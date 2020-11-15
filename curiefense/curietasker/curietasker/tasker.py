@@ -16,6 +16,7 @@ def get_tasks(options):
         if options.task_file is None:
             tasks = options.api.db.get(options.task_db_name).body
         else:
+            options.task_file.seek(0)
             tasks = json.load(options.task_file)
     except Exception as e:
         if options.task_file is None:
