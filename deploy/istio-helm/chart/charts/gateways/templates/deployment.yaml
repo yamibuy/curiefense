@@ -65,6 +65,8 @@ spec:
           env:
             - name: CURIE_BUCKET_LINK
               value: "{{ $.Values.global.proxy.curieconf_manifest_url }}"
+            - name: CURIESYNC_QUIET
+              value: "true"
             - name: RUN_MODE
 {{- if $.Values.global.proxy.initial_curieconf_pull }}
               value: "SYNC_ONCE"
@@ -119,6 +121,8 @@ spec:
           env:
             - name: CURIE_BUCKET_LINK
               value: {{ $.Values.global.proxy.curieconf_manifest_url }}
+            - name: CURIESYNC_QUIET
+              value: "true"
             - name: RUN_MODE
               value: "PERIODIC_SYNC"
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
