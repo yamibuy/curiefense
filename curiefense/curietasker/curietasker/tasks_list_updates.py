@@ -45,22 +45,22 @@ class TaskUpdate(Task):
         if len(lines) > 0:
             midlist = int(len(lines)/2)
             ## first,last and one from the middle. at least one must match.
-            if any((ipre.match(lines[0]),
-                ipre.match(lines[-1]),
-                    ipre.match(lines[midlist]),)):
+            if any((self.parsers["ip"].match(lines[0]),
+                self.parsers["ip"].match(lines[-1]),
+                    self.parsers["ip"].match(lines[midlist]),)):
 
                 for line in lines:
-                    match = ipre.match(line)
+                    match = self.parsers["ip"].match(line)
                     if match:
                         g = match.groups()
                         if g:
                             yield [ "ip", g[0], g[-1] and g[-1][:128] ]
 
-            elif any((asnre.match(lines[0]),
-                asnre.match(lines[-1]),
-                    asnre.match(lines[midlist]),)):
+            elif any((self.parsers["asn"].match(lines[0]),
+                self.parsers["asn"].match(lines[-1]),
+                    self.parsers["asn"].match(lines[midlist]),)):
                 for line in lines:
-                    match = asnre.match(line)
+                    match = self.parsers["asn"].match(line)
                     if match:
                         g = match.groups()
                         if g:
@@ -86,13 +86,13 @@ class TaskUpdate(Task):
                     yield j
 
             else:
-                match = ipre.match(element)
+                match = self.parsers["ip"].match(element)
                 if match:
                     g = match.groups()
                     if g:
                         yield [ "ip", g[0], g[-1] and g[-1][:128] ]
                 else:
-                    match = asnre.match(element)
+                    match = self.parsers["asn"].match(element)
                     if match:
                         g = match.groups()
                         if g:
