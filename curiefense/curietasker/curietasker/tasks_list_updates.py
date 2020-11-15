@@ -104,8 +104,10 @@ class TaskUpdate(Task):
             data = requests.get(url)
             data.raise_for_status()
             if 'application/json' in data.headers.get("Content-Type", data.headers.get("content-type")):
+                self.log.info(f"readurl got JSON")
                 return data.json()
             else:
+                self.log.info(f"readurl got text")
                 return data.text
         except:
             return None
@@ -114,26 +116,30 @@ class TaskUpdate(Task):
         url = lst.get("source")
         data = self.readurl(url)
         if data:
-            if type(data).__name__ not in ('dict', 'list'):
-                native_format = self.parse_native(data)
-                if native_format:
-                    # native format, update the whole entry
-                    lst = native_format
-                else:
-                    entries = list(self.parse_re(data))
-                    if len(entries) > 0 and entries[0]:
-                        lst["entries"] = list(entries)
-                        lst["mdate"] = datetime.datetime.now().isoformat()
-
-            else:
-                entries = list(self.parse_object(data))
+            typename = type(data).__name__
+            self.log.info(f"parse results data type {typename}")
+            if typename not in ('dict', 'list'):
+                entries = list(self.parse_re(data))
                 if len(entries) > 0 and entries[0]:
-                    print ("found entries")
                     lst["entries"] = list(entries)
                     lst["mdate"] = datetime.datetime.now().isoformat()
 
+            else:
+                native_format = self.parse_native(data)
+                if native_format:
+                    self.log.info(f"native format found")
+                    # native format, update the whole entry
+                    lst = native_format
+                else:
+                    entries = list(self.parse_object(data))
+                    if len(entries) > 0 and entries[0]:
+                        self.log.info(f"parseobject found entries")
+                        lst["entries"] = list(entries)
+                        lst["mdate"] = datetime.datetime.now().isoformat()
+
             return lst
 
+        self.log.error(f"Could not fetch data from: {url}")
         return False
 
     def action(self):
