@@ -23,6 +23,7 @@ spec:
         {{ else }}
         image: {{ .Values.global.images.curietasker }}:{{ .Values.global.settings.docker_tag }}
         {{ end }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}

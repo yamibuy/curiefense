@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 if [ -z "$DOCKER_TAG" ]; then
     if ! GITTAG="$(git describe --tag --long --exact-match 2> /dev/null)"; then
         GITTAG="$(git describe --tag --long --dirty)"
@@ -10,12 +9,17 @@ if [ -z "$DOCKER_TAG" ]; then
     DOCKER_TAG="$GITTAG-$DOCKER_DIR_HASH"
 fi
 
-TEST_PARAM=""
+PARAMS=()
+
+if [ -n "$NOPULL" ]; then
+    PARAMS+=("--set" "global.imagePullPolicy=Never")
+fi
+
 if [ -n "$TESTIMG" ]; then
-    TEST_PARAM=("--set" "global.images.$TESTIMG=curiefense/$TESTIMG:test")
+    PARAMS+=("--set" "global.images.$TESTIMG=curiefense/$TESTIMG:test")
     echo "Deploying version \"test\" for image $TESTIMG, and version $GITTAG for all others"
 else
     echo "Deploying version $DOCKER_TAG for all images"
 fi
 
-helm upgrade --install --namespace curiefense --reuse-values --atomic --debug --set "global.settings.docker_tag=$DOCKER_TAG" ${TEST_PARAM[@]} curiefense curiefense/
+helm upgrade --install --namespace curiefense --reuse-values --atomic --debug --set "global.settings.docker_tag=$DOCKER_TAG" ${PARAMS[@]} curiefense curiefense/
