@@ -32,10 +32,10 @@ class TaskUpdate(Task):
                 validate(instance=data, schema=schema)
                 return True
             except Exception as err:
+                self.log.error(f"Exception while parsing schema {err!r}")
                 return False
 
     def parse_native(self, data):
-        return False
         if self.validate_schema(data):
             #return entire document
             return data
