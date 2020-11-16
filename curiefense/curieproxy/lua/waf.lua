@@ -91,8 +91,8 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
         ["sig_operand"] = "-",
         ["sig_msg"] = "waf-regulation",
         ["section"] = section,
-        ["name"] = "entry name",
-        ["value"] = "entry value"
+        ["name"] = "-",
+        ["value"] = "-"
     }
 
 
@@ -101,8 +101,8 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local ignore_alphanum = profile.ignore_alphanum
 
     if #entries > max_count then
+        block_info["sig_msg"] = string.format("# of entries (%s) in section %s exceeded max value %s", #entries, section, max_count)
         return WAFBlock, block_info
-
     end
 
     for name, value in pairs(entries) do
@@ -137,7 +137,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                         block_info["sig_msg"] = msg
                         block_info["name"] = name
                         block_info["value"] = value
-                        
+
                         return response, block_info
                     end
                 end
