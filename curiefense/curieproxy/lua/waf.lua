@@ -148,6 +148,21 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     return WAFPass, {}
 end
 
+function gen_waf_block(category, section, name, value, token)
+    return {
+        ["initiator"] = "waf",
+        ["sig_id"] = "libinjection",
+        ["sig_category"] = category,
+        ["sig_subcategory"] = category,
+        ["sig_severity"] = 5,
+        ["sig_certainity"] = 5,
+        ["sig_operand"] = "-",
+        ["sig_msg"] = token,
+        ["section"] = section,
+        ["name"] = name,
+        ["value"] = value
+    }
+end
 function check(waf_profile, request)
     request.handle:logDebug("WAF inspection starts - with profile %s", waf_profile.name)
     local omit_entries = {}
@@ -164,6 +179,18 @@ function check(waf_profile, request)
         -- negative security
         for name, value in pairs(request[section]) do
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
+---
+                if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name]["libinjection"]) then
+                    local detect, token = detect_sqli(value)
+                    if detect then
+                        return WAFBlock, gen_waf_block("sqli", section, name, value, token)
+                    end
+                    detect, token = detect_xss(value)
+                    if detect then
+                        return WAFBlock, gen_waf_block("xss", section, name, value, token)
+                    end
+                end
+---                
                 for _, sig in ipairs(globals.WAFSignatures) do
                     if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name][sig.id]) then
 
@@ -192,3 +219,95 @@ function check(waf_profile, request)
 
     return WAFPass, "waf-passed"
 end
+
+
+
+------
+
+local libinject = require "resty.libinjection"
+
+function detect_sqli(input)
+    if (type(input) == 'table') then
+        for _, v in ipairs(input) do
+            local match, value = detect_sqli(v)
+
+            if match then
+                return match, value
+            end
+        end
+    else
+        -- yes this is really just one line
+        -- libinjection.sqli has the same return values that lookup.operators expects
+        return libinject.sqli(input)
+    end
+
+    return false, nil
+end
+
+function detect_xss(input)
+    if (type(input) == 'table') then
+        for _, v in ipairs(input) do
+            local match, value = detect_xss(v)
+
+            if match then
+                return match, value
+            end
+        end
+    else
+        -- yes this is really just one line
+        -- libinjection.sqli has the same return values that lookup.operators expects
+        return libinject.xss(input)
+    end
+
+    return false, nil
+end
+
+-- function libscan(request_map, scanfunc)
+--     local request_uri = ctx._ctx['none']['REQUEST_URI']
+--     detect, token = scanfunc(request_uri)
+--     if (detect) then
+--         return detect, request_uri
+--     end
+
+--     request_uri = ctx._ctx['none|urlDecodeUni|cssDecode|htmlEntityDecode|jsDecode|lowercase|compressWhitespace|replaceComments']['REQUEST_URI']
+--     detect, token = scanfunc(request_uri)
+--     if (detect) then
+--         return detect, request_uri
+--     end
+
+--     local _args = ctx._ctx['none']['ARGS']
+--     if (type(_args) == 'table') then
+--         for name, value in ipairs(_args) do
+--             detect, token = scanfunc(value)
+--             if (detect) then
+--                 return detect, "arg/" .. tostring(name) .. "/" .. tostring(value)
+--             end
+--         end
+--     end
+
+--     if ctx.site_global_settings["dpi_inspect_headers"] then
+--         local _headers = ctx._ctx['none']['REQUEST_HEADERS']
+--         if (type(_headers) == 'table') then
+--             for name, value in pairs(_headers) do
+--                 if name == "accept" and value:find("/*", 1, true) then
+--                     -- skip
+--                 else
+--                     detect, token = scanfunc(value)
+--                     if (detect) then
+--                         return detect, "header/" .. tostring(name) .. "/" .. tostring(value)
+--                     end
+--                 end
+--             end
+--         end
+
+--         local _cookies = ctx._ctx['none']['REQUEST_COOKIES']
+--         if (type(_cookies) == 'table') then
+--             for name, value in pairs(_cookies) do
+--                 detect, token = scanfunc(value)
+--                 if (detect) then
+--                     return detect, "cookie/" .. tostring(name) .. "/" .. tostring(value)
+--                 end
+--             end
+--         end
+--     end
+-- end
