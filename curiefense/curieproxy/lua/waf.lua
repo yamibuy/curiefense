@@ -3,6 +3,8 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 
+local table_length = utils.table_length
+
 local WAFPass   = globals.WAFPass
 local WAFBlock  = globals.WAFBlock
 
@@ -100,7 +102,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local check_regex = (#regex_rules > 0)
     local ignore_alphanum = profile.ignore_alphanum
 
-    if #entries > max_count then
+    if table_length(entries) > max_count then
         block_info["sig_msg"] = string.format("# of entries (%s) in section %s exceeded max value %s", #entries, section, max_count)
         return WAFBlock, block_info
     end
@@ -220,8 +222,6 @@ function check(waf_profile, request)
     return WAFPass, "waf-passed"
 end
 
-
-
 ------
 
 local libinject = require "lua.resty.libinjection"
@@ -230,14 +230,11 @@ function detect_sqli(input)
     if (type(input) == 'table') then
         for _, v in ipairs(input) do
             local match, value = detect_sqli(v)
-
             if match then
                 return match, value
             end
         end
     else
-        -- yes this is really just one line
-        -- libinjection.sqli has the same return values that lookup.operators expects
         return libinject.sqli(input)
     end
 
@@ -248,66 +245,13 @@ function detect_xss(input)
     if (type(input) == 'table') then
         for _, v in ipairs(input) do
             local match, value = detect_xss(v)
-
             if match then
                 return match, value
             end
         end
     else
-        -- yes this is really just one line
-        -- libinjection.sqli has the same return values that lookup.operators expects
         return libinject.xss(input)
     end
 
     return false, nil
 end
-
--- function libscan(request_map, scanfunc)
---     local request_uri = ctx._ctx['none']['REQUEST_URI']
---     detect, token = scanfunc(request_uri)
---     if (detect) then
---         return detect, request_uri
---     end
-
---     request_uri = ctx._ctx['none|urlDecodeUni|cssDecode|htmlEntityDecode|jsDecode|lowercase|compressWhitespace|replaceComments']['REQUEST_URI']
---     detect, token = scanfunc(request_uri)
---     if (detect) then
---         return detect, request_uri
---     end
-
---     local _args = ctx._ctx['none']['ARGS']
---     if (type(_args) == 'table') then
---         for name, value in ipairs(_args) do
---             detect, token = scanfunc(value)
---             if (detect) then
---                 return detect, "arg/" .. tostring(name) .. "/" .. tostring(value)
---             end
---         end
---     end
-
---     if ctx.site_global_settings["dpi_inspect_headers"] then
---         local _headers = ctx._ctx['none']['REQUEST_HEADERS']
---         if (type(_headers) == 'table') then
---             for name, value in pairs(_headers) do
---                 if name == "accept" and value:find("/*", 1, true) then
---                     -- skip
---                 else
---                     detect, token = scanfunc(value)
---                     if (detect) then
---                         return detect, "header/" .. tostring(name) .. "/" .. tostring(value)
---                     end
---                 end
---             end
---         end
-
---         local _cookies = ctx._ctx['none']['REQUEST_COOKIES']
---         if (type(_cookies) == 'table') then
---             for name, value in pairs(_cookies) do
---                 detect, token = scanfunc(value)
---                 if (detect) then
---                     return detect, "cookie/" .. tostring(name) .. "/" .. tostring(value)
---                 end
---             end
---         end
---     end
--- end
