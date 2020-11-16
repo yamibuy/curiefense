@@ -255,8 +255,6 @@ export default {
       newEntry.exclusions = this.packExclusions(newEntry.exclusions)
       let type = newEntry.type
       delete newEntry.type
-      console.log(newEntry)
-      console.log(this.selectedDoc)
       this.selectedDoc[this.tab][type].unshift(newEntry)
     },
 
@@ -291,9 +289,6 @@ export default {
         row_key = elem.dataset.curie;
       }
     }
-  },
-  created() {
-    console.log("this.selectedDoc", this.selectedDoc)
   }
 }
 </script>

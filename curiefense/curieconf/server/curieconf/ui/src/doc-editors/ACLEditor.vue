@@ -6,12 +6,12 @@
           <div class="columns">
             <div class="column">
               <div class="field is-grouped">
-                <input class="input is-small is-fullwidth"
+                <input class="input is-small is-fullwidth document-name"
                        type="text"
                        placeholder="Document name"
                        v-model="selectedDoc.name">
               </div>
-              <p class="subtitle is-6 has-text-grey"
+              <p class="subtitle is-6 has-text-grey document-id"
                  title="Document ID">
                 {{ selectedDoc.id }}
               </p>
@@ -29,17 +29,18 @@
           <div class="column is-2" v-for="operation in operations" :key="operation">
             <p class="title is-7 is-uppercase x-has-text-centered">{{ titles[operation] }}</p>
             <hr :style="barStyle[operation]"/>
-            <table class="table is-narrow is-fullwidth ">
+            <table class="table is-narrow is-fullwidth">
               <tbody>
               <tr v-for="(tag, idx) in selectedDoc[operation]" :key="idx">
-                <td :class=" duplicateTags[tag] ? 'has-text-danger' : '' "
+                <td class="tag-cell"
+                    :class=" duplicateTags[tag] ? 'has-text-danger' : '' "
                     :style=" allPrior(operation) ? 'text-decoration: line-through; color: lightgray' : '' "
                     :title=" allPrior(operation) ? '[all] is set in a higher priorirty section' : '' ">
                   {{ tag }}
                 </td>
                 <td class="is-size-7 is-18-px">
                   <a title="remove entry"
-                     class="is-small has-text-grey"
+                     class="is-small has-text-grey remove-entry-button"
                      @click="removeTag(operation, idx)">
                     &ndash;
                   </a>
@@ -48,16 +49,17 @@
               <tr>
                 <td>
                   <tag-autocomplete-input v-if="addNewColName === operation"
+                                          ref="tagAutocompleteInput"
                                           :clearInputAfterSelection="true"
                                           :selectionType="'single'"
                                           :autoFocus="true"
-                                          @keyup.esc="cancelAddNewTag"
+                                          @keydown.esc="cancelAddNewTag"
                                           @tagSubmitted="addNewEntry(operation, $event)">
                   </tag-autocomplete-input>
                 </td>
                 <td class="is-size-7 is-18-px">
                   <a title="add new entry"
-                     class="is-size-7 is-18-px is-small has-text-grey"
+                     class="is-size-7 is-18-px is-small has-text-grey add-new-entry-button"
                      @click="openTagInput(operation)">
                     +
                   </a>

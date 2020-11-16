@@ -57,19 +57,20 @@ function processRequest(methodName, apiUrl, data, successMessage, failureMessage
     } else {
         request = axiosMethod(apiUrl)
     }
-    // Toast message
-    request
+    request = request
         .then((response) => {
+            // Toast message
             if (successMessage) {
                 successToast(successMessage)
             }
             return response
         })
         .catch((error) => {
+            // Toast message
             if (failureMessage) {
                 failureToast(failureMessage)
             }
-            return error
+            throw error
         })
     return request
 }

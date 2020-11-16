@@ -1,17 +1,17 @@
 <template>
 
   <aside class="menu " style="position: fixed;">
-    <div v-for="(sectionItems, sectionTitle) in menuItems" :key="sectionTitle">
+    <div v-for="(sectionItems, sectionTitle) in menuItems" :key="sectionTitle" class="menu-item">
       <p class="menu-label" style="margin-top: 12px">
         {{ sectionTitle }}
       </p>
       <ul class="menu-list">
-        <li v-for="(menuItemDetails, menuItemKey) in sectionItems" :key="menuItemKey">
-          <a :data-curie="menuItemKey"
-             :href="menuItemKey"
-             :class="{ 'is-active': currentRoutePath === menuItemKey }">
+        <li v-for="(menuItemDetails, menuItemKey) in sectionItems" :key="menuItemKey" class="section-item">
+          <router-link :data-curie="menuItemKey"
+                       :to="menuItemKey"
+                       :class="{ 'is-active': currentRoutePath === menuItemKey }">
             {{ menuItemDetails.title }}
-          </a>
+          </router-link>
         </li>
       </ul>
     </div>
@@ -30,15 +30,15 @@ export default {
       selectedMenuItem: null,
       menuItems: {
         Configuration: {
-          "/config": {"title": "Document Editor"},
-          "/db": {"title": "System Settings"},
-          "/publish": {"title": "Publish Configuration"},
+          '/config': {'title': 'Document Editor'},
+          '/db': {'title': 'System Settings'},
+          '/publish': {'title': 'Publish Configuration'},
         },
         Analytics: {
-          "/accesslog": {"title": "Access Log"}
+          '/accesslog': {'title': 'Access Log'}
         },
         Git: {
-          "/versioncontrol": {"title": "Version Control"}
+          '/versioncontrol': {'title': 'Version Control'}
         },
       }
     }
@@ -46,7 +46,7 @@ export default {
 
   computed: {
     currentRoutePath() {
-      return this.$route.path;
+      return this.$route.path
     }
   },
 
@@ -55,22 +55,25 @@ export default {
 }
 </script>
 <style scoped>
-  .menu-label {
-    color: #8F99A3;
-    font-weight: 700;
-  }
-  .menu-list a {
-    color: #0F1D38;
-    font-size: 14px;
-    font-weight: 700;
-  }
-  .menu-list a:hover {
-    background-color: transparent;
-    color: #276cda;
-  }
-  .menu-list a.is-active {
-    background-color: transparent;
-    color: #276cda;
-    font-weight: 700;
-  }
+.menu-label {
+  color: #8F99A3;
+  font-weight: 700;
+}
+
+.menu-list a {
+  color: #0F1D38;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.menu-list a:hover {
+  background-color: transparent;
+  color: #276cda;
+}
+
+.menu-list a.is-active {
+  background-color: transparent;
+  color: #276cda;
+  font-weight: 700;
+}
 </style>
