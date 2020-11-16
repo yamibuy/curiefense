@@ -78,33 +78,43 @@ function regex_check(section, name, regex_rules, omit_entries, sig_excludes)
 end
 
 function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
-    request.handle:logDebug("WAF regulation - positive security for section: " .. section)
+    -- request.handle:logDebug("WAF regulation - positive security for section: " .. section)
     local name_rules, regex_rules, max_len, max_count = unpack(build_section(section, profile))
 
-    request.handle:logDebug(string.format("name_rules %s, regex_rules %s, max_len %s, max_count %s", name_rules, regex_rules, max_len, max_count))
+    local block_info = {
+        ["initiator"] = "waf",
+        ["sig_id"] = "-",
+        ["sig_category"] = "-",
+        ["sig_subcategory"] = "-",
+        ["sig_severity"] = "-",
+        ["sig_certainity"] = "-",
+        ["sig_operand"] = "-",
+        ["sig_msg"] = "waf-regulation",
+        ["section"] = section,
+        ["name"] = "entry name",
+        ["value"] = "entry value"
+    }
+
 
     local entries = request[section]
     local check_regex = (#regex_rules > 0)
     local ignore_alphanum = profile.ignore_alphanum
 
     if #entries > max_count then
-        return WAFBlock, string.format("Maximum entries for section %s exceeded. Limit: %s, Got: %s",
-            section, max_count, #entries)
+        return WAFBlock, block_info
+
     end
 
     for name, value in pairs(entries) do
         if value then
             -- headers/ cookies/args length
             local value_len = value:len()
-
-            request.handle:logDebug(string.format("WAF - inspecting [%s] length %s max %s\n%s", 
-                section, value_len, max_len, value))
-
-            request.handle:logDebug(string.format("WAF - value_len > max_len == %s", value_len > max_len))
+            
             if value_len > max_len then
-                request.handle:logDebug(string.format("WAF - block by value length"))
-                return WAFBlock, string.format("Length of %s/%s exceeded. Limit: %s, Got: %s",
-                    section, name, max_len, value_len)
+                block_info["sig_msg"] = string.format("Length of %s/%s exceeded. Limit: %s, Got: %s", section, name, max_len, value_len)
+                block_info["name"] = name
+                block_info["value"] = value
+                return WAFBlock, block_info
             end
 
             if ignore_alphanum and re_match(value, "^\\w$") then
@@ -114,13 +124,21 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 if name_rule then
                     local respone, msg = name_check(section, name, name_rule, value, omit_entries, sig_excludes)
                     if WAFBlock == response then
-                        return response, msg
+                        block_info["sig_msg"] = msg
+                        block_info["name"] = name
+                        block_info["value"] = value
+
+                        return response, block_info
                     end
                 end
                 if check_regex then
                     local response, msg = regex_check(section, name, regex_rules, omit_entries, sig_excludes)
                     if WAFBlock == response then
-                        return response, msg
+                        block_info["sig_msg"] = msg
+                        block_info["name"] = name
+                        block_info["value"] = value
+                        
+                        return response, block_info
                     end
                 end
             end
@@ -137,7 +155,7 @@ function check(waf_profile, request)
     local sections = {"headers", "cookies", "args"}
 
     for _, section in ipairs(sections) do
-        request.handle:logDebug("WAF inspecting section: " .. section)
+        -- request.handle:logDebug("WAF inspecting section: " .. section)
         -- positive security
         local response, msg = waf_regulate(section, waf_profile, request, omit_entries, exclude_sigs)
         if response == WAFBlock then
