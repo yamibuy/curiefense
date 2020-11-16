@@ -96,6 +96,10 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
         if value then
             -- headers/ cookies/args length
             local value_len = value:len()
+
+            request.handle:logDebug(string.format("WAF - inspecting [%s] length %s max %s\n%s", 
+                section, value_len, max_len, value))
+
             if value_len > max_len then
                 return WAFBlock, string.format("Length of %s/%s exceeded. Limit: %s, Got: %s",
                     section, name, max_len, value_len)
