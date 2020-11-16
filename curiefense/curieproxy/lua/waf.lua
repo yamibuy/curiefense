@@ -224,7 +224,7 @@ end
 
 ------
 
-local libinject = require "resty.libinjection"
+local libinject = require "lua.resty.libinjection"
 
 function detect_sqli(input)
     if (type(input) == 'table') then
