@@ -46,10 +46,12 @@
       "items": {
         "type": "string"
       },
-      "minItems": 1
+      "minItems": 1,
+      "uniqueItems": true
     },
     "entries": {
       "type": "array",
+      "uniqueItems": true,
       "title": "Entries List",
       "description": "List of entries pulled from the source",
       "items": {
@@ -60,14 +62,13 @@
       "minItems": 1
     }
   },
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": [
     "name",
     "id",
     "active",
     "mdate",
     "source",
-    "notes",
     "entries_relation",
     "tags",
     "entries"
