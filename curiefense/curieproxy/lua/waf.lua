@@ -145,7 +145,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
         end
     end
 
-    return WAFPass, ""
+    return WAFPass, {}
 end
 
 function check(waf_profile, request)
