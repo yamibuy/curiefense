@@ -34,6 +34,7 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: persistent-redis
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}

@@ -1,7 +1,9 @@
 global:
+  imagePullPolicy: Always
   images:
     confserver: curiefense/confserver
     curielogger: curiefense/curielogger
+    curietasker: curiefense/curietasker
     logdb: curiefense/logdb
     redis: curiefense/redis
     curielogserver: curiefense/curielogserver

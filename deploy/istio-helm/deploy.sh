@@ -16,8 +16,14 @@ if ! kubectl api-resources|grep -q config.istio.io; then
     sleep 5
 fi
 
+PARAMS=()
+
+if [ -n "$NOPULL" ]; then
+    PARAMS+=("--set" "global.imagePullPolicy=Never")
+fi
+
 helm upgrade --install --namespace istio-system --reuse-values --debug \
     -f chart/custom/enable-waf-ingress.yaml \
     --set "global.proxy.gw_image=curiefense/curieproxy-istio:$DOCKER_TAG" \
     --set "global.proxy.curiesync_image=curiefense/curiesync:$DOCKER_TAG" \
-    istio-cf chart/
+    ${PARAMS[@]} istio-cf chart/

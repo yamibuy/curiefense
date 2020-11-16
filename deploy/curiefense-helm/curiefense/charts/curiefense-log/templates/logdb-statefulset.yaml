@@ -44,6 +44,7 @@ spec:
           name: curiefense-db-credentials
         - mountPath: /run/secrets/db-readonly-credentials
           name: curiefense-db-readonly-credentials
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

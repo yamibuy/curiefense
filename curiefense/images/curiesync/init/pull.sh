@@ -3,16 +3,24 @@
 PERIOD=10
 
 echo "Run mode is [${RUN_MODE}]"
+QUIET="${CURIESYNC_QUIET:-false}"
+
+
+info () {
+    if [ "$QUIET" = "true" ]; then
+        echo "$*"
+    fi
+}
 
 
 if [ "$RUN_MODE" = "SYNC_ONCE" ]; then
-    echo "Synchronizing once"
-    curieconf_cli sync pull "${CURIE_BUCKET_LINK}" /config
+    info "Synchronizing once"
+    curieconfctl sync pull "${CURIE_BUCKET_LINK}" /config
     exit 0
 fi
 
 if [ "$RUN_MODE" = "COPY_BOOTSTRAP" ]; then
-    echo "Copying bootstrap config"
+    info "Copying bootstrap config"
     if [ ! -e /config/bootstrap ]
     then
         mkdir -p /config
@@ -28,12 +36,12 @@ fi
 
 
 if [ "$RUN_MODE" = "PERIODIC_SYNC" -o -z "$RUN_MODE" ]; then
-    echo "Synchronizing conf every $PERIOD seconds"
+    info "Synchronizing conf every $PERIOD seconds"
     while :;
     do
-        echo "Pulling ${CURIE_BUCKET_LINK}"
-        curieconf_cli sync pull "${CURIE_BUCKET_LINK}" /config
-        echo "Sleeping"
+        info "Pulling ${CURIE_BUCKET_LINK}"
+        curieconfctl sync pull "${CURIE_BUCKET_LINK}" /config
+        info "Sleeping"
         sleep $PERIOD
     done
 fi

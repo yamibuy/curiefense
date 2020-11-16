@@ -33,6 +33,7 @@ spec:
         volumeMounts:
         - mountPath: /uwsgi
           name: uwsgi-socket
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         command: ["/usr/bin/dumb-init", "/bin/bash", "/init/start_nginx.sh"]
       - name: curielogserver-uwsgi
         env:
@@ -57,6 +58,7 @@ spec:
         volumeMounts:
         - mountPath: /uwsgi
           name: uwsgi-socket
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         command: ["/usr/bin/dumb-init", "/bin/bash", "/init/start_uwsgi.sh"]
       restartPolicy: Always
       serviceAccountName: ""
