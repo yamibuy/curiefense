@@ -8,10 +8,10 @@
              class="tag-input input is-small"
              aria-haspopup="true"
              aria-controls="dropdown-menu"
-             @keyup.enter="selectTag"
-             @keyup.down='focusPreviousSuggestion'
-             @keyup.up='focusNextSuggestion'
-             @keyup.esc='closeDropdown'
+             @keydown.enter="selectTag"
+             @keydown.down='focusNextSuggestion'
+             @keydown.up='focusPreviousSuggestion'
+             @keydown.esc='closeDropdown'
              @input="openDropdown(); tagChanged()"
              ref="tagInput"/>
     </div>
@@ -51,7 +51,8 @@ export default {
       type: String,
       validator(val) {
         return ['single', 'multiple'].includes(val)
-      }
+      },
+      default: 'single'
     }
   },
 
@@ -158,11 +159,11 @@ export default {
       this.selectTag()
     },
 
-    selectTag() {
+    async selectTag() {
       if (this.focusedSuggestionIndex !== -1) {
         this.currentTag = this.matches[this.focusedSuggestionIndex]
       } else if (!this.tagsSuggestions.includes(this.currentTag)) {
-        this.addUnknownTagToDB(this.currentTag)
+        await this.addUnknownTagToDB(this.currentTag)
       }
       this.tagSubmitted()
       this.tagChanged()
@@ -174,12 +175,12 @@ export default {
       }
     },
 
-    focusNextSuggestion() {
+    focusPreviousSuggestion() {
       if (this.focusedSuggestionIndex > -1)
         this.focusedSuggestionIndex--
     },
 
-    focusPreviousSuggestion() {
+    focusNextSuggestion() {
       if (this.focusedSuggestionIndex < this.matches.length - 1)
         this.focusedSuggestionIndex++
     },
@@ -188,11 +189,11 @@ export default {
       return index === this.focusedSuggestionIndex
     },
 
-    createAutocompleteDBKey() {
-      // if database doesn't exist, create it
-      RequestsUtils.sendRequest('GET', `db/${this.db}/`)
-          .catch(() => {
-            RequestsUtils.sendRequest('POST', `db/${this.db}`, {})
+    async createAutocompleteDBKey() {
+      // if database doesn't exist, create it and wait until it's created
+      await RequestsUtils.sendRequest('GET', `db/${this.db}/`)
+          .catch(async () => {
+            await RequestsUtils.sendRequest('POST', `db/${this.db}/`, {})
           })
       // if key doesn't exist, create it
       RequestsUtils.sendRequest('GET', `db/${this.db}/k/${this.key}/`)
@@ -206,11 +207,13 @@ export default {
       const document = {...{tags: []}, ...response.data}
       document.tags.push(tag)
       return RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, document)
-          .then(() => {
+          .then((response) => {
             console.log(`saved key [${this.key}] to database [${this.db}]`)
+            return response
           })
-          .catch(() => {
+          .catch((error) => {
             console.log(`failed saving key [${this.key}] to database [${this.db}]`)
+            throw error
           })
     },
 

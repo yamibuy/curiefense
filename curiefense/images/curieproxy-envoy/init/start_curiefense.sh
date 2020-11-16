@@ -21,7 +21,7 @@ sed -e "s/TARGET_ADDRESS/$TADDR/" -e "s/TARGET_PORT/$TPORT/" /etc/envoy/envoy.ya
 
 while true
 do
-	/usr/local/bin/envoy -c /etc/envoy/envoy.yaml --service-cluster proxy --concurrency 1 --log-level debug $ENVOY_ARGS
+	/usr/local/bin/envoy -c /etc/envoy/envoy.yaml --service-cluster proxy --concurrency 1 --log-level info $ENVOY_ARGS
 	sleep 1
 done
 

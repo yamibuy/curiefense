@@ -9,16 +9,21 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 
 def time_match(d, datespec):
-    for spec in ["year", "month", "day", "dayofweek", "hour", "minute"]:
+    for spec in ["year", "month", "day", "weekday", "hour", "minute"]:
         if spec in datespec:
             val = datespec[spec]
-            target = getattr(d,spec)
+            if type(val) is str and val.isdigit():
+                val = int(val)
+            target = getattr(d,spec) if spec != "weekday" else d.isoweekday()
             if type(val) is str and val.startswith("*/"):
                 val = int(val[2:])
                 if target % val != 0:
                     return False
+            elif type(val) is str and spec == "weekday":
+                if val.lower() not in [d.strftime(fmt).lower() for fmt in ["%a", "%A"]]:
+                    return False
             else:
-                if int(val) != target:
+                if val != target:
                     return False
     return True
 

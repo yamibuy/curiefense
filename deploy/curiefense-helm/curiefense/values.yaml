@@ -1,4 +1,5 @@
 global:
+  imagePullPolicy: Always
   images:
     confserver: curiefense/confserver
     curielogger: curiefense/curielogger

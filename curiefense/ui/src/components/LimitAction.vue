@@ -70,6 +70,8 @@
 </template>
 
 <script>
+import DatasetsUtils from '@/assets/DatasetsUtils'
+
 export default {
   name: "LimitAction",
   props: {
@@ -79,7 +81,7 @@ export default {
   },
 
   data() {
-    const { LimitActions } = this.$root.dsutils
+    const LimitActions = DatasetsUtils.LimitActions
     const availableActions = {}
     Object.keys(LimitActions).forEach(actionType => {
       availableActions[actionType] = {

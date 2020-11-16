@@ -3,6 +3,8 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 
+local table_length = utils.table_length
+
 local WAFPass   = globals.WAFPass
 local WAFBlock  = globals.WAFBlock
 
@@ -78,27 +80,43 @@ function regex_check(section, name, regex_rules, omit_entries, sig_excludes)
 end
 
 function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
-    request.handle:logDebug("WAF regulation - positive security for section: " .. section)
+    -- request.handle:logDebug("WAF regulation - positive security for section: " .. section)
     local name_rules, regex_rules, max_len, max_count = unpack(build_section(section, profile))
 
-    request.handle:logDebug(string.format("name_rules %s, regex_rules %s, max_len %s, max_count %s", name_rules, regex_rules, max_len, max_count))
+    local block_info = {
+        ["initiator"] = "waf",
+        ["sig_id"] = "-",
+        ["sig_category"] = "-",
+        ["sig_subcategory"] = "-",
+        ["sig_severity"] = "-",
+        ["sig_certainity"] = "-",
+        ["sig_operand"] = "-",
+        ["sig_msg"] = "waf-regulation",
+        ["section"] = section,
+        ["name"] = "-",
+        ["value"] = "-"
+    }
+
 
     local entries = request[section]
     local check_regex = (#regex_rules > 0)
     local ignore_alphanum = profile.ignore_alphanum
-
-    if #entries > max_count then
-        return WAFBlock, string.format("Maximum entries for section %s exceeded. Limit: %s, Got: %s",
-            section, max_count, #entries)
+    local num_entries = table_length(entries)
+    if num_entries > max_count then
+        block_info["sig_msg"] = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
+        return WAFBlock, block_info
     end
 
     for name, value in pairs(entries) do
         if value then
             -- headers/ cookies/args length
             local value_len = value:len()
+            
             if value_len > max_len then
-                return WAFBlock, string.format("Length of %s/%s exceeded. Limit: %s, Got: %s",
-                    section, name, max_len, value_len)
+                block_info["sig_msg"] = string.format("Length of %s/%s exceeded. Limit: %s, Got: %s", section, name, max_len, value_len)
+                block_info["name"] = name
+                block_info["value"] = value
+                return WAFBlock, block_info
             end
 
             if ignore_alphanum and re_match(value, "^\\w$") then
@@ -108,22 +126,45 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 if name_rule then
                     local respone, msg = name_check(section, name, name_rule, value, omit_entries, sig_excludes)
                     if WAFBlock == response then
-                        return response, msg
+                        block_info["sig_msg"] = msg
+                        block_info["name"] = name
+                        block_info["value"] = value
+
+                        return response, block_info
                     end
                 end
                 if check_regex then
                     local response, msg = regex_check(section, name, regex_rules, omit_entries, sig_excludes)
                     if WAFBlock == response then
-                        return response, msg
+                        block_info["sig_msg"] = msg
+                        block_info["name"] = name
+                        block_info["value"] = value
+
+                        return response, block_info
                     end
                 end
             end
         end
     end
 
-    return WAFPass, ""
+    return WAFPass, {}
 end
 
+function gen_waf_block(category, section, name, value, token)
+    return {
+        ["initiator"] = "waf",
+        ["sig_id"] = "libinjection",
+        ["sig_category"] = category,
+        ["sig_subcategory"] = category,
+        ["sig_severity"] = 5,
+        ["sig_certainity"] = 5,
+        ["sig_operand"] = "-",
+        ["sig_msg"] = token,
+        ["section"] = section,
+        ["name"] = name,
+        ["value"] = value
+    }
+end
 function check(waf_profile, request)
     request.handle:logDebug("WAF inspection starts - with profile %s", waf_profile.name)
     local omit_entries = {}
@@ -131,7 +172,7 @@ function check(waf_profile, request)
     local sections = {"headers", "cookies", "args"}
 
     for _, section in ipairs(sections) do
-        request.handle:logDebug("WAF inspecting section: " .. section)
+        -- request.handle:logDebug("WAF inspecting section: " .. section)
         -- positive security
         local response, msg = waf_regulate(section, waf_profile, request, omit_entries, exclude_sigs)
         if response == WAFBlock then
@@ -140,6 +181,18 @@ function check(waf_profile, request)
         -- negative security
         for name, value in pairs(request[section]) do
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
+---
+                if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name]["libinjection"]) then
+                    local detect, token = detect_sqli(value)
+                    if detect then
+                        return WAFBlock, gen_waf_block("sqli", section, name, value, token)
+                    end
+                    detect, token = detect_xss(value)
+                    if detect then
+                        return WAFBlock, gen_waf_block("xss", section, name, value, token)
+                    end
+                end
+---                
                 for _, sig in ipairs(globals.WAFSignatures) do
                     if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name][sig.id]) then
 
@@ -167,4 +220,38 @@ function check(waf_profile, request)
     end
 
     return WAFPass, "waf-passed"
+end
+
+------
+
+local libinject = require "lua.resty.libinjection"
+
+function detect_sqli(input)
+    if (type(input) == 'table') then
+        for _, v in ipairs(input) do
+            local match, value = detect_sqli(v)
+            if match then
+                return match, value
+            end
+        end
+    else
+        return libinject.sqli(input)
+    end
+
+    return false, nil
+end
+
+function detect_xss(input)
+    if (type(input) == 'table') then
+        for _, v in ipairs(input) do
+            local match, value = detect_xss(v)
+            if match then
+                return match, value
+            end
+        end
+    else
+        return libinject.xss(input)
+    end
+
+    return false, nil
 end

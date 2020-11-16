@@ -10,6 +10,7 @@ setup(name='curietasker',
       packages=['curietasker'],
       scripts=['bin/curietasker'],
       install_requires=[
+        "jsonschema"
 #          "curieconf",
       ],
 )

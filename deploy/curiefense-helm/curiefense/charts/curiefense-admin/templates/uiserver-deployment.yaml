@@ -37,6 +37,7 @@ spec:
           name: uisslcrt
         - mountPath: /run/secrets/uisslkey
           name: uisslkey
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

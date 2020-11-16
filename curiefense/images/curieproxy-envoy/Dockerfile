@@ -19,8 +19,10 @@ RUN luarocks install lrexlib-pcre2 && \
 COPY curieproxy/envoy-1.14.0 /usr/local/bin/envoy
 
 COPY init/start_curiefense.sh /start_curiefense.sh
+
 COPY curieproxy/lua /lua
-COPY curieproxy/lua/grasshopper.so /usr/local/lib/lua/5.1/grasshopper.so
+COPY curieproxy/lua/shared-objects/*.so /usr/local/lib/lua/5.1/
+
 COPY curieproxy/config /bootstrap-config/config
 COPY curieproxy/envoy.yaml.* /etc/envoy/
 

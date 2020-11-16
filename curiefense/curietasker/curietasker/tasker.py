@@ -16,6 +16,7 @@ def get_tasks(options):
         if options.task_file is None:
             tasks = options.api.db.get(options.task_db_name).body
         else:
+            options.task_file.seek(0)
             tasks = json.load(options.task_file)
     except Exception as e:
         if options.task_file is None:
@@ -86,11 +87,11 @@ def tasker(options):
 
         for task in list(options.tasklist):
             if not task.is_alive():
-                log.info(f"<== Task [{task.name}] finished (was started at {task.start_time}).")
+                log.info(f"<== Task [{task.name}] ({task.taskid}) finished (was started at {task.start_time}).")
                 task.join()
                 options.tasklist.remove(task)
             else:
-                log.info(f"STATUS: Task [{task.name}] still running (was started at {task.start_time}.")
+                log.info(f"STATUS: Task [{task.name}] ({task.taskid}) still running (was started at {task.start_time}.")
         log.info(f"STATUS: {len(options.tasklist)} tasks still running")
         options.timemark = next_timemark
 

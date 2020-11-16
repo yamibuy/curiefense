@@ -19,7 +19,7 @@ COPY curieproxy/envoy-1.13.4 /usr/local/bin/envoy
 
 COPY init/start_curiefense_pilot.sh /start_curiefense_pilot.sh
 COPY curieproxy/lua /lua
-COPY curieproxy/lua/grasshopper.so /usr/local/lib/lua/5.1/grasshopper.so
+COPY curieproxy/lua/shared-objects/*.so /usr/local/lib/lua/5.1/
 COPY curieproxy/config /bootstrap-config/config
 
 RUN mkdir /config && chmod a+rwxt /config
