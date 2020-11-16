@@ -375,7 +375,6 @@ export default {
           }
 
         })
-        .catch()
 
     },
     removeEntry(currentPage, idx) {

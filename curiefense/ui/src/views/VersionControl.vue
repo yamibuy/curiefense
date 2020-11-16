@@ -8,7 +8,7 @@
               <div class="field is-grouped">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedBranch" @change="switchBranch()">
+                    <select v-model="selectedBranch" @change="switchBranch()" class="branch-selection">
                       <option v-for="name in branchNames" :key="name" :value="name">{{ name }}</option>
                     </select>
                   </div>
@@ -17,13 +17,13 @@
                   <span class="icon is-small">
                     <i class="mdi mdi-dark mdi-source-branch"></i>
                   </span>
-                  <span class="is-size-7  ">{{ branches }} branches</span>
+                  <span class="is-size-7 git-branches">{{ branches }} branches</span>
                 </div>
                 <div class="control">
                   <span class="icon is-small">
                     <i class="mdi mdi-dark mdi-source-commit"></i>
                   </span>
-                  <span class="is-size-7  ">{{ commits }} commits</span>
+                  <span class="is-size-7 git-commits">{{ commits }} commits</span>
                 </div>
               </div>
             </div>
@@ -34,7 +34,7 @@
                 <p class="control">
                   <span class="field has-addons">
                     <span class="control">
-                      <a class="button is-small"
+                      <a class="button is-small fork-branch-toggle"
                          @click="toggleBranchFork()">
                         <span class="icon is-small">
                           <i class="fas fa-code-branch"></i>
@@ -43,21 +43,21 @@
                     </span>
                     <span class="control is-expanded"
                           v-if="forkBranchInputOpen">
-                      <input class="input is-small"
+                      <input class="input is-small fork-branch-input"
                              @input="validateInput($event, isSelectedBranchForkNameValid)"
                              placeholder="Forked Branch Name"
                              v-model="forkBranchName"
                              type="text">
                     </span>
                     <span class="control" v-if="forkBranchInputOpen">
-                      <a class="button is-danger is-small" @click="toggleBranchFork">
+                      <a class="button is-danger is-small fork-branch-cancel" @click="toggleBranchFork">
                         <span class="icon is-small">
                           <i class="fas fa-times"></i>
                         </span>
                       </a>
                     </span>
                     <span class="control" v-if="forkBranchInputOpen">
-                      <a class="button is-primary is-small"
+                      <a class="button is-primary is-small fork-branch-confirm"
                          @click="forkBranch"
                          :disabled="!isSelectedBranchForkNameValid">
                         <span class="icon is-small">
@@ -82,7 +82,7 @@
                 <p class="control">
                   <span class="field has-addons">
                     <span class="control">
-                      <a class="button is-small has-text-danger"
+                      <a class="button is-small has-text-danger delete-branch-toggle"
                          @click="toggleBranchDelete()">
                         <span class="icon is-small">
                           <i class="fas fa-trash"></i>
@@ -91,20 +91,21 @@
                     </span>
                     <span class="control is-expanded"
                           v-if="deleteBranchInputOpen">
-                      <input class="input is-small"
+                      <input class="input is-small delete-branch-input"
                              placeholder="Confirm Branch Name"
                              v-model="deleteBranchName"
                              type="text">
                     </span>
                     <span class="control" v-if="deleteBranchInputOpen">
-                      <a class="button is-danger is-small" @click="toggleBranchDelete">
+                      <a class="button is-danger is-small delete-branch-cancel"
+                         @click="toggleBranchDelete">
                         <span class="icon is-small">
                           <i class="fas fa-times"></i>
                         </span>
                       </a>
                     </span>
                     <span class="control" v-if="deleteBranchInputOpen">
-                      <a class="button is-primary is-small"
+                      <a class="button is-primary is-small delete-branch-confirm"
                          @click="deleteBranch"
                          :disabled="!isSelectedBranchDeleteNameValid">
                         <span class="icon is-small">
@@ -120,11 +121,10 @@
         </div>
       </div>
       <div class="content">
-        <GitHistory :gitLog.sync="gitLog"
-                    :gitlogLoading.sync="gitLogLoading"
-                    :apiPath.sync="gitAPIPath"
-                    @restoreVersion="restoreGitVersion">
-        </GitHistory>
+        <git-history :gitLog.sync="gitLog"
+                     :apiPath.sync="gitAPIPath"
+                     @restoreVersion="restoreGitVersion">
+        </git-history>
       </div>
     </div>
   </div>
@@ -151,7 +151,6 @@ export default {
       selectedBranchData: null,
       isDownloadLoading: false,
 
-      gitLogLoading: false,
       gitLog: [],
       commits: 0,
       branches: 0,
@@ -247,20 +246,17 @@ export default {
       this.forkBranchInputOpen = false
       this.deleteBranchInputOpen = false
       await this.loadSelectedBranchData()
-      this.loadGitLog()
+      await this.loadGitLog()
     },
 
-    loadGitLog() {
-      this.gitlogLoading = true
-
-      let self = this,
-          config = this.selectedBranch,
+    async loadGitLog() {
+      let config = this.selectedBranch,
           url_trail = `configs/${config}/v/`
 
       if (config) {
-        RequestsUtils.sendRequest('GET', url_trail).then((response) => {
+        return RequestsUtils.sendRequest('GET', url_trail).then((response) => {
           this.gitLog = response.data
-          self.gitlogLoading = false
+          return response
         })
       }
 
@@ -276,29 +272,25 @@ export default {
       this.loadGitLog()
     },
 
-    async deleteBranch() {
+    deleteBranch() {
       if (!this.isSelectedBranchDeleteNameValid) {
         return
       }
-      const isDeleted = await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/`, null, `Branch [${this.selectedBranch}] deleted successfully!`, `Failed deleting branch [${this.selectedBranch}]!`)
+      RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/`,
+          null, `Branch [${this.selectedBranch}] deleted successfully!`,
+          `Failed deleting branch [${this.selectedBranch}]!`)
           .then(() => {
-            return true
+            this.loadConfigs()
+            this.toggleBranchDelete()
           })
-          .catch(() => {
-            return false
-          })
-      if (isDeleted) {
-        this.loadConfigs()
-      }
-      this.toggleBranchDelete()
     },
 
-    async forkBranch() {
+    forkBranch() {
       if (!this.isSelectedBranchForkNameValid) {
         return
       }
       let newBranchName = this.forkBranchName
-      const isSaved = await RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/clone/${newBranchName}/`,
+      RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/clone/${newBranchName}/`,
           {
             'id': 'string',
             'description': 'string'
@@ -306,15 +298,9 @@ export default {
           `Branch [${this.selectedBranch}] forked to [${this.forkBranchName}] successfully!`,
           `Failed forking branch [${this.selectedBranch}] to [${this.forkBranchName}]!`)
           .then(() => {
-            return true
+            this.loadConfigs(newBranchName)
+            this.toggleBranchFork()
           })
-          .catch(() => {
-            return false
-          })
-      if (isSaved) {
-        this.loadConfigs(newBranchName)
-      }
-      this.toggleBranchFork()
     },
 
     downloadBranch(event) {

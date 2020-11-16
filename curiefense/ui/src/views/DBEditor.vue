@@ -8,7 +8,8 @@
               <div class="field is-grouped">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedDB"
+                    <select class="database-selection"
+                            v-model="selectedDB"
                             @change="switchDB">
                       <option v-for="db in databases"
                               :key="db"
@@ -20,7 +21,7 @@
                 </div>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <button class="button is-small fork-database-button"
                           @click="forkDB"
                           title="Duplicate Database">
                     <span class="icon is-small">
@@ -40,7 +41,7 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <button class="button is-small new-database-button"
                           @click="addNewDB()"
                           title="Add New Database">
                     <span class="icon is-small">
@@ -50,7 +51,7 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small has-text-danger"
+                  <button class="button is-small has-text-danger delete-database-button"
                           @click="deleteDB()"
                           title="Delete Database"
                           :disabled="selectedDB === defaultDBName || databases.length <= 1">
@@ -65,7 +66,8 @@
               <div class="field is-grouped is-pulled-right">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedKey"
+                    <select class="key-selection"
+                            v-model="selectedKey"
                             @change="switchKey">
                       <option v-for="key in keys"
                               :key="key"
@@ -77,7 +79,7 @@
                 </div>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <button class="button is-small fork-key-button"
                           @click="forkKey"
                           title="Duplicate Key">
                     <span class="icon is-small">
@@ -97,7 +99,7 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <button class="button is-small new-key-button"
                           @click="addNewKey()"
                           title="Add New Key">
                     <span class="icon is-small">
@@ -107,7 +109,7 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <button class="button is-small save-button"
                           @click="saveChanges"
                           title="Save changes"
                           :disabled="!isFormValid">
@@ -118,7 +120,7 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small has-text-danger"
+                  <button class="button is-small has-text-danger delete-key-button"
                           @click="deleteKey()"
                           title="Delete Key"
                           :disabled="(selectedDB === defaultDBName && selectedKey === defaultKeyName) || keys.length <= 1">
@@ -141,7 +143,7 @@
               <div class="field">
                 <label class="label">Database</label>
                 <div class="control">
-                  <input class="input is-small is-fullwidth"
+                  <input class="input is-small is-fullwidth database-name-input"
                          @input="validateInput($event, isSelectedDBNewNameValid)"
                          type="text"
                          placeholder="Database name"
@@ -155,7 +157,7 @@
               <div class="field">
                 <label class="label">Key</label>
                 <div class="control">
-                  <input class="input is-small is-fullwidth"
+                  <input class="input is-small is-fullwidth key-name-input"
                          @input="validateInput($event, isSelectedKeyNewNameValid)"
                          type="text"
                          placeholder="Key name"
@@ -172,7 +174,7 @@
                   <textarea
                       @input="validateInput($event, isNewDocumentValid)"
                       rows="20"
-                      class="is-family-monospace textarea"
+                      class="is-family-monospace textarea document-input"
                       v-model="document"
                   >
                   </textarea>
@@ -182,10 +184,9 @@
           </div>
         </div>
         <hr/>
-        <GitHistory :gitLog.sync="gitLog"
-                    :gitlogLoading.sync="gitLogLoading"
-                    :apiPath.sync="gitAPIPath"
-                    @restoreVersion="restoreGitVersion"></GitHistory>
+        <git-history :gitLog.sync="gitLog"
+                     :apiPath.sync="gitAPIPath"
+                     @restoreVersion="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>
@@ -220,7 +221,6 @@ export default {
       selectedDBData: null,
       document: null,
 
-      gitLogLoading: false,
       gitLog: [],
 
       apiRoot: DatasetsUtils.ConfAPIRoot,
@@ -292,32 +292,19 @@ export default {
       this.initDBKeys(this.selectedDB)
     },
 
-    saveDB(db, data) {
-      if (!db) {
-        db = this.selectedDB
-      }
+    saveDB(db = this.selectedDB, data) {
       if (!data) {
         data = {key: {}}
       }
 
       return RequestsUtils.sendRequest('PUT', `db/${db}/`, data, `Database [${db}] saved!`, `Failed saving database [${db}]!`)
-          .then(() => {
-            return true
-          })
-          .catch(() => {
-            return false
-          })
-
     },
 
     switchDB() {
       this.loadDB(this.selectedDB)
     },
 
-    deleteDB(db, disableAnnouncementMessages) {
-      if (!db) {
-        db = this.selectedDB
-      }
+    deleteDB(db = this.selectedDB, disableAnnouncementMessages) {
       const db_index = this.ld.findIndex(this.databases, (database) => {
         return database === db
       })
@@ -338,11 +325,10 @@ export default {
       if (!new_db) {
         new_db = Utils.generateUniqueEntityName('new database', this.databases)
       }
-      const isSaved = await this.saveDB(new_db, data)
-      if (isSaved) {
+      await this.saveDB(new_db, data).then(() => {
         this.loadDB(new_db)
         this.databases.unshift(new_db)
-      }
+      })
     },
 
     forkDB() {
@@ -372,26 +358,10 @@ export default {
       this.loadGitLog()
     },
 
-    async saveKey(db, key, doc) {
-      if (!db) {
-        db = this.selectedDB
-      }
-      if (!key) {
-        key = this.selectedKey
-      }
-      if (!doc) {
-        doc = this.document
-      }
-      doc = JSON.parse(doc)
+    saveKey(db = this.selectedDB, key = this.selectedKey, doc = this.document) {
+      const parsedDoc = JSON.parse(doc)
 
-      return RequestsUtils.sendRequest('PUT', `db/${db}/k/${key}/`, doc, `Key [${key}] in database [${db}] saved!`, `Failed saving key [${key}] in database [${db}]!`)
-          .then(() => {
-            return true
-          })
-          .catch(() => {
-            return false
-          })
-
+      return RequestsUtils.sendRequest('PUT', `db/${db}/k/${key}/`, parsedDoc, `Key [${key}] in database [${db}] saved!`, `Failed saving key [${key}] in database [${db}]!`)
     },
 
     switchKey() {
@@ -426,12 +396,11 @@ export default {
       if (!new_document) {
         new_document = '{}'
       }
-      const isSaved = await this.saveKey(this.selectedDB, new_key, new_document)
-      if (isSaved) {
+      return this.saveKey(this.selectedDB, new_key, new_document).then(() => {
         this.selectedDBData[new_key] = JSON.parse(new_document)
         this.loadKey(new_key)
         this.keys.unshift(new_key)
-      }
+      })
     },
 
     forkKey() {
@@ -454,7 +423,8 @@ export default {
       // If DB name changed -> Save the data under the new name and remove the old database
       if (this.selectedDB !== this.dbNameInput) {
         const old_db = this.selectedDB
-        const old_data = (await RequestsUtils.sendRequest('GET', `db/${old_db}/`)).data
+        const old_data_response = await RequestsUtils.sendRequest('GET', `db/${old_db}/`)
+        const old_data = old_data_response.data
         await this.addNewDB(this.dbNameInput, old_data)
         this.deleteDB(old_db, true)
       }
@@ -470,16 +440,10 @@ export default {
       await this.loadGitLog()
     },
 
-    resetGitLog() {
-      this.gitLog = []
-    },
-
     async loadGitLog() {
-      this.gitlogLoading = true
       const url_trail = `db/${this.selectedDB}/k/${this.selectedKey}/v/`
       const response = await RequestsUtils.sendRequest('GET', url_trail)
       this.gitLog = response.data
-      this.gitlogLoading = false
     },
 
     async restoreGitVersion(gitVersion) {

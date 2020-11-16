@@ -47,7 +47,7 @@
         <div class="columns">
           <div class="column">
             <p class="title is-6 is-expanded">Version History</p>
-            <table class="table" v-if="gitLog.length > 0">
+            <table class="table" v-if="gitLog && gitLog.length > 0">
               <tbody>
               <tr
                   @click="selectCommit(commit)"
@@ -77,7 +77,7 @@
           </div>
           <div class="column">
             <p class="title is-6 is-expanded">Target Buckets</p>
-            <table class="table" v-if="gitLog.length > 0">
+            <table class="table" v-if="gitLog && gitLog.length > 0">
               <tbody>
               <tr
                   v-for="bucket in buckets"
@@ -125,7 +125,6 @@ export default {
 
       configs: [],
 
-      gitlogLoading: false,
       gitLog: [],
       expanded: false,
       init_max_rows: 5,
@@ -247,7 +246,6 @@ export default {
       } else {
         this.gitLog = []
       }
-      self.gitlogLoading = false
 
     },
 
