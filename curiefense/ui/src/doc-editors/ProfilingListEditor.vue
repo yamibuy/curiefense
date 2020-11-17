@@ -40,20 +40,6 @@
               <p class="help">Only 'self-managed' lists are fully editable. For Internet sourced lists, only metadata is editable.</p>
             </div>
             <div class="field">
-              <label class="label is-small">Entries Relation</label>
-              <div class="control is-expanded">
-                <div class="select is-small is-size-7 is-fullwidth">
-                  <select
-                    v-model="selectedDoc.entries_relation"
-                    :readonly="selectedDoc.source === 'reblaze-managed'"
-                    :disabled="selectedDoc.source === 'reblaze-managed'">
-                    <option value="OR">OR</option>
-                  </select>
-                </div>
-              </div>
-              <p class="help">Logical relations between different entries in different categories.</p>
-            </div>
-            <div class="field">
               <label class="checkbox is-size-7">
                 <input type="checkbox"
                   :readonly="selectedDoc.source === 'reblaze-managed'"
@@ -70,79 +56,96 @@
             </div>
           </div>
           <div class="column is-7">
-            <div v-if="newentry && editable">
-              <table class="table is-narrow is-fullwidth" >
-                <thead>
-                  <tr>
-                    <th class="is-size-7">Category</th>
-                    <th class="is-size-7">Entry</th>
-                    <th class="is-size-7 is-48-px">
-                      <a class="is-small has-text-grey" title="cancel" @click="newentry = false">cancel</a>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="is-size-7">
-                      <div class="select is-small is-fullwidth">
-                        <select v-model="newentry_category" class="select">
-                          <option v-for="(entry, category) in list_entry_types" :key="category" :value="category">{{ entry.title }}</option>
-                        </select>
-                      </div>
-                    </td>
-                    <td class="is-size-7">
-                      <textarea rows="3"
-                        class="textarea is-small is-fullwidth"
-                        :placeholder="inputDescription"
-                        v-model="newentry_items"></textarea>
-                    </td>
-                    <th class="is-size-7 is-48-px">
-                      <a class="is-small has-text-grey" title="add entry" @click="addEntry">add</a>
-                    </th>
-                  </tr>
-                </tbody>
-              </table>
-              <hr/>
-            </div>
-            <table class="table is-narrow">
-              <thead>
-                <tr>
-                  <th class="is-size-7 is-48-px">
-                  <th class="is-size-7">Category</th>
-                  <th class="is-size-7">Entry</th>
-                  <th class="is-size-7">Annotation</th>
-                  <th class=" is-size-7 is-48-px">
-                    <a v-if="editable "
-                      class="has-text-grey-dark is-small is-pulled-right" title="Add new entry" @click="newentry = true">
-                      <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                    </a>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(entry,idx) in selectedDocPage" :key="idx">
-                  <td class="is-size-7 is-48-px has-text-right has-text-grey-light">{{ ((idx+1) + ((currentPage-1)*rowsPerPage) )}}</td>
-                  <td class="is-size-7">{{ list_entry_types[entry[0]].title }}</td>
-                  <td class="is-size-7"><span v-html="dualCell(entry[1])"></span></td>
-                  <td class="is-size-7" :title="entry[2]">{{ entry[2] ? entry[2].substr(0,40) : ""}}</td>
-                  <td class="is-size-7 is-48-px">
-                    <a v-if="editable "
-                      class="is-small has-text-grey" title="remove entry"
-                      @click="removeEntry(currentPage, idx)"
-                    >remove</a>
-                  </td>
-                </tr>
-                <tr v-if="totalPages > 1">
-                  <td colspan="5">
-                    <nav class="pagination is-small" role="navigation" aria-label="pagination">
-                      <a :disabled="currentPage === 1" class="is-pulled-left pagination-previous" @click="navigate(currentPage - 1)">Previous Page</a>
-                      <a :disabled="currentPage === totalPages" class="is-pulled-right pagination-next" @click="navigate(currentPage + 1)">Next page</a>
-                    </nav>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <entries-relation-list></entries-relation-list>
           </div>
+<!--          <div class="column is-7">-->
+<!--            <div class="field">-->
+<!--              <label class="label is-small">Entries Relation</label>-->
+<!--              <div class="control is-expanded">-->
+<!--                <div class="select is-small is-size-7 is-fullwidth">-->
+<!--                  <select-->
+<!--                      v-model="selectedDoc.entries_relation"-->
+<!--                      :readonly="selectedDoc.source === 'reblaze-managed'"-->
+<!--                      :disabled="selectedDoc.source === 'reblaze-managed'">-->
+<!--                    <option value="OR">OR</option>-->
+<!--                  </select>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--              <p class="help">Logical relations between different entries in different categories.</p>-->
+<!--            </div>-->
+<!--            <div v-if="newentry && editable">-->
+<!--              <table class="table is-narrow is-fullwidth" >-->
+<!--                <thead>-->
+<!--                  <tr>-->
+<!--                    <th class="is-size-7">Category</th>-->
+<!--                    <th class="is-size-7">Entry</th>-->
+<!--                    <th class="is-size-7 is-48-px">-->
+<!--                      <a class="is-small has-text-grey" title="cancel" @click="newentry = false">cancel</a>-->
+<!--                    </th>-->
+<!--                  </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
+<!--                  <tr>-->
+<!--                    <td class="is-size-7">-->
+<!--                      <div class="select is-small is-fullwidth">-->
+<!--                        <select v-model="newentry_category" class="select">-->
+<!--                          <option v-for="(entry, category) in list_entry_types" :key="category" :value="category">{{ entry.title }}</option>-->
+<!--                        </select>-->
+<!--                      </div>-->
+<!--                    </td>-->
+<!--                    <td class="is-size-7">-->
+<!--                      <textarea rows="3"-->
+<!--                        class="textarea is-small is-fullwidth"-->
+<!--                        :placeholder="inputDescription"-->
+<!--                        v-model="newentry_items"></textarea>-->
+<!--                    </td>-->
+<!--                    <th class="is-size-7 is-48-px">-->
+<!--                      <a class="is-small has-text-grey" title="add entry" @click="addEntry">add</a>-->
+<!--                    </th>-->
+<!--                  </tr>-->
+<!--                </tbody>-->
+<!--              </table>-->
+<!--              <hr/>-->
+<!--            </div>-->
+<!--            <table class="table is-narrow">-->
+<!--              <thead>-->
+<!--                <tr>-->
+<!--                  <th class="is-size-7 is-48-px">-->
+<!--                  <th class="is-size-7">Category</th>-->
+<!--                  <th class="is-size-7">Entry</th>-->
+<!--                  <th class="is-size-7">Annotation</th>-->
+<!--                  <th class=" is-size-7 is-48-px">-->
+<!--                    <a v-if="editable "-->
+<!--                      class="has-text-grey-dark is-small is-pulled-right" title="Add new entry" @click="newentry = true">-->
+<!--                      <span class="icon is-small"><i class="fas fa-plus"></i></span>-->
+<!--                    </a>-->
+<!--                  </th>-->
+<!--                </tr>-->
+<!--              </thead>-->
+<!--              <tbody>-->
+<!--                <tr v-for="(entry,idx) in selectedDocPage" :key="idx">-->
+<!--                  <td class="is-size-7 is-48-px has-text-right has-text-grey-light">{{ ((idx+1) + ((currentPage-1)*rowsPerPage) )}}</td>-->
+<!--                  <td class="is-size-7">{{ list_entry_types[entry[0]].title }}</td>-->
+<!--                  <td class="is-size-7"><span v-html="dualCell(entry[1])"></span></td>-->
+<!--                  <td class="is-size-7" :title="entry[2]">{{ entry[2] ? entry[2].substr(0,40) : ""}}</td>-->
+<!--                  <td class="is-size-7 is-48-px">-->
+<!--                    <a v-if="editable "-->
+<!--                      class="is-small has-text-grey" title="remove entry"-->
+<!--                      @click="removeEntry(currentPage, idx)"-->
+<!--                    >remove</a>-->
+<!--                  </td>-->
+<!--                </tr>-->
+<!--                <tr v-if="totalPages > 1">-->
+<!--                  <td colspan="5">-->
+<!--                    <nav class="pagination is-small" role="navigation" aria-label="pagination">-->
+<!--                      <a :disabled="currentPage === 1" class="is-pulled-left pagination-previous" @click="navigate(currentPage - 1)">Previous Page</a>-->
+<!--                      <a :disabled="currentPage === totalPages" class="is-pulled-right pagination-next" @click="navigate(currentPage + 1)">Next page</a>-->
+<!--                    </nav>-->
+<!--                  </td>-->
+<!--                </tr>-->
+<!--              </tbody>-->
+<!--            </table>-->
+<!--          </div>-->
         </div>
         <span class="is-family-monospace  has-text-grey-lighter">{{apiPath}}</span>
       </div>
@@ -156,11 +159,13 @@ import _ from 'lodash'
 
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
 import RequestsUtils from "@/assets/RequestsUtils";
+import EntriesRelationList from '@/components/EntriesRelationList'
 
 export default {
   name: 'ProfilingListEditor',
 
   components: {
+    EntriesRelationList,
     TagAutocompleteInput
   },
 
@@ -199,6 +204,13 @@ export default {
     }
   },
   computed: {
+    // TODO: Fix pathing in selectedDoc
+    relationList() {
+      return {
+        relation: this.selectedDoc.relation,
+        list: this.selectedDoc.entries
+      }
+    },
 
     inputDescription() {
       if ((new RegExp("(args|cookies|headers)")).test(this.newentry_category)) {

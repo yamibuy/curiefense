@@ -50,7 +50,7 @@ export default {
     selectionType: {
       type: String,
       validator(val) {
-        return ['single', 'multiple'].includes(val)
+        return ['single', 'multiple'].includes(val.toLowerCase())
       }
     }
   },
