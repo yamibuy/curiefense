@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-
+use std::cmp::max;
 
 type Tree<T> = Option<Box<Node<T>>>;
 
@@ -24,18 +24,26 @@ impl<T> AVLTreeSet<T> where T:Ord {
     }
 
     pub fn insert(& mut self, key: T) -> bool {
-        fn ins<T:Ord>(p_tree: &mut Tree<T>, key: T) -> bool {
+        fn ins<T:Ord>(p_tree: &mut Tree<T>, key: T) -> (bool,isize) {
             match p_tree {
-                None => { *p_tree = Some(Box::new(Node::new(key))); true }
+                None => { *p_tree = Some(Box::new(Node::new(key))); (true,1) }
                 Some(p_node) =>
                     match p_node.key.cmp(&key) {
-                        Ordering::Less => ins(& mut p_node.right, key),
-                        Ordering::Greater => ins(& mut p_node.left, key),
-                        Ordering::Equal => { return false; },
+                        Ordering::Less => {
+                            let (i,h) = ins(& mut p_node.right, key);
+                            p_node.height = max(p_node.height, h+1);
+                            (i,p_node.height)
+                        },
+                        Ordering::Greater => {
+                            let (i,h) = ins(& mut p_node.left, key);
+                            p_node.height = max(p_node.height, h+1);
+                            (i,p_node.height)
+                        },
+                        Ordering::Equal => { return (false,p_node.height); },
                     }
             }
         }
-        let inserted = ins(& mut self.root, key);
+        let (inserted,_) = ins(& mut self.root, key);
         if inserted { self.size += 1};
         inserted
     }
@@ -64,6 +72,13 @@ impl<T> AVLTreeSet<T> where T:Ord {
         false
     }
 
+    pub fn height(& self) -> usize {
+        match &self.root {
+            None => 0,
+            Some(node) => node.height as usize
+        }
+    }
+
     pub fn len(& self) -> usize {
         self.size
     }
@@ -73,7 +88,7 @@ impl<T> Node<T> where T:Ord {
     pub fn new(key: T) -> Node<T> {
         Node {
             key: key,
-            height: 0,
+            height: 1,
             left: None,
             right: None,
         }
