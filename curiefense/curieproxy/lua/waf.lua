@@ -124,7 +124,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
             else
                 name_rule = name_rules[name]
                 if name_rule then
-                    local respone, msg = name_check(section, name, name_rule, value, omit_entries, sig_excludes)
+                    local respone, msg = name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         block_info["sig_msg"] = msg
                         block_info["name"] = name
@@ -134,7 +134,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                     end
                 end
                 if check_regex then
-                    local response, msg = regex_check(section, name, regex_rules, omit_entries, sig_excludes)
+                    local response, msg = regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         block_info["sig_msg"] = msg
                         block_info["name"] = name
