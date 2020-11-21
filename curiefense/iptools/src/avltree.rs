@@ -94,3 +94,52 @@ impl<T> Node<T> where T:Ord {
         }
     }
 }
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_insert() {
+        let mut t = AVLTreeSet::new();
+        assert!(!t.contains(&2));
+        assert!(t.insert(2));
+        assert!(t.contains(&2));
+        assert!(!t.insert(2));
+        assert!(!t.contains(&3));
+        assert!(t.insert(3));
+        assert!(t.contains(&3));
+        assert!(!t.contains(&4));
+    }
+    #[test]
+    fn test_len() {
+        let mut t = AVLTreeSet::new();
+        assert!(t.len() == 0);
+        assert!(t.insert(&1));
+        assert!(t.len() == 1);
+        assert!(t.insert(&2));
+        assert!(t.len() == 2);
+        assert!(!t.insert(&1));
+        assert!(t.len() == 2);
+    }
+    #[test]
+    fn test_height() {
+        let mut t = AVLTreeSet::new();
+        assert!(t.height() == 0);
+        assert!(t.insert(&2));
+        assert!(t.height() == 1);
+        assert!(t.insert(&3));
+        assert!(t.height() == 2);
+        assert!(t.insert(&1));
+        assert!(t.height() == 2);
+        assert!(t.insert(&0));
+        assert!(t.height() == 3);
+        assert!(t.insert(&4));
+        assert!(t.height() == 3);
+        assert!(t.insert(&5));
+        assert!(t.height() == 4);
+    }
+}
