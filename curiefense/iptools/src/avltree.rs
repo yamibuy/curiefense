@@ -6,7 +6,7 @@ type Tree<T> = Option<Box<Node<T>>>;
 #[derive(Debug)]
 struct Node<T: Ord> {
     key    : T,
-    height : i32,
+    height : isize,
     left   : Tree<T>,
     right  : Tree<T>,
 }
@@ -24,18 +24,20 @@ impl<T> AVLTreeSet<T> where T:Ord {
     }
 
     pub fn insert(& mut self, key: T) -> bool {
-
-        let mut p_tree = &mut self.root;
-        while let Some(p_node) = p_tree {
-            match p_node.key.cmp(&key) {
-                Ordering::Less => p_tree = &mut p_node.right,
-                Ordering::Greater => p_tree = &mut p_node.left,
-                Ordering::Equal => { return false; },
+        fn ins<T:Ord>(p_tree: &mut Tree<T>, key: T) -> bool {
+            match p_tree {
+                None => { *p_tree = Some(Box::new(Node::new(key))); true }
+                Some(p_node) =>
+                    match p_node.key.cmp(&key) {
+                        Ordering::Less => ins(& mut p_node.right, key),
+                        Ordering::Greater => ins(& mut p_node.left, key),
+                        Ordering::Equal => { return false; },
+                    }
             }
         }
-        *p_tree = Some(Box::new(Node::new(key)));
-        self.size += 1;
-        true
+        let inserted = ins(& mut self.root, key);
+        if inserted { self.size += 1};
+        inserted
     }
 
     pub fn contains(&self, key: &T) -> bool {
