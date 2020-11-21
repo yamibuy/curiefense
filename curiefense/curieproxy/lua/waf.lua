@@ -52,7 +52,7 @@ function name_check(section, name, name_rule, value, omit_entries, sig_excludes)
     else
         if name_rule.restrict then
             return  WAFBlock, string.format("(%s)/%s mismatch with %s", section, name_rule.reg, value)
-        elseif #name_rule.exclusions  > 0 then
+        elseif table_length(name_rule.exclusions)  > 0 then
             store_section(sig_excludes, section, name, name_rule.exclusions)
         end
     end
@@ -111,7 +111,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
         if value then
             -- headers/ cookies/args length
             local value_len = value:len()
-            
+
             if value_len > max_len then
                 block_info["sig_msg"] = string.format("Length of %s/%s exceeded. Limit: %s, Got: %s", section, name, max_len, value_len)
                 block_info["name"] = name
@@ -192,7 +192,7 @@ function check(waf_profile, request)
                         return WAFBlock, gen_waf_block("xss", section, name, value, token)
                     end
                 end
----                
+---
                 for _, sig in ipairs(globals.WAFSignatures) do
                     if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name][sig.id]) then
 

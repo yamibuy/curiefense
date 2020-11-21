@@ -506,9 +506,10 @@ function table_keys(T)
 end
 
 function table_length(T)
+    if type(T) ~= "table" then return 0 end
     local count = 0
-    for _ in pairs(T) do 
-        count = count + 1 
+    for _ in pairs(T) do
+        count = count + 1
     end
     return count
 end
