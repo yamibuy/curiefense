@@ -86,7 +86,14 @@ end
 function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     -- request.handle:logDebug("WAF regulation - positive security for section: " .. section)
     local section_rules = build_section(section, profile)
-    request.handle:logInfo(string.format("waf rules %s", json_encode(section_rules)))
+    --[[
+        {"other":{"restrict":false,"exclusions":{"100140":1},"reg":"foobar"}}
+        {}
+        1024
+        42
+    ]]--
+
+    -- request.handle:logInfo(string.format("waf rules %s", json_encode(section_rules)))
     local name_rules, regex_rules, max_len, max_count = unpack(section_rules)
 
     local block_info = {
