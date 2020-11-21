@@ -3,6 +3,10 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 
+local cjson = require "cjson"
+
+local json_encode   = cjson.encode
+
 local table_length = utils.table_length
 
 local WAFPass   = globals.WAFPass
@@ -81,7 +85,9 @@ end
 
 function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     -- request.handle:logDebug("WAF regulation - positive security for section: " .. section)
-    local name_rules, regex_rules, max_len, max_count = unpack(build_section(section, profile))
+    local section_rules = build_section(section, profile)
+    request.handle:logInfo(string.format("waf rules %s", json_encode(section_rules)))
+    local name_rules, regex_rules, max_len, max_count = unpack(section_rules)
 
     local block_info = {
         ["initiator"] = "waf",
