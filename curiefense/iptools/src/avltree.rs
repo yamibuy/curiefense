@@ -230,7 +230,7 @@ impl<K,V> Node<K,V> where K:Ord+Debug {
         let mut dnode = dtree.as_mut().unwrap();
         let ctree = dnode.left.take();
         let etree = dnode.right.take();
-        let atree = self.right.take();
+        let atree = self.left.take();
 
         // D becomes B and B becomes D
         swap(&mut self.key, &mut dnode.key); 
