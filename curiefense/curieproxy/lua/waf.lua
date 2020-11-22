@@ -188,7 +188,7 @@ function check(waf_profile, request)
                 end
 ---
                 for _, sig in ipairs(globals.WAFSignatures) do
-                    if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name][sig.id]) then
+                    if exclude_sigs[sections] == nil or exclude_sigs[sections][name] == nil or exclude_sigs[sections][name][sig.id] == nil then
 
                         if re_match(value, sig.operand) then
 
