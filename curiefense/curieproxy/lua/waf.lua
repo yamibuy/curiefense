@@ -64,32 +64,21 @@ function gen_block_info(section, name, value, sig)
     }
 end
 
-function name_check(section, name, name_rule, value, omit_entries, exclude_sigs, request)
+function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
     local matched = re_match(value, name_rule.reg)
 
-    request.handle:logInfo(
-        string.format(
-            "\nnames check with\n section %s\n name %s\n name_rule %s\n value %s\n omit_entries %s\n exclude_sigs %s",
-            section, name, json_encode(name_rule), value, json_encode(omit_entries), json_encode(exclude_sigs)
-        )
-    )
-
     if matched then
-        request.handle:logInfo("WAF name_check MATCHED!")
         store_section(omit_entries, section, name, true)
     else
-        request.handle:logInfo("WAF name_check NO MATCH!")
         if name_rule.restrict then
-            request.handle:logInfo(string.format("WAF name_check name_rule.restrict? %s", name_rule.restrict))
             return  WAFBlock, string.format("(%s)/%s mismatch with %s", section, name_rule.reg, value)
         elseif table_length(name_rule.exclusions)  > 0 then
-            request.handle:logInfo(string.format("WAF name_check name_rule.exclusions? %s", json_encode(name_rule.exclusions)))
             store_section(exclude_sigs, section, name, name_rule.exclusions)
         end
     end
 end
 
-function regex_check(section, name, regex_rules, omit_entries, sig_excludes)
+function regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
 
     for name_patt, patt_rule in pairs(regex_rules) do
         if re_match(name, name_patt) then
@@ -99,8 +88,8 @@ function regex_check(section, name, regex_rules, omit_entries, sig_excludes)
             else
                 if patt_rule.restrict then
                     return WAFBlock, string.format("(%s)/name-patt:%s value-patt:%s mismatch with name: %s value:%s", section, name_patt, patt_rule.reg, name, value)
-                elseif #patt_rule.exclusions > 0 then
-                    store_section(sig_excludes, section, name, patt_rule.exclusions)
+                elseif table_length(patt_rule.exclusions) > 0 then
+                    store_section(exclude_sigs, section, name, patt_rule.exclusions)
                 end
             end
         end
@@ -139,7 +128,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
             else
                 name_rule = name_rules[name]
                 if name_rule then
-                    local respone, msg = name_check(section, name, name_rule, value, omit_entries, exclude_sigs, request)
+                    local response, msg = name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
