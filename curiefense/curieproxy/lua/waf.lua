@@ -165,12 +165,16 @@ function check(waf_profile, request)
         if response == WAFBlock then
             return response, msg
         end
-        request.handle:logInfo(string.format("WAF inspection\nomit_entries: %s\nexclude_sigs: %s", json_encode(omit_entries), json_encode(exclude_sigs)))
+        -- request.handle:logInfo(string.format("WAF inspection\nomit_entries: %s\nexclude_sigs: %s", json_encode(omit_entries), json_encode(exclude_sigs)))
         -- negative security
         for name, value in pairs(request[section]) do
+            request.handle:logInfo(string.format("WAF section %s\nname %s\nvalue %s\nomit_entries %s\nexclude_sigs %s",
+                section, name, value, json_encode(omit_entries), json_encode(exclude_sigs)
+                ))
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
 ---
-                if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name]["libinjection"]) then
+                if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
+
                     local detect, token = detect_sqli(value)
                     if detect then
                         return WAFBlock, gen_block_info(section, name, value,
