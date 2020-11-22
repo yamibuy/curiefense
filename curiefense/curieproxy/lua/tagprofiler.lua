@@ -3,21 +3,18 @@ module(..., package.seeall)
 local globals       = require "lua.globals"
 local utils         = require "lua.utils"
 local rangesbtree   = require "lua.rangesbtree"
-local cjson       = require "cjson"
-local json_safe   = require "cjson.safe"
+local cjson         = require "cjson"
+local json_safe     = require "cjson.safe"
 
 local re_match        = utils.re_match
 local tag_request     = utils.tag_request
-local btree_search    = rangesbtree.btree_search
+-- local btree_search    = rangesbtree.btree_search
 local json_encode     = cjson.encode
 
+
+
 function match_singles(request_map, list_entry)
-
-  -- request_map.handle:logDebug(string.format("match_singles request_map %s\n%s\n%s\n%s", json_encode(request_map.headers), json_encode(request_map.cookies), json_encode(request_map.args), json_encode(request_map.attrs)))
-  -- request_map.handle:logDebug(string.format("match_singles list_entry %s", json_encode(list_entry)))
-
   for entry_key, list_entries in pairs(list_entry) do
-    -- request_map.handle:logDebug(string.format("MATCH SINGLES entry_key %s", entry_key))
     -- exact request map
     local entry_match = list_entries[request_map[entry_key]]
     if entry_match then
@@ -38,8 +35,6 @@ function match_singles(request_map, list_entry)
             request_map.handle:logDebug(string.format("matched >> match_singles - regex %s %s", value, pattern))
             return annotation
           end
-        -- else
-        --   request_map.handle:logDebug(string.format("request_map.attrs[entry_key] %s -- nil", entry_key))
         end
       end
     end
@@ -49,10 +44,6 @@ function match_singles(request_map, list_entry)
 end
 
 function match_pairs(request_map, list_entry)
-
-  -- request_map.handle:logDebug(string.format("match_pairs request_map %s\n%s\n%s\n%s", json_encode(request_map.headers), json_encode(request_map.cookies), json_encode(request_map.args), json_encode(request_map.attrs)))
-  -- request_map.handle:logDebug(string.format("match_pairs list_entry %s", json_encode(list_entry)))
-
   for pair_name, match_entries in pairs(list_entry) do
     for key, va in pairs(match_entries) do
       local value, annotation = unpack(va)
@@ -69,7 +60,6 @@ function match_pairs(request_map, list_entry)
 end
 
 function negate_match_pairs(request_map, list_entry)
-
   for pair_name, match_entries in pairs(list_entry) do
     for key, va in pairs(match_entries) do
       local value, annotation = unpack(va)
@@ -86,7 +76,6 @@ function negate_match_pairs(request_map, list_entry)
 end
 
 function match_iprange(request_map, list_entry)
-  -- ip ranges (soon enough will convert into a binary-tree)
   local ipnum = request_map.attrs.ipnum
   for _, entry in pairs(list_entry) do
     range, annotation = unpack(entry)
@@ -123,13 +112,10 @@ function match_or_list(request_map, list)
     end
   end
 
-  if list.iprange and list.iprange.range then
-    -- search(1666603009, btree)
-    request_map.handle:logDebug(string.format("match_or_list list.iprange.range %s", json_encode(list.iprange.range)))
-    local range, annotation = btree_search(request_map.attrs.ipnum, list.iprange, request_map.handle)
-    if range then
-      request_map.handle:logDebug(string.format("matched >> match_or_list btree_search [%s %s], annotation %s, ipnum %s", range[1] , range[2], annotation, request_map.attrs.ipnum))
-      return annotation  or 'ip-range', list.tags
+  if list.iprange then
+    local within = list.iprange:contains(request_map.attrs.ip)
+    if within then
+      return within, list.tags
     end
   end
 
@@ -154,9 +140,9 @@ function negate_match_or_list(request_map, list)
     end
   end
 
-  if list.negate_iprange and next(list.negate_iprange) then
-    local annotation, tags = match_iprange(request_map, list.negate_iprange)
-    if not annotation then
+  if list.negate_iprange:len() > 0 then
+    local within = list.negate_iprange:contains(request_map.attrs.ip)
+    if not within then
       return 'negate', list.tags
     end
   end

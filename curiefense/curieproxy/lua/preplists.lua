@@ -34,8 +34,9 @@ function gen_masterdict(lst)
         [ "pairs" ]            = defaultdict(dict),
         [ "negate_pairs" ]     = defaultdict(dict),
 
-        [ "iprange" ]          = {},
-        [ "negate_iprange" ]   = {}
+        [ "iprange" ]          = iptools.new_ip_set(),
+        [ "negate_iprange" ]   = iptools.new_ip_set(),
+        -- [ "rangeannotation"]   = {}
     }
 
 end
@@ -102,21 +103,19 @@ function gen_list_entries(lst, handle)
                             cidr = cidr:sub(2)
                         end
 
-                        local start_addr, end_addr = parse_cidr(cidr)
-                        -- [[start,end], annotation]
-                        if start_addr == nil then
-                            handle:logDebug(string.format("CIDR %s could not be parsed", cidr))
-                        else
-                            elem =  { {start_addr, end_addr}, get_annotation(data) }
-                            table.insert(masterdict[mastercategory], elem)
-                        end
+                        local annotation = get_annotation(data)
+                        masterdict[mastercategory]:add(cidr)
+                        -- masterdict["rangeannotation"][cidr] = annotation
                     end
                 end
             end
         end
     end
-    if table_length(masterdict['iprange']) > 0 then
-        masterdict['iprange'] = build_ranges_lists(masterdict['iprange'])
-    end
+    -- if table_length(masterdict['iprange']) > 0 then
+    --     masterdict['iprange'] = build_ranges_lists(masterdict['iprange'])
+    -- end
+    -- if table_length(masterdict['negate_iprange']) > 0 then
+    --     masterdict['negate_iprange'] = build_ranges_lists(masterdict['negate_iprange'])
+    -- end
     return masterdict
 end
