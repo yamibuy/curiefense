@@ -129,7 +129,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 name_rule = name_rules[name]
                 if name_rule then
                     request.handle:logInfo(
-                        string.fomrat(
+                        string.format(
                             "\nnames check with\n section %s\n name %s\n name_rule %s\n value %s\n omit_entries %s\n exclude_sigs %s",
                             section, name, json_encode(name_rule), value, json_encode(omit_entries), json_encode(exclude_sigs)
                         )
