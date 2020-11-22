@@ -2,6 +2,7 @@ module(..., package.seeall)
 
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
+local libinject = require "lua.resty.libinjection"
 
 local cjson = require "cjson"
 
@@ -76,6 +77,7 @@ function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
             store_section(exclude_sigs, section, name, name_rule.exclusions)
         end
     end
+    return nil, nil
 end
 
 function regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
@@ -94,9 +96,7 @@ function regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
             end
         end
     end
-
     return nil, nil
-
 end
 
 function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
@@ -106,7 +106,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local name_rules, regex_rules, max_len, max_count = unpack(section_rules)
 
     local entries = request[section]
-    local check_regex = (#regex_rules > 0)
+    local check_regex = (table_length(regex_rules) > 0)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
 
@@ -193,9 +193,8 @@ function check(waf_profile, request)
     return WAFPass, "waf-passed"
 end
 
-------
 
-local libinject = require "lua.resty.libinjection"
+
 
 function detect_sqli(input)
     if (type(input) == 'table') then
