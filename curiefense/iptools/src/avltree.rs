@@ -1,11 +1,12 @@
 use std::cmp::Ordering;
 use std::cmp::max;
 use core::mem::swap;
+use std::fmt::Debug;
 
 type Tree<K,V> = Option<Box<Node<K,V>>>;
 
 #[derive(Debug)]
-struct Node<K: Ord,V> {
+struct Node<K: Ord+Debug,V> {
     key    : K,
     value  : V,
     height : isize,
@@ -14,20 +15,20 @@ struct Node<K: Ord,V> {
 }
 
 #[derive(Debug)]
-pub struct AVLTreeMap<K : Ord,V> {
+pub struct AVLTreeMap<K : Ord+Debug,V> {
     root : Tree<K,V>,
     size : usize,
 }
 
 
-impl<K,V> AVLTreeMap<K,V> where K:Ord {
+impl<K,V> AVLTreeMap<K,V> where K:Ord+Debug {
     pub fn new() -> AVLTreeMap<K,V> {
         AVLTreeMap { root: None, size: 0 }
     }
 
     pub fn insert(& mut self, key: K, value: V) -> bool {
 
-        fn ins<K:Ord,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (bool,isize) {
+        fn ins<K:Ord+Debug,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (bool,isize) {
             match p_tree {
                 None => { *p_tree = Some(Box::new(Node::new(key, value))); (true,1) }
                 Some(p_node) =>
@@ -97,7 +98,7 @@ impl<K,V> AVLTreeMap<K,V> where K:Ord {
     }
 }
 
-impl<K,V> Node<K,V> where K:Ord {
+impl<K,V> Node<K,V> where K:Ord+Debug {
     pub fn new(key: K, value: V) -> Node<K,V> {
         Node {
             key: key,
@@ -200,7 +201,15 @@ impl<K,V> Node<K,V> where K:Ord {
         self.update_height();
         true
     }
-
+    fn dump(&self, n:usize) {
+        println!("{: <1$}{:0}{:?}", "", n, self.key);
+        if self.left.is_some() {
+            self.left.as_ref().unwrap().dump(n+2)
+        }
+        if self.right.is_some() {
+            self.right.as_ref().unwrap().dump(n+2)
+        }
+    }
 }
 
 #[cfg(test)]
