@@ -7,11 +7,11 @@ use std::str::FromStr;
 use std::cmp::Ordering;
 
 pub mod avltree;
-use avltree::AVLTreeSet;
+use avltree::AVLTreeMap;
 
 
 #[derive(Debug)]
-struct IPSet (AVLTreeSet<AnyIpCidr>);
+struct IPSet (AVLTreeMap<AnyIpCidr,String>);
 
 
 fn cmp(net:&AnyIpCidr, ip:&AnyIpCidr) -> Ordering {
@@ -32,19 +32,23 @@ fn cmp(net:&AnyIpCidr, ip:&AnyIpCidr) -> Ordering {
 
 impl IPSet {
     pub fn new() -> IPSet {
-        IPSet(AVLTreeSet::new())
+        IPSet(AVLTreeMap::new())
     }
 
     pub fn contains(&self, key: &AnyIpCidr) -> bool {
-        self.0.custom_contains(key, cmp)
+        self.0.contains_custom(key, cmp)
+   }
+
+    pub fn get(&self, key: &AnyIpCidr) -> Option<&String> {
+        self.0.get_custom(key, cmp)
    }
 
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn insert(&mut self, key: AnyIpCidr) -> bool {
-        self.0.insert(key)
+    pub fn insert(&mut self, key: AnyIpCidr, value: String) -> bool {
+        self.0.insert(key, value)
     }
 }
 
@@ -62,10 +66,19 @@ impl mlua::UserData for IPSet {
                                Ok(this.contains(&a))
                            }
         );
+        methods.add_method("get",
+                           |_, this:&IPSet, value:String| {
+                               let a:AnyIpCidr = AnyIpCidr::from_str(&value).unwrap();
+                               match this.get(&a) {
+                                   Some(v) => Ok(Some(v.clone())),
+                                   None => Ok(None),
+                               }
+                           }
+        );
         methods.add_method_mut("add",
-                               |_, this:&mut IPSet, value: String| {
-                                   let a:AnyIpCidr = AnyIpCidr::from_str(&value).unwrap();
-                                   this.insert(a);
+                               |_, this:&mut IPSet, (key,value): (String,String)| {
+                                   let a:AnyIpCidr = AnyIpCidr::from_str(&key).unwrap();
+                                   this.insert(a, value);
                                    Ok(())
                                })
             ;
@@ -104,7 +117,7 @@ mod tests {
         for n in ip1.iter() {
             let a = AnyIpCidr::from_str(&n).unwrap();
             println!("Inserting {:?}",a);
-            ipset.0.insert(a);
+            ipset.0.insert(a,"hello".to_string());
         }
         assert!(ipset.len() == ip1.len());
 
