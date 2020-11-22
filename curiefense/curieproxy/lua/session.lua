@@ -28,7 +28,6 @@ local WAFPass       = globals.WAFPass
 local WAFBlock      = globals.WAFBlock
 
 local re_match      = utils.re_match
--- local tagify        = utils.tagify
 local map_request   = utils.map_request
 local tag_request   = utils.tag_request
 local deny_request  = utils.deny_request
