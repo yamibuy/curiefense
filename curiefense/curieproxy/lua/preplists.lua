@@ -5,7 +5,7 @@ local utils       = require "lua.utils"
 local iputils     = require "lua.iputils"
 local rangesbtree = require "lua.rangesbtree"
 
-local iptools     = require("iptools")
+local iptools     = require "iptools"
 
 local cjson       = require "cjson"
 local json_safe   = require "cjson.safe"
@@ -36,7 +36,6 @@ function gen_masterdict(lst)
 
         [ "iprange" ]          = iptools.new_ip_set(),
         [ "negate_iprange" ]   = iptools.new_ip_set(),
-        -- [ "rangeannotation"]   = {}
     }
 
 end
@@ -103,8 +102,8 @@ function gen_list_entries(lst, handle)
                             cidr = cidr:sub(2)
                         end
 
-                        local annotation = get_annotation(data)
-                        masterdict[mastercategory]:add(cidr, annotation or mastercategory)
+                        local annotation = get_annotation(data) or mastercategory
+                        masterdict[mastercategory]:add(cidr, annotation)
                     end
                 end
             end

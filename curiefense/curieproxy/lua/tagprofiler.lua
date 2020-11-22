@@ -124,7 +124,6 @@ end
 
 -- returns the first match's annotation or "1" (when normalized)
 function negate_match_or_list(request_map, list)
-  request_map.handle:logDebug(string.format("negate_match_or_list list %s", json_encode(list)))
   -- not match_x will do the trick.
   if list.negate_singles and next(list.negate_singles) then
     local annotation, tags = match_singles(request_map, list.negate_singles)

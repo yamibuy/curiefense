@@ -184,8 +184,8 @@ function load_and_reconstruct_taglist(handle, path)
                     #(tag_list.negate_singles or {}),
                     #(tag_list.pairs or {}),
                     #(tag_list.negate_pairs or {}),
-                    #(tag_list.iprange or {}),
-                    #(tag_list.negate_iprange or {})
+                    tag_list.iprange:len(),
+                    tag_list.negate_iprange:len()
                 )
             )
             store[tag_list.id] = tag_list
