@@ -50,30 +50,39 @@ impl<K,V> AVLTreeMap<K,V> where K:Ord+Debug {
     }
     pub fn insert(& mut self, key: K, value: V) -> bool {
 
-        fn ins<K:Ord+Debug,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (bool,isize) {
+        fn ins<K:Ord+Debug,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (Option<InsertSide>,isize) {
             match p_tree {
-                None => { *p_tree = Some(Box::new(Node::new(key, value))); (true,1) }
+                None => {
+                    *p_tree = Some(Box::new(Node::new(key, value)));
+                    (Some(InsertSide::Middle), 1)
+                }
                 Some(p_node) =>
                     match p_node.key.cmp(&key) {
                         Ordering::Less => {
-                            let (i,h) = ins(& mut p_node.right, key, value);
+                            let (side, h) = ins(& mut p_node.right, key, value);
+                            if side.is_none() {
+                                return (None, p_node.height)
+                            }
                             p_node.height = max(p_node.height, h+1);
-                            p_node.rebalance();
-                            (i,p_node.height)
+                            p_node.rebalance(side.unwrap());
+                            (Some(InsertSide::Right), p_node.height)
                         },
                         Ordering::Greater => {
-                            let (i,h) = ins(& mut p_node.left, key, value);
+                            let (side, h) = ins(& mut p_node.left, key, value);
+                            if side.is_none() {
+                                return (None, p_node.height)
+                            }
                             p_node.height = max(p_node.height, h+1);
-                            p_node.rebalance();
-                            (i,p_node.height)
+                            p_node.rebalance(side.unwrap());
+                            (Some(InsertSide::Left), p_node.height)
                         },
-                        Ordering::Equal => { return (false,p_node.height); },
+                        Ordering::Equal => { return (None, p_node.height); },
                     }
             }
         }
         let (inserted,_) = ins(& mut self.root, key, value);
-        if inserted { self.size += 1};
-        inserted
+        if inserted.is_some() { self.size += 1};
+        inserted.is_some()
     }
 
     pub fn get(&self, key: &K) -> Option<&V> {
@@ -154,12 +163,25 @@ impl<K,V> Node<K,V> where K:Ord+Debug {
         self.height_right() - self.height_left()
     }
 
-    fn rebalance(&mut self) -> bool {
+    fn rebalance(&mut self, side: InsertSide) -> bool {
         match self.balance_factor() {
             -1|0|1 => false,
-            -2 => self.rotate_right(),
-            2 => self.rotate_left(),
-            _ => panic!("Internal error. AVLTree balance factor out of [-2;2]"),
+            -2 => {
+                if side == InsertSide::Right {
+                    self.left.as_mut().unwrap().rotate_left();
+                }
+                self.rotate_right();
+            },
+            2 => {
+                if side == InsertSide::Left {
+                    self.right.as_mut().unwrap().rotate_right();
+                }
+                self.rotate_left();
+            },
+            bf => {
+                self.dump(0);
+                panic!("Internal error: AVLTree balance factor={}. Should be in [-2;2]", bf);
+            },
         }
     }
 
