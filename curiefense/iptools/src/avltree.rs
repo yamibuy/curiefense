@@ -20,6 +20,22 @@ pub struct AVLTreeMap<K : Ord+Debug,V> {
     size : usize,
 }
 
+#[derive(PartialEq)]
+enum InsertSide {
+    Left,
+    Right,
+    Middle
+}
+
+impl std::fmt::Display for InsertSide {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            InsertSide::Left =>  write!(f, "Left"),
+            InsertSide::Right =>  write!(f, "Right"),
+            InsertSide::Middle =>  write!(f, "Middle"),
+        }
+    }
+}
 
 impl<K,V> AVLTreeMap<K,V> where K:Ord+Debug {
     pub fn new() -> AVLTreeMap<K,V> {
