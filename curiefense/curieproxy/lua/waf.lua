@@ -188,7 +188,7 @@ function check(waf_profile, request)
                 end
 ---
                 for _, sig in ipairs(globals.WAFSignatures) do
-                    request.handle:logInfo(string.format("\nWAF Going NegSec?\nA: %s\nB: %s\nC: %s\nD: %s"
+                    request.handle:logInfo(string.format("\nWAF Going NegSec?\nA: %s\nB: %s\nC: %s\nD: %s",
                         sections, name, sig.id , json_encode(exclude_sigs[sections][name][sig.id])))
 
                     if exclude_sigs[sections] == nil or exclude_sigs[sections][name] == nil or exclude_sigs[sections][name][sig.id] == nil then
