@@ -3,6 +3,10 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 
+local cjson = require "cjson"
+
+local json_encode   = cjson.encode
+
 local table_length = utils.table_length
 
 local WAFPass   = globals.WAFPass
@@ -44,7 +48,23 @@ function build_section(section_name, profile)
 
 end
 
-function name_check(section, name, name_rule, value, omit_entries, sig_excludes)
+function gen_block_info(section, name, value, sig)
+    return {
+        ["initiator"] = 'waf',
+        ["section"] = section,
+        ["name"] = name,
+        ["value"] = value,
+        ["sig_id"] = sig.id or '-',
+        ["sig_category"] = sig.category or '-',
+        ["sig_subcategory"] = sig.subcategory or '-',
+        ["sig_severity"] = sig.severity or 5,
+        ["sig_certainity"] = sig.certainity or 5,
+        ["sig_operand"] = sig.operand or '-',
+        ["sig_msg"] = sig.msg or '-'
+    }
+end
+
+function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
     local matched = re_match(value, name_rule.reg)
 
     if matched then
@@ -52,13 +72,13 @@ function name_check(section, name, name_rule, value, omit_entries, sig_excludes)
     else
         if name_rule.restrict then
             return  WAFBlock, string.format("(%s)/%s mismatch with %s", section, name_rule.reg, value)
-        elseif #name_rule.exclusions  > 0 then
-            store_section(sig_excludes, section, name, name_rule.exclusions)
+        elseif table_length(name_rule.exclusions)  > 0 then
+            store_section(exclude_sigs, section, name, name_rule.exclusions)
         end
     end
 end
 
-function regex_check(section, name, regex_rules, omit_entries, sig_excludes)
+function regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
 
     for name_patt, patt_rule in pairs(regex_rules) do
         if re_match(name, name_patt) then
@@ -68,8 +88,8 @@ function regex_check(section, name, regex_rules, omit_entries, sig_excludes)
             else
                 if patt_rule.restrict then
                     return WAFBlock, string.format("(%s)/name-patt:%s value-patt:%s mismatch with name: %s value:%s", section, name_patt, patt_rule.reg, name, value)
-                elseif #patt_rule.exclusions > 0 then
-                    store_section(sig_excludes, section, name, patt_rule.exclusions)
+                elseif table_length(patt_rule.exclusions) > 0 then
+                    store_section(exclude_sigs, section, name, patt_rule.exclusions)
                 end
             end
         end
@@ -81,42 +101,26 @@ end
 
 function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     -- request.handle:logDebug("WAF regulation - positive security for section: " .. section)
-    local name_rules, regex_rules, max_len, max_count = unpack(build_section(section, profile))
+    local section_rules = build_section(section, profile)
 
-    local block_info = {
-        ["initiator"] = "waf",
-        ["sig_id"] = "-",
-        ["sig_category"] = "-",
-        ["sig_subcategory"] = "-",
-        ["sig_severity"] = "-",
-        ["sig_certainity"] = "-",
-        ["sig_operand"] = "-",
-        ["sig_msg"] = "waf-regulation",
-        ["section"] = section,
-        ["name"] = "-",
-        ["value"] = "-"
-    }
-
+    local name_rules, regex_rules, max_len, max_count = unpack(section_rules)
 
     local entries = request[section]
     local check_regex = (#regex_rules > 0)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
+
     if num_entries > max_count then
-        block_info["sig_msg"] = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
-        return WAFBlock, block_info
+        local msg = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
+        return WAFBlock, gen_block_info(section, '-', '-', {["msg"] = msg})
     end
 
     for name, value in pairs(entries) do
         if value then
-            -- headers/ cookies/args length
             local value_len = value:len()
-            
             if value_len > max_len then
-                block_info["sig_msg"] = string.format("Length of %s/%s exceeded. Limit: %s, Got: %s", section, name, max_len, value_len)
-                block_info["name"] = name
-                block_info["value"] = value
-                return WAFBlock, block_info
+                local msg = string.format("Length of %s/%s exceeded. Limit: %s, Got: %s", section, name, max_len, value_len)
+                return WAFBlock, gen_block_info(section, name, value, {["msg"] = msg})
             end
 
             if ignore_alphanum and re_match(value, "^\\w$") then
@@ -124,23 +128,15 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
             else
                 name_rule = name_rules[name]
                 if name_rule then
-                    local respone, msg = name_check(section, name, name_rule, value, omit_entries, sig_excludes)
+                    local response, msg = name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
-                        block_info["sig_msg"] = msg
-                        block_info["name"] = name
-                        block_info["value"] = value
-
-                        return response, block_info
+                        return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
                 end
                 if check_regex then
-                    local response, msg = regex_check(section, name, regex_rules, omit_entries, sig_excludes)
+                    local response, msg = regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
                     if WAFBlock == response then
-                        block_info["sig_msg"] = msg
-                        block_info["name"] = name
-                        block_info["value"] = value
-
-                        return response, block_info
+                        return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
                 end
             end
@@ -150,21 +146,6 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     return WAFPass, {}
 end
 
-function gen_waf_block(category, section, name, value, token)
-    return {
-        ["initiator"] = "waf",
-        ["sig_id"] = "libinjection",
-        ["sig_category"] = category,
-        ["sig_subcategory"] = category,
-        ["sig_severity"] = 5,
-        ["sig_certainity"] = 5,
-        ["sig_operand"] = "-",
-        ["sig_msg"] = token,
-        ["section"] = section,
-        ["name"] = name,
-        ["value"] = value
-    }
-end
 function check(waf_profile, request)
     request.handle:logDebug("WAF inspection starts - with profile %s", waf_profile.name)
     local omit_entries = {}
@@ -178,40 +159,30 @@ function check(waf_profile, request)
         if response == WAFBlock then
             return response, msg
         end
+        -- request.handle:logInfo(string.format("WAF inspection\nomit_entries: %s\nexclude_sigs: %s", json_encode(omit_entries), json_encode(exclude_sigs)))
         -- negative security
         for name, value in pairs(request[section]) do
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
 ---
-                if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name]["libinjection"]) then
+                if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
+
                     local detect, token = detect_sqli(value)
                     if detect then
-                        return WAFBlock, gen_waf_block("sqli", section, name, value, token)
+                        return WAFBlock, gen_block_info(section, name, value,
+                            { ["id"] = "libinjection", ["category"] = "sqli", ["subcategory"] = "sqli", ["msg"] = token })
                     end
                     detect, token = detect_xss(value)
                     if detect then
-                        return WAFBlock, gen_waf_block("xss", section, name, value, token)
+                        return WAFBlock, gen_block_info(section, name, value,
+                            { ["id"] = "libinjection", ["category"] = "xss", ["subcategory"] = "xss", ["msg"] = token })
                     end
                 end
----                
+---
                 for _, sig in ipairs(globals.WAFSignatures) do
-                    if exclude_sigs[sections] == nil or (not exclude_sigs[sections][name][sig.id]) then
-
+                    if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
                         if re_match(value, sig.operand) then
-
-                            return WAFBlock, {
-                                ["initiator"] = "waf",
-                                ["sig_id"] = sig.id,
-                                ["sig_category"] = sig.category,
-                                ["sig_subcategory"] = sig.subcategory,
-                                ["sig_severity"] = sig.severity,
-                                ["sig_certainity"] = sig.certainity,
-                                ["sig_operand"] = sig.operand,
-                                ["sig_msg"] = sig.msg,
-                                ["section"] = section,
-                                ["name"] = name,
-                                ["value"] = value
-                            }
-
+                            request.handle:logInfo(string.format("WAF block by Sig %s", sig.id))
+                            return WAFBlock, gen_block_info(section, name, value, sig)
                         end
                     end
                 end
