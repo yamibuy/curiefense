@@ -42,6 +42,12 @@ impl<K,V> AVLTreeMap<K,V> where K:Ord+Debug {
         AVLTreeMap { root: None, size: 0 }
     }
 
+    pub fn dump(&self) {
+        match &self.root {
+            None => println!("Empty tree"),
+            Some(node) => node.dump(0),
+        }
+    }
     pub fn insert(& mut self, key: K, value: V) -> bool {
 
         fn ins<K:Ord+Debug,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (bool,isize) {
