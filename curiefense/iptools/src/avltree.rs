@@ -214,6 +214,7 @@ impl<K,V> Node<K,V> where K:Ord+Debug {
 
 #[cfg(test)]
 mod tests {
+    use rand::Rng;
     use super::*;
 
     #[test]
@@ -269,4 +270,36 @@ mod tests {
         println!("add 8: height={} tree={:?}", t.height(), t);
         assert!(t.height() == 4);
     }
+
+    #[test]
+    fn test_balance2() {
+        let mut t = AVLTreeMap::new();
+        for i in 0..1000000 {
+            assert!(t.insert(i, "hello"));
+            assert!(t.len() == i+1);
+            let h:usize = ((64-(i+1).leading_zeros())) as usize;
+            assert!(t.height() == h);
+        }
+    }
+    #[test]
+    fn test_balance3() {
+        let mut t = AVLTreeMap::new();
+        for i in 0..1000000 {
+            assert!(t.insert(10000000-i, "hello"));
+            assert!(t.len() == i+1);
+            let h:usize = ((64-(i+1).leading_zeros())) as usize;
+            assert!(t.height() == h);
+        }
+    }
+    #[test]
+    fn test_balance4() {
+        let mut rng = rand::thread_rng();
+        let mut t = AVLTreeMap::new();
+        for i in 0..1000000 {
+            t.insert(rng.gen_range(0, 1000000), "hello");
+            assert!(t.len() <= i+1);
+        }
+    }
+
+
 }
