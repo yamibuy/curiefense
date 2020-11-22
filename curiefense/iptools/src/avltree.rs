@@ -170,13 +170,13 @@ impl<K,V> Node<K,V> where K:Ord+Debug {
                 if side == InsertSide::Right {
                     self.left.as_mut().unwrap().rotate_left();
                 }
-                self.rotate_right();
+                self.rotate_right()
             },
             2 => {
                 if side == InsertSide::Left {
                     self.right.as_mut().unwrap().rotate_right();
                 }
-                self.rotate_left();
+                self.rotate_left()
             },
             bf => {
                 self.dump(0);
@@ -339,9 +339,13 @@ mod tests {
     fn test_balance4() {
         let mut rng = rand::thread_rng();
         let mut t = AVLTreeMap::new();
-        for i in 0..1000000 {
-            t.insert(rng.gen_range(0, 1000000), "hello");
-            assert!(t.len() <= i+1);
+        let mut cnt = 0;
+        for _i in 0..1000000 {
+            let val = rng.gen_range(0, 10000);
+            println!("###### Inserting {}", val);
+            if !t.contains(&val) { cnt += 1 };
+            t.insert(val, "hello");
+            assert!(cnt == t.len());
         }
     }
 
