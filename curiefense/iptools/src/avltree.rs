@@ -224,7 +224,7 @@ impl<K,V> Node<K,V> where K:Ord+Debug {
         true
     }
     fn dump(&self, n:usize) {
-        println!("{: <1$}{:0}{:?}", "", n, self.key);
+        println!("{: <1$}({:0})[{:?}]", "", n, self.key);
         if self.left.is_some() {
             self.left.as_ref().unwrap().dump(n+2)
         }
