@@ -113,7 +113,7 @@ function match_or_list(request_map, list)
   end
 
   if list.iprange then
-    local within = list.iprange:contains(request_map.attrs.ip)
+    local within = list.iprange:get(request_map.attrs.ip)
     if within then
       return within, list.tags
     end
@@ -141,7 +141,7 @@ function negate_match_or_list(request_map, list)
   end
 
   if list.negate_iprange:len() > 0 then
-    local within = list.negate_iprange:contains(request_map.attrs.ip)
+    local within = list.negate_iprange:get(k)(request_map.attrs.ip)
     if not within then
       return 'negate', list.tags
     end

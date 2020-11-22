@@ -104,18 +104,11 @@ function gen_list_entries(lst, handle)
                         end
 
                         local annotation = get_annotation(data)
-                        masterdict[mastercategory]:add(cidr)
-                        -- masterdict["rangeannotation"][cidr] = annotation
+                        masterdict[mastercategory]:add(cidr, annotation or mastercategory)
                     end
                 end
             end
         end
     end
-    -- if table_length(masterdict['iprange']) > 0 then
-    --     masterdict['iprange'] = build_ranges_lists(masterdict['iprange'])
-    -- end
-    -- if table_length(masterdict['negate_iprange']) > 0 then
-    --     masterdict['negate_iprange'] = build_ranges_lists(masterdict['negate_iprange'])
-    -- end
     return masterdict
 end
