@@ -35,12 +35,14 @@ end
 
 function should_exclude(request_map, limit_set)
     local exclude = false
-    for dict_type, entries in pairs(limit_set["exclude"]) do
+    for section, entries in pairs(limit_set["exclude"]) do
         for name, value in pairs(entries) do
-            if re_match(request_map[dict_type][name], value) then
-                request_map.handle:logDebug(string.format("limit excluding (%s)[%s]=='%s'", dict_type, name, value))
-                exclude = true
-                break
+            if request_map[section][name] then
+                if re_match(request_map[section][name], value) then
+                    request_map.handle:logDebug(string.format("limit excluding (%s)[%s]=='%s'", section, name, value))
+                    exclude = true
+                    break
+                end
             end
         end
     end
@@ -49,10 +51,15 @@ end
 
 function should_include(request_map, limit_set)
     local include = true
-    for dict_type, entries in pairs(limit_set["include"]) do
+    for section, entries in pairs(limit_set["include"]) do
         for name, value in pairs(entries) do
-            if not re_match(request_map[dict_type][name], value) then
-                request_map.handle:logDebug(string.format("limit NOT including (%s)[%s]=='%s'", dict_type, name, value))
+            if request_map[section][name] then
+                if not re_match(request_map[section][name], value) then
+                    request_map.handle:logDebug(string.format("limit NOT including (%s)[%s]=='%s'", section, name, value))
+                    include = false
+                    break
+                end
+            else
                 include = false
                 break
             end
