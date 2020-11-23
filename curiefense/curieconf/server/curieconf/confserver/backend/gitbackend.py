@@ -621,7 +621,10 @@ class GitBackend(CurieBackend):
                     break
             else:
                 abort(404, "entry [%s] does not exist" % entry)
-            doc[i].update(data)
+
+            for k,v in data.items():
+                doc[i][k] = v
+
             self.add_document(document, doc)
             if data["id"] == entry:
                 msg = "Update entry [%s] of document [%s]" % (entry, document)
