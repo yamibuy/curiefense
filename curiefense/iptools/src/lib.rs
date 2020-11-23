@@ -5,6 +5,7 @@ use mlua::prelude::*;
 use cidr::AnyIpCidr;
 use std::str::FromStr;
 use std::cmp::Ordering;
+use md5;
 
 pub mod avltree;
 use avltree::AVLTreeMap;
@@ -93,12 +94,27 @@ fn new_ip_set(_: &Lua, _:()) -> LuaResult<IPSet> {
 }
 
 
+fn modhash(_: &Lua, (val,m):(String,u32)) -> LuaResult<Option<u32>> {
+    let digest = md5::compute(val);
+
+    let res = match m {
+        0 => None,
+        m => {
+            let h:u128 = u128::from_be_bytes(*digest);
+            Some((h % (m as u128)) as u32)
+        },
+    };
+    Ok(res)
+}
+
+
+
 
 #[lua_module]
 fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("new_ip_set", lua.create_function(new_ip_set)?)?;
-
+    exports.set("modhash", lua.create_function(modhash)?)?;
     Ok(exports)
 }
 
