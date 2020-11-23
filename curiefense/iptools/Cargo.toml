@@ -15,3 +15,4 @@ mlua = { version = "0.4", features = ["lua51", "module"] }
 mlua_derive = "0.4"
 cidr = "0.1.1"
 rand = "0.7.3"
+md5 = "0.7.0"

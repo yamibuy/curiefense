@@ -1,11 +1,12 @@
 use std::cmp::Ordering;
 use std::cmp::max;
 use core::mem::swap;
+use std::fmt::Debug;
 
 type Tree<K,V> = Option<Box<Node<K,V>>>;
 
 #[derive(Debug)]
-struct Node<K: Ord,V> {
+struct Node<K: Ord+Debug,V> {
     key    : K,
     value  : V,
     height : isize,
@@ -14,43 +15,74 @@ struct Node<K: Ord,V> {
 }
 
 #[derive(Debug)]
-pub struct AVLTreeMap<K : Ord,V> {
+pub struct AVLTreeMap<K : Ord+Debug,V> {
     root : Tree<K,V>,
     size : usize,
 }
 
+#[derive(PartialEq)]
+enum InsertSide {
+    Left,
+    Right,
+    Middle
+}
 
-impl<K,V> AVLTreeMap<K,V> where K:Ord {
+impl std::fmt::Display for InsertSide {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            InsertSide::Left =>  write!(f, "Left"),
+            InsertSide::Right =>  write!(f, "Right"),
+            InsertSide::Middle =>  write!(f, "Middle"),
+        }
+    }
+}
+
+impl<K,V> AVLTreeMap<K,V> where K:Ord+Debug {
     pub fn new() -> AVLTreeMap<K,V> {
         AVLTreeMap { root: None, size: 0 }
     }
 
+    pub fn dump(&self) {
+        match &self.root {
+            None => println!("Empty tree"),
+            Some(node) => node.dump(0),
+        }
+    }
     pub fn insert(& mut self, key: K, value: V) -> bool {
 
-        fn ins<K:Ord,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (bool,isize) {
+        fn ins<K:Ord+Debug,V>(p_tree: &mut Tree<K,V>, key: K, value: V) -> (Option<InsertSide>,isize) {
             match p_tree {
-                None => { *p_tree = Some(Box::new(Node::new(key, value))); (true,1) }
+                None => {
+                    *p_tree = Some(Box::new(Node::new(key, value)));
+                    (Some(InsertSide::Middle), 1)
+                }
                 Some(p_node) =>
                     match p_node.key.cmp(&key) {
                         Ordering::Less => {
-                            let (i,h) = ins(& mut p_node.right, key, value);
+                            let (side, h) = ins(& mut p_node.right, key, value);
+                            if side.is_none() {
+                                return (None, p_node.height)
+                            }
                             p_node.height = max(p_node.height, h+1);
-                            p_node.rebalance();
-                            (i,p_node.height)
+                            p_node.rebalance(side.unwrap());
+                            (Some(InsertSide::Right), p_node.height)
                         },
                         Ordering::Greater => {
-                            let (i,h) = ins(& mut p_node.left, key, value);
+                            let (side, h) = ins(& mut p_node.left, key, value);
+                            if side.is_none() {
+                                return (None, p_node.height)
+                            }
                             p_node.height = max(p_node.height, h+1);
-                            p_node.rebalance();
-                            (i,p_node.height)
+                            p_node.rebalance(side.unwrap());
+                            (Some(InsertSide::Left), p_node.height)
                         },
-                        Ordering::Equal => { return (false,p_node.height); },
+                        Ordering::Equal => { return (None, p_node.height); },
                     }
             }
         }
         let (inserted,_) = ins(& mut self.root, key, value);
-        if inserted { self.size += 1};
-        inserted
+        if inserted.is_some() { self.size += 1};
+        inserted.is_some()
     }
 
     pub fn get(&self, key: &K) -> Option<&V> {
@@ -97,7 +129,7 @@ impl<K,V> AVLTreeMap<K,V> where K:Ord {
     }
 }
 
-impl<K,V> Node<K,V> where K:Ord {
+impl<K,V> Node<K,V> where K:Ord+Debug {
     pub fn new(key: K, value: V) -> Node<K,V> {
         Node {
             key: key,
@@ -131,12 +163,25 @@ impl<K,V> Node<K,V> where K:Ord {
         self.height_right() - self.height_left()
     }
 
-    fn rebalance(&mut self) -> bool {
+    fn rebalance(&mut self, side: InsertSide) -> bool {
         match self.balance_factor() {
             -1|0|1 => false,
-            -2 => self.rotate_right(),
-            2 => self.rotate_left(),
-            _ => panic!("Internal error. AVLTree balance factor out of [-2;2]"),
+            -2 => {
+                if side == InsertSide::Right {
+                    self.left.as_mut().unwrap().rotate_left();
+                }
+                self.rotate_right()
+            },
+            2 => {
+                if side == InsertSide::Left {
+                    self.right.as_mut().unwrap().rotate_right();
+                }
+                self.rotate_left()
+            },
+            bf => {
+                self.dump(0);
+                panic!("Internal error: AVLTree balance factor={}. Should be in [-2;2]", bf);
+            },
         }
     }
 
@@ -185,7 +230,7 @@ impl<K,V> Node<K,V> where K:Ord {
         let mut dnode = dtree.as_mut().unwrap();
         let ctree = dnode.left.take();
         let etree = dnode.right.take();
-        let atree = self.right.take();
+        let atree = self.left.take();
 
         // D becomes B and B becomes D
         swap(&mut self.key, &mut dnode.key); 
@@ -200,11 +245,20 @@ impl<K,V> Node<K,V> where K:Ord {
         self.update_height();
         true
     }
-
+    fn dump(&self, n:usize) {
+        println!("{: <1$}({:0})[{:?}]", "", n, self.key);
+        if self.left.is_some() {
+            self.left.as_ref().unwrap().dump(n+2)
+        }
+        if self.right.is_some() {
+            self.right.as_ref().unwrap().dump(n+2)
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use rand::Rng;
     use super::*;
 
     #[test]
@@ -260,4 +314,40 @@ mod tests {
         println!("add 8: height={} tree={:?}", t.height(), t);
         assert!(t.height() == 4);
     }
+
+    #[test]
+    fn test_balance2() {
+        let mut t = AVLTreeMap::new();
+        for i in 0..1000000 {
+            assert!(t.insert(i, "hello"));
+            assert!(t.len() == i+1);
+            let h:usize = ((64-(i+1).leading_zeros())) as usize;
+            assert!(t.height() == h);
+        }
+    }
+    #[test]
+    fn test_balance3() {
+        let mut t = AVLTreeMap::new();
+        for i in 0..1000000 {
+            assert!(t.insert(10000000-i, "hello"));
+            assert!(t.len() == i+1);
+            let h:usize = ((64-(i+1).leading_zeros())) as usize;
+            assert!(t.height() == h);
+        }
+    }
+    #[test]
+    fn test_balance4() {
+        let mut rng = rand::thread_rng();
+        let mut t = AVLTreeMap::new();
+        let mut cnt = 0;
+        for _i in 0..1000000 {
+            let val = rng.gen_range(0, 10000);
+            println!("###### Inserting {}", val);
+            if !t.contains(&val) { cnt += 1 };
+            t.insert(val, "hello");
+            assert!(cnt == t.len());
+        }
+    }
+
+
 }
