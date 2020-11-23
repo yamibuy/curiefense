@@ -29,15 +29,15 @@
               <tbody>
                 <tr>
                   <td>Max Length</td>
-                  <td><input required class="input is-small" type="text" :value="selectedDoc.max_header_length" /></td>
-                  <td><input required class="input is-small" type="text" :value="selectedDoc.max_cookie_length" /></td>
-                  <td><input required class="input is-small" type="text" :value="selectedDoc.max_arg_length" /></td>
+                  <td><input required class="input is-small" type="number" v-model.number="selectedDoc.max_header_length" /></td>
+                  <td><input required class="input is-small" type="number" v-model.number="selectedDoc.max_cookie_length" /></td>
+                  <td><input required class="input is-small" type="number" v-model.number="selectedDoc.max_arg_length" /></td>
                 </tr>
                 <tr>
                   <td>Max Count</td>
-                  <td><input required class="input is-small" type="text" :value="selectedDoc.max_headers_count" /></td>
-                  <td><input required class="input is-small" type="text" :value="selectedDoc.max_cookies_count" /></td>
-                  <td><input required class="input is-small" type="text" :value="selectedDoc.max_args_count" /></td>
+                  <td><input required class="input is-small" type="number" v-model.number="selectedDoc.max_headers_count" /></td>
+                  <td><input required class="input is-small" type="number" v-model.number="selectedDoc.max_cookies_count" /></td>
+                  <td><input required class="input is-small" type="number" v-model.number="selectedDoc.max_args_count" /></td>
                 </tr>
               </tbody>
             </table>
@@ -129,7 +129,7 @@
                           </td>
                           <td><center><input type="checkbox" v-model="newEntry.restrict" /></center></td>
                           <td>
-                            <input type="text" class="input is-small" v-model="newEntry.exclusions" placeholder="comma seperated sig IDs" />
+                            <serialized-input :placeholder="'comma separated sig IDs'" :value="newEntry.exclusions" :get-function="unpackExclusions" :set-function="packExclusions" @blur="newEntry.exclusions = $event"></serialized-input>
                           </td>
                           <td class="has-text-centered  ">
                             <button title="Add new parameter" class="button is-light is-small" @click="addNewParameter">
@@ -142,7 +142,7 @@
                           <td>
                             <div class="field">
                               <p class="control has-icons-left">
-                                <input required class="input is-small" type="text" :value="entry.key" :title="dsutils.Titles.names">
+                                <input required class="input is-small" type="text" v-model="entry.key" :title="dsutils.Titles.names">
                                 <span class="icon is-small is-left has-text-grey">
                                   <i class="fas fa-font"></i>
                                 </span>
@@ -150,14 +150,14 @@
                             </div>
                           <td>
                               <p class="control has-icons-left">
-                                <input required class="input is-small" type="text" :value="entry.reg" :title="dsutils.Titles.regex"/>
+                                <input required class="input is-small" type="text" v-model="entry.reg" :title="dsutils.Titles.regex"/>
                                 <span class="icon is-small is-left has-text-grey">
                                   <i class="fas fa-code"></i>
                                 </span>
                               </p>
                           </td>
                           <td><center><input type="checkbox" :checked="entry.restrict" /></center></td>
-                          <td><input required type="text" class="input is-small" :value="unpackExclusions(entry.exclusions)" placeholder="comma seperated sig IDs" /></td>
+                          <td><serialized-input :placeholder="'comma separated sig IDs'" :value="entry.exclusions" :get-function="unpackExclusions" :set-function="packExclusions" @blur="entry.exclusions = $event"></serialized-input></td>
                           <td class="has-text-centered  ">
                             <button title="Delete entry"
                                 :data-curie="gen_row_key(tab, 'names', idx)"
@@ -173,7 +173,7 @@
                           <td>
                             <div class="field">
                               <p class="control has-icons-left">
-                                <input required class="input is-small" type="text" :value="entry.key" :title="dsutils.Titles.regex">
+                                <input required class="input is-small" type="text" v-model="entry.key" :title="dsutils.Titles.regex">
                                 <span class="icon is-small is-left has-text-grey">
                                   <i class="fas fa-code"></i>
                                 </span>
@@ -182,7 +182,7 @@
                           </td>
                           <td>
                               <p class="control has-icons-left">
-                                <input required class="input is-small" type="text" :value="entry.reg" :title="dsutils.Titles.regex"/>
+                                <input required class="input is-small" type="text" v-model="entry.reg" :title="dsutils.Titles.regex"/>
                                 <span class="icon is-small is-left has-text-grey">
                                   <i class="fas fa-code"></i>
                                 </span>
@@ -191,7 +191,7 @@
                           <td>
                             <center><input type="checkbox" :checked="entry.restrict" /></center>
                           </td>
-                          <td><input required type="text" class="input is-small" :value="unpackExclusions(entry.exclusions)" placeholder="comma seperated sig IDs" /></td>
+                          <td><serialized-input :placeholder="'comma separated sig IDs'" :value="entry.exclusions" :get-function="unpackExclusions" :set-function="packExclusions" @blur="entry.exclusions = $event"></serialized-input></td>
                           <td class="has-text-centered  ">
                             <button
                               :data-curie="gen_row_key(tab, 'regex', idx)"
@@ -221,8 +221,10 @@
 
 <script>
 
+import SerializedInput from '@/components/serializedInput'
 export default {
   name: 'WAFEditor',
+  components: {SerializedInput},
   props: {
     selectedDoc: Object,
     apiPath: String
@@ -251,8 +253,6 @@ export default {
     addNewParameter() {
       let newEntry = this.ld.cloneDeep(this.newEntry)
       this.newEntry = this.newWAFLine = null;
-
-      newEntry.exclusions = this.packExclusions(newEntry.exclusions)
       let type = newEntry.type
       delete newEntry.type
       this.selectedDoc[this.tab][type].unshift(newEntry)
