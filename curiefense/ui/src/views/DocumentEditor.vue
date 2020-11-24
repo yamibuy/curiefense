@@ -290,15 +290,6 @@ export default {
       let branch = this.selectedBranch
       RequestsUtils.sendRequest('GET', `configs/${branch}/d/${doctype}/`).then((response) => {
         this.docs = response.data
-        // TODO - remove this conversion and make sure we use the same prop name as the server
-        if (doctype === 'profilinglists') {
-          for (let i = 0; i < this.docs.length; i++) {
-            this.docs[i].entriesRelation = {
-              relation: this.docs[i].entries_relation,
-              entries: this.docs[i].entries
-            }
-          }
-        }
         this.updateDocIdNames()
         if (this.docIdNames && this.docIdNames.length && this.docIdNames[0].length) {
           this.selectedDocID = this.docIdNames[0][0]

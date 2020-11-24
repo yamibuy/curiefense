@@ -5,20 +5,21 @@
         <div class="field">
           <label class="label is-small is-inline-block">Entries Relation</label>
           <a v-if="editable && recursive"
-             class="has-text-grey-dark is-small is-pulled-right is-danger is-light"
+             class="has-text-grey-dark is-small is-pulled-right is-danger is-light remove-entries-block-button"
              title="Delete this entries block"
              @click="removeEntryBlock">
             <span class="icon is-small"><i class="fas fa-trash"></i></span>
           </a>
           <a v-if="editable"
-             class="has-text-grey-dark is-small is-pulled-right"
+             class="has-text-grey-dark is-small is-pulled-right add-entries-block-button"
              title="Add new entries block"
              @click="addEntryBlock">
             <span class="icon is-small"><i class="fas fa-plus"></i></span>
           </a>
           <div class="control is-expanded">
             <div class="select is-small is-size-7 is-fullwidth">
-              <select v-model="relationList.relation">
+              <select v-model="relationList.relation"
+                      class="relation-selection">
                 <option value="AND">AND</option>
                 <option value="OR">OR</option>
               </select>
@@ -27,7 +28,7 @@
           <p class="help">Logical relation between different entries in different categories.</p>
         </div>
         <div v-if="isListLowestLevel">
-          <table class="table is-narrow is-fullwidth" v-if="newEntry && editable">
+          <table class="table is-narrow is-fullwidth new-entry-table" v-if="newEntry && editable">
             <thead>
             <tr>
               <th class="is-size-7">Category</th>
@@ -41,7 +42,7 @@
             <tr>
               <td class="is-size-7">
                 <div class="select is-small is-fullwidth">
-                  <select v-model="newEntryCategory" class="select">
+                  <select v-model="newEntryCategory" class="select new-entry-type-selection">
                     <option v-for="(entry, category) in listEntryTypes" :key="category" :value="category">
                       {{ entry.title }}
                     </option>
@@ -50,12 +51,12 @@
               </td>
               <td class="is-size-7">
                           <textarea rows="3"
-                                    class="textarea is-small is-fullwidth"
+                                    class="textarea is-small is-fullwidth new-entry-textarea"
                                     :placeholder="inputDescription"
                                     v-model="newEntryItems"></textarea>
               </td>
               <th class="is-size-7 is-48-px">
-                <a class="is-small has-text-grey" title="add entry" @click="addEntry">add</a>
+                <a class="is-small has-text-grey confirm-add-entry-button" title="add entry" @click="addEntry">add</a>
               </th>
             </tr>
             </tbody>
@@ -70,23 +71,23 @@
               <th class="is-size-7">Annotation</th>
               <th class=" is-size-7 is-48-px">
                 <a v-if="editable"
-                   class="has-text-grey-dark is-small is-pulled-right" title="Add new entry" @click="newEntry = true">
+                   class="has-text-grey-dark is-small is-pulled-right add-entry-button" title="Add new entry" @click="newEntry = true">
                   <span class="icon is-small"><i class="fas fa-plus"></i></span>
                 </a>
               </th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(entry,idx) in selectedPage" :key="idx">
-              <td class="is-size-7 is-48-px has-text-right has-text-grey-light">
+            <tr v-for="(entry,idx) in selectedPage" :key="idx" class="entry-row">
+              <td class="is-size-7 is-48-px has-text-right has-text-grey-light entry-number">
                 {{ ((idx + 1) + ((currentPage - 1) * rowsPerPage)) }}
               </td>
-              <td class="is-size-7">{{ listEntryTypes[entry[0]].title }}</td>
-              <td class="is-size-7"><span v-html="dualCell(entry[1])"></span></td>
-              <td class="is-size-7" :title="entry[2]">{{ entry[2] ? entry[2].substr(0, 40) : '' }}</td>
+              <td class="is-size-7 entry-category">{{ listEntryTypes[entry[0]].title }}</td>
+              <td class="is-size-7 entry-value"><span v-html="dualCell(entry[1])"></span></td>
+              <td class="is-size-7 entry-annotation" :title="entry[2]">{{ entry[2] ? entry[2].substr(0, 40) : '' }}</td>
               <td class="is-size-7 is-48-px">
                 <a v-if="editable"
-                   class="is-small has-text-grey" title="remove entry"
+                   class="is-small has-text-grey remove-entry-button" title="remove entry"
                    @click="removeEntry(currentPage, idx)">
                   remove
                 </a>
@@ -146,7 +147,7 @@ export default {
           // Validate that all entries are either arrays with correct length or relationList objects
           for (let i = 0; i < value.entries.length; i++) {
             const entry = value.entries[i]
-            if (!entry || entry.length < 2 || entry.length > 3) {
+            if (!entry || !entry.length || entry.length < 2 || entry.length > 3) {
               isListValidEntries = false
             }
             if (!entry || !validateRelationList(entry)) {
