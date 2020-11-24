@@ -493,17 +493,27 @@ function dump_table(handle, datatable)
     end
 end
 
-function table_keys(tab)
+function table_keys(T)
     local keys = {}
     local n = 0
 
-    for k,v in pairs(tab) do
+    for k,v in pairs(T) do
       n = n + 1
       keys[n] = k
     end
 
     return keys
 end
+
+function table_length(T)
+    if type(T) ~= "table" then return 0 end
+    local count = 0
+    for _ in pairs(T) do
+        count = count + 1
+    end
+    return count
+end
+
 
 function md5(input)
     if type(input) ~= "string" then return nil end

@@ -55,6 +55,8 @@
 </template>
 
 <script>
+import DatasetsUtils from '@/assets/DatasetsUtils'
+
 export default {
   name: "LimitOption",
   props: {
@@ -68,7 +70,7 @@ export default {
     disabledOptions: Array
   },
   data() {
-    const { LimitRulesTypes, LimitAttributes } = this.$root.dsutils
+    const { LimitRulesTypes, LimitAttributes } = DatasetsUtils
     const optionsData = {
       self: {
         type: 'self',
@@ -83,7 +85,7 @@ export default {
       optionsData,
       options: LimitRulesTypes,
       attributes: LimitAttributes,
-      type: this.option.type || 'attrs'
+      type: this.option?.type || 'attrs'
     }
   },
   computed: {

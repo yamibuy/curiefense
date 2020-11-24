@@ -5,6 +5,8 @@ local utils       = require "lua.utils"
 local iputils     = require "lua.iputils"
 local rangesbtree = require "lua.rangesbtree"
 
+local iptools     = require "iptools"
+
 local cjson       = require "cjson"
 local json_safe   = require "cjson.safe"
 
@@ -12,6 +14,7 @@ local json_safe   = require "cjson.safe"
 local dict          = utils.dict
 local defaultdict   = utils.defaultdict
 local slice         = utils.slice
+local table_length  = utils.table_length
 
 local parse_cidr    = iputils.parse_cidr
 local build_ranges_lists = rangesbtree.build_ranges_lists
@@ -31,8 +34,8 @@ function gen_masterdict(lst)
         [ "pairs" ]            = defaultdict(dict),
         [ "negate_pairs" ]     = defaultdict(dict),
 
-        [ "iprange" ]          = {},
-        [ "negate_iprange" ]   = {}
+        [ "iprange" ]          = iptools.new_ip_set(),
+        [ "negate_iprange" ]   = iptools.new_ip_set(),
     }
 
 end
@@ -55,7 +58,7 @@ function categorize_pairs(pairv)
 end
 
 function get_annotation(data)
-    if #data > 1 then
+    if table_length(data) > 1 then
         return data[2]
     else
         return nil
@@ -99,21 +102,12 @@ function gen_list_entries(lst, handle)
                             cidr = cidr:sub(2)
                         end
 
-                        local start_addr, end_addr = parse_cidr(cidr)
-                        -- [[start,end], annotation]
-                        if start_addr == nil then
-                            handle:logDebug(string.format("CIDR %s could not be parsed", cidr))
-                        else
-                            elem =  { {start_addr, end_addr}, get_annotation(data) }
-                            table.insert(masterdict[mastercategory], elem)
-                        end
+                        local annotation = get_annotation(data) or mastercategory
+                        masterdict[mastercategory]:add(cidr, annotation)
                     end
                 end
             end
         end
-    end
-    if #masterdict['iprange'] > 0 then
-        masterdict['iprange'] = build_ranges_lists(masterdict['iprange'])
     end
     return masterdict
 end

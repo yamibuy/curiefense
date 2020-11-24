@@ -39,7 +39,7 @@
               <td class="is-size-7 is-vcentered py-3">{{ commit.email }}</td>
               <td class="is-size-7 is-vcentered restore-cell">
                 <p class="control has-text-centered" v-if="commitOverIndex === index">
-                  <a class="button is-small" @click="restoreVersion(commit)" title="Restore Version">
+                  <a class="button is-small restore-button" @click="restoreVersion(commit)" title="Restore Version">
                     <span class="icon is-small">
                       <i class="fas fa-history"></i>
                     </span>
@@ -73,7 +73,6 @@ export default {
 
   props: {
     gitLog: Array,
-    compact: Boolean,
     apiPath: String
   },
 
@@ -102,11 +101,11 @@ export default {
     },
 
     mouseLeave() {
-      this.commitOverIndex = null;
+      this.commitOverIndex = null
     },
 
     mouseOver(index) {
-      this.commitOverIndex = index;
+      this.commitOverIndex = index
     },
   },
 
@@ -120,22 +119,22 @@ export default {
 </script>
 <style scoped>
 
-  table.is-borderless td, table.is-borderless th {
-    border: 0;
-  }
+table.is-borderless td, table.is-borderless th {
+  border: 0;
+}
 
-  table.inner-table td, table.inner-table th {
-    border: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
+table.inner-table td, table.inner-table th {
+  border: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
 
-  .version-history-title {
-    line-height: 30px;
-  }
+.version-history-title {
+  line-height: 30px;
+}
 
-  .restore-cell {
-    width: 50px
-  }
+.restore-cell {
+  width: 50px
+}
 
 </style>

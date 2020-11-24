@@ -189,8 +189,8 @@ export default {
               this.selectedDoc.mdate = (new Date).toISOString()
             }
 
-          })
-          .catch()
+        })
+
     },
   },
 

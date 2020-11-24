@@ -9,7 +9,6 @@ import _ from 'lodash'
 import DatasetsUtils from '@/assets/DatasetsUtils.js'
 
 Object.defineProperty(Vue.prototype, 'ld', { value: _ });
-Object.defineProperty(Vue.prototype, 'loDash', { value: _ });
 Object.defineProperty(Vue.prototype, 'dsutils', { value: DatasetsUtils });
 
 import ip6addr from 'ip6addr'

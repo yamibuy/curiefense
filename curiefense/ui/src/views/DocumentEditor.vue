@@ -8,14 +8,14 @@
               <div class="field is-grouped">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedBranch" @change="switchBranch">
+                    <select v-model="selectedBranch" @change="switchBranch" class="branch-selection">
                       <option v-for="name in branchNames" :key="name" :value="name">{{ name }}</option>
                     </select>
                   </div>
                 </div>
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedDocType" @change="switchDocType()">
+                    <select v-model="selectedDocType" @change="switchDocType()" class="doc-type-selection">
                       <option v-for="(component, propertyName) in componentsMap" :key="propertyName"
                               :value="propertyName">{{ component.title }}
                       </option>
@@ -26,13 +26,13 @@
                   <span class="icon is-small">
                     <i class="mdi mdi-dark mdi-source-branch"></i>
                   </span>
-                  <span class="is-size-7  ">{{ branches }} branches</span>
+                  <span class="is-size-7 git-branches">{{ branches }} branches</span>
                 </div>
                 <div class="control">
                   <span class="icon is-small">
                     <i class="mdi mdi-dark mdi-source-commit"></i>
                   </span>
-                  <span class="is-size-7  ">{{ commits }} commits</span>
+                  <span class="is-size-7 git-commits">{{ commits }} commits</span>
                 </div>
               </div>
             </div>
@@ -41,7 +41,7 @@
               <div class="field is-grouped is-pulled-right">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedDocID" @change="loadGitLog()">
+                    <select v-model="selectedDocID" @change="loadGitLog()" class="doc-selection">
                       <option v-for="pair in docIdNames" :key="pair[0]" :value="pair[0]">{{ pair[1] }}</option>
                     </select>
                   </div>
@@ -49,7 +49,7 @@
 
                 <p class="control"
                    v-if="selectedDocType !== 'wafsigs'">
-                  <button class="button is-small"
+                  <button class="button is-small fork-document-button"
                           @click="forkDoc"
                           title="Duplicate Document"
                           :disabled="!selectedDoc.name">
@@ -72,7 +72,7 @@
 
                 <p class="control"
                    v-if="selectedDocType !== 'wafsigs'">
-                  <button class="button is-small"
+                  <button class="button is-small new-document-button"
                           @click="addNewDoc()"
                           title="Add New Document">
                     <span class="icon is-small">
@@ -83,7 +83,7 @@
 
                 <p class="control"
                    v-if="selectedDocType !== 'wafsigs'">
-                  <button class="button is-small"
+                  <button class="button is-small save-document-button"
                           @click="saveChanges()"
                           title="Save changes">
                     <span class="icon is-small">
@@ -94,7 +94,7 @@
 
                 <p class="control"
                    v-if="selectedDocType !== 'wafsigs'">
-                  <button class="button is-small has-text-danger"
+                  <button class="button is-small has-text-danger delete-document-button"
                           @click="deleteDoc"
                           title="Delete Document"
                           :disabled="selectedDoc.id === '__default__' || isDocReferenced || docs.length <= 1">
@@ -122,11 +122,10 @@
             ref="currentComponent"
         ></component>
         <hr/>
-        <GitHistory v-if="selectedDocID"
+        <git-history v-if="selectedDocID"
                     :gitLog.sync="gitLog"
-                    :gitlogLoading.sync="gitlogLoading"
                     :apiPath.sync="gitAPIPath"
-                    @restoreVersion="restoreGitVersion"></GitHistory>
+                    @restoreVersion="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>
@@ -169,7 +168,6 @@ export default {
       docIdNames: [],
       selectedDocID: null,
 
-      gitlogLoading: false,
       gitLog: [],
       commits: 0,
       branches: 0,
@@ -226,10 +224,6 @@ export default {
         })
       }
       return 0
-    },
-
-    docNames() {
-      return this.ld.map(this.docs, 'name')
     },
 
     isDocReferenced() {
@@ -314,10 +308,7 @@ export default {
     },
 
     loadGitLog(interaction) {
-      this.gitlogLoading = true
-
-      let self = this,
-          config = this.selectedBranch,
+      let config = this.selectedBranch,
           document_ = this.selectedDocType,
           entry = this.selectedDocID,
           url_trail = `configs/${config}/d/${document_}/e/${entry}/v/`
@@ -325,7 +316,6 @@ export default {
       if (config && document_ && entry) {
         RequestsUtils.sendRequest('GET', url_trail).then((response) => {
           this.gitLog = response.data
-          self.gitlogLoading = false
           if (interaction) {
             this.loadConfigs(true)
           }
