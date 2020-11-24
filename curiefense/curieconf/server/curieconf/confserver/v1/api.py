@@ -193,6 +193,10 @@ m_config = api.model("Config", {
     "delete_blobs": fields.Nested(m_config_delete_blobs),
 })
 
+m_edit = api.model("Edit", {
+    "path": fields.String(required=True),
+    "value": fields.String(required=True),
+})
 
 ### Publish
 
@@ -496,6 +500,18 @@ class EntryResource(Resource):
         res = current_app.backend.entries_delete(config, document, entry)
         return res
 
+
+@ns_configs.route('/<string:config>/d/<string:document>/e/<string:entry>/edit/')
+class EntryEditResource(Resource):
+    def put(self, config, document, entry):
+        "Update an entry in a document"
+        if document not in models:
+            abort(404, "document does not exist")
+        data = marshal(request.json, m_edit, skip_none=True)
+        if type(data) is not list:
+            data = [data]
+        res = current_app.backend.entries_edit(config, document, entry, data)
+        return res
 
 @ns_configs.route('/<string:config>/d/<string:document>/e/<string:entry>/v/')
 class EntryListVersionResource(Resource):

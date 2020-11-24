@@ -25,6 +25,7 @@ setup(
         "colorama",
         "jmespath",
         "fasteners",
+        "jsonpath-ng",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
