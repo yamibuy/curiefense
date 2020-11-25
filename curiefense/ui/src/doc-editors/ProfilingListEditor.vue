@@ -59,7 +59,7 @@
             </div>
           </div>
           <div class="column is-8">
-            <entries-relation-list :relation-list="selectedDoc.entriesRelation"
+            <entries-relation-list :relation-list="selectedDoc.entries"
                                    :editable="editable">
             </entries-relation-list>
           </div>
@@ -186,12 +186,37 @@ export default {
 
             if (entries.length > 0) {
               this.selectedDoc.entries = entries
+              this.convertOldEntriesToNewEntries()
               this.selectedDoc.mdate = (new Date).toISOString()
             }
 
-        })
+          })
 
     },
+
+    convertOldEntriesToNewEntries() {
+      // TODO - Temporary casting as we are changing the structure of profiling lists object
+      const entriesList = this.selectedDoc.entries
+      if (entriesList?.constructor.name === 'Array') {
+        this.selectedDoc.entries = {
+          relation: 'AND',
+          entries: [{
+            relation: this.selectedDoc.entries_relation,
+            entries: entriesList
+          }]
+        }
+      }
+    },
+  },
+
+  watch: {
+    selectedDoc: {
+      handler: function () {
+        this.convertOldEntriesToNewEntries()
+      },
+      immediate: true,
+      deep: true
+    }
   },
 
 }

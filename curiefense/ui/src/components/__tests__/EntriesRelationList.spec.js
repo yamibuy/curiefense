@@ -74,93 +74,115 @@ describe('EntriesRelationList.vue', () => {
 
     test('should display correct data from prop to view if data changed', async() => {
         const wantedEntryData = ['ip', '1.2.3.4']
-        wrapper.vm.relationList = {
-            relation: 'and',
-            entries: [wantedEntryData]
-        }
+        entryData1.entries = [wantedEntryData]
         await Vue.nextTick()
-        const component = wrapper.findAllComponents(EntriesRelationList).at(0)
+        const component = wrapper.findAllComponents(EntriesRelationList).at(1)
         const categories = component.findAll('.entry-category')
         const values = component.findAll('.entry-value')
         expect(categories.at(0).text().toLowerCase()).toContain(wantedEntryData[0].toLowerCase())
         expect(values.at(0).text().toLowerCase()).toContain(wantedEntryData[1].toLowerCase())
     })
 
+    test('should not break if not given a prop', () => {
+        wrapper = mount(EntriesRelationList)
+        const components = wrapper.findAllComponents(EntriesRelationList)
+        expect(components.length).toEqual(1)
+    })
+
+    test('should not break if data changes to invalid data', async() => {
+        entryData1 = {}
+        await Vue.nextTick()
+        const components = wrapper.findAllComponents(EntriesRelationList)
+        expect(components.length).toEqual(3)
+    })
+
     describe('large data pagination', () => {
+        let checkedComponent
         beforeEach(() => {
-            entriesRelationData.entries = [
-                ['uri', '/login0'],
-                ['uri', '/login1'],
-                ['uri', '/login2'],
-                ['uri', '/login3'],
-                ['uri', '/login4'],
-                ['uri', '/login5'],
-                ['uri', '/login6'],
-                ['uri', '/login7'],
-                ['uri', '/login8'],
-                ['uri', '/login9'],
-                ['uri', '/account0'],
-                ['uri', '/account1'],
-                ['uri', '/account2'],
-                ['uri', '/account3'],
-                ['uri', '/account4'],
-                ['uri', '/account5'],
-                ['uri', '/account6'],
-                ['uri', '/account7'],
-                ['uri', '/account8'],
-                ['uri', '/account9'],
-                ['uri', '/about0'],
-                ['uri', '/about1'],
-                ['uri', '/about2'],
-                ['uri', '/about3'],
-                ['uri', '/about4'],
-                ['uri', '/about5'],
-                ['uri', '/about6'],
-                ['uri', '/about7'],
-                ['uri', '/about8'],
-                ['uri', '/about9'],
-            ]
+            entryData1 = {
+                relation: 'and',
+                entries: [
+                    ['uri', '/login0'],
+                    ['uri', '/login1'],
+                    ['uri', '/login2'],
+                    ['uri', '/login3'],
+                    ['uri', '/login4'],
+                    ['uri', '/login5'],
+                    ['uri', '/login6'],
+                    ['uri', '/login7'],
+                    ['uri', '/login8'],
+                    ['uri', '/login9'],
+                    ['uri', '/account0'],
+                    ['uri', '/account1'],
+                    ['uri', '/account2'],
+                    ['uri', '/account3'],
+                    ['uri', '/account4'],
+                    ['uri', '/account5'],
+                    ['uri', '/account6'],
+                    ['uri', '/account7'],
+                    ['uri', '/account8'],
+                    ['uri', '/account9'],
+                    ['uri', '/about0'],
+                    ['uri', '/about1'],
+                    ['uri', '/about2'],
+                    ['uri', '/about3'],
+                    ['uri', '/about4'],
+                    ['uri', '/about5'],
+                    ['uri', '/about6'],
+                    ['uri', '/about7'],
+                    ['uri', '/about8'],
+                    ['uri', '/about9'],
+                ]
+            }
+            entriesRelationData = {
+                relation: 'and',
+                entries: [
+                    entryData1,
+                    entryData2
+                ]
+            }
             wrapper = mount(EntriesRelationList, {
                 propsData: {
                     relationList: entriesRelationData,
                     editable: true
                 }
             })
+            checkedComponent = wrapper.findAllComponents(EntriesRelationList).at(1)
         })
 
         test('should show 20 entries per page', () => {
-            const entryRows = wrapper.findAll('.entry-row')
+            const entryRows = checkedComponent.findAll('.entry-row')
             expect(entryRows.length).toEqual(20)
         })
 
         test('should correctly render next page when next page button is clicked', async () => {
-            const nextPageButton = wrapper.find('.pagination-next')
+            const nextPageButton = checkedComponent.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
-            const entryRows = wrapper.findAll('.entry-row')
+            const entryRows = checkedComponent.findAll('.entry-row')
             expect(entryRows.length).toEqual(10)
         })
 
         test('should have next page button disabled if currently in last page', async () => {
-            const nextPageButton = wrapper.find('.pagination-next')
+            const nextPageButton = checkedComponent.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
             expect(nextPageButton.attributes('disabled')).toBeTruthy()
         })
 
         test('should correctly render prev page when next prev button is clicked', async () => {
-            const nextPageButton = wrapper.find('.pagination-next')
+            const nextPageButton = checkedComponent.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
-            const prevPageButton = wrapper.find('.pagination-previous')
+            const prevPageButton = checkedComponent.find('.pagination-previous')
             prevPageButton.trigger('click')
             await Vue.nextTick()
-            const entryRows = wrapper.findAll('.entry-row')
+            const entryRows = checkedComponent.findAll('.entry-row')
             expect(entryRows.length).toEqual(20)
         })
 
         test('should have prev page button disabled if currently in first page', async () => {
-            const prevPageButton = wrapper.find('.pagination-previous')
+            const prevPageButton = checkedComponent.find('.pagination-previous')
             expect(prevPageButton.attributes('disabled')).toBeTruthy()
         })
     })
@@ -211,30 +233,6 @@ describe('EntriesRelationList.vue', () => {
             addEntriesBlockButton.trigger('click')
             const childComponents = parentComponent.findAllComponents(EntriesRelationList)
             expect(childComponents.length).toEqual(3)
-        })
-
-        test('should copy entries data from parent to new entries block child', () => {
-            const wantedEntryData = wrapper.vm.ld.cloneDeep(entryData1.entries)
-            const components = wrapper.findAllComponents(EntriesRelationList)
-            const parentComponent = components.at(1)
-            const addEntriesBlockButton = parentComponent.find('.add-entries-block-button')
-            addEntriesBlockButton.trigger('click')
-            const childComponent = parentComponent.findComponent(EntriesRelationList)
-            const categories = childComponent.findAll('.entry-category')
-            const values = childComponent.findAll('.entry-value')
-            expect(categories.at(0).text().toLowerCase()).toContain(wantedEntryData[0][0].toLowerCase())
-            expect(values.at(0).text().toLowerCase()).toContain(wantedEntryData[0][1].toLowerCase())
-            expect(categories.at(1).text().toLowerCase()).toContain(wantedEntryData[1][0].toLowerCase())
-            expect(values.at(1).text().toLowerCase()).toContain(wantedEntryData[1][1].toLowerCase())
-            expect(entriesRelationData.entries[0].entries[0].entries).toEqual(wantedEntryData)
-        })
-
-        test('should copy relation status from parent to new entries block child', () => {
-            const components = wrapper.findAllComponents(EntriesRelationList)
-            const parentComponent = components.at(1)
-            const addEntriesBlockButton = parentComponent.find('.add-entries-block-button')
-            addEntriesBlockButton.trigger('click')
-            expect(entriesRelationData.entries[0].entries[0].relation.toLowerCase()).toEqual('or')
         })
 
         test('should not have the option to add component if not editable', () => {
