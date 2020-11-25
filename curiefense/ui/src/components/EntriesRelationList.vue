@@ -143,25 +143,15 @@ export default {
             return false
           }
           const isRelationValid = ['OR', 'AND'].includes(value.relation.toUpperCase())
-          let isListValidEntries = true
-          let isListValidEntriesBlocks = true
-          let isListValid = true
           // Validate that all entries are either arrays with correct length or relationList objects
-          for (let i = 0; i < value.entries.length; i++) {
-            const entry = value.entries[i]
-            if (!entry || !entry.length || entry.length < 2 || entry.length > 3) {
-              isListValidEntries = false
-            }
-            if (!entry || !validateRelationList(entry)) {
-              isListValidEntriesBlocks = false
-            }
-            isListValid = isListValidEntries || isListValidEntriesBlocks
-            // If the list is invalid, there is no need to continue iterations
-            if (!isListValid) {
-              break
-            }
-          }
-          return isRelationValid && isListValid
+          const isListContainsInvalidEntries = value.entries.find((entry) => {
+            return (!entry || !entry.length || entry.length < 2 || entry.length > 3)
+          })
+          const isListContainsInvalidEntriesBlocks = value.entries.find((entry) => {
+            return (!entry || !validateRelationList(entry))
+          })
+          const isListInvalid = isListContainsInvalidEntries && isListContainsInvalidEntriesBlocks
+          return isRelationValid && !isListInvalid
         }
         return validateRelationList(val)
       }
