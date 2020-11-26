@@ -2,19 +2,14 @@
   <div class="card">
     <div class="card-content">
       <div class="content">
-        <div class="field">
+        <div class="field"
+             v-if="recursive || listTotalEntries > 1">
           <label class="label is-small is-inline-block">Entries Relation</label>
           <a v-if="editable && recursive"
-             class="has-text-grey-dark is-small is-pulled-right is-danger is-light remove-entries-block-button"
+             class="has-text-danger is-small is-pulled-right is-danger is-light remove-entries-block-button"
              title="Delete this entries block"
              @click="removeEntryBlock">
             <span class="icon is-small"><i class="fas fa-trash"></i></span>
-          </a>
-          <a v-if="editable"
-             class="has-text-grey-dark is-small is-pulled-right add-entries-block-button"
-             title="Add new entries block"
-             @click="addEntryBlock">
-            <span class="icon is-small"><i class="fas fa-plus"></i></span>
           </a>
           <div class="control is-expanded">
             <div class="select is-small is-size-7 is-fullwidth">
@@ -27,7 +22,7 @@
           </div>
           <p class="help">Logical relation between different entries in different categories.</p>
         </div>
-        <div v-if="isListLowestLevel">
+        <div v-if="recursive">
           <table class="table is-narrow is-fullwidth new-entry-table" v-if="newEntry && editable">
             <thead>
             <tr>
@@ -62,7 +57,7 @@
             </tbody>
           </table>
           <hr/>
-          <table class="table is-narrow">
+          <table class="table is-narrow entries-table">
             <thead>
             <tr>
               <th class="is-size-7 is-48-px">
@@ -71,7 +66,8 @@
               <th class="is-size-7">Annotation</th>
               <th class=" is-size-7 is-48-px">
                 <a v-if="editable"
-                   class="has-text-grey-dark is-small is-pulled-right add-entry-button" title="Add new entry" @click="newEntry = true">
+                   class="has-text-grey-dark is-small is-pulled-right add-entry-button" title="Add new entry"
+                   @click="newEntry = true">
                   <span class="icon is-small"><i class="fas fa-plus"></i></span>
                 </a>
               </th>
@@ -115,6 +111,12 @@
                                  @delete="removeEntryBlock($event, id)">
           </entries-relation-list>
         </div>
+        <button v-if="editable && !recursive"
+                class="button add-entries-block-button"
+                title="Add new entries block"
+                @click="addEntryBlock">
+          Add new entries block
+        </button>
       </div>
     </div>
   </div>
@@ -141,25 +143,15 @@ export default {
             return false
           }
           const isRelationValid = ['OR', 'AND'].includes(value.relation.toUpperCase())
-          let isListValidEntries = true
-          let isListValidEntriesBlocks = true
-          let isListValid = true
           // Validate that all entries are either arrays with correct length or relationList objects
-          for (let i = 0; i < value.entries.length; i++) {
-            const entry = value.entries[i]
-            if (!entry || !entry.length || entry.length < 2 || entry.length > 3) {
-              isListValidEntries = false
-            }
-            if (!entry || !validateRelationList(entry)) {
-              isListValidEntriesBlocks = false
-            }
-            isListValid = isListValidEntries || isListValidEntriesBlocks
-            // If the list is invalid, there is no need to continue iterations
-            if (!isListValid) {
-              break
-            }
-          }
-          return isRelationValid && isListValid
+          const isListContainsInvalidEntries = value.entries.find((entry) => {
+            return (!entry || !entry.length || entry.length < 2 || entry.length > 3)
+          })
+          const isListContainsInvalidEntriesBlocks = value.entries.find((entry) => {
+            return (!entry || !validateRelationList(entry))
+          })
+          const isListInvalid = isListContainsInvalidEntries && isListContainsInvalidEntriesBlocks
+          return isRelationValid && !isListInvalid
         }
         return validateRelationList(val)
       }
@@ -208,10 +200,6 @@ export default {
       return this.localEntries.length || 0
     },
 
-    isListLowestLevel() {
-      return !this.listTotalEntries || this.localEntries[0].constructor.name === 'Array'
-    },
-
     selectedPage() {
       if (this.listTotalEntries === 0) {
         return []
@@ -226,7 +214,8 @@ export default {
   watch: {
     relationList: {
       handler: function (newVal) {
-        this.localEntries = newVal.entries || []
+        this.localEntries = newVal.entries
+        this.currentPage = 1
       },
       immediate: true,
       deep: true
@@ -249,19 +238,10 @@ export default {
     },
 
     addEntryBlock() {
-      if (!this.isListLowestLevel) {
-        this.localEntries.unshift({
-          relation: 'OR',
-          entries: []
-        })
-      } else {
-        const currentEntries = this.ld.cloneDeep(this.localEntries)
-        this.localEntries.splice(0, this.localEntries.length)
-        this.localEntries.unshift({
-          relation: this.relationList.relation,
-          entries: currentEntries
-        })
-      }
+      this.localEntries.unshift({
+        relation: 'OR',
+        entries: []
+      })
     },
 
     removeEntryBlock(event, index) {
@@ -302,3 +282,8 @@ export default {
   }
 }
 </script>
+<style scoped>
+.entries-table {
+  margin-bottom: 2rem
+}
+</style>
