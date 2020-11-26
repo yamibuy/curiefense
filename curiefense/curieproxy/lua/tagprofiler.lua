@@ -112,7 +112,7 @@ function match_or_list(request_map, list)
     end
   end
 
-  if list.iprange then
+  if list.iprange:len() > 0 then
     local within = list.iprange:get(request_map.attrs.ip)
     if within then
       return within, list.tags
