@@ -534,8 +534,8 @@ export default {
 }
 
 .is-48-px {
-  min-width: 40px;
-  max-width: 40px;
+  min-width: 48px;
+  max-width: 48px;
   width: 48px;
 }
 

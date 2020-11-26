@@ -59,7 +59,7 @@
             </div>
           </div>
           <div class="column is-8">
-            <entries-relation-list :relation-list="selectedDoc.entries"
+            <entries-relation-list :rule="selectedDoc.rule"
                                    :editable="editable">
             </entries-relation-list>
           </div>
@@ -196,13 +196,12 @@ export default {
 
     convertOldEntriesToNewEntries() {
       // TODO - Temporary casting as we are changing the structure of profiling lists object
-      const entriesList = this.selectedDoc.entries
-      if (entriesList?.constructor.name === 'Array') {
-        this.selectedDoc.entries = {
+      if (!this.selectedDoc?.rule) {
+        this.selectedDoc.rule = {
           relation: 'AND',
-          entries: [{
+          sections: [{
             relation: this.selectedDoc.entries_relation,
-            entries: entriesList
+            entries: this.selectedDoc.entries
           }]
         }
       }
