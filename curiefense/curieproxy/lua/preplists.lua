@@ -40,6 +40,7 @@ function gen_masterdict(lst)
 
 end
 
+
 function categorize_singles(key)
     local mastercategory = "singles"
     if key:startswith("!") then
@@ -65,10 +66,21 @@ function get_annotation(data)
     end
 end
 
-function gen_list_entries(lst, handle)
-    local masterdict = gen_masterdict(lst)
 
-    for _, entry in ipairs(lst["entries"]) do
+function gen_section_dict(section)
+
+    local masterdict = {
+        [ "singles" ]          = defaultdict(dict),
+        [ "negate_singles" ]   = defaultdict(dict),
+
+        [ "pairs" ]            = defaultdict(dict),
+        [ "negate_pairs" ]     = defaultdict(dict),
+
+        [ "iprange" ]          = iptools.new_ip_set(),
+        [ "negate_iprange" ]   = iptools.new_ip_set(),
+    }
+
+    for _, entry in ipairs(section["entries"]) do
         category, data = entry[1], slice(entry, 2)
         -- pairs
         if category:within("args cookies headers") then
@@ -109,5 +121,27 @@ function gen_list_entries(lst, handle)
             end
         end
     end
+
     return masterdict
+
+end
+
+function gen_list_entries(lst, handle)
+    local masterdict = gen_masterdict(lst)
+    local section_gate = lst.rule.relation
+    local sections = lst.rule.sections
+
+    local rule = {
+        ["relation"] = lst.rule.relation,
+        ["sections"]  = {}
+    }
+
+    for _, section in ipairs(sections) do
+        table.insert(rule.sections, {
+            [ "relation" ] = section.relation,
+            [ "entries" ] = gen_section_dict(section)
+        })
+    end
+
+    return rule
 end

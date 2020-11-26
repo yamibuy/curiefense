@@ -174,20 +174,23 @@ function load_and_reconstruct_taglist(handle, path)
         handle:logDebug(string.format("LART -- ID:Name active? %s:%s", list.id, list.name, list.active))
         if list.active then
             local tag_list = gen_list_entries(list, handle)
-            handle:logDebug(
-                string.format(
-                    "LART -- ID:Name %s:%s tags %s singles %s negate_singles %s pairs %s negate_pairs %s iprange %s negate_iprange %s",
-                    tag_list.id,
-                    tag_list.name,
-                    tag_list.tags,
-                    #(tag_list.singles or {}),
-                    #(tag_list.negate_singles or {}),
-                    #(tag_list.pairs or {}),
-                    #(tag_list.negate_pairs or {}),
-                    tag_list.iprange:len(),
-                    tag_list.negate_iprange:len()
+            for section in tag_list.sections do
+                handle:logDebug(
+                    string.format(
+                        "LART -- ID:Name %s:%s tags %s singles %s negate_singles %s pairs %s negate_pairs %s iprange %s negate_iprange %s",
+                        tag_list.id,
+                        tag_list.name,
+                        tag_list.tags,
+                        #(section.singles or {}),
+                        #(section.negate_singles or {}),
+                        #(section.pairs or {}),
+                        #(section.negate_pairs or {}),
+                        section.iprange:len(),
+                        section.negate_iprange:len()
+                    )
                 )
-            )
+            end
+
             store[tag_list.id] = tag_list
         end
     end
