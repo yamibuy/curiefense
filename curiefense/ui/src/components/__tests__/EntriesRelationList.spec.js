@@ -5,7 +5,7 @@ import Vue from 'vue'
 
 describe('EntriesRelationList.vue', () => {
     let wrapper
-    let entriesRelationData
+    let ruleData
     let entryData1
     let entryData2
     beforeEach(() => {
@@ -37,16 +37,16 @@ describe('EntriesRelationList.vue', () => {
                 ]
             ]
         }
-        entriesRelationData = {
+        ruleData = {
             relation: 'and',
-            entries: [
+            sections: [
                 entryData1,
                 entryData2
             ]
         }
         wrapper = mount(EntriesRelationList, {
             propsData: {
-                relationList: entriesRelationData,
+                rule: ruleData,
                 editable: true
             }
         })
@@ -55,28 +55,28 @@ describe('EntriesRelationList.vue', () => {
         jest.clearAllMocks()
     })
 
-    test('should have a single component rendered for each relation list', () => {
-        const components = wrapper.findAllComponents(EntriesRelationList)
-        expect(components.length).toEqual(3)
+    test('should have a single table rendered for each entries list', () => {
+        const tables = wrapper.findAll('.entries-table')
+        expect(tables.length).toEqual(2)
     })
 
     test('should display correct data from prop to view', () => {
         const wantedEntryData = wrapper.vm.ld.cloneDeep(entryData1.entries)
-        const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+        const component = wrapper.findComponent(EntriesRelationList)
         const categories = component.findAll('.entry-category')
         const values = component.findAll('.entry-value')
         expect(categories.at(0).text().toLowerCase()).toContain(wantedEntryData[0][0].toLowerCase())
         expect(values.at(0).text().toLowerCase()).toContain(wantedEntryData[0][1].toLowerCase())
         expect(categories.at(1).text().toLowerCase()).toContain(wantedEntryData[1][0].toLowerCase())
         expect(values.at(1).text().toLowerCase()).toContain(wantedEntryData[1][1].toLowerCase())
-        expect(entriesRelationData.entries[0].entries).toEqual(wantedEntryData)
+        expect(ruleData.sections[0].entries).toEqual(wantedEntryData)
     })
 
     test('should display correct data from prop to view if data changed', async() => {
         const wantedEntryData = ['ip', '1.2.3.4']
-        entryData1.entries = [wantedEntryData]
+        ruleData.sections[0].entries = [wantedEntryData]
         await Vue.nextTick()
-        const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+        const component = wrapper.findComponent(EntriesRelationList)
         const categories = component.findAll('.entry-category')
         const values = component.findAll('.entry-value')
         expect(categories.at(0).text().toLowerCase()).toContain(wantedEntryData[0].toLowerCase())
@@ -85,19 +85,20 @@ describe('EntriesRelationList.vue', () => {
 
     test('should not break if not given a prop', () => {
         wrapper = mount(EntriesRelationList)
-        const components = wrapper.findAllComponents(EntriesRelationList)
-        expect(components.length).toEqual(1)
+        const component = wrapper.findComponent(EntriesRelationList)
+        expect(component).toBeTruthy()
     })
 
     test('should not break if data changes to invalid data', async() => {
         entryData1 = {}
         await Vue.nextTick()
-        const components = wrapper.findAllComponents(EntriesRelationList)
-        expect(components.length).toEqual(3)
+        const component = wrapper.findComponent(EntriesRelationList)
+        expect(component).toBeTruthy()
     })
 
     describe('large data pagination', () => {
         let checkedComponent
+        let checkedTable
         beforeEach(() => {
             entryData1 = {
                 relation: 'and',
@@ -134,163 +135,158 @@ describe('EntriesRelationList.vue', () => {
                     ['uri', '/about9'],
                 ]
             }
-            entriesRelationData = {
+            ruleData = {
                 relation: 'and',
-                entries: [
-                    entryData1,
-                    entryData2
+                sections: [
+                    entryData1
                 ]
             }
             wrapper = mount(EntriesRelationList, {
                 propsData: {
-                    relationList: entriesRelationData,
+                    rule: ruleData,
                     editable: true
                 }
             })
-            checkedComponent = wrapper.findAllComponents(EntriesRelationList).at(1)
+            checkedComponent = wrapper.findComponent(EntriesRelationList)
+            checkedTable = checkedComponent.findAll('.entries-table').at(0)
         })
 
         test('should show 20 entries per page', () => {
-            const entryRows = checkedComponent.findAll('.entry-row')
+            const entryRows = checkedTable.findAll('.entry-row')
             expect(entryRows.length).toEqual(20)
         })
 
         test('should correctly render next page when next page button is clicked', async () => {
-            const nextPageButton = checkedComponent.find('.pagination-next')
+            const nextPageButton = checkedTable.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
-            const entryRows = checkedComponent.findAll('.entry-row')
+            const entryRows = checkedTable.findAll('.entry-row')
             expect(entryRows.length).toEqual(10)
         })
 
         test('should have next page button disabled if currently in last page', async () => {
-            const nextPageButton = checkedComponent.find('.pagination-next')
+            const nextPageButton = checkedTable.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
             expect(nextPageButton.attributes('disabled')).toBeTruthy()
         })
 
         test('should correctly render prev page when next prev button is clicked', async () => {
-            const nextPageButton = checkedComponent.find('.pagination-next')
+            const nextPageButton = checkedTable.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
-            const prevPageButton = checkedComponent.find('.pagination-previous')
+            const prevPageButton = checkedTable.find('.pagination-previous')
             prevPageButton.trigger('click')
             await Vue.nextTick()
-            const entryRows = checkedComponent.findAll('.entry-row')
+            const entryRows = checkedTable.findAll('.entry-row')
             expect(entryRows.length).toEqual(20)
         })
 
         test('should have prev page button disabled if currently in first page', async () => {
-            const prevPageButton = checkedComponent.find('.pagination-previous')
+            const prevPageButton = checkedTable.find('.pagination-previous')
             expect(prevPageButton.attributes('disabled')).toBeTruthy()
         })
     })
 
-    describe('relationList prop validator', () => {
+    describe('rule prop validator', () => {
         let validator
         beforeEach(() => {
-            validator = EntriesRelationList.props.relationList.validator
+            validator = EntriesRelationList.props.rule.validator
         })
 
         test('should return true for data in the correct schema', () => {
-            const isValid = validator(entriesRelationData)
+            const isValid = validator(ruleData)
             expect(isValid).toEqual(true)
         })
 
         test('should return false for relation not `or` or `and`', () => {
-            entriesRelationData.relation = 'unknown value'
-            const isValid = validator(entriesRelationData)
+            ruleData.relation = 'unknown value'
+            const isValid = validator(ruleData)
             expect(isValid).toEqual(false)
         })
 
         test('should return false for entries with too few arguments', () => {
-            entriesRelationData.entries[0] = ['ok']
-            const isValid = validator(entriesRelationData)
+            ruleData.sections[0].entries[0] = ['ok']
+            const isValid = validator(ruleData)
             expect(isValid).toEqual(false)
         })
 
         test('should return false for entries with too many arguments', () => {
-            entriesRelationData.entries[0] = ['ok', 'test', 'banana', 'apple', 'pear', 'eggplant']
-            const isValid = validator(entriesRelationData)
+            ruleData.sections[0].entries[0] = ['ok', 'test', 'banana', 'apple', 'pear', 'eggplant']
+            const isValid = validator(ruleData)
             expect(isValid).toEqual(false)
         })
 
         test('should return false for object entry which does not match the schema', () => {
-            entriesRelationData.entries[0] = {
+            ruleData.sections[0].entries[0] = {
                 prop: 'value'
             }
-            const isValid = validator(entriesRelationData)
+            const isValid = validator(ruleData)
             expect(isValid).toEqual(false)
         })
     })
 
     describe('add entries block button', () => {
         test('should add empty entries block', () => {
-            const components = wrapper.findAllComponents(EntriesRelationList)
-            const parentComponent = components.at(0)
-            const addEntriesBlockButton = parentComponent.find('.add-entries-block-button')
+            const component = wrapper.findComponent(EntriesRelationList)
+            const addEntriesBlockButton = component.find('.add-entries-block-button')
             addEntriesBlockButton.trigger('click')
-            const childComponents = parentComponent.findAllComponents(EntriesRelationList)
-            expect(childComponents.length).toEqual(3)
+            const tables = component.findAll('.entries-table')
+            expect(tables.length).toEqual(2)
         })
 
         test('should not have the option to add component if not editable', () => {
             wrapper = mount(EntriesRelationList, {
                 propsData: {
-                    relationList: entriesRelationData,
+                    rule: ruleData,
                     editable: false
                 }
             })
-            const components = wrapper.findAllComponents(EntriesRelationList)
-            const componentToRemove = components.at(0)
-            const addEntriesBlockButton = componentToRemove.find('.add-entries-block-button')
+            const component = wrapper.findComponent(EntriesRelationList)
+            const addEntriesBlockButton = component.find('.add-entries-block-button')
             expect(addEntriesBlockButton.element).toBeUndefined()
         })
     })
 
     describe('remove entries block button', () => {
         test('should remove entries block', async () => {
-            let components = wrapper.findAllComponents(EntriesRelationList)
-            const componentToRemove = components.at(1)
-            const removeEntriesBlockButton = componentToRemove.find('.remove-entries-block-button')
+            const component = wrapper.findComponent(EntriesRelationList)
+            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
             removeEntriesBlockButton.trigger('click')
             await Vue.nextTick()
-            components = wrapper.findAllComponents(EntriesRelationList)
-            expect(components.length).toEqual(2)
+            const tables = wrapper.findAll('.entries-table')
+            expect(tables.length).toEqual(1)
         })
 
         test('should not have the option to remove top level component', () => {
-            entriesRelationData.entries = []
+            ruleData.sections = []
             wrapper = mount(EntriesRelationList, {
                 propsData: {
-                    relationList: entriesRelationData,
+                    rule: ruleData,
                     editable: true
                 }
             })
-            const components = wrapper.findAllComponents(EntriesRelationList)
-            const componentToRemove = components.at(0)
-            const removeEntriesBlockButton = componentToRemove.find('.remove-entries-block-button')
+            const component = wrapper.findComponent(EntriesRelationList)
+            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
             expect(removeEntriesBlockButton.element).toBeUndefined()
         })
 
         test('should not have the option to remove component if not editable', () => {
             wrapper = mount(EntriesRelationList, {
                 propsData: {
-                    relationList: entriesRelationData,
+                    rule: ruleData,
                     editable: false
                 }
             })
-            const components = wrapper.findAllComponents(EntriesRelationList)
-            const componentToRemove = components.at(1)
-            const removeEntriesBlockButton = componentToRemove.find('.remove-entries-block-button')
+            const component = wrapper.findComponent(EntriesRelationList)
+            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
             expect(removeEntriesBlockButton.element).toBeUndefined()
         })
     })
 
     describe('add entry button', () => {
         test('should open new entry table', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
@@ -299,7 +295,7 @@ describe('EntriesRelationList.vue', () => {
         })
 
         test('should add new entry from input when confirm button is clicked', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
@@ -314,7 +310,7 @@ describe('EntriesRelationList.vue', () => {
         })
 
         test('should add multiple new entries from input when confirm button is clicked', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
@@ -330,7 +326,7 @@ describe('EntriesRelationList.vue', () => {
         })
 
         test('should add new entries from multi-line input when confirm button is clicked', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
@@ -351,7 +347,7 @@ describe('EntriesRelationList.vue', () => {
         })
 
         test('should not add new entries from multi-line input when confirm button is clicked if has too few lines', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
@@ -371,7 +367,7 @@ describe('EntriesRelationList.vue', () => {
         })
 
         test('should not add new entries from multi-line input when confirm button is clicked if has too many lines', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
@@ -393,11 +389,11 @@ describe('EntriesRelationList.vue', () => {
         test('should not show new entry button if not editable', () => {
             wrapper = mount(EntriesRelationList, {
                 propsData: {
-                    relationList: entriesRelationData,
+                    rule: ruleData,
                     editable: false
                 }
             })
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             expect(addEntryButton.element).toBeUndefined()
         })
@@ -405,7 +401,7 @@ describe('EntriesRelationList.vue', () => {
 
     describe('remove entry button', () => {
         test('should remove entry', async () => {
-            const component = wrapper.findAllComponents(EntriesRelationList).at(1)
+            const component = wrapper.findComponent(EntriesRelationList)
             const removeEntryButton = component.find('.remove-entry-button')
             removeEntryButton.trigger('click')
             await Vue.nextTick()
