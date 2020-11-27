@@ -143,5 +143,6 @@ function gen_list_entries(lst, handle)
         })
     end
 
-    return rule
+    lst["rule"] = rule
+    return lst
 end
