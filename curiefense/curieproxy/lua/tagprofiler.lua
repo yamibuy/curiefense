@@ -74,7 +74,7 @@ end
 
 function eval_section(request_map, section)
   local section_relation_and = (section.relation == "AND")
-  local m_singles, m_pairs, m_iprange, nm_singles, nm_pairs, nm_iprange,  = true, true, true, true, true, true
+  local m_singles, m_pairs, m_iprange, nm_singles, nm_pairs, nm_iprange  = true, true, true, true, true, true
 
 
   if section.singles then
