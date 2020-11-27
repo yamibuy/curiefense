@@ -122,10 +122,10 @@ function gen_list_entries(lst, handle)
     end
 
     return {
-        ["id"] = lst["id"]
-        ["name"] = lst["name"]
-        ["active"] = lst["active"]
-        ["tags"] = lst["tags"]
+        ["id"] = lst["id"],
+        ["name"] = lst["name"],
+        ["active"] = lst["active"],
+        ["tags"] = lst["tags"],
         ["rule"] = rule
     }
 
