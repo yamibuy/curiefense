@@ -19,28 +19,6 @@ local table_length  = utils.table_length
 local parse_cidr    = iputils.parse_cidr
 local build_ranges_lists = rangesbtree.build_ranges_lists
 
-function gen_masterdict(lst)
-
-    return {
-        -- copy essentials as is.
-        [ "id" ]               = lst["id"],
-        [ "name" ]             = lst["name"],
-        [ "entries_relation" ] = lst["entries_relation"],
-        [ "tags" ]             = lst["tags"],
-
-        [ "singles" ]          = defaultdict(dict),
-        [ "negate_singles" ]   = defaultdict(dict),
-
-        [ "pairs" ]            = defaultdict(dict),
-        [ "negate_pairs" ]     = defaultdict(dict),
-
-        [ "iprange" ]          = iptools.new_ip_set(),
-        [ "negate_iprange" ]   = iptools.new_ip_set(),
-    }
-
-end
-
-
 function categorize_singles(key)
     local mastercategory = "singles"
     if key:startswith("!") then
@@ -127,7 +105,7 @@ function gen_section_dict(section)
 end
 
 function gen_list_entries(lst, handle)
-    local masterdict = gen_masterdict(lst)
+
     local section_gate = lst.rule.relation
     local sections = lst.rule.sections
 
@@ -143,6 +121,12 @@ function gen_list_entries(lst, handle)
         })
     end
 
-    lst["rule"] = rule
-    return lst
+    return {
+        ["id"] = lst["id"]
+        ["name"] = lst["name"]
+        ["active"] = lst["active"]
+        ["tags"] = lst["tags"]
+        ["rule"] = rule
+    }
+
 end
