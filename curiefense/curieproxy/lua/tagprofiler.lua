@@ -138,7 +138,7 @@ function tag_lists(request_map)
     local sections = list.rule.sections
     local rule_relation_and = (list.rule.relation == "AND")
 
-    for section in ipairs(sections) do
+    for _, section in ipairs(sections) do
       if not eval_section(request_map, section) then
         -- first no match, bounce.
         if rule_relation_and then
