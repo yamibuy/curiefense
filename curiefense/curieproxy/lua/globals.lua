@@ -174,7 +174,7 @@ function load_and_reconstruct_taglist(handle, path)
         handle:logDebug(string.format("LART -- ID:Name active? %s:%s", list.id, list.name, list.active))
         if list.active then
             local tag_list = gen_list_entries(list, handle)
-            for _, section in ipairs(tag_list.sections) do
+            for _, section in ipairs(tag_list.rule.sections) do
                 handle:logDebug(
                     string.format(
                         "LART -- ID:Name %s:%s tags %s singles %s negate_singles %s pairs %s negate_pairs %s iprange %s negate_iprange %s",
