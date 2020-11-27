@@ -132,7 +132,7 @@ m_profilinglist = api.model("Profiling List", {
     "active": fields.Boolean(required=True),
     "entries_relation": fields.String(required=True),
     "tags": fields.List(fields.String()),
-    "entries": AnyType(),
+    "rule": AnyType(),
 })
 
 
