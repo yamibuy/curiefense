@@ -139,7 +139,7 @@ function eval_section(request_map, section)
 end
 
 function tag_lists(request_map)
-  request_map.handle:logDebug(string.format("TAG LIST WITH %s" ,json_encode(request_map)))
+  -- request_map.handle:logDebug(string.format("TAG LIST WITH %s" ,json_encode(request_map)))
   for _, list in pairs(globals.ProfilingLists) do
     local list_matched = false
     local sections = list.rule.sections
