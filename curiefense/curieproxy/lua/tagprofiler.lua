@@ -173,11 +173,11 @@ function tag_lists(request_map)
     for _, section in ipairs(sections) do
       local sec_eval = eval_section(request_map, section)
 
-      request_map.handle:logDebug(stirng.format("TAG LIST section evaluated %s", sec_eval))
+      request_map.handle:logDebug(string.format("TAG LIST section evaluated %s", sec_eval))
       if not eval_section(request_map, section) then
         -- first no match, bounce.
         if rule_relation_and then
-          request_map.handle:logDebug(stirng.format("TAG LIST rule_relation_and %s exiting", rule_relation_and))
+          request_map.handle:logDebug(string.format("TAG LIST rule_relation_and %s exiting", rule_relation_and))
           return
         end
         request_map.handle:logDebug("TAG LIST setting list_matched false given eval_section result and rule_relation_and is false")
