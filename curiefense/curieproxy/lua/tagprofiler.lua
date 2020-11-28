@@ -28,8 +28,9 @@ function match_singles(request_map, list_entry)
       for pattern, annotation in pairs(list_entries) do
         local value = request_map.attrs[entry_key]
         if value then
-          if re_match(value, pattern) then
-            request_map.handle:logDebug(string.format("matched >> match_singles - regex %s %s", value, pattern))
+          local val_patt_match = re_match(value, pattern)
+          request_map.handle:logDebug(string.format("matched? %s >> match_singles - regex %s %s", val_patt_match, value, pattern))
+          if val_patt_match then
             return annotation
           end
         end
@@ -46,8 +47,9 @@ function match_pairs(request_map, list_entry)
       local value, annotation = unpack(va)
       local reqmap_value = request_map[pair_name][key]
       if value and reqmap_value then
-        if reqmap_value == value or re_match(reqmap_value, value) then
-          request_map.handle:logDebug(string.format("matched >> match_pairs %s %s", reqmap_value, value))
+        local val_matched = (reqmap_value == value or re_match(reqmap_value, value))
+        request_map.handle:logDebug(string.format("matched? %s >> match_pairs %s %s", val_matched, reqmap_value, value))
+        if val_matched then
           return annotation
         end
       end
@@ -62,8 +64,9 @@ function negate_match_pairs(request_map, list_entry)
       local value, annotation = unpack(va)
       local reqmap_value = request_map[pair_name][key]
       if value and reqmap_value then
-        if reqmap_value ~= value and not re_match(reqmap_value, value) then
-          request_map.handle:logDebug(string.format("matched >> negate_match_pairs %s NOT %s", reqmap_value, value))
+        local neg_val_matched = (reqmap_value ~= value and not re_match(reqmap_value, value))
+        request_map.handle:logDebug(string.format("negate matched? %s >> negate_match_pairs %s NOT %s", neg_val_matched, reqmap_value, value))
+        if neg_val_matched then
           return annotation
         end
       end
