@@ -8,6 +8,7 @@ local json_safe     = require "cjson.safe"
 
 local re_match        = utils.re_match
 local tag_request     = utils.tag_request
+local table_length    = utils.table_length
 local json_encode     = cjson.encode
 
 function match_singles(request_map, list_entry)
