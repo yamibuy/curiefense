@@ -159,11 +159,8 @@ function eval_section(request_map, section)
 
 end
 
-function tag_lists(request_map)
-  request_map.handle:logDebug(string.format("TAG LIST WITH \nHEADERS:\n%s, \nARGS\n%s",
-    json_encode(request_map.headers),json_encode(request_map.args)))
+function eval_list( request_map, list )
 
-  for _, list in pairs(globals.ProfilingLists) do
     request_map.handle:logDebug(string.format("TAG LIST profiling list %s (%s)", list.name, list.id))
 
     local list_matched = false
@@ -174,7 +171,7 @@ function tag_lists(request_map)
       local sec_eval = eval_section(request_map, section)
 
       request_map.handle:logDebug(string.format("TAG LIST section evaluated %s", sec_eval))
-      if not eval_section(request_map, section) then
+      if not sec_eval then
         -- first no match, bounce.
         if rule_relation_and then
           request_map.handle:logDebug(string.format("TAG LIST rule_relation_and %s exiting", rule_relation_and))
@@ -186,8 +183,7 @@ function tag_lists(request_map)
         -- OR mode, match and move on.
         if not rule_relation_and then
           request_map.handle:logDebug("TAG LIST setting tagging request given rule_relation_and is false and eval_section matched")
-          tag_request(request_map, list.tags)
-          return
+          return true
         end
         list_matched = true
       end
@@ -195,6 +191,18 @@ function tag_lists(request_map)
     request_map.handle:logDebug(string.format("TAG LIST done with list -- rule_relation_and %s list_matched %s",
       rule_relation_and, list_matched))
     if rule_relation_and and list_matched then
+      return true
+    end
+
+end
+
+function tag_lists(request_map)
+  request_map.handle:logDebug(string.format("TAG LIST WITH \nHEADERS:\n%s, \nARGS\n%s",
+    json_encode(request_map.headers),json_encode(request_map.args)))
+
+  for _, list in pairs(globals.ProfilingLists) do
+    local list_eval = eval_list(request_map, list)
+    if list_eval then
       tag_request(request_map, list.tags)
     end
   end
