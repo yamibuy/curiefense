@@ -15,11 +15,13 @@ function match_singles(request_map, list_entry)
     -- exact request map
     local entry_match = list_entries[request_map[entry_key]]
     if entry_match then
+      request_map.handle:logDebug(string.format("match_singles:: Exact Match! %s %s %s", entry_match, entry_key, request_map[entry_key]))
       return entry_match
     end
     -- exact request map's attr
     entry_match = list_entries[request_map.attrs[entry_key]]
     if entry_match then
+      request_map.handle:logDebug(string.format("match_singles:: ATTR Match! %s %s %s", entry_match, entry_key, request_map.attrs[entry_key]))
       return entry_match
     end
 
@@ -29,7 +31,7 @@ function match_singles(request_map, list_entry)
         local value = request_map.attrs[entry_key]
         if value then
           local val_patt_match = re_match(value, pattern)
-          request_map.handle:logDebug(string.format("matched? %s >> match_singles - regex %s %s", val_patt_match, value, pattern))
+          request_map.handle:logDebug(string.format("match_singles:: %s matched? %s >>  - regex %s %s", entry_key, val_patt_match, value, pattern))
           if val_patt_match then
             return annotation
           end
@@ -79,55 +81,65 @@ function eval_section(request_map, section)
   -- request_map.handle:logDebug(string.format("SECTION %s" ,json_encode(section)))
   local section_relation_and = (section.relation == "AND")
   local section_entries = section.entries
-  local m_singles, m_pairs, m_iprange, nm_singles, nm_pairs, nm_iprange  = true, true, true, true, true, true
+  local m_singles, m_pairs, m_iprange, nm_singles, nm_pairs, nm_iprange  = false, false, false, false, false, false
 
-  for k, v in pairs(section.entries) do
-    request_map.handle:logDebug(string.format("K %s V %s", k, v))
-  end
+  -- for k, v in pairs(section.entries) do
+  --   request_map.handle:logDebug(string.format("K %s V %s", k, v))
+  -- end
 
-  if section_entries.singles then
+  if table_length(section_entries.singles) > 0 then
     -- request_map.handle:logDebug(string.format("match_or_list section.singles %s", json_encode(section_entries.singles)))
     local annotation, tags = match_singles(request_map, section_entries.singles)
     if not annotation then
       m_singles = false
       if section_relation_and then return false end
+    else
+      m_singles = true
     end
   end
 
-  if section_entries.pairs then
+  if table_length(section_entries.pairs) > 0 then
     -- request_map.handle:logDebug(string.format("match_or_list section_entries.pairs %s", json_encode(section_entries.pairs)))
     local annotation, tags = match_pairs(request_map, section_entries.pairs)
     if not annotation then
       m_pairs = false
       if section_relation_and then return false end
+    else
+      m_pairs = true
     end
   end
 
-  if section_entries.iprange then
+  if (section_entries.iprange:len() > 0 ) then
     -- request_map.handle:logDebug(string.format("match_or_list section_entries.iprange %s", json_encode(section_entries.iprange)))
     local within = section_entries.iprange:contains(request_map.attrs.ip)
     if not within then
       m_iprange = false
       if section_relation_and then return false end
+    else
+      m_iprange = true
     end
   end
 
   -- has entries
-  if section_entries.negate_singles and next(section_entries.negate_singles) then
+  if table_length(section_entries.negate_singles) > 0 then
     -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_singles %s", json_encode(section_entries.negate_singles)))
     local annotation, tags = match_singles(request_map, section_entries.negate_singles)
     if annotation then
       nm_singles = false
       if section_relation_and then return false end
+    else
+      nm_singles = true
     end
   end
 
-  if section_entries.negate_pairs and next(section_entries.negate_pairs) then
+  if table_length(section_entries.negate_pairs) > 0 then
     -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_pairs %s", json_encode(section_entries.negate_pairs)))
     local annotation, tags = negate_match_pairs(request_map, section_entries.negate_pairs)
     if not annotation then
       nm_pairs = false
       if section_relation_and then return false end
+    else
+      nm_pairs = true
     end
   end
 
@@ -137,6 +149,8 @@ function eval_section(request_map, section)
     if within then
       nm_iprange = false
       if section_relation_and then return false end
+    else
+      nm_iprange = true
     end
   end
 
