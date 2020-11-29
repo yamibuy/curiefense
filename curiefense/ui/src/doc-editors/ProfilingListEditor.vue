@@ -202,8 +202,8 @@ export default {
         this.selectedDoc.rule = {
           relation: 'AND',
           sections: [{
-            relation: this.selectedDoc.entries_relation,
-            entries: this.selectedDoc.entries
+            relation: this.selectedDoc?.entries_relation || 'OR',
+            entries: this.selectedDoc?.entries || []
           }]
         }
       }
