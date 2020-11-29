@@ -26,8 +26,8 @@ function match_singles(request_map, list_entry)
       return entry_match
     end
 
-    -- pattern matching for all but ip.
-    if entry_key ~= 'ip' then
+    -- pattern matching for all but ip or ASN.
+    if entry_key ~= 'ip' and entry_key ~= 'asn' then
       for pattern, annotation in pairs(list_entries) do
         local value = request_map.attrs[entry_key]
         if value then
