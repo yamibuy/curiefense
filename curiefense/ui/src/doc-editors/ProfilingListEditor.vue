@@ -3,7 +3,7 @@
     <div class="card-content">
       <div class="content">
         <div class="columns">
-          <div class="column is-4" style="border-right:solid 2px #f8f8f8; ">
+          <div class="column is-3" style="border-right:solid 2px #f8f8f8; ">
             <div class="field">
               <label class="label is-small">Name</label>
               <div class="control">
@@ -58,7 +58,7 @@
               </div>
             </div>
           </div>
-          <div class="column is-8">
+          <div class="column is-9">
             <entries-relation-list :rule="selectedDoc.rule"
                                    :editable="editable">
             </entries-relation-list>
@@ -86,16 +86,18 @@ export default {
     TagAutocompleteInput
   },
 
+  data() {
+    return {
+      listTotalEntries: 0
+    }
+  },
+
   props: {
     selectedDoc: Object,
     apiPath: String
   },
 
   computed: {
-    listTotalEntries() {
-      return this.selectedDoc?.entries?.length
-    },
-
     readonly() {
       return this.selectedDoc.source === 'reblaze-managed'
     },
@@ -200,8 +202,8 @@ export default {
         this.selectedDoc.rule = {
           relation: 'AND',
           sections: [{
-            relation: this.selectedDoc.entries_relation,
-            entries: this.selectedDoc.entries
+            relation: this.selectedDoc?.entries_relation || 'OR',
+            entries: this.selectedDoc?.entries || []
           }]
         }
       }
@@ -212,6 +214,13 @@ export default {
     selectedDoc: {
       handler: function () {
         this.convertOldEntriesToNewEntries()
+        if (this.selectedDoc?.rule?.sections?.length) {
+          this.listTotalEntries = this.ld.sumBy(this.selectedDoc.rule.sections, (section) => {
+            return section.entries?.length
+          })
+        } else {
+          this.listTotalEntries = 0
+        }
       },
       immediate: true,
       deep: true

@@ -10,7 +10,7 @@ describe('EntriesRelationList.vue', () => {
     let entryData2
     beforeEach(() => {
         entryData1 = {
-            relation: 'or',
+            relation: 'OR',
             entries: [
                 [
                     'uri',
@@ -23,7 +23,7 @@ describe('EntriesRelationList.vue', () => {
             ]
         }
         entryData2 = {
-            relation: 'and',
+            relation: 'AND',
             entries: [
                 [
                     'headers',
@@ -38,7 +38,7 @@ describe('EntriesRelationList.vue', () => {
             ]
         }
         ruleData = {
-            relation: 'and',
+            relation: 'AND',
             sections: [
                 entryData1,
                 entryData2
@@ -94,6 +94,25 @@ describe('EntriesRelationList.vue', () => {
         await Vue.nextTick()
         const component = wrapper.findComponent(EntriesRelationList)
         expect(component).toBeTruthy()
+    })
+
+    test('should change section relation between `OR` and `AND` when clicked', async () => {
+        const component = wrapper.findComponent(EntriesRelationList)
+        const sectionRelationToggle = component.findAll('.section-relation-toggle').at(1)
+        sectionRelationToggle.trigger('click')
+        await Vue.nextTick()
+        expect(sectionRelationToggle.text()).toEqual('OR')
+        sectionRelationToggle.trigger('click')
+        await Vue.nextTick()
+        expect(sectionRelationToggle.text()).toEqual('AND')
+    })
+
+    test('should not change section relation if section entries contains two entries of same category', async () => {
+        const component = wrapper.findComponent(EntriesRelationList)
+        const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
+        sectionRelationToggle.trigger('click')
+        await Vue.nextTick()
+        expect(sectionRelationToggle.text()).toEqual('OR')
     })
 
     describe('large data pagination', () => {
@@ -160,6 +179,7 @@ describe('EntriesRelationList.vue', () => {
             const nextPageButton = checkedTable.find('.pagination-next')
             nextPageButton.trigger('click')
             await Vue.nextTick()
+            checkedTable = checkedComponent.findAll('.entries-table').at(0)
             const entryRows = checkedTable.findAll('.entry-row')
             expect(entryRows.length).toEqual(10)
         })
@@ -178,6 +198,7 @@ describe('EntriesRelationList.vue', () => {
             const prevPageButton = checkedTable.find('.pagination-previous')
             prevPageButton.trigger('click')
             await Vue.nextTick()
+            checkedTable = checkedComponent.findAll('.entries-table').at(0)
             const entryRows = checkedTable.findAll('.entry-row')
             expect(entryRows.length).toEqual(20)
         })
@@ -221,6 +242,24 @@ describe('EntriesRelationList.vue', () => {
             ruleData.sections[0].entries[0] = {
                 prop: 'value'
             }
+            const isValid = validator(ruleData)
+            expect(isValid).toEqual(false)
+        })
+
+        test('should return false for undefined sections', () => {
+            ruleData.sections = undefined
+            const isValid = validator(ruleData)
+            expect(isValid).toEqual(false)
+        })
+
+        test('should return false for undefined relation', () => {
+            ruleData.relation = undefined
+            const isValid = validator(ruleData)
+            expect(isValid).toEqual(false)
+        })
+
+        test('should return false for undefined rule', () => {
+            ruleData = undefined
             const isValid = validator(ruleData)
             expect(isValid).toEqual(false)
         })
@@ -281,6 +320,18 @@ describe('EntriesRelationList.vue', () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const removeEntriesBlockButton = component.find('.remove-entries-block-button')
             expect(removeEntriesBlockButton.element).toBeUndefined()
+        })
+
+        test('should close new entry table after removing entries block', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
+            removeEntriesBlockButton.trigger('click')
+            await Vue.nextTick()
+            const newEntryTable = component.find('.new-entry-table')
+            expect(newEntryTable.element).toBeUndefined()
         })
     })
 
@@ -396,6 +447,122 @@ describe('EntriesRelationList.vue', () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             expect(addEntryButton.element).toBeUndefined()
+        })
+
+        test('should set section relation to `OR` if two items of same category added', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            // remove all entries
+            let removeEntryButton = component.find('.remove-entry-button')
+            removeEntryButton.trigger('click')
+            await Vue.nextTick()
+            removeEntryButton = component.find('.remove-entry-button')
+            removeEntryButton.trigger('click')
+            await Vue.nextTick()
+            // set relation to AND
+            const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
+            sectionRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(sectionRelationToggle.text()).toEqual('AND')
+            // open new entry table
+            const addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            // add input to new entry table
+            const newEntryTable = component.find('.new-entry-table')
+            const newEntryTextarea = newEntryTable.find('.new-entry-textarea')
+            newEntryTextarea.setValue('1.2.3.4#annotation\n1.2.3.5#wow')
+            // confirm add new entry
+            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            // check
+            expect(sectionRelationToggle.text()).toEqual('OR')
+        })
+
+        test('should not set section relation to `OR` if no more than one item of same category added', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            // remove all entries
+            let removeEntryButton = component.find('.remove-entry-button')
+            removeEntryButton.trigger('click')
+            await Vue.nextTick()
+            removeEntryButton = component.find('.remove-entry-button')
+            removeEntryButton.trigger('click')
+            await Vue.nextTick()
+            // set relation to AND
+            const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
+            sectionRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(sectionRelationToggle.text()).toEqual('AND')
+            // open new entry table
+            const addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            // add input to new entry table
+            const newEntryTable = component.find('.new-entry-table')
+            const newEntryTextarea = newEntryTable.find('.new-entry-textarea')
+            newEntryTextarea.setValue('1.2.3.4#annotation')
+            // confirm add new entry
+            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            // check
+            expect(sectionRelationToggle.text()).toEqual('AND')
+        })
+
+        test('should not set section relation to `OR` if two headers added', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            // remove all entries
+            let removeEntryButton = component.find('.remove-entry-button')
+            removeEntryButton.trigger('click')
+            await Vue.nextTick()
+            removeEntryButton = component.find('.remove-entry-button')
+            removeEntryButton.trigger('click')
+            await Vue.nextTick()
+            // set relation to AND
+            const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
+            sectionRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(sectionRelationToggle.text()).toEqual('AND')
+            // open new entry table
+            let addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            let newEntryTable = component.find('.new-entry-table')
+            // change entry type to headers
+            let typeSelection = newEntryTable.find('.new-entry-type-selection')
+            typeSelection.trigger('click')
+            let options = typeSelection.findAll('option')
+            options.at(7).element.selected = true
+            typeSelection.trigger('change')
+            await Vue.nextTick()
+            // add input to new entry table
+            let newEntryTextarea = newEntryTable.find('.new-entry-textarea')
+            newEntryTextarea.setValue('something\nright\nhere')
+            // confirm add new entry
+            let confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            // open new entry table - second time
+            addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            newEntryTable = component.find('.new-entry-table')
+            // change entry type to headers - second time
+            typeSelection = newEntryTable.find('.new-entry-type-selection')
+            typeSelection.trigger('click')
+            options = typeSelection.findAll('option')
+            options.at(7).element.selected = true
+            typeSelection.trigger('change')
+            await Vue.nextTick()
+            // add input to new entry table - second time
+            newEntryTextarea = newEntryTable.find('.new-entry-textarea')
+            newEntryTextarea.setValue('something\nright\nhere')
+            // confirm add new entry - second time
+            confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            // check
+            expect(sectionRelationToggle.text()).toEqual('AND')
         })
     })
 
