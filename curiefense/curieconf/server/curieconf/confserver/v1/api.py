@@ -91,7 +91,7 @@ m_wafrule = api.model("WAF Rule", {
     "subcategory": fields.String(required=True),
 })
 
-# wafprofile
+# wafpolicy
 
 m_wafpolicy = api.model("WAF Policy", {
     "id": fields.String(required=True),
@@ -108,7 +108,7 @@ m_wafpolicy = api.model("WAF Policy", {
     "cookies": fields.Raw(),
 })
 
-# aclprofile
+# aclpolicy
 
 m_aclpolicy = api.model("ACL Policy", {
     "id": fields.String(required=True),
@@ -224,8 +224,8 @@ def validateJson(json_data, schema_type):
 
 base_path = Path(__file__).parent
 # base_path = "/etc/curiefense/json/"
-acl_profiles_file_path = (base_path / "../json/acl-profiles.schema").resolve()
-with open(acl_profiles_file_path) as json_file:
+acl_policy_file_path = (base_path / "../json/acl-policy.schema").resolve()
+with open(acl_policy_file_path) as json_file:
     acl_policy_schema = json.load(json_file)
 ratelimits_file_path = (base_path / "../json/rate-limits.schema").resolve()
 with open(ratelimits_file_path) as json_file:
@@ -233,8 +233,8 @@ with open(ratelimits_file_path) as json_file:
 urlmaps_file_path = (base_path / "../json/url-maps.schema").resolve()
 with open(urlmaps_file_path) as json_file:
     urlmaps_schema = json.load(json_file)
-waf_profiles_file_path = (base_path / "../json/waf-profiles.schema").resolve()
-with open(waf_profiles_file_path) as json_file:
+waf_policy_file_path = (base_path / "../json/waf-policy.schema").resolve()
+with open(waf_policy_file_path) as json_file:
     waf_policy_schema = json.load(json_file)
 tagrules_file_path = (base_path / "../json/tag-rules.schema").resolve()
 with open(tagrules_file_path) as json_file:
