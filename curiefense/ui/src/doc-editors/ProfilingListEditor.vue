@@ -7,19 +7,33 @@
             <div class="field">
               <label class="label is-small">Name</label>
               <div class="control">
-                <input class="input is-small" placeholder="list name" v-model="selectedDoc.name"
+                <input class="input is-small"
+                       placeholder="list name"
+                       v-model="selectedDoc.name"
                        :readonly="readonly"/>
               </div>
-              <p class="subtitle is-7 has-text-grey">{{ selectedDoc.id + '\t|\t' + localDocTotalEntries + ' entries.' }}</p>
+              <p class="subtitle is-7 has-text-grey">
+                {{ selectedDoc.id + '\t|\t' + localDocTotalEntries + ' entries.' }}
+              </p>
             </div>
             <div class="field">
-              <a v-if="selectedDoc && selectedDoc.source && selectedDoc.source.indexOf('http') === 0"
-                 class="is-small has-text-grey is-size-7 is-pulled-right"
-                 @click="fetchList"
-              >update now</a>
-              <label class="label is-small">Last update</label>
+              <label class="label is-small">Sections control</label>
+              <span class="is-size-7">Sections: {{ localDoc.rule.sections.length }}</span>
               <div class="control">
-                <input class="input is-small" v-model="selectedDoc.mdate" readonly/>
+                <span class="is-size-7">
+                  Sections relation:
+                  <span class="tag is-small is-info is-light rule-relation-toggle"
+                        @click="toggleRuleRelation()">
+                    {{ localDoc.rule.relation }}
+                  </span>
+                </span>
+              </div>
+              <div class="control" v-if="editable">
+                <button class="button is-small has-text-danger-dark remove-all-sections-button"
+                        title="Remove all sections"
+                        @click="removeAllSections">
+                  Remove all sections
+                </button>
               </div>
             </div>
             <div class="field">
@@ -33,6 +47,11 @@
               <p class="help">Separated by space.</p>
             </div>
             <div class="field">
+              <a v-if="selectedDoc && selectedDoc.source && selectedDoc.source.indexOf('http') === 0"
+                 class="is-small has-text-grey is-size-7 is-pulled-right"
+                 @click="fetchList">
+                update now
+              </a>
               <label class="label is-small">Source</label>
               <div class="control">
                 <input class="input is-small" v-model="selectedDoc.source"
@@ -57,11 +76,16 @@
                           :readonly="readonly"></textarea>
               </div>
             </div>
+            <span class="is-small is-family-monospace has-text-grey-lighter">
+              Last update:
+              <br/>
+              {{ selectedDoc.mdate }}
+            </span>
           </div>
           <div class="column is-9">
             <entries-relation-list :rule="localDoc.rule"
                                    :editable="editable"
-                                    @update="updateRule($event)">
+                                   @update="updateRule($event)">
             </entries-relation-list>
           </div>
         </div>
@@ -132,6 +156,24 @@ export default {
 
   methods: {
 
+    emitDocUpdate() {
+      this.$emit('update', this.localDoc)
+    },
+
+    toggleRuleRelation() {
+      if (this.localDoc.rule.relation === 'AND') {
+        this.localDoc.rule.relation = 'OR'
+      } else {
+        this.localDoc.rule.relation = 'AND'
+      }
+      this.emitDocUpdate()
+    },
+
+    removeAllSections() {
+      this.localDoc.rule.sections.splice(0, this.localDoc.rule.sections.length)
+      this.emitDocUpdate()
+    },
+
     tryMatch(data, regex, type) {
       let matches, entries = []
       matches = regex.exec(data)
@@ -194,7 +236,7 @@ export default {
 
     updateRule(rule) {
       this.localDoc.rule = rule
-      this.$emit('update', this.localDoc)
+      this.emitDocUpdate()
     },
 
     convertOldEntriesToNewEntries() {
@@ -223,3 +265,8 @@ export default {
 
 }
 </script>
+<style scoped>
+.rule-relation-toggle {
+  cursor: pointer;
+}
+</style>
