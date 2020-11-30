@@ -174,11 +174,11 @@ export default {
 
       componentsMap: {
         'aclprofiles': {component: ACLEditor, title: 'ACL Profiles'},
-        'tagrules': {component: ProfilingListEditor, title: 'Profiling Lists'},
+        'tagrules': {component: ProfilingListEditor, title: 'Tag Rules'},
         'ratelimits': {component: RateLimitsEditor, title: 'Rate Limits'},
         'urlmaps': {component: URLMapsEditor, title: 'URL Maps'},
         'wafprofiles': {component: WAFEditor, title: 'WAF Profiles'},
-        'wafrules': {component: WAFSigsEditor, title: 'WAF Signatures'},
+        'wafrules': {component: WAFSigsEditor, title: 'WAF Rules'},
       },
 
       apiRoot: DatasetsUtils.ConfAPIRoot,

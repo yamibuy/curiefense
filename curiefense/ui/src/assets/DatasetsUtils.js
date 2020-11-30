@@ -66,7 +66,7 @@ const Titles = {
   "urlmaps": "URL Maps",
   "wafprofiles": "WAF Profiles",
   "wafrules": "WAF Signatures",
-  "tagrules": "Profiling Lists"
+  "tagrules": "Tag Rules"
 }
 
 const LimitRulesTypes = {
