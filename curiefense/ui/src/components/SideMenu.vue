@@ -29,10 +29,10 @@ export default {
     return {
       selectedMenuItem: null,
       menuItems: {
-        Configuration: {
-          '/config': {'title': 'Document Editor'},
-          '/db': {'title': 'System Settings'},
-          '/publish': {'title': 'Publish Configuration'},
+        Settings: {
+          '/config': {'title': 'Policies & Rules'},
+          '/db': {'title': 'System DB'},
+          '/publish': {'title': 'Publish Changes'},
         },
         Analytics: {
           '/accesslog': {'title': 'Access Log'}
