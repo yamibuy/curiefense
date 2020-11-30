@@ -38,17 +38,18 @@
         </div>
       </div>
     <hr/>
-    <div v-for="(section, id) in localRule.sections" :key="id" class="section">
-      <div class="card">
-        <div class="card-content">
-          <div class="content">
-            <div class="columns has-text-grey section-bar">
-              <div class="column is-height-30-px">
-                <div class="field is-grouped">
-                  <div class="control">
-                    <span class="is-size-7">Entries: {{ section.entries.length }}</span>
-                  </div>
-                  <div class="control">
+    <div class="sections-wrapper">
+      <div v-for="(section, id) in localRule.sections" :key="id" class="section">
+        <div class="card">
+          <div class="card-content">
+            <div class="content">
+              <div class="columns has-text-grey section-bar">
+                <div class="column is-height-30-px">
+                  <div class="field is-grouped">
+                    <div class="control">
+                      <span class="is-size-7">Entries: {{ section.entries.length }}</span>
+                    </div>
+                    <div class="control">
                   <span class="is-size-7">
                     Entries relation:
                     <span class="tag is-small is-info is-light section-relation-toggle"
@@ -56,121 +57,122 @@
                       {{ section.relation }}
                     </span>
                   </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="column is-height-30-px">
+                  <div v-if="editable"
+                       class="field is-grouped is-pulled-right">
+                    <div class="control">
+                      <button class="button is-small has-text-primary add-entry-button"
+                              title="Add new entry"
+                              @click="clearNewEntryData(); newEntrySectionIndex = id">
+                        Add entry
+                      </button>
+                    </div>
+                    <div class="control">
+                      <button class="button is-small has-text-danger remove-section-button"
+                              title="Remove section"
+                              @click="removeSection(id)">
+                        Remove section
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="column is-height-30-px">
-                <div v-if="editable"
-                     class="field is-grouped is-pulled-right">
-                  <div class="control">
-                    <button class="button is-small has-text-primary add-entry-button"
-                            title="Add new entry"
-                            @click="clearNewEntryData(); newEntrySectionIndex = id">
-                      Add entry
-                    </button>
-                  </div>
-                  <div class="control">
-                    <button class="button is-small has-text-danger remove-section-button"
-                            title="Remove section"
-                            @click="removeSection(id)">
-                      Remove section
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <hr/>
-            <table v-if="newEntrySectionIndex === id && editable"
-                   class="table is-narrow is-fullwidth new-entry-table">
-              <thead>
-              <tr>
-                <th class="is-size-7">Category</th>
-                <th class="is-size-7">Entry</th>
-                <th class="is-size-7 is-48-px">
-                  <a class="is-small has-text-grey" title="cancel" @click="clearNewEntryData">cancel</a>
-                </th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr>
-                <td class="is-size-7">
-                  <div class="select is-small is-fullwidth">
-                    <select v-model="newEntryCategory" class="select new-entry-type-selection">
-                      <option v-for="(entryType, category) in listEntryTypes" :key="category" :value="category">
-                        {{ entryType.title }}
-                      </option>
-                    </select>
-                  </div>
-                </td>
-                <td class="is-size-7">
+              <hr/>
+              <table v-if="newEntrySectionIndex === id && editable"
+                     class="table is-narrow is-fullwidth new-entry-table">
+                <thead>
+                <tr>
+                  <th class="is-size-7">Category</th>
+                  <th class="is-size-7">Entry</th>
+                  <th class="is-size-7 is-48-px">
+                    <a class="is-small has-text-grey" title="cancel" @click="clearNewEntryData">cancel</a>
+                  </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td class="is-size-7">
+                    <div class="select is-small is-fullwidth">
+                      <select v-model="newEntryCategory" class="select new-entry-type-selection">
+                        <option v-for="(entryType, category) in listEntryTypes" :key="category" :value="category">
+                          {{ entryType.title }}
+                        </option>
+                      </select>
+                    </div>
+                  </td>
+                  <td class="is-size-7">
                           <textarea v-model="newEntryItems"
                                     :placeholder="inputDescription"
                                     class="textarea is-small is-fullwidth new-entry-textarea"
                                     rows="3"></textarea>
-                </td>
-                <td class="is-size-7 is-48-px">
-                  <a class="is-small has-text-grey confirm-add-entry-button" title="add entry"
-                     @click="addEntry(section, id)">add</a>
-                </td>
-              </tr>
-              </tbody>
-            </table>
-            <hr v-if="newEntrySectionIndex === id && editable"/>
-            <table class="table is-narrow entries-table">
-              <thead>
-              <tr>
-                <th class="is-size-7 is-vcentered is-48-px"></th>
-                <th class="is-size-7 is-vcentered">Category</th>
-                <th class="is-size-7 is-vcentered">Entry</th>
-                <th class="is-size-7 is-vcentered">Annotation</th>
-                <th class=" is-size-7 is-vcentered is-48-px"></th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="(entry,idx) in sectionsCurrentPage[id]" :key="idx" class="entry-row">
-                <td class="is-size-7 is-48-px has-text-centered has-text-grey-light entry-number">
+                  </td>
+                  <td class="is-size-7 is-48-px">
+                    <a class="is-small has-text-grey confirm-add-entry-button" title="add entry"
+                       @click="addEntry(section, id)">add</a>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+              <hr v-if="newEntrySectionIndex === id && editable"/>
+              <table class="table is-narrow entries-table">
+                <thead>
+                <tr>
+                  <th class="is-size-7 is-vcentered is-48-px"></th>
+                  <th class="is-size-7 is-vcentered">Category</th>
+                  <th class="is-size-7 is-vcentered">Entry</th>
+                  <th class="is-size-7 is-vcentered">Annotation</th>
+                  <th class=" is-size-7 is-vcentered is-48-px"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(entry,idx) in sectionsCurrentPage[id]" :key="idx" class="entry-row">
+                  <td class="is-size-7 is-48-px has-text-centered has-text-grey-light entry-number">
                   <span v-if="((idx + 1) + ((sectionsCurrentPageIndex[id] - 1) * rowsPerPage)) !== 1"
-                      class="tag is-small is-info is-light section-relation-toggle"
+                        class="tag is-small is-info is-light section-relation-toggle"
                         @click="toggleSectionRelation(section)">
                     {{ section.relation }}
                   </span>
-                </td>
-                <td class="is-size-7 entry-category">{{ listEntryTypes[entry[0]].title }}</td>
-                <td class="is-size-7 entry-value"><span v-html="dualCell(entry[1])"></span></td>
-                <td :title="entry[2]" class="is-size-7 entry-annotation">{{
-                    entry[2] ? entry[2].substr(0, 40) : ''
-                  }}
-                </td>
-                <td class="is-size-7 is-48-px">
-                  <a v-if="editable"
-                     class="is-small has-text-grey remove-entry-button" title="remove entry"
-                     @click="removeEntry(section, id, idx)">
-                    remove
-                  </a>
-                </td>
-              </tr>
-              <tr v-if="totalPages(section) > 1">
-                <td colspan="5">
-                  <nav aria-label="pagination" class="pagination is-small" role="navigation">
-                    <a :disabled="sectionsCurrentPageIndex[id] === 1" class="is-pulled-left pagination-previous"
-                       @click="navigate(section, id, sectionsCurrentPageIndex[id] - 1)">Previous Page</a>
-                    <a :disabled="sectionsCurrentPageIndex[id] === totalPages(section)"
-                       class="is-pulled-right pagination-next"
-                       @click="navigate(section, id, sectionsCurrentPageIndex[id] + 1)">Next page</a>
-                  </nav>
-                </td>
-              </tr>
-              </tbody>
-            </table>
+                  </td>
+                  <td class="is-size-7 entry-category">{{ listEntryTypes[entry[0]].title }}</td>
+                  <td class="is-size-7 entry-value"><span v-html="dualCell(entry[1])"></span></td>
+                  <td :title="entry[2]" class="is-size-7 entry-annotation">{{
+                      entry[2] ? entry[2].substr(0, 40) : ''
+                    }}
+                  </td>
+                  <td class="is-size-7 is-48-px">
+                    <a v-if="editable"
+                       class="is-small has-text-grey remove-entry-button" title="remove entry"
+                       @click="removeEntry(section, id, idx)">
+                      remove
+                    </a>
+                  </td>
+                </tr>
+                <tr v-if="totalPages(section) > 1">
+                  <td colspan="5">
+                    <nav aria-label="pagination" class="pagination is-small" role="navigation">
+                      <a :disabled="sectionsCurrentPageIndex[id] === 1" class="is-pulled-left pagination-previous"
+                         @click="navigate(section, id, sectionsCurrentPageIndex[id] - 1)">Previous Page</a>
+                      <a :disabled="sectionsCurrentPageIndex[id] === totalPages(section)"
+                         class="is-pulled-right pagination-next"
+                         @click="navigate(section, id, sectionsCurrentPageIndex[id] + 1)">Next page</a>
+                    </nav>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-      <div v-if="localRule.sections.length > 1 && id !== localRule.sections.length - 1"
-           class="control is-expanded relation-selection-wrapper">
+        <div v-if="localRule.sections.length > 1 && id !== localRule.sections.length - 1"
+             class="control is-expanded relation-selection-wrapper">
         <span class="tag is-small is-info is-light is-relative rule-relation-toggle"
               @click="toggleRuleRelation()">
           {{ localRule.relation }}
         </span>
+        </div>
       </div>
     </div>
   </div>
@@ -443,6 +445,11 @@ export default {
   background: black;
   width: 100%;
   transform: translateY(-50%);
+}
+
+.sections-wrapper {
+  max-height: 1000px;
+  overflow-y: auto;
 }
 
 .rule-relation-toggle, .section-relation-toggle {
