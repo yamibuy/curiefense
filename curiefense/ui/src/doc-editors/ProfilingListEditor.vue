@@ -10,7 +10,7 @@
                 <input class="input is-small" placeholder="list name" v-model="selectedDoc.name"
                        :readonly="readonly"/>
               </div>
-              <p class="subtitle is-7 has-text-grey">{{ selectedDoc.id + '\t|\t' + listTotalEntries + ' entries.' }}</p>
+              <p class="subtitle is-7 has-text-grey">{{ selectedDoc.id + '\t|\t' + localDocTotalEntries + ' entries.' }}</p>
             </div>
             <div class="field">
               <a v-if="selectedDoc && selectedDoc.source && selectedDoc.source.indexOf('http') === 0"
@@ -59,8 +59,9 @@
             </div>
           </div>
           <div class="column is-9">
-            <entries-relation-list :rule="selectedDoc.rule"
-                                   :editable="editable">
+            <entries-relation-list :rule="localDoc.rule"
+                                   :editable="editable"
+                                    @update="updateRule($event)">
             </entries-relation-list>
           </div>
         </div>
@@ -84,12 +85,6 @@ export default {
   components: {
     EntriesRelationList,
     TagAutocompleteInput
-  },
-
-  data() {
-    return {
-      listTotalEntries: 0
-    }
   },
 
   props: {
@@ -119,25 +114,35 @@ export default {
       }, 500)
     },
 
+    localDoc() {
+      return JSON.parse(JSON.stringify(this.selectedDoc))
+    },
+
+    localDocTotalEntries() {
+      let totalEntries = 0
+      if (this.localDoc?.rule?.sections?.length) {
+        totalEntries = this.ld.sumBy(this.localDoc.rule.sections, (section) => {
+          return section.entries?.length
+        })
+      }
+      return totalEntries
+    }
+
   },
 
   methods: {
+
     tryMatch(data, regex, type) {
       let matches, entries = []
-
       matches = regex.exec(data)
       while (matches) {
-
         let entry = [type, matches[1], null]
-
         if (matches.length > 2) {
           entry[2] = (matches.slice(-1)[0] || '').slice(0, 128)
         }
-
         entries.push(entry)
         matches = regex.exec(data)
       }
-
       return entries
     },
 
@@ -146,7 +151,6 @@ export default {
           line_matching_asn = /(as\d{3,6})((\s+)?([#;/?].+))?/gmi,
           single_ip = /^((((\d{1,3})\.){3}\d{1,3}(\/\d{1,2}))|([0-9a-f]+:+){1,8}([0-9a-f]+)?(\/\d{1,3})?)$/,
           single_asn = /(as\d{3,6})/i
-
       // try every node / element of String type with the regex.
       let object_parser = (data, store) => {
         this.ld.each(data,
@@ -163,21 +167,15 @@ export default {
               }
             })
       }
-
       let url = this.selectedDoc.source
-
       RequestsUtils.sendRequest('GET', `tools/fetch?url=${url}`).then(
           (response) => {
-
             let data = response.data,
                 entries = []
-
             entries = this.tryMatch(data, line_matching_ip, 'ip')
-
             if (entries.length === 0) {
               entries = this.tryMatch(data, line_matching_asn, 'asn')
             }
-
             if (entries.length === 0) {
               try {
                 object_parser(data, entries)
@@ -185,7 +183,6 @@ export default {
                 console.log(e)
               }
             }
-
             if (entries.length > 0) {
               this.selectedDoc.entries = entries
               this.convertOldEntriesToNewEntries()
@@ -193,17 +190,21 @@ export default {
             }
 
           })
+    },
 
+    updateRule(rule) {
+      this.localDoc.rule = rule
+      this.$emit('update', this.localDoc)
     },
 
     convertOldEntriesToNewEntries() {
       // TODO - Temporary casting as we are changing the structure of profiling lists object
-      if (!this.selectedDoc?.rule) {
-        this.selectedDoc.rule = {
+      if (!this.localDoc?.rule) {
+        this.localDoc.rule = {
           relation: 'AND',
           sections: [{
-            relation: this.selectedDoc?.entries_relation || 'OR',
-            entries: this.selectedDoc?.entries || []
+            relation: this.localDoc?.entries_relation || 'OR',
+            entries: this.localDoc?.entries || []
           }]
         }
       }
@@ -214,13 +215,6 @@ export default {
     selectedDoc: {
       handler: function () {
         this.convertOldEntriesToNewEntries()
-        if (this.selectedDoc?.rule?.sections?.length) {
-          this.listTotalEntries = this.ld.sumBy(this.selectedDoc.rule.sections, (section) => {
-            return section.entries?.length
-          })
-        } else {
-          this.listTotalEntries = 0
-        }
       },
       immediate: true,
       deep: true

@@ -1,5 +1,5 @@
 import EntriesRelationList from '@/components/EntriesRelationList'
-import {describe, test, expect, beforeEach, jest, afterEach} from '@jest/globals'
+import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals'
 import {mount} from '@vue/test-utils'
 import Vue from 'vue'
 
@@ -44,10 +44,16 @@ describe('EntriesRelationList.vue', () => {
                 entryData2
             ]
         }
+        const onUpdate = (rule) => {
+            wrapper.setProps({rule: rule})
+        }
         wrapper = mount(EntriesRelationList, {
             propsData: {
                 rule: ruleData,
                 editable: true
+            },
+            listeners: {
+                update: onUpdate
             }
         })
     })
@@ -72,9 +78,11 @@ describe('EntriesRelationList.vue', () => {
         expect(ruleData.sections[0].entries).toEqual(wantedEntryData)
     })
 
-    test('should display correct data from prop to view if data changed', async() => {
+    test('should display correct data from prop to view if data changed', async () => {
         const wantedEntryData = ['ip', '1.2.3.4']
-        ruleData.sections[0].entries = [wantedEntryData]
+        const newRuleData = JSON.parse(JSON.stringify(ruleData))
+        newRuleData.sections[0].entries = [wantedEntryData]
+        wrapper.setProps({rule: newRuleData})
         await Vue.nextTick()
         const component = wrapper.findComponent(EntriesRelationList)
         const categories = component.findAll('.entry-category')
@@ -89,30 +97,45 @@ describe('EntriesRelationList.vue', () => {
         expect(component).toBeTruthy()
     })
 
-    test('should not break if data changes to invalid data', async() => {
+    test('should not break if data changes to invalid data', async () => {
         entryData1 = {}
         await Vue.nextTick()
         const component = wrapper.findComponent(EntriesRelationList)
         expect(component).toBeTruthy()
     })
 
-    test('should change section relation between `OR` and `AND` when clicked', async () => {
-        const component = wrapper.findComponent(EntriesRelationList)
-        const sectionRelationToggle = component.findAll('.section-relation-toggle').at(1)
-        sectionRelationToggle.trigger('click')
-        await Vue.nextTick()
-        expect(sectionRelationToggle.text()).toEqual('OR')
-        sectionRelationToggle.trigger('click')
-        await Vue.nextTick()
-        expect(sectionRelationToggle.text()).toEqual('AND')
-    })
+    describe('relation switch labels', () => {
+        test('should change section relation between `OR` and `AND` when clicked', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const section = component.findAll('.section').at(1)
+            const sectionRelationToggle = section.find('.section-relation-toggle')
+            sectionRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(sectionRelationToggle.text()).toEqual('OR')
+            sectionRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(sectionRelationToggle.text()).toEqual('AND')
+        })
 
-    test('should not change section relation if section entries contains two entries of same category', async () => {
-        const component = wrapper.findComponent(EntriesRelationList)
-        const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
-        sectionRelationToggle.trigger('click')
-        await Vue.nextTick()
-        expect(sectionRelationToggle.text()).toEqual('OR')
+        test('should not change section relation if section entries contains two entries of same category', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const section = component.findAll('.section').at(0)
+            const sectionRelationToggle = section.find('.section-relation-toggle')
+            sectionRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(sectionRelationToggle.text()).toEqual('OR')
+        })
+
+        test('should change rule relation between `OR` and `AND` when clicked', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const ruleRelationToggle = component.find('.rule-relation-toggle')
+            ruleRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(ruleRelationToggle.text()).toEqual('OR')
+            ruleRelationToggle.trigger('click')
+            await Vue.nextTick()
+            expect(ruleRelationToggle.text()).toEqual('AND')
+        })
     })
 
     describe('large data pagination', () => {
@@ -160,10 +183,16 @@ describe('EntriesRelationList.vue', () => {
                     entryData1
                 ]
             }
+            const onUpdate = (rule) => {
+                wrapper.setProps({rule: rule})
+            }
             wrapper = mount(EntriesRelationList, {
                 propsData: {
                     rule: ruleData,
                     editable: true
+                },
+                listeners: {
+                    update: onUpdate
                 }
             })
             checkedComponent = wrapper.findComponent(EntriesRelationList)
@@ -265,11 +294,11 @@ describe('EntriesRelationList.vue', () => {
         })
     })
 
-    describe('add entries block button', () => {
-        test('should add empty entries block', () => {
+    describe('add section button', () => {
+        test('should add empty section', () => {
             const component = wrapper.findComponent(EntriesRelationList)
-            const addEntriesBlockButton = component.find('.add-entries-block-button')
-            addEntriesBlockButton.trigger('click')
+            const addSectionButton = component.find('.add-section-button')
+            addSectionButton.trigger('click')
             const tables = component.findAll('.entries-table')
             expect(tables.length).toEqual(2)
         })
@@ -282,16 +311,16 @@ describe('EntriesRelationList.vue', () => {
                 }
             })
             const component = wrapper.findComponent(EntriesRelationList)
-            const addEntriesBlockButton = component.find('.add-entries-block-button')
-            expect(addEntriesBlockButton.element).toBeUndefined()
+            const addSectionButton = component.find('.add-section-button')
+            expect(addSectionButton.element).toBeUndefined()
         })
     })
 
-    describe('remove entries block button', () => {
-        test('should remove entries block', async () => {
+    describe('remove section button', () => {
+        test('should remove section', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
-            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
-            removeEntriesBlockButton.trigger('click')
+            const removeSectionButton = component.find('.remove-section-button')
+            removeSectionButton.trigger('click')
             await Vue.nextTick()
             const tables = wrapper.findAll('.entries-table')
             expect(tables.length).toEqual(1)
@@ -306,8 +335,8 @@ describe('EntriesRelationList.vue', () => {
                 }
             })
             const component = wrapper.findComponent(EntriesRelationList)
-            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
-            expect(removeEntriesBlockButton.element).toBeUndefined()
+            const removeSectionButton = component.find('.remove-section-button')
+            expect(removeSectionButton.element).toBeUndefined()
         })
 
         test('should not have the option to remove component if not editable', () => {
@@ -318,20 +347,43 @@ describe('EntriesRelationList.vue', () => {
                 }
             })
             const component = wrapper.findComponent(EntriesRelationList)
-            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
-            expect(removeEntriesBlockButton.element).toBeUndefined()
+            const removeSectionButton = component.find('.remove-section-button')
+            expect(removeSectionButton.element).toBeUndefined()
         })
 
-        test('should close new entry table after removing entries block', async () => {
+        test('should close new entry table after removing section', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
             await Vue.nextTick()
-            const removeEntriesBlockButton = component.find('.remove-entries-block-button')
-            removeEntriesBlockButton.trigger('click')
+            const removeSectionButton = component.find('.remove-section-button')
+            removeSectionButton.trigger('click')
             await Vue.nextTick()
             const newEntryTable = component.find('.new-entry-table')
             expect(newEntryTable.element).toBeUndefined()
+        })
+    })
+
+    describe('remove all sections button', () => {
+        test('should remove section', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const removeAllSectionsButton = component.find('.remove-all-sections-button')
+            removeAllSectionsButton.trigger('click')
+            await Vue.nextTick()
+            const tables = wrapper.findAll('.entries-table')
+            expect(tables.length).toEqual(0)
+        })
+
+        test('should not have the option to remove component if not editable', () => {
+            wrapper = mount(EntriesRelationList, {
+                propsData: {
+                    rule: ruleData,
+                    editable: false
+                }
+            })
+            const component = wrapper.findComponent(EntriesRelationList)
+            const removeAllSectionsButton = component.find('.remove-all-sections-button')
+            expect(removeAllSectionsButton.element).toBeUndefined()
         })
     })
 
@@ -356,8 +408,8 @@ describe('EntriesRelationList.vue', () => {
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()
-            expect(entryData1.entries.length).toEqual(3)
-            expect(entryData1.entries[0]).toEqual(['ip', '1.2.3.4', 'annotation'])
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(3)
+            expect(wrapper.vm.rule.sections[0].entries[0]).toEqual(['ip', '1.2.3.4', 'annotation'])
         })
 
         test('should add multiple new entries from input when confirm button is clicked', async () => {
@@ -371,9 +423,9 @@ describe('EntriesRelationList.vue', () => {
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()
-            expect(entryData1.entries.length).toEqual(4)
-            expect(entryData1.entries[0]).toEqual(['ip', '127.0.0.1', 'localhost'])
-            expect(entryData1.entries[1]).toEqual(['ip', '1.2.3.4', 'annotation'])
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(4)
+            expect(wrapper.vm.rule.sections[0].entries[0]).toEqual(['ip', '127.0.0.1', 'localhost'])
+            expect(wrapper.vm.rule.sections[0].entries[1]).toEqual(['ip', '1.2.3.4', 'annotation'])
         })
 
         test('should add new entries from multi-line input when confirm button is clicked', async () => {
@@ -393,8 +445,8 @@ describe('EntriesRelationList.vue', () => {
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()
-            expect(entryData1.entries.length).toEqual(3)
-            expect(entryData1.entries[0]).toEqual(['headers', ['something', 'right'], 'here'])
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(3)
+            expect(wrapper.vm.rule.sections[0].entries[0]).toEqual(['headers', ['something', 'right'], 'here'])
         })
 
         test('should not add new entries from multi-line input when confirm button is clicked if has too few lines', async () => {
@@ -414,7 +466,7 @@ describe('EntriesRelationList.vue', () => {
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()
-            expect(entryData1.entries.length).toEqual(2)
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(2)
         })
 
         test('should not add new entries from multi-line input when confirm button is clicked if has too many lines', async () => {
@@ -434,7 +486,7 @@ describe('EntriesRelationList.vue', () => {
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()
-            expect(entryData1.entries.length).toEqual(2)
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(2)
         })
 
         test('should not show new entry button if not editable', () => {
@@ -572,7 +624,7 @@ describe('EntriesRelationList.vue', () => {
             const removeEntryButton = component.find('.remove-entry-button')
             removeEntryButton.trigger('click')
             await Vue.nextTick()
-            expect(entryData1.entries.length).toEqual(1)
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(1)
         })
     })
 })
