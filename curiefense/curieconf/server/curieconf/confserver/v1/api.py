@@ -41,7 +41,7 @@ class AnyType(fields.Raw):
 # limit
 
 
-m_limit = api.model("Rate Limit Rule", {
+m_limit = api.model("Rate Limit", {
     "id": fields.String(required=True),
     "name": fields.String(required=True),
     "description": fields.String(required=True),
@@ -78,9 +78,9 @@ m_urlmap = api.model("URL Map", {
     "map": fields.List(fields.Nested(m_secprofilemap)),
 })
 
-# wafsig
+# wafrule
 
-m_wafsig = api.model("WAF Signature", {
+m_wafrule = api.model("WAF Rule", {
     "id": fields.String(required=True),
     "name": fields.String(required=True),
     "msg": fields.String(required=True),
@@ -121,9 +121,9 @@ m_aclprofile = api.model("ACL Profile", {
     "force_deny": fields.List(fields.String()),
 })
 
-# profiling list
+# Tag Rule
 
-m_profilinglist = api.model("Profiling List", {
+m_tagrule = api.model("Tag Rule", {
     "id": fields.String(required=True),
     "name": fields.String(required=True),
     "source": fields.String(required=True),
@@ -139,12 +139,12 @@ m_profilinglist = api.model("Profiling List", {
 ### mapping from doc name to model
 
 models = {
-    "limits": m_limit,
+    "ratelimits": m_limit,
     "urlmaps": m_urlmap,
-    "wafsigs": m_wafsig,
+    "wafrules": m_wafrule,
     "wafprofiles": m_wafprofile,
     "aclprofiles": m_aclprofile,
-    "profilinglists": m_profilinglist,
+    "tagrules": m_tagrule,
 }
 
 ### Other models
@@ -227,25 +227,25 @@ base_path = Path(__file__).parent
 acl_profiles_file_path = (base_path / "../json/acl-profiles.schema").resolve()
 with open(acl_profiles_file_path) as json_file:
     acl_profiles_schema = json.load(json_file)
-limits_file_path = (base_path / "../json/limits.schema").resolve()
-with open(limits_file_path) as json_file:
-    limits_schema = json.load(json_file)
-urlmaps_file_path = (base_path / "../json/urlmaps.schema").resolve()
+ratelimits_file_path = (base_path / "../json/rate-limits.schema").resolve()
+with open(ratelimits_file_path) as json_file:
+    ratelimits_schema = json.load(json_file)
+urlmaps_file_path = (base_path / "../json/url-maps.schema").resolve()
 with open(urlmaps_file_path) as json_file:
     urlmaps_schema = json.load(json_file)
 waf_profiles_file_path = (base_path / "../json/waf-profiles.schema").resolve()
 with open(waf_profiles_file_path) as json_file:
     waf_profiles_schema = json.load(json_file)
-profiling_lists_file_path = (base_path / "../json/profiling-lists.schema").resolve()
-with open(profiling_lists_file_path) as json_file:
-    profiling_lists_schema = json.load(json_file)
+tagrules_file_path = (base_path / "../json/tag-rules.schema").resolve()
+with open(tagrules_file_path) as json_file:
+    tagrules_schema = json.load(json_file)
 
 schema_type_map = {
-    "limits": limits_schema,
+    "ratelimits": ratelimits_schema,
     "urlmaps": urlmaps_schema,
     "wafprofiles": waf_profiles_schema,
     "aclprofiles": acl_profiles_schema,
-    "profilinglists": profiling_lists_schema,
+    "tagrules": tagrules_schema,
 }
 
 
