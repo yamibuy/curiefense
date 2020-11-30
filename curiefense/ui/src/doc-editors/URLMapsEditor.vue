@@ -446,7 +446,7 @@ export default {
         // ID is referenced, copy rate limit
         recommendedRateLimit.name = "copy of " + recommendedRateLimit.name
         recommendedRateLimit.id = DatasetsUtils.UUID2()
-        RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/d/limits/e/${recommendedRateLimit.id}`)
+        RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/d/ratelimits/e/${recommendedRateLimit.id}`)
             .then(() => {
               this.ld.remove(this.mapEntryAnalyzed.limit_ids, (id) => {
                 return id === this.rateLimitAnalyzed.id
@@ -456,7 +456,7 @@ export default {
         this.clearRateLimitRecommendation()
       } else {
         // ID is not referenced, edit rate limit
-        RequestsUtils.sendRequest('PUT', `configs/${this.selectedBranch}/d/limits/e/${recommendedRateLimit.id}`)
+        RequestsUtils.sendRequest('PUT', `configs/${this.selectedBranch}/d/ratelimits/e/${recommendedRateLimit.id}`)
         this.clearRateLimitRecommendation()
       }
     },
@@ -498,7 +498,7 @@ export default {
         })
       })
 
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/limits/`).then((response) => {
+      RequestsUtils.sendRequest('GET', `configs/${branch}/d/ratelimits/`).then((response) => {
         this.limitRuleNames = response.data
       })
     },

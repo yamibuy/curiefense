@@ -622,10 +622,10 @@ describe('DocumentEditor.vue', () => {
             if (path === `/conf/api/v1/configs/${branch}/d/aclprofiles/e/${docID}/v/`) {
                 return Promise.resolve({data: aclDocsLogs[0]})
             }
-            if (path === `/conf/api/v1/configs/${branch}/d/profilinglists/`) {
+            if (path === `/conf/api/v1/configs/${branch}/d/tagrules/`) {
                 return Promise.resolve({data: profilingListDocs})
             }
-            if (path === `/conf/api/v1/configs/${branch}/d/profilinglists/e/${docID}/v/`) {
+            if (path === `/conf/api/v1/configs/${branch}/d/tagrules/e/${docID}/v/`) {
                 return Promise.resolve({data: profilingListDocsLogs[0]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/`) {
