@@ -62,11 +62,11 @@ const Titles = {
 
 
   "aclprofiles": "ACL Profiles",
-  "limits": "Rate Limits",
+  "ratelimits": "Rate Limits",
   "urlmaps": "URL Maps",
   "wafprofiles": "WAF Profiles",
-  "wafsigs": "WAF Signatures",
-  "profilinglists": "Profiling Lists"
+  "wafrules": "WAF Signatures",
+  "tagrules": "Profiling Lists"
 }
 
 const LimitRulesTypes = {
