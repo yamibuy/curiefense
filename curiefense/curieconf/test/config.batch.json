@@ -5,7 +5,7 @@
         "date": "2020-06-19T22:09:46+02:00"
     },
     "documents": {
-        "limits": [
+        "ratelimits": [
             {
                 "id": "f971e92459e2",
                 "name": "New Rate Limit Rule rrt",
@@ -161,7 +161,7 @@
                 ]
             }
         ],
-        "wafsigs": [
+        "wafrules": [
             {
                 "id": "100000",
                 "name": "100000",
@@ -173,7 +173,7 @@
                 "subcategory": "statement injection"
             }
         ],
-        "wafprofiles": [
+        "wafpolicies": [
             {
                 "id": "__default__",
                 "name": "default waf",
@@ -405,7 +405,7 @@
                 }
             }
         ],
-        "aclprofiles": [
+        "aclpolicies": [
             {
                 "id": "__default__",
                 "name": "default-acl",
@@ -445,7 +445,7 @@
                 "force_deny": []
             }
         ],
-        "profilinglists": [
+        "tagrules": [
             {
                 "id": "ed8f6efb",
                 "active": true,

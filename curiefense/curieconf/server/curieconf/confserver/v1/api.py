@@ -142,8 +142,8 @@ models = {
     "ratelimits": m_limit,
     "urlmaps": m_urlmap,
     "wafrules": m_wafrule,
-    "wafprofiles": m_wafpolicy,
-    "aclprofiles": m_aclpolicy,
+    "wafpolicies": m_wafpolicy,
+    "aclpolicies": m_aclpolicy,
     "tagrules": m_tagrule,
 }
 

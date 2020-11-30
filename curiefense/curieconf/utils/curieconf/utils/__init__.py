@@ -6,8 +6,8 @@ DOCUMENTS_PATH = {
     "ratelimits": "config/json/limits.json",
     "urlmaps": "config/json/urlmap.json",
     "wafrules": "config/json/waf-signatures.json",
-    "wafprofiles": "config/json/waf-profiles.json",
-    "aclprofiles": "config/json/acl-profiles.json",
+    "wafpolicies": "config/json/waf-profiles.json",
+    "aclpolicies": "config/json/acl-profiles.json",
     "tagrules": "config/json/profiling-lists.json",
 }
 

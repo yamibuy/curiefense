@@ -45,7 +45,7 @@ vec_urlmap = {
 }
 
 
-vec_wafsig = {
+vec_wafrule = {
     "id": "100000",
     "name": "100000",
     "msg": "SQLi Attempt (Conditional Operator Detected)",
@@ -57,7 +57,7 @@ vec_wafsig = {
 }
 
 
-vec_wafprofile = {
+vec_wafpolicy = {
     "id": "__default__",
     "name": "default waf",
     "ignore_alphanum": True,
@@ -125,7 +125,7 @@ vec_wafprofile = {
 
 
 
-vec_aclprofile = {
+vec_aclpolicy = {
     "id": "__default__",
     "name": "default-acl",
     "allow": [ "allow-change" ],
@@ -137,7 +137,7 @@ vec_aclprofile = {
 }
 
 
-vec_profilinglists =   {
+vec_tagrule =   {
     "id": "ed8f6efb",
     "name": "Spamhaus DROP",
     "source": "https://www.spamhaus.org/drop/drop.txt",
@@ -161,17 +161,17 @@ vec_geolite2country = { "format": "base64", "blob": "AAAABBBB" }
 
 
 vec_documents = {
-    "limits": vec_limit,
+    "ratelimits": vec_limit,
     "urlmaps": vec_urlmap,
-    "wafsigs": vec_wafsig,
-    "wafprofiles": vec_wafprofile,
-    "aclprofiles": vec_aclprofile,
-    "profilinglists": vec_profilinglists,
+    "wafrules": vec_wafrule,
+    "wafpolicies": vec_wafpolicy,
+    "aclpolicies": vec_aclpolicy,
+    "tagrules": vec_tagrule,
 }
 
 vec_blobs = {
-        "geolite2asn": vec_geolite2asn,
-        "geolite2country": vec_geolite2country,
+    "geolite2asn": vec_geolite2asn,
+    "geolite2country": vec_geolite2country,
 }
 bootstrap_small_config_json = {
     "config": {
