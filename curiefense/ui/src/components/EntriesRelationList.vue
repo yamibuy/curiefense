@@ -1,9 +1,85 @@
 <template>
   <div>
-    <div v-for="(section, id) in localSections" :key="id">
+    <div class="columns has-text-black-bis rule-bar">
+        <div class="column is-height-30-px">
+          <div class="field is-grouped">
+            <div class="control">
+              <span class="is-size-7">Sections: {{ localRule.sections.length }}</span>
+            </div>
+            <div class="control">
+              <span class="is-size-7">
+                Sections relation:
+                <span class="tag is-small is-info is-light rule-relation-toggle"
+                      @click="toggleRuleRelation()">
+                  {{ localRule.relation }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="column is-height-30-px">
+          <div v-if="editable"
+               class="field is-grouped is-pulled-right">
+            <div class="control">
+              <button class="button is-small has-text-primary-dark add-section-button"
+                      title="Add new section"
+                      @click="addSection">
+                Add new
+              </button>
+            </div>
+            <div class="control">
+              <button class="button is-small has-text-danger-dark remove-all-sections-button"
+                      title="Remove all sections"
+                      @click="removeAllSections">
+                Remove all
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <hr/>
+    <div v-for="(section, id) in localRule.sections" :key="id" class="section">
       <div class="card">
         <div class="card-content">
           <div class="content">
+            <div class="columns has-text-grey section-bar">
+              <div class="column is-height-30-px">
+                <div class="field is-grouped">
+                  <div class="control">
+                    <span class="is-size-7">Entries: {{ section.entries.length }}</span>
+                  </div>
+                  <div class="control">
+                  <span class="is-size-7">
+                    Entries relation:
+                    <span class="tag is-small is-info is-light section-relation-toggle"
+                          @click="toggleSectionRelation(section)">
+                      {{ section.relation }}
+                    </span>
+                  </span>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-height-30-px">
+                <div v-if="editable"
+                     class="field is-grouped is-pulled-right">
+                  <div class="control">
+                    <button class="button is-small has-text-primary add-entry-button"
+                            title="Add new entry"
+                            @click="clearNewEntryData(); newEntrySectionIndex = id">
+                      Add entry
+                    </button>
+                  </div>
+                  <div class="control">
+                    <button class="button is-small has-text-danger remove-section-button"
+                            title="Remove section"
+                            @click="removeSection(id)">
+                      Remove section
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr/>
             <table v-if="newEntrySectionIndex === id && editable"
                    class="table is-narrow is-fullwidth new-entry-table">
               <thead>
@@ -43,28 +119,21 @@
             <table class="table is-narrow entries-table">
               <thead>
               <tr>
-                <th class="is-size-7 is-vcentered is-48-px">
-                  <span class="tag is-small is-success is-light section-relation-toggle"
-                        @click="toggleSectionRelation(section)">
-                    {{ section.relation === 'AND' ? 'AND' : 'OR' }}
-                  </span>
-                </th>
+                <th class="is-size-7 is-vcentered is-48-px"></th>
                 <th class="is-size-7 is-vcentered">Category</th>
                 <th class="is-size-7 is-vcentered">Entry</th>
                 <th class="is-size-7 is-vcentered">Annotation</th>
-                <th class=" is-size-7 is-vcentered is-48-px">
-                  <a v-if="editable"
-                     class="has-text-grey-dark is-small is-pulled-right add-entry-button" title="Add new entry"
-                     @click="clearNewEntryData(); newEntrySectionIndex = id">
-                    <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                  </a>
-                </th>
+                <th class=" is-size-7 is-vcentered is-48-px"></th>
               </tr>
               </thead>
               <tbody>
               <tr v-for="(entry,idx) in sectionsCurrentPage[id]" :key="idx" class="entry-row">
                 <td class="is-size-7 is-48-px has-text-centered has-text-grey-light entry-number">
-                  {{ ((idx + 1) + ((sectionsCurrentPageIndex[id] - 1) * rowsPerPage)) }}
+                  <span v-if="((idx + 1) + ((sectionsCurrentPageIndex[id] - 1) * rowsPerPage)) !== 1"
+                      class="tag is-small is-info is-light section-relation-toggle"
+                        @click="toggleSectionRelation(section)">
+                    {{ section.relation }}
+                  </span>
                 </td>
                 <td class="is-size-7 entry-category">{{ listEntryTypes[entry[0]].title }}</td>
                 <td class="is-size-7 entry-value"><span v-html="dualCell(entry[1])"></span></td>
@@ -93,32 +162,17 @@
               </tr>
               </tbody>
             </table>
-            <button v-if="editable"
-                    class="button has-text-danger remove-entries-block-button"
-                    title="Delete this entries block"
-                    @click="removeEntryBlock(id)">
-              Remove entries block
-            </button>
           </div>
         </div>
       </div>
-      <div v-if="localSections.length > 1 && id !== localSections.length - 1"
+      <div v-if="localRule.sections.length > 1 && id !== localRule.sections.length - 1"
            class="control is-expanded relation-selection-wrapper">
-        <div class="select is-small is-size-7">
-          <select v-model="rule.relation"
-                  class="relation-selection">
-            <option value="AND">AND</option>
-            <option value="OR">OR</option>
-          </select>
-        </div>
+        <span class="tag is-small is-info is-light is-relative rule-relation-toggle"
+              @click="toggleRuleRelation()">
+          {{ localRule.relation }}
+        </span>
       </div>
     </div>
-    <button v-if="editable"
-            class="button add-entries-block-button"
-            title="Add new entries block"
-            @click="addEntryBlock">
-      Add new entries block
-    </button>
   </div>
 
 </template>
@@ -175,14 +229,13 @@ export default {
       newEntrySectionIndex: -1,
       // newEntryCategory - start with most common category - IP
       newEntryCategory: 'ip',
-      newEntryItems: '',
-      localSections: []
+      newEntryItems: ''
     }
   },
 
   computed: {
     inputDescription() {
-      if ((new RegExp('(args|cookies|headers)')).test(this.newEntryCategory)) {
+      if (this.isCategoryMultiline(this.newEntryCategory)) {
         return '1st line: NAME\n2nd line: VALUE\n3rd line: optional annotation'
       }
       return 'One entry per line, use \'#\' for annotation\ne.g. 12.13.14.15 #San Jose Office'
@@ -190,8 +243,8 @@ export default {
 
     sectionsCurrentPage() {
       let pages = []
-      for (let i = 0; i < this.rule.sections.length; i++) {
-        const section = this.rule.sections[i]
+      for (let i = 0; i < this.localRule.sections.length; i++) {
+        const section = this.localRule.sections[i]
         if (this.sectionTotalEntries(section) !== 0) {
           pages[i] = section.entries
           pages[i] = this.ld.slice(pages[i], (this.sectionsCurrentPageIndex[i] - 1) * this.rowsPerPage, this.rowsPerPage * this.sectionsCurrentPageIndex[i])
@@ -199,14 +252,17 @@ export default {
       }
       return pages
     },
+
+    localRule() {
+      return JSON.parse(JSON.stringify(this.rule))
+    },
   },
 
   watch: {
     rule: {
-      handler: function (newVal) {
-        this.localSections = newVal.sections
-        for (let i = 0; i < this.localSections.length; i++) {
-          const section = this.localSections[i]
+      handler: function () {
+        for (let i = 0; i < this.localRule.sections.length; i++) {
+          const section = this.localRule.sections[i]
           Vue.set(this.sectionsCurrentPageIndex, i, 1)
           if (this.sectionContainsSameCategoryItems(section)) {
             section.relation = 'OR'
@@ -219,14 +275,23 @@ export default {
   },
 
   methods: {
+    isCategoryMultiline(category) {
+      return (new RegExp('(args|cookies|headers)')).test(category)
+    },
+
+    emitRuleUpdate() {
+      this.$emit('update', this.localRule)
+    },
+
     sectionContainsSameCategoryItems(section) {
       const countedCategories = this.ld.countBy(section.entries, (entry) => {
         return this.listEntryTypes[entry[0]].title
       })
-      const categories = Object.values(this.listEntryTypes)
-      for (let i = 0; i < categories.length; i++) {
-        const category = categories[i]
-        if (category.pair) {
+      const categoriesKeys = Object.keys(this.listEntryTypes)
+      for (let i = 0; i < categoriesKeys.length; i++) {
+        const categoryKey = categoriesKeys[i]
+        const category = this.listEntryTypes[categoryKey]
+        if (this.isCategoryMultiline(categoryKey)) {
           break
         }
         if (countedCategories[category.title] > 1) {
@@ -234,6 +299,15 @@ export default {
         }
       }
       return false
+    },
+
+    toggleRuleRelation() {
+      if (this.localRule.relation === 'AND') {
+        this.localRule.relation = 'OR'
+      } else {
+        this.localRule.relation = 'AND'
+      }
+      this.emitRuleUpdate()
     },
 
     toggleSectionRelation(section) {
@@ -245,6 +319,7 @@ export default {
       } else {
         section.relation = 'AND'
       }
+      this.emitRuleUpdate()
     },
 
     clearNewEntryData() {
@@ -275,21 +350,30 @@ export default {
       }
     },
 
-    addEntryBlock() {
+    addSection() {
       const newSection = {
         relation: 'OR',
         entries: []
       }
-      this.localSections.push(newSection)
-      Vue.set(this.sectionsCurrentPageIndex, this.localSections.length - 1, 1)
+      this.localRule.sections.push(newSection)
+      Vue.set(this.sectionsCurrentPageIndex, this.localRule.sections.length - 1, 1)
+      this.emitRuleUpdate()
     },
 
-    removeEntryBlock(sectionIndex) {
-      this.localSections.splice(sectionIndex, 1)
+    removeAllSections() {
+      this.localRule.sections.splice(0, this.localRule.sections.length)
+      this.sectionsCurrentPageIndex.splice(0, this.sectionsCurrentPageIndex.length)
+      this.clearNewEntryData()
+      this.emitRuleUpdate()
+    },
+
+    removeSection(sectionIndex) {
+      this.localRule.sections.splice(sectionIndex, 1)
       this.sectionsCurrentPageIndex.splice(sectionIndex, 1)
       if (this.newEntrySectionIndex === sectionIndex) {
         this.clearNewEntryData()
       }
+      this.emitRuleUpdate()
     },
 
     addEntry(section) {
@@ -312,16 +396,22 @@ export default {
         section.relation = 'OR'
       }
       this.clearNewEntryData()
+      this.emitRuleUpdate()
     },
 
     removeEntry(section, sectionIndex, idx) {
       let pointer = ((this.sectionsCurrentPageIndex[sectionIndex] - 1) * this.rowsPerPage) + idx
       section.entries.splice(pointer, 1)
+      this.emitRuleUpdate()
     },
   }
 }
 </script>
 <style scoped>
+.section {
+  padding: initial;
+}
+
 .entries-table {
   margin-bottom: 2rem;
 }
@@ -330,6 +420,13 @@ export default {
   min-width: 48px;
   max-width: 48px;
   width: 48px;
+}
+
+.is-height-30-px {
+  min-height: 30px;
+  max-height: 30px;
+  height: 30px;
+  box-sizing: content-box;
 }
 
 .relation-selection-wrapper {
@@ -348,7 +445,7 @@ export default {
   transform: translateY(-50%);
 }
 
-.section-relation-toggle {
+.rule-relation-toggle, .section-relation-toggle {
   cursor: pointer
 }
 </style>

@@ -118,6 +118,7 @@
             :selectedDoc.sync="selectedDoc"
             :docs.sync="docs"
             :apiPath="documentAPIPath"
+            @update="selectedDoc = $event"
             @switchDocType="switchDocType"
             ref="currentComponent"
         ></component>
