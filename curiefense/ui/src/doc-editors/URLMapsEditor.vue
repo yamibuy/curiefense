@@ -482,7 +482,7 @@ export default {
     wafacllimitProfileNames() {
       let branch = this.selectedBranch
 
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/wafprofiles/`).then((response) => {
+      RequestsUtils.sendRequest('GET', `configs/${branch}/d/wafpolicies/`).then((response) => {
         this.wafProfileNames = this.ld.sortBy(this.ld.map(response.data, (entity) => {
           return [entity.id, entity.name]
         }), (e) => {
@@ -490,7 +490,7 @@ export default {
         })
       })
 
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/aclprofiles/`).then((response) => {
+      RequestsUtils.sendRequest('GET', `configs/${branch}/d/aclpolicies/`).then((response) => {
         this.aclProfileNames = this.ld.sortBy(this.ld.map(response.data, (entity) => {
           return [entity.id, entity.name]
         }), (e) => {

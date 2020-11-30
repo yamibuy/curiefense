@@ -93,7 +93,7 @@ m_wafrule = api.model("WAF Rule", {
 
 # wafprofile
 
-m_wafprofile = api.model("WAF Profile", {
+m_wafpolicy = api.model("WAF Policy", {
     "id": fields.String(required=True),
     "name": fields.String(required=True),
     "ignore_alphanum": fields.Boolean(required=True),
@@ -110,7 +110,7 @@ m_wafprofile = api.model("WAF Profile", {
 
 # aclprofile
 
-m_aclprofile = api.model("ACL Profile", {
+m_aclpolicy = api.model("ACL Policy", {
     "id": fields.String(required=True),
     "name": fields.String(required=True),
     "allow": fields.List(fields.String()),
@@ -142,8 +142,8 @@ models = {
     "ratelimits": m_limit,
     "urlmaps": m_urlmap,
     "wafrules": m_wafrule,
-    "wafprofiles": m_wafprofile,
-    "aclprofiles": m_aclprofile,
+    "wafprofiles": m_wafpolicy,
+    "aclprofiles": m_aclpolicy,
     "tagrules": m_tagrule,
 }
 
@@ -226,7 +226,7 @@ base_path = Path(__file__).parent
 # base_path = "/etc/curiefense/json/"
 acl_profiles_file_path = (base_path / "../json/acl-profiles.schema").resolve()
 with open(acl_profiles_file_path) as json_file:
-    acl_profiles_schema = json.load(json_file)
+    acl_policy_schema = json.load(json_file)
 ratelimits_file_path = (base_path / "../json/rate-limits.schema").resolve()
 with open(ratelimits_file_path) as json_file:
     ratelimits_schema = json.load(json_file)
@@ -235,7 +235,7 @@ with open(urlmaps_file_path) as json_file:
     urlmaps_schema = json.load(json_file)
 waf_profiles_file_path = (base_path / "../json/waf-profiles.schema").resolve()
 with open(waf_profiles_file_path) as json_file:
-    waf_profiles_schema = json.load(json_file)
+    waf_policy_schema = json.load(json_file)
 tagrules_file_path = (base_path / "../json/tag-rules.schema").resolve()
 with open(tagrules_file_path) as json_file:
     tagrules_schema = json.load(json_file)
@@ -243,8 +243,8 @@ with open(tagrules_file_path) as json_file:
 schema_type_map = {
     "ratelimits": ratelimits_schema,
     "urlmaps": urlmaps_schema,
-    "wafprofiles": waf_profiles_schema,
-    "aclprofiles": acl_profiles_schema,
+    "wafpolicies": waf_policy_schema,
+    "aclpolicies": acl_policy_schema,
     "tagrules": tagrules_schema,
 }
 

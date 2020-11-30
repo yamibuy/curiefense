@@ -61,10 +61,10 @@ const Titles = {
   "attrs-entry": "Attribute",
 
 
-  "aclprofiles": "ACL Profiles",
+  "aclpolicies": "ACL Policies",
   "ratelimits": "Rate Limits",
   "urlmaps": "URL Maps",
-  "wafprofiles": "WAF Profiles",
+  "wafprolicies": "WAF Policies",
   "wafrules": "WAF Signatures",
   "tagrules": "Tag Rules"
 }
@@ -112,7 +112,7 @@ function UUID() {
 function UUID2() { return UUID().split("-")[4] }
 
 const NewDocEntryFactory = {
-    aclprofiles() {
+    aclpolicies() {
         return  {
           "id": UUID2(),
           "name": "NEW ACL",
@@ -126,7 +126,7 @@ const NewDocEntryFactory = {
         }
     },
 
-    wafprofiles() {
+    wafpolicies() {
       return {
         "id": UUID2(),
         "name": "NEW WAF",
@@ -155,7 +155,7 @@ const NewDocEntryFactory = {
       }
     },
 
-    profilinglists() {
+    tagrules() {
       return {
         "id": UUID2(),
         "name": "New Profiling List",
@@ -187,7 +187,7 @@ const NewDocEntryFactory = {
         ]
       }
     },
-    limits() {
+    ratelimits() {
       return {
         "id": UUID2(),
         "description": "New Rate Limit Rule",

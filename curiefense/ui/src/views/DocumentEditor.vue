@@ -173,11 +173,11 @@ export default {
       branches: 0,
 
       componentsMap: {
-        'aclprofiles': {component: ACLEditor, title: 'ACL Profiles'},
+        'aclpolicies': {component: ACLEditor, title: 'ACL Policies'},
         'tagrules': {component: ProfilingListEditor, title: 'Tag Rules'},
         'ratelimits': {component: RateLimitsEditor, title: 'Rate Limits'},
         'urlmaps': {component: URLMapsEditor, title: 'URL Maps'},
-        'wafprofiles': {component: WAFEditor, title: 'WAF Profiles'},
+        'wafpolicies': {component: WAFEditor, title: 'WAF Policies'},
         'wafrules': {component: WAFSigsEditor, title: 'WAF Rules'},
       },
 
@@ -227,10 +227,10 @@ export default {
     },
 
     isDocReferenced() {
-      if (this.selectedDocType === 'aclprofiles') {
+      if (this.selectedDocType === 'aclpolicies') {
         return this.referencedIDsACL.includes(this.selectedDocID)
       }
-      if (this.selectedDocType === 'wafprofiles') {
+      if (this.selectedDocType === 'wafpolicies') {
         return this.referencedIDsWAF.includes(this.selectedDocID)
       }
       if (this.selectedDocType === 'limits') {
