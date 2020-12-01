@@ -118,6 +118,7 @@
             :selectedDoc.sync="selectedDoc"
             :docs.sync="docs"
             :apiPath="documentAPIPath"
+            @update="selectedDoc = $event"
             @switchDocType="switchDocType"
             ref="currentComponent"
         ></component>
@@ -140,6 +141,7 @@ import WAFSigsEditor from '@/doc-editors/WAFSigsEditor.vue'
 import URLMapsEditor from '@/doc-editors/URLMapsEditor.vue'
 import RateLimitsEditor from '@/doc-editors/RateLimitsEditor.vue'
 import ProfilingListEditor from '@/doc-editors/ProfilingListEditor.vue'
+import FlowControlEditor from '@/doc-editors/FlowControlEditor'
 import GitHistory from '@/components/GitHistory.vue'
 import RequestsUtils from '@/assets/RequestsUtils'
 
@@ -174,6 +176,7 @@ export default {
 
       componentsMap: {
         'aclprofiles': {component: ACLEditor, title: 'ACL Profiles'},
+        'flowcontrol': {component: FlowControlEditor, title: 'Flow Control'},
         'profilinglists': {component: ProfilingListEditor, title: 'Profiling Lists'},
         'limits': {component: RateLimitsEditor, title: 'Rate Limits'},
         'urlmaps': {component: URLMapsEditor, title: 'URL Maps'},

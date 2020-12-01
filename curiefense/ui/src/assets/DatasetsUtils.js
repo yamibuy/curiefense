@@ -66,7 +66,8 @@ const Titles = {
   "urlmaps": "URL Maps",
   "wafprofiles": "WAF Profiles",
   "wafsigs": "WAF Signatures",
-  "profilinglists": "Profiling Lists"
+  "profilinglists": "Profiling Lists",
+  "flowcontrol": "Flow Control",
 }
 
 const LimitRulesTypes = {
@@ -218,6 +219,14 @@ const NewDocEntryFactory = {
           "self": "self"
         }
       }
+    },
+
+    flowcontrol() {
+        return  {
+            "id": UUID2(),
+            "name": "New Flow Control",
+            "sequence": []
+        }
     }
 
 }
