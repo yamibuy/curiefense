@@ -446,7 +446,7 @@ export default {
         // ID is referenced, copy rate limit
         recommendedRateLimit.name = "copy of " + recommendedRateLimit.name
         recommendedRateLimit.id = DatasetsUtils.UUID2()
-        RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/d/limits/e/${recommendedRateLimit.id}`)
+        RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/d/ratelimits/e/${recommendedRateLimit.id}`)
             .then(() => {
               this.ld.remove(this.mapEntryAnalyzed.limit_ids, (id) => {
                 return id === this.rateLimitAnalyzed.id
@@ -456,7 +456,7 @@ export default {
         this.clearRateLimitRecommendation()
       } else {
         // ID is not referenced, edit rate limit
-        RequestsUtils.sendRequest('PUT', `configs/${this.selectedBranch}/d/limits/e/${recommendedRateLimit.id}`)
+        RequestsUtils.sendRequest('PUT', `configs/${this.selectedBranch}/d/ratelimits/e/${recommendedRateLimit.id}`)
         this.clearRateLimitRecommendation()
       }
     },
@@ -482,7 +482,7 @@ export default {
     wafacllimitProfileNames() {
       let branch = this.selectedBranch
 
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/wafprofiles/`).then((response) => {
+      RequestsUtils.sendRequest('GET', `configs/${branch}/d/wafpolicies/`).then((response) => {
         this.wafProfileNames = this.ld.sortBy(this.ld.map(response.data, (entity) => {
           return [entity.id, entity.name]
         }), (e) => {
@@ -490,7 +490,7 @@ export default {
         })
       })
 
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/aclprofiles/`).then((response) => {
+      RequestsUtils.sendRequest('GET', `configs/${branch}/d/aclpolicies/`).then((response) => {
         this.aclProfileNames = this.ld.sortBy(this.ld.map(response.data, (entity) => {
           return [entity.id, entity.name]
         }), (e) => {
@@ -498,7 +498,7 @@ export default {
         })
       })
 
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/limits/`).then((response) => {
+      RequestsUtils.sendRequest('GET', `configs/${branch}/d/ratelimits/`).then((response) => {
         this.limitRuleNames = response.data
       })
     },
@@ -534,8 +534,8 @@ export default {
 }
 
 .is-48-px {
-  min-width: 40px;
-  max-width: 40px;
+  min-width: 48px;
+  max-width: 48px;
   width: 48px;
 }
 

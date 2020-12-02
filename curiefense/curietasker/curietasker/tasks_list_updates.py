@@ -8,7 +8,7 @@ from jsonschema import validate, ValidationError
 
 from .task import Task
 
-SCHEMAFILE="/profiling-lists.schema"
+SCHEMAFILE="/tag-rules.schema"
 
 @Task.register("update")
 class TaskUpdate(Task):

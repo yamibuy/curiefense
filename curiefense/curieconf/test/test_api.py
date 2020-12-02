@@ -55,7 +55,7 @@ def test_config_create_fail_clean(curieapi_empty):
     conf = {
         "meta":{"id":"pytest", "description": "pytest"},
         "documents": {
-            "aclprofiles": [{"id":"qsmkldjqsdk","name": "aqzdzd"}, {"id":"sqd","name":"qds"}],
+            "aclpolicies": [{"id":"qsmkldjqsdk","name": "aqzdzd"}, {"id":"sqd","name":"qds"}],
         }
 
     }
@@ -67,7 +67,7 @@ def test_config_create_fail_clean(curieapi_empty):
     assert e.value.response.status_code == 400
 
     curieapi_empty.configs.create(body={"meta":{"id":"pytest3", "description": "pytest3"}})
-    r = curieapi_empty.documents.get("pytest3", "aclprofiles")
+    r = curieapi_empty.documents.get("pytest3", "aclpolicies")
     assert r.body == []
 
 
@@ -118,7 +118,7 @@ def test_configs_update(curieapi_small):
         "blobs": { "bltor": jblob },
         "documents": { "limits": newlimits, "wafsigs": newwafsigs},
         "delete_blobs": { "bltor": False, "blvpnip": True },
-        "delete_documents": { 
+        "delete_documents": {
             "urlmaps": { "sqdqsd": True, "fezfzf": True, vec_urlmap["id"]: False },
             "wafsigs": { vec_wafsig["id"]: True }
         }
@@ -504,7 +504,7 @@ def test_entries_list_versions(curieapi, docname):
     v1 = r.body
     assert len(v1) == 1
 
-    r = curieapi.entries.update("pytest", docname, eid, 
+    r = curieapi.entries.update("pytest", docname, eid,
                                 body = {"id": eid, "name":"%s" % time.time()})
     r = curieapi.entries.list_versions("pytest", docname, eid)
     assert r.status_code == 200

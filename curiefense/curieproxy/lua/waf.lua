@@ -80,7 +80,7 @@ function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
     return nil, nil
 end
 
-function regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
+function regex_check(section, name, regex_rules, value, omit_entries, exclude_sigs)
 
     for name_patt, patt_rule in pairs(regex_rules) do
         if re_match(name, name_patt) then
@@ -134,7 +134,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                     end
                 end
                 if check_regex then
-                    local response, msg = regex_check(section, name, regex_rules, omit_entries, exclude_sigs)
+                    local response, msg = regex_check(section, name, regex_rules, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end

@@ -19,27 +19,6 @@ local table_length  = utils.table_length
 local parse_cidr    = iputils.parse_cidr
 local build_ranges_lists = rangesbtree.build_ranges_lists
 
-function gen_masterdict(lst)
-
-    return {
-        -- copy essentials as is.
-        [ "id" ]               = lst["id"],
-        [ "name" ]             = lst["name"],
-        [ "entries_relation" ] = lst["entries_relation"],
-        [ "tags" ]             = lst["tags"],
-
-        [ "singles" ]          = defaultdict(dict),
-        [ "negate_singles" ]   = defaultdict(dict),
-
-        [ "pairs" ]            = defaultdict(dict),
-        [ "negate_pairs" ]     = defaultdict(dict),
-
-        [ "iprange" ]          = iptools.new_ip_set(),
-        [ "negate_iprange" ]   = iptools.new_ip_set(),
-    }
-
-end
-
 function categorize_singles(key)
     local mastercategory = "singles"
     if key:startswith("!") then
@@ -65,10 +44,21 @@ function get_annotation(data)
     end
 end
 
-function gen_list_entries(lst, handle)
-    local masterdict = gen_masterdict(lst)
 
-    for _, entry in ipairs(lst["entries"]) do
+function gen_section_dict(section)
+
+    local masterdict = {
+        [ "singles" ]          = defaultdict(dict),
+        [ "negate_singles" ]   = defaultdict(dict),
+
+        [ "pairs" ]            = defaultdict(dict),
+        [ "negate_pairs" ]     = defaultdict(dict),
+
+        [ "iprange" ]          = iptools.new_ip_set(),
+        [ "negate_iprange" ]   = iptools.new_ip_set(),
+    }
+
+    for _, entry in ipairs(section["entries"]) do
         category, data = entry[1], slice(entry, 2)
         -- pairs
         if category:within("args cookies headers") then
@@ -109,5 +99,34 @@ function gen_list_entries(lst, handle)
             end
         end
     end
+
     return masterdict
+
+end
+
+function gen_list_entries(lst, handle)
+
+    local section_gate = lst.rule.relation
+    local sections = lst.rule.sections
+
+    local rule = {
+        ["relation"] = lst.rule.relation,
+        ["sections"]  = {}
+    }
+
+    for _, section in ipairs(sections) do
+        table.insert(rule.sections, {
+            [ "relation" ] = section.relation,
+            [ "entries" ] = gen_section_dict(section)
+        })
+    end
+
+    return {
+        ["id"] = lst["id"],
+        ["name"] = lst["name"],
+        ["active"] = lst["active"],
+        ["tags"] = lst["tags"],
+        ["rule"] = rule
+    }
+
 end

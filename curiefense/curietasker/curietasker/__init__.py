@@ -40,7 +40,7 @@ def main(args=None):
     options = parser.parse_args(args)
 
     options.api = confclient.get_api(options.base_url)
-    options.verbosity = 1 if options.debug else max(1, 50+10*(options.quiet-options.verbose)) 
+    options.verbosity = 1 if options.debug else max(1, 50+10*(options.quiet-options.verbose))
     logging.basicConfig(format="%(asctime)s: %(levelname)-5s: %(name)s: %(message)s", level=options.verbosity)
 
     options.func(options)
