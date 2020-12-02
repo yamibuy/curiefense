@@ -55,6 +55,7 @@ class EntriesResource(Resource):
         get_version = GET("configs/{}/d/{}/e/{}/v/{}/"),
         create = POST("configs/{}/d/{}/e/"),
         update = PUT("configs/{}/d/{}/e/{}/"),
+        edit = PUT("configs/{}/d/{}/e/{}/edit/"),
         delete = DELETE("configs/{}/d/{}/e/{}/"),
         revert = PUT("configs/{}/d/{}/e/{}/v/{}/revert/")
     )

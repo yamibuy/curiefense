@@ -77,6 +77,8 @@ class CurieBackend(object):
         raise NotImplementedError
     def entries_update(self, config, document, entry, data):
         raise NotImplementedError
+    def entries_edit(self, config, document, entry, data):
+        raise NotImplementedError
     def entries_delete(self, config, document, entry):
         raise NotImplementedError
     def entries_revert(self, config, document, entry, version):

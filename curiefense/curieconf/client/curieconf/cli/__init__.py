@@ -223,6 +223,20 @@ def update(config:str, doc:DocsEnum, entry:str, fname:str=typer.Argument(None)):
     output(state.api.entries.update(config, doc.value, entry, body=json.load(f)).body)
 
 @entries.command()
+def edit(config:str, doc:DocsEnum, entry:str, fname:str=typer.Argument(None)):
+    f = open(fname, "r") if fname else sys.stdin
+    output(state.api.entries.edit(config, doc.value, entry, body=json.load(f)).body)
+
+@entries.command()
+def edit_one(config:str, doc:DocsEnum, entry:str, jsonpath:str, jsonvalue:str):
+    value = json.loads(jsonvalue)
+    edit = {
+        "path": jsonpath,
+        "value": value
+    }
+    output(state.api.entries.edit(config, doc.value, entry, body=edit).body)
+
+@entries.command()
 def list_versions(config:str, doc:DocsEnum, entry:str):
     output(state.api.entries.list_versions(config, doc.value, entry).body)
 

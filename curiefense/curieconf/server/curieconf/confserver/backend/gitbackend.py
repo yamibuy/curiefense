@@ -11,6 +11,7 @@ from curieconf import utils
 import jmespath
 import fasteners
 from typing import Dict, List
+import jsonpath_ng
 
 
 CURIE_AUTHOR = git.Actor("Curiefense API", "curiefense@reblaze.com")
@@ -629,6 +630,34 @@ class GitBackend(CurieBackend):
                 msg = "Update entry [%s] of document [%s]" % (entry, document)
             else:
                 msg = "Update entry [%s] into entry [%s] in document [%s]" % (entry, data["id"], document)
+            self.commit(msg)
+        return { "ok": True }
+
+    def entries_edit(self, config, document, entry, data):
+        if len(data) == 0:
+            return {"ok": False, "message": "empty edit request" }
+        with self.repo.lock:
+            self.prepare_branch(config)
+            doc = self.get_document(document)
+            for i,e in enumerate(doc):
+                if e["id"] == entry:
+                    break
+            else:
+                abort(404, "entry [%s] does not exist" % entry)
+
+            for edit in data:
+                p = jsonpath_ng.parse(edit["path"])
+                res = p.find(e)
+                for r in res:
+                    r.path.update(r.context.value, edit["value"])
+
+            doc[i] = e
+
+            self.add_document(document, doc)
+            if doc[i]["id"] == entry:
+                msg = "Edit entry [%s] of document [%s]" % (entry, document)
+            else:
+                msg = "Edit entry [%s] into entry [%s] in document [%s]" % (entry, data["id"], document)
             self.commit(msg)
         return { "ok": True }
 
