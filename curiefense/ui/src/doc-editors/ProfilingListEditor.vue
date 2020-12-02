@@ -5,7 +5,9 @@
         <div class="columns">
           <div class="column is-3" style="border-right:solid 2px #f8f8f8; ">
             <div class="field">
-              <label class="label is-small">Name</label>
+              <label class="label is-small">Name
+                  <span class="has-text-grey is-pulled-right" title="Rule Id">{{ selectedDoc.id }}</span>
+              </label>
               <div class="control">
                 <input class="input is-small"
                        placeholder="list name"
@@ -13,29 +15,34 @@
                        :readonly="readonly"/>
               </div>
               <p class="subtitle is-7 has-text-grey">
-                {{ selectedDoc.id + '\t|\t' + localDocTotalEntries + ' entries.' }}
+                {{ secentries }}
               </p>
             </div>
             <div class="field">
-              <label class="label is-small">Sections control</label>
-              <span class="is-size-7">Sections: {{ localDoc.rule.sections.length }}</span>
-              <div class="control">
-                <span class="is-size-7">
-                  Sections relation:
-                  <span class="tag is-small is-info is-light rule-relation-toggle"
-                        @click="toggleRuleRelation()">
-                    {{ localDoc.rule.relation }}
-                  </span>
-                </span>
-              </div>
+              <label class="checkbox is-size-7">
+                <input type="checkbox"
+                       :readonly="readonly"
+                       :disabled="readonly"
+                       v-model="selectedDoc.active">
+                Active
+              </label>
+            </div>
+
+            <div class="field">
+
               <div class="control" v-if="editable">
-                <button class="button is-small has-text-danger-dark remove-all-sections-button"
-                        title="Remove all sections"
-                        @click="removeAllSections">
-                  Remove all sections
-                </button>
+                <label class="label is-small">Sections Relation</label>
+                <div class="tags has-addons">
+                  <span class="tag pointer"
+                    :class="localDoc.rule.relation == 'AND' ? 'is-info xis-light is-selected' : ''" @click="setRuleRelation('AND')"
+                  >AND</span>
+                  <span class="tag pointer"
+                      :class="localDoc.rule.relation == 'OR' ? 'is-info xis-light is-selected' : ''" @click="setRuleRelation('OR')"
+                  >OR</span>
+                </div>
               </div>
             </div>
+
             <div class="field">
               <label class="label is-small">Tags</label>
               <div class="control">
@@ -44,8 +51,8 @@
                                         @tagChanged="selectedDocTags = $event">
                 </tag-autocomplete-input>
               </div>
-              <p class="help">Separated by space.</p>
             </div>
+
             <div class="field">
               <a v-if="selectedDoc && selectedDoc.source && selectedDoc.source.indexOf('http') === 0"
                  class="is-small has-text-grey is-size-7 is-pulled-right"
@@ -57,18 +64,8 @@
                 <input class="input is-small" v-model="selectedDoc.source"
                        :readonly="readonly"/>
               </div>
-              <p class="help">Only 'self-managed' lists are fully editable. For Internet sourced lists, only metadata is
-                editable.</p>
             </div>
-            <div class="field">
-              <label class="checkbox is-size-7">
-                <input type="checkbox"
-                       :readonly="readonly"
-                       :disabled="readonly"
-                       v-model="selectedDoc.active">
-                Active
-              </label>
-            </div>
+
             <div class="field">
               <label class="label is-small">Notes</label>
               <div class="control">
@@ -76,11 +73,18 @@
                           :readonly="readonly"></textarea>
               </div>
             </div>
-            <span class="is-small is-family-monospace has-text-grey-lighter">
-              Last update:
-              <br/>
-              {{ selectedDoc.mdate }}
-            </span>
+            <div style="padding-top:3rem">
+              <div class="field">
+                <div class="control is-expanded">
+                  <button class="button is-small has-text-danger-dark"
+                          title="Remove all sections"
+                          @click="removeAllSections">Clear all sections
+                  </button>
+                </div>
+              </div>
+              <p class="help">updated @ {{ selectedDoc.mdate }}</p>
+            </div>
+
           </div>
           <div class="column is-9">
             <entries-relation-list :rule="localDoc.rule"
@@ -117,6 +121,11 @@ export default {
   },
 
   computed: {
+    secentries() {
+      let s = 'section' + ((this.localDoc.rule.sections.length !== 1) ? 's' : ''),
+          e = 'entr' + ((this.localDocTotalEntries !== 1) ? 'ies' : 'y')
+      return `${this.localDoc.rule.sections.length} ${s}\t|\t${this.localDocTotalEntries} ${e}`
+    },
     readonly() {
       return this.selectedDoc.source === 'reblaze-managed'
     },
@@ -160,12 +169,12 @@ export default {
       this.$emit('update', this.localDoc)
     },
 
-    toggleRuleRelation() {
-      if (this.localDoc.rule.relation === 'AND') {
-        this.localDoc.rule.relation = 'OR'
-      } else {
-        this.localDoc.rule.relation = 'AND'
-      }
+    setRuleRelation(relation) {
+      if (relation)
+        this.localDoc.rule.relation = relation
+      else // toggle
+        this.localDoc.rule.relation = (this.localDoc.rule.relation === 'AND') ? "OR": "AND"
+
       this.emitDocUpdate()
     },
 
@@ -189,7 +198,7 @@ export default {
     },
 
     fetchList() {
-      const line_matching_ip = /^[^;]((((\d{1,3})\.){3}\d{1,3}(\/\d{1,2}))|([0-9a-f]+:+){1,8}([0-9a-f]+)?(\/\d{1,3})?)\s+([#;/].+)/gm,
+      const line_matching_ip = /^((((\d{1,3})\.){3}\d{1,3}(\/\d{1,2}))|([0-9a-f]+:+){1,8}([0-9a-f]+)?(\/\d{1,3})?)\s+([#;/].+)/gm,
           line_matching_asn = /(as\d{3,6})((\s+)?([#;/?].+))?/gmi,
           single_ip = /^((((\d{1,3})\.){3}\d{1,3}(\/\d{1,2}))|([0-9a-f]+:+){1,8}([0-9a-f]+)?(\/\d{1,3})?)$/,
           single_asn = /(as\d{3,6})/i
@@ -226,7 +235,17 @@ export default {
               }
             }
             if (entries.length > 0) {
-              this.selectedDoc.entries = entries
+              let new_section = {
+                relation: "OR",
+                entries: entries
+              }
+              this.selectedDoc.rule = {
+                "sections": [
+                  new_section
+                ],
+                "relation": "OR"
+              }
+
               this.convertOldEntriesToNewEntries()
               this.selectedDoc.mdate = (new Date).toISOString()
             }
@@ -265,7 +284,9 @@ export default {
 
 }
 </script>
+
 <style scoped>
+.pointer { cursor: pointer; }
 .rule-relation-toggle {
   cursor: pointer;
 }
