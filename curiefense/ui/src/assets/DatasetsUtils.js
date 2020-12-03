@@ -54,6 +54,8 @@ const Titles = {
   "traffic-overview": "Traffic Overview",
   "update-log": "Update log",
   "version-control": "Version Control",
+  "include": "Include",
+  "exclude": "Exclude",
 
   "headers-entry": "Header",
   "cookies-entry": "Cookie",
@@ -228,6 +230,17 @@ const NewDocEntryFactory = {
         return  {
             "id": UUID2(),
             "name": "New Flow Control",
+            "ttl": 60,
+            "key": [
+                {
+                    "attrs": "ip"
+                }
+            ],
+            "action": {
+                "type": "default"
+            },
+            "exclude": [],
+            "include": ["all"],
             "sequence": []
         }
     }

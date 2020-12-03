@@ -124,9 +124,9 @@
         ></component>
         <hr/>
         <git-history v-if="selectedDocID"
-                    :gitLog.sync="gitLog"
-                    :apiPath.sync="gitAPIPath"
-                    @restoreVersion="restoreGitVersion"></git-history>
+                     :gitLog.sync="gitLog"
+                     :apiPath.sync="gitAPIPath"
+                     @restoreVersion="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>
