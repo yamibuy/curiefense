@@ -6,6 +6,7 @@ use cidr::AnyIpCidr;
 use std::str::FromStr;
 use std::cmp::Ordering;
 use md5;
+use std::net::IpAddr;
 
 pub mod avltree;
 use avltree::AVLTreeMap;
@@ -108,6 +109,15 @@ fn modhash(_: &Lua, (val,m):(String,u32)) -> LuaResult<Option<u32>> {
 }
 
 
+fn iptonum(_: &Lua, ip:String) -> LuaResult<Option<String>> {
+    match IpAddr::from_str(&ip) {
+        Ok(r) => match r {
+            IpAddr::V4(a) => Ok(Some(u32::from_be_bytes(a.octets()).to_string())),
+            IpAddr::V6(a) => Ok(Some(u128::from_be_bytes(a.octets()).to_string())),
+        },
+        Err(_) => Ok(None)
+    }
+}
 
 
 #[lua_module]
@@ -115,6 +125,7 @@ fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("new_ip_set", lua.create_function(new_ip_set)?)?;
     exports.set("modhash", lua.create_function(modhash)?)?;
+    exports.set("iptonum", lua.create_function(iptonum)?)?;
     Ok(exports)
 }
 
