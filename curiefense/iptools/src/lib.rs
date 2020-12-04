@@ -64,26 +64,33 @@ impl mlua::UserData for IPSet {
         );
         methods.add_method("contains",
                            |_, this:&IPSet, value:String| {
-                               let a:AnyIpCidr = AnyIpCidr::from_str(&value).unwrap();
-                               Ok(this.contains(&a))
+                               match AnyIpCidr::from_str(&value) {
+                                   Ok(a) => Ok(Some(this.contains(&a))),
+                                   Err(_) => Ok(None),
+                               }
                            }
         );
         methods.add_method("get",
                            |_, this:&IPSet, value:String| {
-                               let a:AnyIpCidr = AnyIpCidr::from_str(&value).unwrap();
-                               match this.get(&a) {
-                                   Some(v) => Ok(Some(v.clone())),
-                                   None => Ok(None),
+                               match AnyIpCidr::from_str(&value) {
+                                   Ok(a) => {
+                                       match this.get(&a) {
+                                           Some(v) => Ok(Some(v.clone())),
+                                           None => Ok(None),
+                                       }
+                                   },
+                                   Err(_) => Ok(None)
                                }
                            }
         );
         methods.add_method_mut("add",
                                |_, this:&mut IPSet, (key,value): (String,String)| {
-                                   let a:AnyIpCidr = AnyIpCidr::from_str(&key).unwrap();
-                                   this.insert(a, value);
-                                   Ok(())
-                               })
-            ;
+                                   match AnyIpCidr::from_str(&key) {
+                                       Ok(k) => Ok(Some(this.insert(k, value))),
+                                       Err(_) => Ok(None),
+                                   }
+                               }
+        );
     }
 }
 

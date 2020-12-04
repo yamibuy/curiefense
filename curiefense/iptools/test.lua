@@ -30,3 +30,6 @@ for k,v in pairs(tests) do
 end
 
 
+print("get foo  ", s:get("foo"))
+print("contains 123", s:contains("123"))
+print("add dazd", s:add("dazd","adz"))
