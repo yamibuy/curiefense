@@ -90,7 +90,7 @@ spec:
             path: s3cfg
           secretName: s3cfg
       - name: uwsgi-socket
-        emptydir: {}
+        emptyDir: {}
 {{- if .Values.global.tolerations }}
       tolerations:
 {{ toYaml .Values.global.tolerations | indent 8 }}
