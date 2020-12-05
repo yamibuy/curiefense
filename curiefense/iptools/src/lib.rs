@@ -11,6 +11,8 @@ use std::net::IpAddr;
 pub mod avltree;
 use avltree::AVLTreeMap;
 
+pub mod sigset;
+use sigset::{SigSet,SigSetError};
 
 #[derive(Debug)]
 struct IPSet (AVLTreeMap<AnyIpCidr,String>);
@@ -103,6 +105,72 @@ fn new_ip_set(_: &Lua, _:()) -> LuaResult<IPSet> {
 }
 
 
+//////////////// SIG SET ////////////////
+
+fn new_sig_set(_: &Lua, _:()) -> LuaResult<SigSet> {
+    Ok(SigSet::new())
+}
+
+
+impl Into<mlua::Error> for SigSetError {
+    fn into(self) -> mlua::Error {
+        mlua::Error::RuntimeError(self.to_string())
+    }
+}
+
+impl mlua::UserData for SigSet {
+    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method_mut("add",
+                           |_, this:&mut SigSet, (r,i):(String, String)| {
+                               match this.add(r,i) {
+                                   Ok(_) => Ok(()),
+                                   Err(x) => Err(x.into()),
+                               }
+                           }
+        );
+        methods.add_method_mut("compile",
+                           |_, this:&mut SigSet, _:()| {
+                               match this.compile() {
+                                   Ok(_) => Ok(()),
+                                   Err(x) => Err(x.into()),
+                               }
+                           }
+        );
+        methods.add_method("is_match",
+                           |_, this:&SigSet, m:String| {
+                               match this.is_match(&m) {
+                                   Ok(res) => Ok(res),
+                                   Err(x) => Err(x.into()),
+                               }
+                           }
+        );
+        methods.add_method("is_match_id",
+                           |_, this:&SigSet, m:String| {
+                               match this.is_match_id(&m) {
+                                   Ok(res) => match res {
+                                       None => Ok(None),
+                                       Some(x) => Ok(Some(x.clone())),
+                                   },
+                                   Err(x) => Err(x.into()),
+                               }
+                           }
+        );
+        methods.add_method("is_match_ids",
+                           |lua:&Lua, this:&SigSet, m:String| {
+                               match this.is_match_ids(&m) {
+                                   Ok(res) => {
+                                       let tab = lua.create_table()?;
+                                       for (i,&r) in res.iter().enumerate() {
+                                           tab.set(i,r.clone())?;
+                                       };
+                                       Ok(tab)
+                                   },
+                                   Err(x) => Err(x.into()),
+                               }
+                           }
+        );
+    }
+}
 
 //////////////// MOD HASH ////////////////
 
@@ -140,6 +208,7 @@ fn iptonum(_: &Lua, ip:String) -> LuaResult<Option<String>> {
 fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("new_ip_set", lua.create_function(new_ip_set)?)?;
+    exports.set("new_sig_set", lua.create_function(new_sig_set)?)?;
     exports.set("modhash", lua.create_function(modhash)?)?;
     exports.set("iptonum", lua.create_function(iptonum)?)?;
     Ok(exports)
