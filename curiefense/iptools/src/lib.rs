@@ -15,6 +15,7 @@ use avltree::AVLTreeMap;
 #[derive(Debug)]
 struct IPSet (AVLTreeMap<AnyIpCidr,String>);
 
+//////////////// IP SET ////////////////
 
 fn cmp(net:&AnyIpCidr, ip:&AnyIpCidr) -> Ordering {
     let eq = match (ip.first_address(), ip.last_address(), net.first_address(), net.last_address()) {
@@ -102,6 +103,9 @@ fn new_ip_set(_: &Lua, _:()) -> LuaResult<IPSet> {
 }
 
 
+
+//////////////// MOD HASH ////////////////
+
 fn modhash(_: &Lua, (val,m):(String,u32)) -> LuaResult<Option<u32>> {
     let digest = md5::compute(val);
 
@@ -115,6 +119,8 @@ fn modhash(_: &Lua, (val,m):(String,u32)) -> LuaResult<Option<u32>> {
     Ok(res)
 }
 
+//////////////// IP TO NUM ////////////////
+
 
 fn iptonum(_: &Lua, ip:String) -> LuaResult<Option<String>> {
     match IpAddr::from_str(&ip) {
@@ -125,6 +131,9 @@ fn iptonum(_: &Lua, ip:String) -> LuaResult<Option<String>> {
         Err(_) => Ok(None)
     }
 }
+
+
+/////////////////////////////////////////
 
 
 #[lua_module]
