@@ -7,6 +7,8 @@ use std::str::FromStr;
 use std::cmp::Ordering;
 use md5;
 use std::net::IpAddr;
+use maxminddb::geoip2;
+
 
 pub mod avltree;
 use avltree::AVLTreeMap;
@@ -14,10 +16,160 @@ use avltree::AVLTreeMap;
 pub mod sigset;
 use sigset::{SigSet,SigSetError};
 
-#[derive(Debug)]
-struct IPSet (AVLTreeMap<AnyIpCidr,String>);
+//////////////// MAXMIND GEOIP ////////////////
+
+enum GeoIPError {
+    DBNotLoadedError,
+    AddrParseError(std::net::AddrParseError),
+    MMError(maxminddb::MaxMindDBError),
+    LookupError(maxminddb::MaxMindDBError),
+}
+
+
+struct GeoIP {
+    country_db: Option<maxminddb::Reader<Vec<u8>>>,
+    asn_db:    Option<maxminddb::Reader<Vec<u8>>>,
+}
+
+
+impl GeoIP {
+    fn new() -> GeoIP {
+        GeoIP {
+            country_db: None,
+            asn_db: None,
+        }
+    }
+
+    fn load_country(&mut self, pth: &std::path::Path) -> Result<(), GeoIPError> {
+        match maxminddb::Reader::open_readfile(pth) {
+            Ok(db) => { self.country_db = Some(db); Ok(()) },
+            Err(x) => Err(GeoIPError::MMError(x)),
+        }
+    }
+    fn load_asn(&mut self, pth: &std::path::Path) -> Result<(), GeoIPError> {
+        match maxminddb::Reader::open_readfile(pth) {
+            Ok(db) => { self.asn_db = Some(db); Ok(()) },
+            Err(x) => Err(GeoIPError::MMError(x)),
+        }
+    }
+
+    fn lookup_asn(&self, ip_str: String) -> Result<(Option<u32>,Option<String>), GeoIPError> {
+        match &self.asn_db {
+            None => Err(GeoIPError::DBNotLoadedError),
+            Some(db) =>
+                match FromStr::from_str(&ip_str) {
+                    Err(x) => Err(GeoIPError::AddrParseError(x)),
+                    Ok(ip) => {
+                        match db.lookup(ip) {
+                            Err(x) => { Err(GeoIPError::LookupError(x)) },
+                            Ok(res) => {
+                                let asn: geoip2::Asn = res;
+                                let org = match asn.autonomous_system_organization {
+                                    None => None,
+                                    Some(o) => Some(o.to_string())
+                                };
+                                Ok((asn.autonomous_system_number,org))
+                            }
+                        }
+                    }
+                }
+        }
+    }
+    fn lookup_country(&self, ip_str: String) -> Result<(Option<String>,Option<String>), GeoIPError> {
+        match &self.country_db {
+            None => Err(GeoIPError::DBNotLoadedError),
+            Some(db) =>
+                match FromStr::from_str(&ip_str) {
+                    Err(x) => Err(GeoIPError::AddrParseError(x)),
+                    Ok(ip) => {
+                        match db.lookup(ip) {
+                            Err(x) => { Err(GeoIPError::LookupError(x)) },
+                            Ok(res) => {
+                                let country: geoip2::Country = res;
+                                let (iso_code,name) = match country.country {
+                                    None => (None,None),
+                                    Some(c) => {
+                                        let iso = match c.iso_code {
+                                            None => None,
+                                            Some(s) => Some(s.to_string()),
+                                        };
+                                        let name = match c.names {
+                                            None => None,
+                                            Some(names) => match names.get(&"en") {
+                                                None => None,
+                                                Some(n) => Some(n.to_string())
+                                            }
+                                        };
+                                        (iso,name)
+                                    }
+                                };
+                                Ok((iso_code,name))
+                            }
+                        }
+                    }
+                }
+        }
+    }
+}
+
+
+fn new_geoipdb(_: &Lua, _:()) -> LuaResult<GeoIP> {
+    Ok(GeoIP::new())
+}
+
+
+impl mlua::UserData for GeoIP {
+    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method_mut("load_asn_db",
+                               |_, this:&mut GeoIP, pth:String| {
+                                   match this.load_asn(std::path::Path::new(&pth)) {
+                                       Ok(_) => Ok(true),
+                                       Err(_) => Ok(false),
+                                   }
+                               }
+        );
+        methods.add_method_mut("load_country_db",
+                               |_, this:&mut GeoIP, pth:String| {
+                                   match this.load_country(std::path::Path::new(&pth)) {
+                                       Ok(_) => Ok(true),
+                                       Err(_) => Ok(false),
+                                   }
+                               }
+        );
+        methods.add_method("lookup_asn",
+                           |lua: &Lua, this:&GeoIP, value:String| {
+                               let mut res = Vec::new();
+                               match this.lookup_asn(value) {
+                                   Ok((asn,org)) => {
+                                       res.push(asn.to_lua(lua).unwrap());
+                                       res.push(org.to_lua(lua).unwrap());
+                                   },
+                                   _ => {}
+                               }
+                               Ok(mlua::MultiValue::from_vec(res))
+                           }
+        );
+        methods.add_method("lookup_country",
+                           |lua: &Lua, this:&GeoIP, value:String| {
+                               let mut res = Vec::new();
+                               match this.lookup_country(value) {
+                                   Ok((iso,name)) => {
+                                       res.push(iso.to_lua(lua).unwrap());
+                                       res.push(name.to_lua(lua).unwrap());
+                                   },
+                                   _ => {}
+                               }
+                               Ok(mlua::MultiValue::from_vec(res))
+                           }
+        );
+    }
+}
+
 
 //////////////// IP SET ////////////////
+
+#[derive(Debug)]
+struct IPSet (AVLTreeMap<AnyIpCidr,String>);
 
 fn cmp(net:&AnyIpCidr, ip:&AnyIpCidr) -> Ordering {
     let eq = match (ip.first_address(), ip.last_address(), net.first_address(), net.last_address()) {
@@ -157,14 +309,14 @@ impl mlua::UserData for SigSet {
                            }
         );
         methods.add_method("is_match_ids",
-                           |lua:&Lua, this:&SigSet, m:String| {
+                           |_, this:&SigSet, m:String| {
                                match this.is_match_ids(&m) {
                                    Ok(res) => {
-                                       let tab = lua.create_table()?;
-                                       for (i,&r) in res.iter().enumerate() {
-                                           tab.set(i,r.clone())?;
-                                       };
-                                       Ok(Some(tab))
+                                       let mut v = Vec::new();
+                                       for &r in res.iter() {
+                                           v.push(r.clone())
+                                       }
+                                       Ok(Some(v))
                                    },
                                    Err(_) => Ok(None),
                                }
@@ -210,6 +362,7 @@ fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("new_ip_set", lua.create_function(new_ip_set)?)?;
     exports.set("new_sig_set", lua.create_function(new_sig_set)?)?;
+    exports.set("new_geoipdb", lua.create_function(new_geoipdb)?)?;
     exports.set("modhash", lua.create_function(modhash)?)?;
     exports.set("iptonum", lua.create_function(iptonum)?)?;
     Ok(exports)
