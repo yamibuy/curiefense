@@ -237,6 +237,7 @@ function maybe_reload(handle)
         LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
 
         for id, sig  in pairs(WAFSignatures) do
+            handle:logDebug(string.format("adding to RustSig %s: (%s)", id, sig.operand))
             WAFRustSignatures.add(sig.operand, id)
         end
         WAFRustSignatures.compile()
