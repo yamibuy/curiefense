@@ -457,9 +457,13 @@ end
 
 -- slice table
 function slice(T, first, last, step)
+  if not first then first = 1 end
+  if not last then last = #T end
+  if not step then step = 1 end
+
   local sliced = {}
 
-  for i = first or 1, last or #T, step or 1 do
+  for i = first, last, step do
     sliced[#sliced+1] = T[i]
   end
   return sliced

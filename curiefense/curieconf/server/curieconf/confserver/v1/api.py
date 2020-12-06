@@ -135,6 +135,20 @@ m_tagrule = api.model("Tag Rule", {
     "rule": AnyType(),
 })
 
+# Flow control
+
+m_flowcontrol = api.model("Flow Control", {
+    "id": fields.String(required=True),
+    "name": fields.String(required=True),
+    "ttl": fields.Integer(required=True),
+    "key": fields.List(fields.Raw(required=True)),
+    "sequence": fields.List(fields.Raw(required=True)),
+    "action": fields.Raw(required=True),
+    "include": fields.List(fields.String()),
+    "exclude": fields.List(fields.String()),
+})
+
+
 
 ### mapping from doc name to model
 

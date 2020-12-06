@@ -178,8 +178,10 @@ function check(waf_profile, request)
                     end
                 end
 ---
+                local sec_exclude = (exclude_sigs[section] == nil) or (exclude_sigs[section][name] == nil)
                 for _, sig in ipairs(globals.WAFSignatures) do
-                    if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
+                    -- if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
+                    if sec_exclude  or sec_exclude[sig.id] == nil then
                         if re_match(value, sig.operand) then
                             request.handle:logInfo(string.format("WAF block by Sig %s", sig.id))
                             return WAFBlock, gen_block_info(section, name, value, sig)
@@ -192,8 +194,6 @@ function check(waf_profile, request)
 
     return WAFPass, "waf-passed"
 end
-
-
 
 
 function detect_sqli(input)
