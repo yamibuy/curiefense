@@ -112,27 +112,22 @@ fn new_sig_set(_: &Lua, _:()) -> LuaResult<SigSet> {
 }
 
 
-impl Into<mlua::Error> for SigSetError {
-    fn into(self) -> mlua::Error {
-        mlua::Error::RuntimeError(self.to_string())
-    }
-}
-
 impl mlua::UserData for SigSet {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("add",
                            |_, this:&mut SigSet, (r,i):(String, String)| {
                                match this.add(r,i) {
-                                   Ok(_) => Ok(()),
-                                   Err(x) => Err(x.into()),
+                                   Ok(_) => Ok(Some(true)),
+                                   Err(_) => Ok(None),
                                }
                            }
         );
         methods.add_method_mut("compile",
                            |_, this:&mut SigSet, _:()| {
                                match this.compile() {
-                                   Ok(_) => Ok(()),
-                                   Err(x) => Err(x.into()),
+                                   Ok(_) => Ok(Some(true)),
+                                   Err(SigSetError::RegexCompileError(_)) => Ok(Some(false)),
+                                   _ => Ok(None)
                                }
                            }
         );
@@ -145,8 +140,8 @@ impl mlua::UserData for SigSet {
         methods.add_method("is_match",
                            |_, this:&SigSet, m:String| {
                                match this.is_match(&m) {
-                                   Ok(res) => Ok(res),
-                                   Err(x) => Err(x.into()),
+                                   Ok(res) => Ok(Some(res)),
+                                   Err(_) => Ok(None),
                                }
                            }
         );
@@ -157,7 +152,7 @@ impl mlua::UserData for SigSet {
                                        None => Ok(None),
                                        Some(x) => Ok(Some(x.clone())),
                                    },
-                                   Err(x) => Err(x.into()),
+                                   Err(_) => Ok(None),
                                }
                            }
         );
@@ -169,9 +164,9 @@ impl mlua::UserData for SigSet {
                                        for (i,&r) in res.iter().enumerate() {
                                            tab.set(i,r.clone())?;
                                        };
-                                       Ok(tab)
+                                       Ok(Some(tab))
                                    },
-                                   Err(x) => Err(x.into()),
+                                   Err(_) => Ok(None),
                                }
                            }
         );

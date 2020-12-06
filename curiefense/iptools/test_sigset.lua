@@ -45,3 +45,15 @@ ss:compile()
 for i,t in pairs(tests) do
    print(t, ss:is_match(t))
 end
+
+print("======= test errors ========")
+print("add after compile", ss:add("a","a"))
+print("recompiile", ss:compile())
+ss:clear()
+print("match before compile", ss:is_match("a"))
+ss:add("(sqdf","xx")
+print("syntax error", ss:compile())
+
+ss:clear()
+ss:add("xx","xx")
+print("no problem to compile", ss:compile())
