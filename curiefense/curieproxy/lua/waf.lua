@@ -15,6 +15,17 @@ local WAFBlock  = globals.WAFBlock
 
 local re_match  = utils.re_match
 
+
+local WAFRustSignatures = globals.WAFRustSignatures
+local WAFSignatures = globals.WAFSignatures
+
+function wafsig_re_match(input )
+    local id = WAFRustSignatures.is_match_id(input)
+    if id then
+        return WAFSignatures[id]
+    end
+end
+
 function store_section(master_dict, key, subkey,  value)
     if master_dict[key] then
         master_dict[key][subkey] = value
@@ -180,9 +191,10 @@ function check(waf_profile, request)
 ---
                 for _, sig in ipairs(globals.WAFSignatures) do
                     if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
-                        if re_match(value, sig.operand) then
-                            request.handle:logInfo(string.format("WAF block by Sig %s", sig.id))
-                            return WAFBlock, gen_block_info(section, name, value, sig)
+                        local waf_sig = wafsig_re_match(value)
+                        if waf_sig then
+                            request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
+                            return WAFBlock, gen_block_info(section, name, value, waf_sig)
                         end
                     end
                 end
