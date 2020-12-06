@@ -4,6 +4,7 @@ local cjson       = require "cjson"
 local json_safe   = require "cjson.safe"
 local socket      = require "socket"
 local lfs         = require "lfs"
+local iptools     = require "iptools"
 
 local preplists   = require "lua.preplists"
 
@@ -18,6 +19,7 @@ URLMap          = nil
 ACLProfiles     = nil
 WAFProfiles     = nil
 WAFSignatures   = nil
+WAFRustSignatures   = iptools.new_sig_set()
 ProfilingLists  = nil
 LimitRules      = nil
 
@@ -214,9 +216,9 @@ function reload(handle)
     LimitRules      = lr(handle, "/config/current/config/json/limits.json")
     ProfilingLists  = lrt(handle,"/config/current/config/json/profiling-lists.json")
 
-    for id, entry in pairs(LimitRules) do
-        handle:logDebug(string.format("globals lua -- LimitRules %s %s", id, entry.name))
-    end
+    -- for id, entry in pairs(LimitRules) do
+    --     handle:logDebug(string.format("globals lua -- LimitRules %s %s", id, entry.name))
+    -- end
 
     handle:logDebug("RELOAD CONFIG DONE")
 end
@@ -233,9 +235,12 @@ function maybe_reload(handle)
         WAFSignatures   = dl(handle,  "/config/current/config/json/waf-signatures.json")
         URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
         LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
-        for id, entry in pairs(LimitRules) do
-            handle:logDebug(string.format("globals lua -- LimitRules %s %s", id, entry.name))
+
+        for id, sig  in pairs(WAFSignatures) do
+            WAFRustSignatures.add(sig.operand, id)
         end
+        WAFRustSignatures.compile()
+
         ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
     end
 

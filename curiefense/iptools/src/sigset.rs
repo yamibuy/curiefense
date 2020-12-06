@@ -59,6 +59,12 @@ impl SigSet {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.regex_set = None;
+        self.regex_list = Vec::new();
+        self.id_list = Vec::new();
+    }
+
     pub fn is_match(&self, s: &String) -> Result<bool,SigSetError> {
         match &self.regex_set {
             None => Err(SigSetError::RegexSetNotCompiled),
@@ -157,6 +163,20 @@ mod tests {
         testT!(ss.is_match(&s!("AAAAA")));
         testT!(ss.is_match(&s!("BBB")));
         testF!(ss.is_match(&s!("BBC")));
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut ss = SigSet::new();
+        testOk!(ss.add(s!("^A+$"), s!("only As")));
+        testOk!(ss.compile());
+        testT!(ss.is_match(&s!("AAAAA")));
+        ss.clear();
+        testErr!(ss.is_match(&s!("AAAAA")));
+        testOk!(ss.add(s!("^B+$"), s!("only Bs")));
+        testOk!(ss.compile());
+        testF!(ss.is_match(&s!("AAAAA")));
+        testT!(ss.is_match(&s!("BBB")));
     }
 
     #[test]

@@ -9,7 +9,7 @@ local resty_md5 = require "resty.md5"
 local iputils   = require "lua.iputils"
 local maxmind   = require "lua.maxmind"
 local globals   = require "lua.globals"
-local accesslog     = require "lua.accesslog"
+local accesslog = require "lua.accesslog"
 
 
 local find      = string.find
@@ -40,6 +40,7 @@ function re_match(subj, patt, cf )
     cf = cf or 'im'
     return _match(subj, patt, 1, cf)
 end
+
 function new_request_map()
     return {
         headers  = {},
