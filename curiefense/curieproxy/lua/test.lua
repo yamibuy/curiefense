@@ -14,11 +14,19 @@ hmethods = {
  }
 setmetatable(HT, {__index = hmethods})
 
+MT = {}
+mmethods = {
+     get = function (self, k)
+         return self[k]
+     end
+ }
+setmetatable(MT, {__index = mmethods})
+
 
 function run(headers, metadata, body)
     request = {
         ["headers"] = HT,
-        ["metadata"] = metadata,
+        ["metadata"] = MT,
         ["body"] = body
     }
 
