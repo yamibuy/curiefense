@@ -12,8 +12,9 @@ fi
 
 TADDR="${TARGET_ADDRESS:-echo}"
 TPORT="${TARGET_PORT:-8080}"
+XFF="${XFF_TRUSTED_HOPS:-1}"
 
-cat /etc/envoy/envoy.yaml.head > /etc/envoy/envoy.yaml
+sed -e "s/XFF_TRUSTED/$XFF/" /etc/envoy/envoy.yaml.head > /etc/envoy/envoy.yaml
 if [ -f /run/secrets/curieproxysslcrt ]; then
 	cat /etc/envoy/envoy.yaml.tls >> /etc/envoy/envoy.yaml
 fi

@@ -7,6 +7,7 @@ $(TARGET): src/lib.rs src/avltree.rs
 test: $(TARGET)
 	cargo test
 	lua test.lua
+	lua test_sigset.lua
 
 .PHONY: test
 
