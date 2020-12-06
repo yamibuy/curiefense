@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -7,6 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
+  serviceName: confserver-hl
   selector:
     matchLabels:
       app.kubernetes.io/name: confserver
@@ -88,7 +90,7 @@ spec:
             path: s3cfg
           secretName: s3cfg
       - name: uwsgi-socket
-        emptydir: {}
+        emptyDir: {}
 {{- if .Values.global.tolerations }}
       tolerations:
 {{ toYaml .Values.global.tolerations | indent 8 }}
