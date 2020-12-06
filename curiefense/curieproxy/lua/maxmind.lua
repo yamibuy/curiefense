@@ -31,8 +31,9 @@ module(..., package.seeall)
 local iptools = require ("iptools")
 
 local mmdb = iptools.new_geoipdb()
-local mmdb:load_asn_db("/config/current/config/maxmind/GeoLite2-ASN.mmdb")
-local mmdb:load_country_db("/config/current/config/maxmind/GeoLite2-Country.mmdb")
+
+mmdb:load_asn_db("/config/current/config/maxmind/GeoLite2-ASN.mmdb")
+mmdb:load_country_db("/config/current/config/maxmind/GeoLite2-Country.mmdb")
 
 function ipinfo(ip, handle)
     local country, iso = mmdb:lookup_country(ip)
