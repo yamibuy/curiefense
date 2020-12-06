@@ -8,6 +8,7 @@ test: $(TARGET)
 	cargo test
 	lua test.lua
 	lua test_sigset.lua
+	lua test_geoip.lua
 
 .PHONY: test
 
