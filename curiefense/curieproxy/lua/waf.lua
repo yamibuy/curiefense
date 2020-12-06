@@ -20,7 +20,7 @@ local WAFRustSignatures = globals.WAFRustSignatures
 local WAFSignatures = globals.WAFSignatures
 
 function wafsig_re_match(input )
-    local id = WAFRustSignatures.is_match_id(input)
+    local id = WAFRustSignatures:is_match_id(input)
     if id then
         return WAFSignatures[id]
     end
