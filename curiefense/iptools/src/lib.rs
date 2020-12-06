@@ -157,14 +157,14 @@ impl mlua::UserData for SigSet {
                            }
         );
         methods.add_method("is_match_ids",
-                           |lua:&Lua, this:&SigSet, m:String| {
+                           |_, this:&SigSet, m:String| {
                                match this.is_match_ids(&m) {
                                    Ok(res) => {
-                                       let tab = lua.create_table()?;
-                                       for (i,&r) in res.iter().enumerate() {
-                                           tab.set(i,r.clone())?;
-                                       };
-                                       Ok(Some(tab))
+                                       let mut v = Vec::new();
+                                       for &r in res.iter() {
+                                           v.push(r.clone())
+                                       }
+                                       Ok(Some(v))
                                    },
                                    Err(_) => Ok(None),
                                }
