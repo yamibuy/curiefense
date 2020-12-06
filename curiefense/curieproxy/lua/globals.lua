@@ -240,7 +240,7 @@ function maybe_reload(handle)
             handle:logDebug(string.format("adding to RustSig %s: (%s)", id, sig.operand))
             WAFRustSignatures:add(sig.operand, id)
         end
-        WAFRustSignatures.compile()
+        WAFRustSignatures:compile()
 
         ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
     end
