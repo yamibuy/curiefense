@@ -135,6 +135,17 @@ m_tagrule = api.model("Tag Rule", {
     "rule": AnyType(),
 })
 
+# Flow Control
+
+m_flowcontrol = api.model("Flow Control", {
+    "id": fields.String(required=True),
+    "name": fields.String(required=True),
+    "ttl": fields.String(required=True),
+    "include": fields.Raw(required=True),
+    "exclude": fields.Raw(required=True),
+    "sequence": AnyType(),
+})
+
 
 ### mapping from doc name to model
 
@@ -145,6 +156,7 @@ models = {
     "wafpolicies": m_wafpolicy,
     "aclpolicies": m_aclpolicy,
     "tagrules": m_tagrule,
+    "flowcontrol": m_flowcontrol,
 }
 
 ### Other models

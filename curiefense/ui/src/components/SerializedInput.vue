@@ -34,11 +34,15 @@ export default {
   },
   methods: {
     updateValue: function (newValue) {
-      const result = this.setFunction(newValue)
-      this.$emit('blur', result)
+      if (typeof this.setFunction === 'function') {
+        const result = this.setFunction(newValue)
+        this.$emit('blur', result)
+      }
     },
     formatValue: function () {
-      this.formattedValue = this.getFunction(this.value)
+      if (typeof this.getFunction === 'function') {
+        this.formattedValue = this.getFunction(this.value)
+      }
     }
   }
 }

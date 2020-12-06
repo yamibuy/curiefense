@@ -231,6 +231,8 @@ const NewDocEntryFactory = {
             "id": UUID2(),
             "name": "New Flow Control",
             "ttl": 60,
+            "active": true,
+            "notes": "New Flow Control Notes and Remarks",
             "key": [
                 {
                     "attrs": "ip"

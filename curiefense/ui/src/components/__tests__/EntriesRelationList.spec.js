@@ -17,8 +17,8 @@ describe('EntriesRelationList.vue', () => {
                     '/login'
                 ],
                 [
-                    'uri',
-                    '/account'
+                    'ip',
+                    '1.1.1.1'
                 ]
             ]
         }
@@ -118,6 +118,19 @@ describe('EntriesRelationList.vue', () => {
         })
 
         test('should not change section relation if section entries contains two entries of same category', async () => {
+            const newRuleData = JSON.parse(JSON.stringify(ruleData))
+            newRuleData.sections[0].entries = [
+                [
+                    'uri',
+                    '/login'
+                ],
+                [
+                    'uri',
+                    '/account'
+                ]
+            ]
+            wrapper.setProps({rule: newRuleData})
+            await Vue.nextTick()
             const component = wrapper.findComponent(EntriesRelationList)
             const section = component.findAll('.section').at(0)
             const sectionRelationToggle = section.find('.section-relation-toggle')
@@ -327,7 +340,7 @@ describe('EntriesRelationList.vue', () => {
             expect(tables.length).toEqual(1)
         })
 
-        test('should not have the option to remove top level component', () => {
+        test('should not have the option to remove section if no sections exist', () => {
             ruleData.sections = []
             wrapper = mount(EntriesRelationList, {
                 propsData: {
@@ -350,18 +363,6 @@ describe('EntriesRelationList.vue', () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const removeSectionButton = component.find('.remove-section-button')
             expect(removeSectionButton.element).toBeUndefined()
-        })
-
-        test('should close new entry row after removing section', async () => {
-            const component = wrapper.findComponent(EntriesRelationList)
-            const addEntryButton = component.find('.add-entry-button')
-            addEntryButton.trigger('click')
-            await Vue.nextTick()
-            const removeSectionButton = component.find('.remove-section-button')
-            removeSectionButton.trigger('click')
-            await Vue.nextTick()
-            const newEntryRow = component.find('.new-entry-row')
-            expect(newEntryRow.element).toBeUndefined()
         })
     })
 
@@ -451,6 +452,27 @@ describe('EntriesRelationList.vue', () => {
             expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['headers', ['something', 'right'], 'here'])
         })
 
+        test('should trim and add new entries from multi-line input when confirm button is clicked if has too many lines', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            const newEntryRow = component.find('.new-entry-row')
+            const typeSelection = newEntryRow.find('.new-entry-type-selection')
+            typeSelection.trigger('click')
+            const options = typeSelection.findAll('option')
+            options.at(7).element.selected = true
+            typeSelection.trigger('change')
+            await Vue.nextTick()
+            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
+            newEntryTextarea.setValue('something\n11\n22\n33\n44\n55\n66')
+            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(3)
+            expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['headers', ['something', '11'], '22'])
+        })
+
         test('should not add new entries from multi-line input when confirm button is clicked if has too few lines', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
@@ -471,26 +493,6 @@ describe('EntriesRelationList.vue', () => {
             expect(wrapper.vm.rule.sections[0].entries.length).toEqual(2)
         })
 
-        test('should not add new entries from multi-line input when confirm button is clicked if has too many lines', async () => {
-            const component = wrapper.findComponent(EntriesRelationList)
-            const addEntryButton = component.find('.add-entry-button')
-            addEntryButton.trigger('click')
-            await Vue.nextTick()
-            const newEntryRow = component.find('.new-entry-row')
-            const typeSelection = newEntryRow.find('.new-entry-type-selection')
-            typeSelection.trigger('click')
-            const options = typeSelection.findAll('option')
-            options.at(7).element.selected = true
-            typeSelection.trigger('change')
-            await Vue.nextTick()
-            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
-            newEntryTextarea.setValue('something\n1\n2\n3\n4\n5\n6')
-            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
-            confirmAddEntryButton.trigger('click')
-            await Vue.nextTick()
-            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(2)
-        })
-
         test('should not show new entry button if not editable', () => {
             wrapper = mount(EntriesRelationList, {
                 propsData: {
@@ -505,13 +507,6 @@ describe('EntriesRelationList.vue', () => {
 
         test('should set section relation to `OR` if two items of same category added', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
-            // remove all entries
-            let removeEntryButton = component.find('.remove-entry-button')
-            removeEntryButton.trigger('click')
-            await Vue.nextTick()
-            removeEntryButton = component.find('.remove-entry-button')
-            removeEntryButton.trigger('click')
-            await Vue.nextTick()
             // set relation to AND
             const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
             sectionRelationToggle.trigger('click')
@@ -533,15 +528,17 @@ describe('EntriesRelationList.vue', () => {
             expect(sectionRelationToggle.text()).toEqual('OR')
         })
 
-        test('should not set section relation to `OR` if no more than one item of same category added', async () => {
+        test.skip('should not set section relation to `OR` if no more than one item of same category added', async () => {
+            const newRuleData = JSON.parse(JSON.stringify(ruleData))
+            newRuleData.sections[0].entries = [
+                [
+                    'uri',
+                    '/login'
+                ]
+            ]
+            wrapper.setProps({rule: newRuleData})
+            await Vue.nextTick()
             const component = wrapper.findComponent(EntriesRelationList)
-            // remove all entries
-            let removeEntryButton = component.find('.remove-entry-button')
-            removeEntryButton.trigger('click')
-            await Vue.nextTick()
-            removeEntryButton = component.find('.remove-entry-button')
-            removeEntryButton.trigger('click')
-            await Vue.nextTick()
             // set relation to AND
             const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
             sectionRelationToggle.trigger('click')
@@ -565,13 +562,6 @@ describe('EntriesRelationList.vue', () => {
 
         test('should not set section relation to `OR` if two headers added', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
-            // remove all entries
-            let removeEntryButton = component.find('.remove-entry-button')
-            removeEntryButton.trigger('click')
-            await Vue.nextTick()
-            removeEntryButton = component.find('.remove-entry-button')
-            removeEntryButton.trigger('click')
-            await Vue.nextTick()
             // set relation to AND
             const sectionRelationToggle = component.findAll('.section-relation-toggle').at(0)
             sectionRelationToggle.trigger('click')
