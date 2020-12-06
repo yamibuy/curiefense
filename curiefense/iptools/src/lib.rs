@@ -14,10 +14,11 @@ use avltree::AVLTreeMap;
 pub mod sigset;
 use sigset::{SigSet,SigSetError};
 
-#[derive(Debug)]
-struct IPSet (AVLTreeMap<AnyIpCidr,String>);
 
 //////////////// IP SET ////////////////
+
+#[derive(Debug)]
+struct IPSet (AVLTreeMap<AnyIpCidr,String>);
 
 fn cmp(net:&AnyIpCidr, ip:&AnyIpCidr) -> Ordering {
     let eq = match (ip.first_address(), ip.last_address(), net.first_address(), net.last_address()) {
