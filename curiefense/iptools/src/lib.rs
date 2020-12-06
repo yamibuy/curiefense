@@ -136,6 +136,12 @@ impl mlua::UserData for SigSet {
                                }
                            }
         );
+        methods.add_method_mut("clear",
+                               |_, this:&mut SigSet, _:()| {
+                                   this.clear();
+                                   Ok(())
+                               }
+        );
         methods.add_method("is_match",
                            |_, this:&SigSet, m:String| {
                                match this.is_match(&m) {

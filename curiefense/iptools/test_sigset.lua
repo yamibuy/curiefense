@@ -34,3 +34,14 @@ for i,t in pairs(tests) do
       print("    ",u)
    end
 end
+
+print("======= test clear ========")
+
+ss:clear()
+ss:add("^A+$","only As")
+ss:add("^B+$","only Bs")
+ss:compile()
+
+for i,t in pairs(tests) do
+   print(t, ss:is_match(t))
+end
