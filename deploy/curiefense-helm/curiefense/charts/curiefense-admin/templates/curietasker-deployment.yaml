@@ -24,6 +24,13 @@ spec:
         image: {{ .Values.global.images.curietasker }}:{{ .Values.global.settings.docker_tag }}
         {{ end }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "900m"
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}

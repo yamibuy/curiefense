@@ -40,6 +40,12 @@ spec:
         - mountPath: /var/lib/grafana
           name: persistent-grafana
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        limits:
+          memory: "1Gi"
+          cpu: "900m"
+        requests:
+          memory: "100Mi"
+          cpu: "20m"
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}
