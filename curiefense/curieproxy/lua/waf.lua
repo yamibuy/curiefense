@@ -19,6 +19,12 @@ local re_match  = utils.re_match
 local WAFRustSignatures = globals.WAFRustSignatures
 local WAFSignatures = globals.WAFSignatures
 
+
+--[[
+comment -- multi line comment
+]]
+
+
 function wafsig_re_match(input, request)
     local id = WAFRustSignatures:is_match_id(input)
     request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s)", input, id))
