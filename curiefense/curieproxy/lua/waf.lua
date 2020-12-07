@@ -207,7 +207,7 @@ function check(waf_profile, request)
                                 request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
                                 return WAFBlock, gen_block_info(section, name, value, waf_sig)
                             else
-                                request.handle:logInfo(string.format("WHY IS WAFSignatures == nil???")
+                                request.handle:logInfo(string.format("WHY IS WAFSignatures == nil???"))
                             end
                         end
                     end
