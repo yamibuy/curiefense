@@ -19,8 +19,9 @@ local re_match  = utils.re_match
 local WAFRustSignatures = globals.WAFRustSignatures
 local WAFSignatures = globals.WAFSignatures
 
-function wafsig_re_match(input )
+function wafsig_re_match(input, request)
     local id = WAFRustSignatures:is_match_id(input)
+    request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s)", input, waf_sig.id))
     if id then
         return WAFSignatures[id]
     end
@@ -193,7 +194,7 @@ function check(waf_profile, request)
                 for _, sig in ipairs(globals.WAFSignatures) do
                     -- if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
                     if sec_exclude  or sec_exclude[sig.id] == nil then
-                        local waf_sig = wafsig_re_match(value)
+                        local waf_sig = wafsig_re_match(value, request)
                         if waf_sig then
                             request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
                             return WAFBlock, gen_block_info(section, name, value, waf_sig)
