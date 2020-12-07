@@ -27,7 +27,8 @@ comment -- multi line comment
 
 function wafsig_re_match(input, request)
     local id = WAFRustSignatures:is_match_id(input)
-    request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s)", input, id))
+    local operand = WAFSignatures[id] and WAFSignatures[id].operand
+    request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s:[==[%s]==])", input, id, operand))
     if id then
         return WAFSignatures[id]
     end
