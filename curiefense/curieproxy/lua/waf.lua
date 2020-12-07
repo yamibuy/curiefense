@@ -195,12 +195,6 @@ function check(waf_profile, request)
                     end
                 end
 ---
-                local sec_exclude = (exclude_sigs[section] == nil) or (exclude_sigs[section][name] == nil)
-                -- for id, sig in pairs(globals.WAFSignatures) do
-                -- request.handle:logDebug(string.format("WAF Sig id: (%s) ?", sig.id))
-                -- if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
-                -- if sec_exclude  or sec_exclude[sig.id] == nil then
-                request.handle:logDebug(string.format("Included! [WAF Sig id: (%s)]", sig.id))
                 local matched_sigs = WAFRustSignatures:is_match_ids(value)
                 if matched_sigs then
                     local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
