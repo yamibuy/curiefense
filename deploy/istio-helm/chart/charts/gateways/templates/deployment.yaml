@@ -74,12 +74,13 @@ spec:
               value: "COPY_BOOTSTRAP"
 {{- end }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
-          limits:
-            memory: "500Mi"
-            cpu: "500m"
-          requests:
-            memory: "100Mi"
-            cpu: "100m"
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
           volumeMounts:
           - mountPath: /run/secrets/s3cfg
             name: s3cfg
@@ -132,12 +133,13 @@ spec:
             - name: RUN_MODE
               value: "PERIODIC_SYNC"
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
-          limits:
-            memory: "500Mi"
-            cpu: "500m"
-          requests:
-            memory: "60Mi"
-            cpu: "100m"
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+            requests:
+              memory: "60Mi"
+              cpu: "100m"
           volumeMounts:
           - mountPath: /run/secrets/s3cfg
             name: s3cfg
@@ -155,12 +157,13 @@ spec:
           image: "{{ $.Values.global.hub }}/{{ $.Values.global.proxy.image }}:{{ $.Values.global.tag }}"
 {{- end }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
-          limits:
-            memory: "2Gi"
-            cpu: "2"
-          requests:
-            memory: "60Mi"
-            cpu: "300m"
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "2"
+            requests:
+              memory: "60Mi"
+              cpu: "300m"
           ports:
             {{- range $key, $val := $spec.ports }}
             - containerPort: {{ $val.port }}
