@@ -29,11 +29,11 @@ function wafsig_re_match(input, request)
     local id = WAFRustSignatures:is_match_id(input)
     request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s)", input, id))
     if id then
-        if WAFSignatures[id] then
+        if WAFSignatures and WAFSignatures[id] then
             local operand = WAFSignatures[id].operand
             request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s:[==[%s]==])", input, id, operand))
         end
-        return WAFSignatures[id]
+        return WAFSignatures and WAFSignatures[id]
     end
 end
 

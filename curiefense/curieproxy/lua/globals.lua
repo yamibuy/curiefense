@@ -242,7 +242,7 @@ function maybe_reload(handle)
 
         for id, sig  in pairs(WAFSignatures) do
             handle:logDebug(string.format("adding to RustSig %s: (%s)", id, sig.operand))
-            WAFRustSignatures:add(sig.operand, id)
+            WAFRustSignatures:add(sig.operand, sig.id)
         end
 
         local reg_compile = WAFRustSignatures:compile()
