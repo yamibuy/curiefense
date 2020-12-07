@@ -202,11 +202,11 @@ function check(waf_profile, request)
                     for _, msig in ipairs(matched_sigs) do
                         request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
                         if not section_exclude_ids[msig] then
-                            if WAFSignatures then
-                                for k, v in pairs(WAFSignatures) do
+                            if globals.WAFSignatures then
+                                for k, v in pairs(globals.WAFSignatures) do
                                     request.handle:logDebug(string.format("WAFSignatures -- Sig %s: %s", k, v))
                                 end
-                                local waf_sig = WAFSignatures[msig]
+                                local waf_sig = globals.WAFSignatures[msig]
                                 request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
                                 return WAFBlock, gen_block_info(section, name, value, waf_sig)
                             else
