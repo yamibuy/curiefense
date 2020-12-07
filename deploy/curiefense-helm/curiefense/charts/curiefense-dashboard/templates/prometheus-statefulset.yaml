@@ -38,12 +38,13 @@ spec:
         - mountPath: /var/run/prometheus
           name: persistent-prometheus
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        limits:
-          memory: "1Gi"
-          cpu: "900m"
-        requests:
-          memory: "100Mi"
-          cpu: "100m"
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "900m"
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}

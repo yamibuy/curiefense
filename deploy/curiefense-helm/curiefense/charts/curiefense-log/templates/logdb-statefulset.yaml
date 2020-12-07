@@ -46,12 +46,13 @@ spec:
         - mountPath: /run/secrets/db-readonly-credentials
           name: curiefense-db-readonly-credentials
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        limits:
-          memory: "2Gi"
-          cpu: "2"
-        requests:
-          memory: "200Mi"
-          cpu: "1"
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+          requests:
+            memory: "200Mi"
+            cpu: "1"
       restartPolicy: Always
       serviceAccountName: ""
       volumes:
