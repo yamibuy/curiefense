@@ -208,20 +208,21 @@ local lrw = load_and_reconstruct_waf
 local lrt = load_and_reconstruct_taglist
 
 function reload(handle)
-    handle:logDebug("RELOAD CONFIG ENTERED")
+    -- handle:logDebug("RELOAD CONFIG ENTERED")
 
-    ACLProfiles     = lr(handle, "/config/current/config/json/acl-profiles.json")
-    WAFProfiles     = lrw(handle,"/config/current/config/json/waf-profiles.json")
-    WAFSignatures   = dl(handle, "/config/current/config/json/waf-signatures.json")
-    URLMap          = dl(handle, "/config/current/config/json/urlmap.json")
-    LimitRules      = lr(handle, "/config/current/config/json/limits.json")
-    ProfilingLists  = lrt(handle,"/config/current/config/json/profiling-lists.json")
+    -- ACLProfiles     = lr(handle, "/config/current/config/json/acl-profiles.json")
+    -- WAFProfiles     = lrw(handle,"/config/current/config/json/waf-profiles.json")
+    -- WAFSignatures   = dl(handle, "/config/current/config/json/waf-signatures.json")
+    -- URLMap          = dl(handle, "/config/current/config/json/urlmap.json")
+    -- LimitRules      = lr(handle, "/config/current/config/json/limits.json")
+    -- ProfilingLists  = lrt(handle,"/config/current/config/json/profiling-lists.json")
 
-    -- for id, entry in pairs(LimitRules) do
-    --     handle:logDebug(string.format("globals lua -- LimitRules %s %s", id, entry.name))
-    -- end
+    -- -- for id, entry in pairs(LimitRules) do
+    -- --     handle:logDebug(string.format("globals lua -- LimitRules %s %s", id, entry.name))
+    -- -- end
 
-    handle:logDebug("RELOAD CONFIG DONE")
+    -- handle:logDebug("RELOAD CONFIG DONE")
+    maybe_reload(handle)
 end
 
 function maybe_reload(handle)
@@ -272,27 +273,3 @@ function print_collection(handle, collection)
     end
 end
 
--- function x()
---     local objURLMap          = { mtime = 0, val = nil, path="/config/json/urlmap.json",               load=dl }
---     local objACLProfiles     = { mtime = 0, val = nil, path="/config/json/acl-profiles.json",         load=lr }
---     local objWAFProfiles     = { mtime = 0, val = nil, path="/config/json/waf-profiles.json",         load=lr }
---     local objWAFSignatures   = { mtime = 0, val = nil, path="/config/json/waf-signatures.json",       load=dl }
-
---     function load_if_needed(obj, handle)
---         while (true)
---         do
---             d = lfs.attributes(obj.path)
---             if d ~= nil then
---                 if d.modification > obj.mtime then
---                     obj.val = obj.load(handle, obj.path)
---                 end
---             end
---             if obj.val == nil then
---                 handle:logWarning(string.format("Config file [%s] not found. Must wait for it.", path))
---                 socket.sleep(1)
---             else
---                 return obj.val
---             end
---         end
---     end
--- end
