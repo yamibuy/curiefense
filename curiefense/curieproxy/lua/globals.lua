@@ -234,14 +234,14 @@ function maybe_reload(handle)
         last_reload_time = curtime
         ACLProfiles     = lra(handle, "/config/current/config/json/acl-profiles.json")
         WAFProfiles     = lrw(handle, "/config/current/config/json/waf-profiles.json")
-        WAFSignatures   = dl(handle,  "/config/current/config/json/waf-signatures.json")
+        WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
         URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
         LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
 
         WAFRustSignatures:clear()
 
         for id, sig  in pairs(WAFSignatures) do
-            handle:logDebug(string.format("adding to RustSig %s: (%s)", id, sig.operand))
+            handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
             WAFRustSignatures:add(sig.operand, sig.id)
         end
 
