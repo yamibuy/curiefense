@@ -248,7 +248,9 @@ function maybe_reload(handle)
         local reg_compile = WAFRustSignatures:compile()
 
         if not reg_compile then
-            handle:logErr("Failed to compile WAF signature!")
+            handle:logErr("Failed to compile WAF signatures!")
+        else
+            handle:logDebug("WAF signatures compiled successfully!")
         end
         ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
     end
