@@ -19,7 +19,6 @@ local re_match  = utils.re_match
 local WAFRustSignatures = globals.WAFRustSignatures
 local WAFSignatures = globals.WAFSignatures
 
-
 --[[
 comment -- multi line comment
 ]]
@@ -203,9 +202,13 @@ function check(waf_profile, request)
                     for _, msig in ipairs(matched_sigs) do
                         request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
                         if not section_exclude_ids[msig] then
-                            local waf_sig = WAFSignatures[msid]
-                            request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
-                            return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                            if globals.WAFSignatures then
+                                local waf_sig = WAFSignatures[msid]
+                                request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
+                                return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                            else
+                                request.handle:logInfo(string.format("WHY IS WAFSignatures == nil???")
+                            end
                         end
                     end
                 end
