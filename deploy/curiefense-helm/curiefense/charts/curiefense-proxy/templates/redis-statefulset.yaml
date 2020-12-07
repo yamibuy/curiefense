@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -7,6 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
+  serviceName: redis-hl
   selector:
     matchLabels:
       app.kubernetes.io/name: redis
@@ -35,6 +37,12 @@ spec:
         - mountPath: /data
           name: persistent-redis
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        limits:
+          memory: "1Gi"
+          cpu: "900m"
+        requests:
+          memory: "20Mi"
+          cpu: "10m"
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}

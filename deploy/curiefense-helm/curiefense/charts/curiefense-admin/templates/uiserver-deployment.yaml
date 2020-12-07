@@ -38,6 +38,13 @@ spec:
         - mountPath: /run/secrets/uisslkey
           name: uisslkey
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "900m"
+          requests:
+            memory: "10Mi"
+            cpu: "100m"
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

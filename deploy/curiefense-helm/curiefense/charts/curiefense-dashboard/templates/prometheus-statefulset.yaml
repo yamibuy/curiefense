@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -7,6 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
+  serviceName: prometheus-hl
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus
@@ -36,6 +38,12 @@ spec:
         - mountPath: /var/run/prometheus
           name: persistent-prometheus
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        limits:
+          memory: "1Gi"
+          cpu: "900m"
+        requests:
+          memory: "100Mi"
+          cpu: "100m"
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}
