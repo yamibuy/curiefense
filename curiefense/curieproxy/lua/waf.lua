@@ -206,7 +206,7 @@ function check(waf_profile, request)
                                 for k, v in pairs(globals.WAFSignatures) do
                                     request.handle:logDebug(string.format("globals.WAFSignatures -- Sig %s: %s", k, v))
                                 end
-                                local waf_sig = globals.WAFSignatures[msid]
+                                local waf_sig = globals.WAFSignatures[msig]
                                 request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
                                 return WAFBlock, gen_block_info(section, name, value, waf_sig)
                             else
