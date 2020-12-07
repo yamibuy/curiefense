@@ -325,6 +325,13 @@ impl mlua::UserData for SigSet {
     }
 }
 
+fn test_regex(_: &Lua, val:String) -> LuaResult<Option<String>> {
+    match regex::Regex::new(&val) {
+        Ok(_) => Ok(None),
+        Err(x) => Ok(Some(format!("{:?}", x).to_string()))
+    }
+}
+
 //////////////// MOD HASH ////////////////
 
 fn modhash(_: &Lua, (val,m):(String,u32)) -> LuaResult<Option<u32>> {
@@ -365,6 +372,7 @@ fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("new_geoipdb", lua.create_function(new_geoipdb)?)?;
     exports.set("modhash", lua.create_function(modhash)?)?;
     exports.set("iptonum", lua.create_function(iptonum)?)?;
+    exports.set("test_regex", lua.create_function(test_regex)?)?;
     Ok(exports)
 }
 
