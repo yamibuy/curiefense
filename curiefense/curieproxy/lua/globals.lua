@@ -11,7 +11,7 @@ local preplists   = require "lua.preplists"
 local gen_list_entries  = preplists.gen_list_entries
 local json_decode       = json_safe.decode
 
-
+local test_regex = iptools.test_regex
 
 -- global datasets
 
@@ -241,8 +241,12 @@ function maybe_reload(handle)
         WAFRustSignatures:clear()
 
         for id, sig  in pairs(WAFSignatures) do
-            handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
-            WAFRustSignatures:add(sig.operand, sig.id)
+            local operand = sig.operand
+            local err = test_regex(operand)
+            if not err then
+                handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
+                WAFRustSignatures:add(sig.operand, sig.id)
+            end
         end
 
         local reg_compile = WAFRustSignatures:compile()
