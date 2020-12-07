@@ -24,19 +24,6 @@ local WAFSignatures = globals.WAFSignatures
 comment -- multi line comment
 ]]
 
-
-function wafsig_re_match(input, request)
-    local id = WAFRustSignatures:is_match_id(input)
-    request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s)", input, id))
-    if id then
-        if WAFSignatures and WAFSignatures[id] then
-            local operand = WAFSignatures[id].operand
-            request.handle:logDebug(string.format("wafsig_re_match matched? (%s) with (%s:[==[%s]==])", input, id, operand))
-        end
-        return WAFSignatures and WAFSignatures[id]
-    end
-end
-
 function store_section(master_dict, key, subkey,  value)
     if master_dict[key] then
         master_dict[key][subkey] = value
@@ -168,6 +155,13 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     return WAFPass, {}
 end
 
+
+
+-- function wafsig_re_match(input, request)
+--     return WAFRustSignatures:is_match_ids(input)
+-- end
+
+
 function check(waf_profile, request)
     local omit_entries = {}
     local exclude_sigs = {}
@@ -203,17 +197,21 @@ function check(waf_profile, request)
 ---
                 local sec_exclude = (exclude_sigs[section] == nil) or (exclude_sigs[section][name] == nil)
                 -- for id, sig in pairs(globals.WAFSignatures) do
-                request.handle:logDebug(string.format("WAF Sig id: (%s) ?", sig.id))
+                -- request.handle:logDebug(string.format("WAF Sig id: (%s) ?", sig.id))
                 -- if exclude_sigs[section] == nil or exclude_sigs[section][name] == nil or exclude_sigs[section][name][sig.id] == nil then
-                if sec_exclude  or sec_exclude[sig.id] == nil then
-                    request.handle:logDebug(string.format("Included! [WAF Sig id: (%s)]", sig.id))
-                    local waf_sig = wafsig_re_match(value, request)
-                    if waf_sig then
-                        request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
-                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                -- if sec_exclude  or sec_exclude[sig.id] == nil then
+                request.handle:logDebug(string.format("Included! [WAF Sig id: (%s)]", sig.id))
+                local matched_sigs = WAFRustSignatures:is_match_ids(value)
+                if matched_sigs then
+                    local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
+                    for _, msig in ipairs(matched_sigs) do
+                        if not section_exclude_ids[msig] then
+                            local waf_sig = WAFSignatures[msid]
+                            request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
+                            return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                        end
                     end
                 end
-                -- end
             end
         end
     end
