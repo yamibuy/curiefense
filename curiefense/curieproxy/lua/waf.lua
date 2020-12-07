@@ -169,10 +169,11 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
 end
 
 function check(waf_profile, request)
-    request.handle:logDebug("WAF inspection starts - with profile %s", waf_profile.name)
     local omit_entries = {}
     local exclude_sigs = {}
     local sections = {"headers", "cookies", "args"}
+
+    request.handle:logDebug(string.format("WAF inspection starts - with profile %s", waf_profile.name))
 
     for _, section in ipairs(sections) do
         -- request.handle:logDebug("WAF inspecting section: " .. section)
