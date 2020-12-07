@@ -232,12 +232,13 @@ function maybe_reload(handle)
 
     if lfs.attributes("/config/current").change > last_reload_time then
         last_reload_time = curtime
+        ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
+        LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
         ACLProfiles     = lra(handle, "/config/current/config/json/acl-profiles.json")
         WAFProfiles     = lrw(handle, "/config/current/config/json/waf-profiles.json")
-        WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
         URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
-        LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
 
+        WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
         WAFRustSignatures:clear()
 
         for id, sig  in pairs(WAFSignatures) do
@@ -256,7 +257,7 @@ function maybe_reload(handle)
         else
             handle:logDebug("WAF signatures compiled successfully!")
         end
-        ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
+
     end
 
     handle:logDebug("MAYBE_RELOAD CONFIG DONE")
