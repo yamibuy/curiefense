@@ -140,7 +140,11 @@ m_tagrule = api.model("Tag Rule", {
 m_flowcontrol = api.model("Flow Control", {
     "id": fields.String(required=True),
     "name": fields.String(required=True),
-    "ttl": fields.String(required=True),
+    "ttl": fields.Integer(required=True),
+    "notes": fields.String(required=True),
+    "active": fields.Boolean(required=True),
+    "action": fields.Raw(required=True),
+    "key": AnyType(required=True),
     "include": fields.Raw(required=True),
     "exclude": fields.Raw(required=True),
     "sequence": AnyType(),

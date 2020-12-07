@@ -20,6 +20,7 @@
             <div class="field">
               <label class="checkbox is-size-7">
                 <input type="checkbox"
+                       class="document-active"
                        v-model="selectedDoc.active">
                 Active
               </label>
@@ -49,7 +50,7 @@
                   New entry
                 </a>
                 <br>
-                <p class="has-text-danger pl-3 mt-3 is-size-7" v-if="!keysAreValid">
+                <p class="has-text-danger pl-3 mt-3 is-size-7 key-invalid" v-if="!keysAreValid">
                   Count-by entries must be unique
                 </p>
               </div>
@@ -60,7 +61,7 @@
             <div class="field">
               <label class="label is-small">Notes</label>
               <div class="control">
-                <textarea class="is-small textarea" v-model="selectedDoc.notes" rows="2"></textarea>
+                <textarea class="is-small textarea document-notes" v-model="selectedDoc.notes" rows="2"></textarea>
               </div>
             </div>
             <div class="columns">
@@ -77,7 +78,7 @@
                     </td>
                     <td class="is-size-7 is-18-px">
                       <a title="remove entry"
-                         class="is-small has-text-grey"
+                         class="is-small has-text-grey remove-filter-entry-button"
                          @click="removeTag(filter, tagIndex)">
                         &ndash;
                       </a>
@@ -87,16 +88,16 @@
                     <td>
                       <tag-autocomplete-input v-if="addNewTagColName === filter"
                                               ref="tagAutocompleteInput"
-                                              :clearInputAfterSelection="true"
-                                              :selectionType="'single'"
-                                              :autoFocus="true"
+                                              :clear-input-after-selection="true"
+                                              :selection-type="'single'"
+                                              :auto-focus="true"
                                               @keydown.esc="cancelAddNewTag"
                                               @tagSubmitted="addNewTag(filter, $event)">
                       </tag-autocomplete-input>
                     </td>
                     <td class="is-size-7 is-18-px">
                       <a title="add new entry"
-                         class="is-size-7 is-18-px is-small has-text-grey add-new-entry-button"
+                         class="is-size-7 is-18-px is-small has-text-grey add-new-filter-entry-button"
                          @click="openTagInput(filter)">
                         +
                       </a>
@@ -122,7 +123,8 @@
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small" v-model="sequenceItem.method" @input="emitDocUpdate"/>
+                          <input class="input is-small method-entry-input" v-model="sequenceItem.method"
+                                 @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
@@ -137,7 +139,8 @@
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small" v-model="sequenceItem.uri" @input="emitDocUpdate"/>
+                          <input class="input is-small uri-entry-input" v-model="sequenceItem.uri"
+                                 @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
@@ -150,12 +153,13 @@
                       <td class="is-80-px is-vcentered">
                         Header
                       </td>
-                      <td class="is-140-px is-vcentered">
-                        host:
+                      <td class="is-100-px is-vcentered">
+                        host
                       </td>
                       <td>
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small" v-model="sequenceItem.headers.host" @input="emitDocUpdate"/>
+                          <input class="input is-small host-entry-input" v-model="sequenceItem.headers.host"
+                                 @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
@@ -170,8 +174,8 @@
                       <td class="is-80-px is-vcentered">
                         {{ listEntryTypes[sequenceEntry[0]].title }}
                       </td>
-                      <td class="is-140-px">
-                        {{ sequenceEntry[1][0] }}:
+                      <td class="is-100-px">
+                        {{ sequenceEntry[1][0] }}
                       </td>
                       <td>
                         {{ sequenceEntry[1][1] }}
@@ -205,18 +209,18 @@
                           </select>
                         </div>
                       </td>
-                      <td class="is-size-7 is-140-px">
+                      <td class="is-size-7 is-100-px">
                         <div class="control has-icons-left is-fullwidth new-entry-name">
-                          <input class="input is-small"
-                                 :placeholder="listEntryTypes[newEntryType].title + ' name'"
+                          <input class="input is-small new-entry-name-input"
+                                 placeholder="Name"
                                  v-model="newEntryItem.name"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
                       <td class="is-size-7">
                         <div class="control has-icons-left is-fullwidth new-entry-value">
-                          <input class="input is-small"
-                                 :placeholder="listEntryTypes[newEntryType].title + ' value'"
+                          <input class="input is-small new-entry-value-input"
+                                 placeholder="Value"
                                  v-model="newEntryItem.value"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
@@ -331,11 +335,11 @@ export default {
       return `${this.selectedDoc.id}_${type}_${idx}`
     },
 
-    generateOption(data, optionType = null) {
+    generateOption(data) {
       const [firstObjectKey] = Object.keys(data)
-      const type = optionType ? optionType : firstObjectKey
-      const key = optionType ? firstObjectKey : (data[firstObjectKey] || null)
-      const value = optionType ? data[firstObjectKey] : null
+      const type = firstObjectKey
+      const key = (data[firstObjectKey] || null)
+      const value = null
       return {type, key, value}
     },
 
@@ -351,7 +355,7 @@ export default {
       this.checkKeysValidity()
     },
 
-    updateKeyOption(option, index = 0) {
+    updateKeyOption(option, index) {
       this.selectedDoc.key.splice(index, 1, {
         [option.type]: option.key
       })
@@ -395,11 +399,11 @@ export default {
           mergedEntries.push(['headers', headersEntries[i]])
         }
       }
-      for (let i = 0; i < cookiesEntries.length; i++) {
-        mergedEntries.push(['cookies', cookiesEntries[i]])
-      }
       for (let i = 0; i < argsEntries.length; i++) {
         mergedEntries.push(['args', argsEntries[i]])
+      }
+      for (let i = 0; i < cookiesEntries.length; i++) {
+        mergedEntries.push(['cookies', cookiesEntries[i]])
       }
       return mergedEntries
     },
@@ -422,25 +426,10 @@ export default {
       const sequenceItem = this.localDoc.sequence[sequenceIndex]
       const newEntryName = this.newEntryItem.name.trim().toLowerCase()
       const newEntryValue = this.newEntryItem.value.trim()
-      console.log(newEntryName)
-      console.log(newEntryValue)
       if (newEntryName && newEntryValue && !Object.prototype.hasOwnProperty.call(sequenceItem[this.newEntryType], newEntryName)) {
         sequenceItem[this.newEntryType][newEntryName] = newEntryValue
       }
       this.setNewEntryIndex(-1)
-      this.emitDocUpdate()
-    },
-
-    changeEntryType(sequenceIndex, type, entry, newType) {
-      const sequenceItem = this.localDoc.sequence[sequenceIndex]
-      delete sequenceItem[type][entry[0]]
-      sequenceItem[newType][entry[0]] = entry[1]
-      this.emitDocUpdate()
-    },
-
-    updateSequenceItemEntry(sequenceIndex, type, key, value) {
-      const sequenceItem = this.localDoc.sequence[sequenceIndex]
-      sequenceItem[type][key] = value
       this.emitDocUpdate()
     },
 
@@ -452,9 +441,9 @@ export default {
 
     // Tags filters
 
-    addNewTag(section, entry) {
+    addNewTag(filter, entry) {
       if (entry && entry.length > 2) {
-        this.selectedDoc[section].push(entry)
+        this.localDoc[filter].push(entry)
         this.emitDocUpdate()
       }
     },
@@ -468,7 +457,7 @@ export default {
     },
 
     removeTag(section, idx) {
-      this.selectedDoc[section].splice(idx, 1)
+      this.localDoc[section].splice(idx, 1)
       this.addNewTagColName = null
       this.emitDocUpdate()
     }
@@ -552,10 +541,10 @@ export default {
   width: 80px;
 }
 
-.is-140-px {
-  min-width: 140px;
-  max-width: 140px;
-  width: 140px;
+.is-100-px {
+  min-width: 100px;
+  max-width: 100px;
+  width: 100px;
 }
 
 </style>
