@@ -23,6 +23,7 @@ WAFRustSignatures   = iptools.new_sig_set()
 ProfilingLists  = nil
 LimitRules      = nil
 
+
 MaxMindCountry  = nil
 MaxMindASN      = nil
 
@@ -236,12 +237,18 @@ function maybe_reload(handle)
         URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
         LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
 
+        WAFRustSignatures:clear()
+
         for id, sig  in pairs(WAFSignatures) do
             handle:logDebug(string.format("adding to RustSig %s: (%s)", id, sig.operand))
             WAFRustSignatures:add(sig.operand, id)
         end
-        WAFRustSignatures:compile()
 
+        local reg_compile = WAFRustSignatures:compile()
+
+        if not reg_compile then
+            handle:logErr("Failed to compile WAF signature!")
+        end
         ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
     end
 
