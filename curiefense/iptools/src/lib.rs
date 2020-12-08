@@ -8,7 +8,8 @@ use std::cmp::Ordering;
 use md5;
 use std::net::IpAddr;
 use maxminddb::geoip2;
-
+use urldecode::decode;
+use urlencoding::encode;
 
 pub mod avltree;
 use avltree::AVLTreeMap;
@@ -214,7 +215,7 @@ impl mlua::UserData for IPSet {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method("len",
                            |_, this:&IPSet, _:()| {
-                               Ok(this.len()) 
+                               Ok(this.len())
                            }
         );
         methods.add_method("contains",
@@ -354,6 +355,15 @@ fn iptonum(_: &Lua, ip:String) -> LuaResult<Option<String>> {
 }
 
 
+fn decodeurl(_: &Lua, url:String) -> LuaResult<Option<String>> {
+    Ok(Some(decode(url)))
+}
+
+fn encodeurl(_: &Lua, url:String) -> LuaResult<Option<String>> {
+    Ok(Some(encode(&url)))
+}
+
+
 /////////////////////////////////////////
 
 
@@ -365,6 +375,8 @@ fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("new_geoipdb", lua.create_function(new_geoipdb)?)?;
     exports.set("modhash", lua.create_function(modhash)?)?;
     exports.set("iptonum", lua.create_function(iptonum)?)?;
+    exports.set("decodeurl", lua.create_function(decodeurl)?)?;
+    exports.set("encodeurl", lua.create_function(encodeurl)?)?;
     Ok(exports)
 }
 

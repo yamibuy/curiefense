@@ -33,3 +33,8 @@ end
 print("get foo  ", s:get("foo"))
 print("contains 123", s:contains("123"))
 print("add dazd", s:add("dazd","adz"))
+
+
+print(ipt.decodeurl("/foo%20bar/?baz=%32das"))
+print(ipt.encodeurl(ipt.decodeurl("/foo%20bar/?baz=%32das")))
+
