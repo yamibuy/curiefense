@@ -28,6 +28,10 @@ local ipinfo    = maxmind.ipinfo
 local json_decode   = json_safe.decode
 local log_request   = accesslog.log_request
 
+local iptools       = require "iptools"
+
+local urldecode     = iptools.decodeurl
+local urlencode     = iptools.encodeurl
 
 nobody = rex.new("(GET|DELETE|TRACE|OPTIONS|HEAD)")
 isipv4 = rex.new("(\\d{1,3}\\.){3}\\d{1,3}")
@@ -240,20 +244,20 @@ function parse_body(request_map)
     end
 end
 
-function urldecode(str)
-    str = gsub(str, '+', ' ')
-    str = gsub(str, '%%(%x%x)', function(h) return char(tonumber(h, 16)) end)
-    str = gsub(str, '\r\n', '\n')
-    return str
-end
+-- function urldecode(str)
+--     str = gsub(str, '+', ' ')
+--     str = gsub(str, '%%(%x%x)', function(h) return char(tonumber(h, 16)) end)
+--     str = gsub(str, '\r\n', '\n')
+--     return str
+-- end
 
-function urlencode(str)
-    if str then
-        str = gsub(str, '\n', '\r\n')
-        str = gsub(str, '([^%w-_.~])', function(c) return format('%%%02X', byte(c)) end)
-    end
-    return str
-end
+-- function urlencode(str)
+--     if str then
+--         str = gsub(str, '\n', '\r\n')
+--         str = gsub(str, '([^%w-_.~])', function(c) return format('%%%02X', byte(c)) end)
+--     end
+--     return str
+-- end
 
 -- parse querystring into table. urldecode tokens
 function parse_query(str, sep, eq)

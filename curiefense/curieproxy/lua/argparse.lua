@@ -9,7 +9,7 @@ module(..., package.seeall)
 local cjson         = require "cjson"
 local json_safe     = require "cjson.safe"
 local utils         = require "lua.utils"
-local iptools         = require "iptools"
+local iptools       = require "iptools"
 
 local find          = string.find
 local gsub          = string.gsub
@@ -27,6 +27,7 @@ local json_decode   = json_safe.decode
 local flatten       = utils.flatten
 
 local urldecode     = iptools.decodeurl
+local urlencode     = iptools.encodeurl
 
 function parse_body(request_map)
     local ctype = request_map.headers['content-type']
@@ -47,21 +48,6 @@ function parse_body(request_map)
             return parse_query(body)
         end
     end
-end
-
--- function urldecode(str)
---     str = gsub(str, '+', ' ')
---     str = gsub(str, '%%(%x%x)', function(h) return char(tonumber(h, 16)) end)
---     str = gsub(str, '\r\n', '\n')
---     return str
--- end
-
-function urlencode(str)
-    if str then
-        str = gsub(str, '\n', '\r\n')
-        str = gsub(str, '([^%w-_.~])', function(c) return format('%%%02X', byte(c)) end)
-    end
-    return str
 end
 
 -- parse querystring into table. urldecode tokens

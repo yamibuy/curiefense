@@ -35,24 +35,29 @@ local format = string.format
 local match = string.match
 local gmatch = string.gmatch
 
-local function urldecode(str)
-  str = gsub(str, '+', ' ')
-  str = gsub(str, '%%(%x%x)', function(h)
-    return char(tonumber(h, 16))
-  end)
-  str = gsub(str, '\r\n', '\n')
-  return str
-end
+local iptools       = require "iptools"
 
-local function urlencode(str)
-  if str then
-    str = gsub(str, '\n', '\r\n')
-    str = gsub(str, '([^%w-_.~])', function(c)
-      return format('%%%02X', byte(c))
-    end)
-  end
-  return str
-end
+local urldecode     = iptools.decodeurl
+local urlencode     = iptools.encodeurl
+
+-- local function urldecode(str)
+--   str = gsub(str, '+', ' ')
+--   str = gsub(str, '%%(%x%x)', function(h)
+--     return char(tonumber(h, 16))
+--   end)
+--   str = gsub(str, '\r\n', '\n')
+--   return str
+-- end
+
+-- local function urlencode(str)
+--   if str then
+--     str = gsub(str, '\n', '\r\n')
+--     str = gsub(str, '([^%w-_.~])', function(c)
+--       return format('%%%02X', byte(c))
+--     end)
+--   end
+--   return str
+-- end
 
 local function stringifyPrimitive(v)
   return tostring(v)
