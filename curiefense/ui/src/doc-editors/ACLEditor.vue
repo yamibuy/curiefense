@@ -50,11 +50,11 @@
                 <td>
                   <tag-autocomplete-input v-if="addNewColName === operation"
                                           ref="tagAutocompleteInput"
-                                          :clearInputAfterSelection="true"
-                                          :selectionType="'single'"
-                                          :autoFocus="true"
+                                          :clear-input-after-selection="true"
+                                          :selection-type="'single'"
+                                          :auto-focus="true"
                                           @keydown.esc="cancelAddNewTag"
-                                          @tagSubmitted="addNewEntry(operation, $event)">
+                                          @tag-submitted="addNewEntry(operation, $event)">
                   </tag-autocomplete-input>
                 </td>
                 <td class="is-size-7 is-18-px">
@@ -142,6 +142,7 @@ export default {
     },
 
     addNewEntry(section, entry) {
+      entry = entry.trim()
       if (entry && entry.length > 2) {
         this.selectedDoc[section].push(entry)
         this.$emit('update:selectedDoc', this.selectedDoc)

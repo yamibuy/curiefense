@@ -118,14 +118,14 @@
             :selectedDoc.sync="selectedDoc"
             :docs.sync="docs"
             :apiPath="documentAPIPath"
-            @switchDocType="switchDocType"
+            @switch-doc-type="switchDocType"
             ref="currentComponent"
         ></component>
         <hr/>
         <git-history v-if="selectedDocID"
                     :gitLog.sync="gitLog"
                     :apiPath.sync="gitAPIPath"
-                    @restoreVersion="restoreGitVersion"></git-history>
+                    @restore-version="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>
