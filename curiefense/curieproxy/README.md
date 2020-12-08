@@ -1,8 +1,26 @@
-# Building envoy with symbols for lua
+# Building envoy 1.16.2 with symbols for lua
 
 ```bash
 git clone https://github.com/envoyproxy/envoy.git
 cd envoy
+git checkout v1.16.2
+
+BAZEL_BUILD_EXTRA_OPTIONS="--define exported_symbols=enabled" ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release.server_only'
+
+cp  /tmp/envoy-docker-build/envoy/source/exe/envoy .
+strip ./envoy
+objdump -T envoy | grep lua_checkstack
+ls -lh envoy
+```
+
+
+
+# Building envoy 1.14.0 with symbols for lua
+
+```bash
+git clone https://github.com/envoyproxy/envoy.git
+cd envoy
+git checkout v1.14.0
 
 ./ci/run_envoy_docker.sh "BAZEL_BUILD_EXTRA_OPTIONS='--define exported_symbols=enabled'" './ci/do_ci.sh bazel.release.server_only'
 
