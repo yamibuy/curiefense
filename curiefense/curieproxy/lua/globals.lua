@@ -75,17 +75,17 @@ function load_json_file(path)
 end
 
 function direct_load(handle, path)
-    handle:logDebug(string.format("loading %s", path))
+    -- -- handle:logDebug(string.format("loading %s", path))
     return load_json_file(path)
 end
 
 function load_and_reconstruct(handle, path)
-    handle:logInfo(string.format("loading %s", path))
+    -- -- handle:logInfo(string.format("loading %s", path))
     local store = {}
     local json_map = direct_load(handle, path)
 
     for _, entry in ipairs(json_map) do
-        handle:logDebug(string.format("loading %s from %s", entry.id, path))
+        -- -- handle:logDebug(string.format("loading %s from %s", entry.id, path))
         store[entry.id] = entry
     end
 
@@ -93,7 +93,7 @@ function load_and_reconstruct(handle, path)
 end
 
 function load_and_reconstruct_acl(handle, path)
-    handle:logInfo(string.format("loading %s", path))
+    -- -- handle:logInfo(string.format("loading %s", path))
     local store = {}
     local json_map = direct_load(handle, path)
     local acl_actions = {"allow", "allow_bot", "deny_bot", "bypass", "deny", "force_deny" }
@@ -143,16 +143,16 @@ function load_and_reconstruct_waf(handle, path)
     local store = {}
 
     -- json_map_str = cjson.encode(json_map)
-    -- handle:logDebug(string.format("WAF RECONSTRUCT - JSON MAP \n%s\n",json_map_str))
+    -- -- handle:logDebug(string.format("WAF RECONSTRUCT - JSON MAP \n%s\n",json_map_str))
 
     local sections = { "args", "headers", "cookies" }
     local subsections = { "names", "regex" }
     for _, waf_profile in ipairs(json_map) do
         local waf_store = new_waf_store(waf_profile)
         for _, section in ipairs(sections) do
-            handle:logDebug(string.format("WAF RECONSTRUCT, section %s ", waf_profile[section]))
+            -- handle:logDebug(string.format("WAF RECONSTRUCT, section %s ", waf_profile[section]))
             for _, subsection in ipairs(subsections) do
-                handle:logDebug(string.format("WAF RECONSTRUCT, section %s subsection %s", section, subsection))
+                -- handle:logDebug(string.format("WAF RECONSTRUCT, section %s subsection %s", section, subsection))
                 for _, entry in ipairs(waf_profile[section][subsection]) do
                     waf_store[section][subsection][entry.key] = {
                       ["reg"] = entry.reg,
@@ -174,26 +174,9 @@ function load_and_reconstruct_taglist(handle, path)
     local json_map = direct_load(handle, path)
 
     for _, list in ipairs(json_map) do
-        handle:logDebug(string.format("LART -- ID:Name active? %s:%s", list.id, list.name, list.active))
+        -- handle:logDebug(string.format("LART -- ID:Name active? %s:%s", list.id, list.name, list.active))
         if list.active then
             local tag_list = gen_list_entries(list, handle)
-            -- for _, section in ipairs(tag_list.rule.sections) do
-            --     handle:logDebug(
-            --         string.format(
-            --             "LART -- ID:Name %s:%s tags %s singles %s negate_singles %s pairs %s negate_pairs %s iprange %s negate_iprange %s",
-            --             tag_list.id,
-            --             tag_list.name,
-            --             tag_list.tags,
-            --             #(section.singles or {}),
-            --             #(section.negate_singles or {}),
-            --             #(section.pairs or {}),
-            --             #(section.negate_pairs or {}),
-            --             section.iprange:len(),
-            --             section.negate_iprange:len()
-            --         )
-            --     )
-            -- end
-
             store[tag_list.id] = tag_list
         end
     end
@@ -208,25 +191,11 @@ local lrw = load_and_reconstruct_waf
 local lrt = load_and_reconstruct_taglist
 
 function reload(handle)
-    -- handle:logDebug("RELOAD CONFIG ENTERED")
-
-    -- ACLProfiles     = lr(handle, "/config/current/config/json/acl-profiles.json")
-    -- WAFProfiles     = lrw(handle,"/config/current/config/json/waf-profiles.json")
-    -- WAFSignatures   = dl(handle, "/config/current/config/json/waf-signatures.json")
-    -- URLMap          = dl(handle, "/config/current/config/json/urlmap.json")
-    -- LimitRules      = lr(handle, "/config/current/config/json/limits.json")
-    -- ProfilingLists  = lrt(handle,"/config/current/config/json/profiling-lists.json")
-
-    -- -- for id, entry in pairs(LimitRules) do
-    -- --     handle:logDebug(string.format("globals lua -- LimitRules %s %s", id, entry.name))
-    -- -- end
-
-    -- handle:logDebug("RELOAD CONFIG DONE")
     maybe_reload(handle)
 end
 
 function maybe_reload(handle)
-    handle:logDebug("MAYBE_RELOAD CONFIG ENTERED")
+    -- handle:logDebug("MAYBE_RELOAD CONFIG ENTERED")
     local fname
     local curtime = os.time()
 
@@ -245,38 +214,38 @@ function maybe_reload(handle)
             local operand = sig.operand
             local err = test_regex(operand)
             if not err then
-                handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
+                -- handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
                 WAFRustSignatures:add(sig.operand, sig.id)
             end
         end
 
         local reg_compile = WAFRustSignatures:compile()
 
-        if not reg_compile then
-            handle:logErr("Failed to compile WAF signatures!")
-        else
-            handle:logDebug("WAF signatures compiled successfully!")
-        end
+        -- if not reg_compile then
+        --     -- handle:logErr("Failed to compile WAF signatures!")
+        -- else
+        --     -- handle:logDebug("WAF signatures compiled successfully!")
+        -- end
 
     end
 
-    handle:logDebug("MAYBE_RELOAD CONFIG DONE")
+    -- handle:logDebug("MAYBE_RELOAD CONFIG DONE")
 end
 
 function init(handle)
-    handle:logDebug("INIT ENTERED")
+    -- handle:logDebug("INIT ENTERED")
 
     if os.time() - last_reload_check_time > 5 then
         read_container_id()
         maybe_reload(handle)
         last_reload_check_time = os.time()
      end
-    handle:logDebug("INIT LOADING ENDS")
+    -- handle:logDebug("INIT LOADING ENDS")
 end
 
 function print_collection(handle, collection)
     for k, v in pairs(collection) do
-        handle:logDebug(string.format("%s - %s", k, v))
+        -- handle:logDebug(string.format("%s - %s", k, v))
     end
 end
 

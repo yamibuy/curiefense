@@ -16,13 +16,13 @@ function match_singles(request_map, list_entry)
     -- exact request map
     local entry_match = list_entries[request_map[entry_key]]
     if entry_match then
-      request_map.handle:logDebug(string.format("match_singles:: Exact Match! %s %s %s", entry_match, entry_key, request_map[entry_key]))
+      -- request_map.handle:logDebug(string.format("match_singles:: Exact Match! %s %s %s", entry_match, entry_key, request_map[entry_key]))
       return entry_match
     end
     -- exact request map's attr
     entry_match = list_entries[request_map.attrs[entry_key]]
     if entry_match then
-      request_map.handle:logDebug(string.format("match_singles:: ATTR Match! %s %s %s", entry_match, entry_key, request_map.attrs[entry_key]))
+      -- request_map.handle:logDebug(string.format("match_singles:: ATTR Match! %s %s %s", entry_match, entry_key, request_map.attrs[entry_key]))
       return entry_match
     end
 
@@ -32,7 +32,7 @@ function match_singles(request_map, list_entry)
         local value = request_map.attrs[entry_key]
         if value then
           local val_patt_match = re_match(value, pattern)
-          request_map.handle:logDebug(string.format("match_singles:: %s matched? %s >>  - regex %s %s", entry_key, val_patt_match, value, pattern))
+          -- request_map.handle:logDebug(string.format("match_singles:: %s matched? %s >>  - regex %s %s", entry_key, val_patt_match, value, pattern))
           if val_patt_match then
             return annotation
           end
@@ -51,7 +51,7 @@ function match_pairs(request_map, list_entry)
       local reqmap_value = request_map[pair_name][key]
       if value and reqmap_value then
         local val_matched = (reqmap_value == value or re_match(reqmap_value, value))
-        request_map.handle:logDebug(string.format("matched? %s >> match_pairs %s %s", val_matched, reqmap_value, value))
+        -- request_map.handle:logDebug(string.format("matched? %s >> match_pairs %s %s", val_matched, reqmap_value, value))
         if val_matched then
           return annotation
         end
@@ -68,7 +68,7 @@ function negate_match_pairs(request_map, list_entry)
       local reqmap_value = request_map[pair_name][key]
       if value and reqmap_value then
         local neg_val_matched = (reqmap_value ~= value and not re_match(reqmap_value, value))
-        request_map.handle:logDebug(string.format("negate matched? %s >> negate_match_pairs %s NOT %s", neg_val_matched, reqmap_value, value))
+        -- request_map.handle:logDebug(string.format("negate matched? %s >> negate_match_pairs %s NOT %s", neg_val_matched, reqmap_value, value))
         if neg_val_matched then
           return annotation
         end
@@ -79,17 +79,17 @@ function negate_match_pairs(request_map, list_entry)
 end
 
 function eval_section(request_map, section)
-  -- request_map.handle:logDebug(string.format("SECTION %s" ,json_encode(section)))
+  -- -- request_map.handle:logDebug(string.format("SECTION %s" ,json_encode(section)))
   local section_relation_and = (section.relation == "AND")
   local section_entries = section.entries
   local m_singles, m_pairs, m_iprange, nm_singles, nm_pairs, nm_iprange  = false, false, false, false, false, false
 
   -- for k, v in pairs(section.entries) do
-  --   request_map.handle:logDebug(string.format("K %s V %s", k, v))
+  -- --   request_map.handle:logDebug(string.format("K %s V %s", k, v))
   -- end
 
   if table_length(section_entries.singles) > 0 then
-    -- request_map.handle:logDebug(string.format("match_or_list section.singles %s", json_encode(section_entries.singles)))
+    -- -- request_map.handle:logDebug(string.format("match_or_list section.singles %s", json_encode(section_entries.singles)))
     local annotation, tags = match_singles(request_map, section_entries.singles)
     if not annotation then
       m_singles = false
@@ -100,7 +100,7 @@ function eval_section(request_map, section)
   end
 
   if table_length(section_entries.pairs) > 0 then
-    -- request_map.handle:logDebug(string.format("match_or_list section_entries.pairs %s", json_encode(section_entries.pairs)))
+    -- -- request_map.handle:logDebug(string.format("match_or_list section_entries.pairs %s", json_encode(section_entries.pairs)))
     local annotation, tags = match_pairs(request_map, section_entries.pairs)
     if not annotation then
       m_pairs = false
@@ -111,7 +111,7 @@ function eval_section(request_map, section)
   end
 
   if (section_entries.iprange:len() > 0 ) then
-    -- request_map.handle:logDebug(string.format("match_or_list section_entries.iprange %s", json_encode(section_entries.iprange)))
+    -- -- request_map.handle:logDebug(string.format("match_or_list section_entries.iprange %s", json_encode(section_entries.iprange)))
     local within = section_entries.iprange:contains(request_map.attrs.ip)
     if not within then
       m_iprange = false
@@ -123,7 +123,7 @@ function eval_section(request_map, section)
 
   -- has entries
   if table_length(section_entries.negate_singles) > 0 then
-    -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_singles %s", json_encode(section_entries.negate_singles)))
+    -- -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_singles %s", json_encode(section_entries.negate_singles)))
     local annotation, tags = match_singles(request_map, section_entries.negate_singles)
     if annotation then
       nm_singles = false
@@ -134,7 +134,7 @@ function eval_section(request_map, section)
   end
 
   if table_length(section_entries.negate_pairs) > 0 then
-    -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_pairs %s", json_encode(section_entries.negate_pairs)))
+    -- -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_pairs %s", json_encode(section_entries.negate_pairs)))
     local annotation, tags = negate_match_pairs(request_map, section_entries.negate_pairs)
     if not annotation then
       nm_pairs = false
@@ -145,7 +145,7 @@ function eval_section(request_map, section)
   end
 
   if section_entries.negate_iprange:len() > 0 then
-    -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_iprange %s", json_encode(section_entries.negate_iprange)))
+    -- -- request_map.handle:logDebug(string.format("match_or_list section_entries.negate_iprange %s", json_encode(section_entries.negate_iprange)))
     local within = section_entries.negate_iprange:contains(request_map.attrs.ip)
     if within then
       nm_iprange = false
@@ -161,7 +161,7 @@ end
 
 function eval_list( request_map, list )
 
-    request_map.handle:logDebug(string.format("TAG LIST profiling list %s (%s)", list.name, list.id))
+    -- request_map.handle:logDebug(string.format("TAG LIST profiling list %s (%s)", list.name, list.id))
 
     local list_matched = false
     local sections = list.rule.sections
@@ -170,26 +170,26 @@ function eval_list( request_map, list )
     for _, section in ipairs(sections) do
       local sec_eval = eval_section(request_map, section)
 
-      request_map.handle:logDebug(string.format("TAG LIST section evaluated %s", sec_eval))
+      -- request_map.handle:logDebug(string.format("TAG LIST section evaluated %s", sec_eval))
       if not sec_eval then
         -- first no match, bounce.
         if rule_relation_and then
-          request_map.handle:logDebug(string.format("TAG LIST rule_relation_and %s exiting", rule_relation_and))
+          -- request_map.handle:logDebug(string.format("TAG LIST rule_relation_and %s exiting", rule_relation_and))
           return
         end
-        request_map.handle:logDebug("TAG LIST setting list_matched false given eval_section result and rule_relation_and is false")
+        -- request_map.handle:logDebug("TAG LIST setting list_matched false given eval_section result and rule_relation_and is false")
         list_matched = false
       else
         -- OR mode, match and move on.
         if not rule_relation_and then
-          request_map.handle:logDebug("TAG LIST setting tagging request given rule_relation_and is false and eval_section matched")
+          -- request_map.handle:logDebug("TAG LIST setting tagging request given rule_relation_and is false and eval_section matched")
           return true
         end
         list_matched = true
       end
     end
-    request_map.handle:logDebug(string.format("TAG LIST done with list -- rule_relation_and %s list_matched %s",
-      rule_relation_and, list_matched))
+    -- request_map.handle:logDebug(string.format("TAG LIST done with list -- rule_relation_and %s list_matched %s",
+      -- rule_relation_and, list_matched))
     if rule_relation_and and list_matched then
       return true
     end
@@ -197,8 +197,8 @@ function eval_list( request_map, list )
 end
 
 function tag_lists(request_map)
-  request_map.handle:logDebug(string.format("TAG LIST WITH \nHEADERS:\n%s, \nARGS\n%s",
-    json_encode(request_map.headers),json_encode(request_map.args)))
+  -- request_map.handle:logDebug(string.format("TAG LIST WITH \nHEADERS:\n%s, \nARGS\n%s",
+    -- json_encode(request_map.headers),json_encode(request_map.args)))
 
   for _, list in pairs(globals.ProfilingLists) do
     local list_eval = eval_list(request_map, list)

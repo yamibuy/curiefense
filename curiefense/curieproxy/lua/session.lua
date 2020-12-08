@@ -55,9 +55,9 @@ function match_urlmap(request_map)
         if profile.match == "__default__" then
             default_map = profile
         else
-            handle:logDebug(sfmt("URLMap - try %s with %s", host, profile.match))
+            -- handle:logDebug(sfmt("URLMap - try %s with %s", host, profile.match))
             if re_match(host, profile.match) then
-                handle:logInfo(sfmt("URLMap matched with: %s", profile.match))
+                -- handle:logInfo(sfmt("URLMap matched with: %s", profile.match))
                 selected_map = profile
                 break
             end
@@ -95,7 +95,7 @@ end
 function print_request_map(request_map)
     for _, entry in ipairs({"headers", "cookies", "args", "attrs"}) do
         for k,v in pairs(request_map[entry]) do
-            request_map.handle:logDebug(sfmt("%s: %s\t%s", entry, k, v))
+            -- request_map.handle:logDebug(sfmt("%s: %s\t%s", entry, k, v))
         end
     end
 end
@@ -112,7 +112,7 @@ end
 --     request_map.attrs.blocked = true
 --     request_map.attrs.block_reason = info
 
---     handle:logDebug(sfmt("Request denied. reason: %s", info))
+-- --     handle:logDebug(sfmt("Request denied. reason: %s", info))
 --     if block_mode then
 --         handle:respond( {[":status"] = status}, "curiefense - request denied")
 --     else
@@ -142,7 +142,7 @@ function inspect(handle)
 
     init(handle)
 
-    handle:logDebug("inspection initiated")
+    -- handle:logDebug("inspection initiated")
 
     local request_map = map_request(handle)
 
@@ -176,7 +176,7 @@ function inspect(handle)
 
 
     if url:startswith("/7060ac19f50208cbb6b45328ef94140a612ee92387e015594234077b4d1e64f1/") then
-        handle:logDebug("CHALLENGE PHASE02")
+        -- handle:logDebug("CHALLENGE PHASE02")
         challenge_phase02(handle, request_map)
     end
 
@@ -189,7 +189,7 @@ function inspect(handle)
     local acl_code, acl_result = acl_check(acl_profile, request_map)
 
     if acl_result then
-        handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
+        -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
         tag_request(request_map, sfmt("acltag:%s" , acl_result.reason))
     end
 
@@ -199,13 +199,13 @@ function inspect(handle)
     local is_human = challenge_verified(handle, request_map)
     tag_request(request_map, is_human and "human" or "bot")
     if acl_code == ACLDenyBot then
-        handle:logDebug("002 ACL DENY BOT MATCHED!")
+        -- handle:logDebug("002 ACL DENY BOT MATCHED!")
 
         if not is_human then
-            handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
+            -- handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
             challenge_phase01(handle, request_map, "1")
-        else
-            handle:logDebug("004 ACL DENY BOT MATCHED! << challenge VERIFIED >>")
+        -- else
+            -- handle:logDebug("004 ACL DENY BOT MATCHED! << challenge VERIFIED >>")
         end
     end
 
@@ -226,5 +226,5 @@ function inspect(handle)
 
     -- logging
     log_request(request_map)
-    handle:logDebug("inspection is done")
+    -- handle:logDebug("inspection is done")
 end

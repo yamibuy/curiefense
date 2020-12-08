@@ -2,8 +2,6 @@
 module(..., package.seeall)
 
 local utils       = require "lua.utils"
-local iputils     = require "lua.iputils"
--- local rangesbtree = require "lua.rangesbtree"
 
 local iptools     = require "iptools"
 
@@ -16,8 +14,6 @@ local defaultdict   = utils.defaultdict
 local slice         = utils.slice
 local table_length  = utils.table_length
 
--- local parse_cidr    = iputils.parse_cidr
--- local build_ranges_lists = rangesbtree.build_ranges_lists
 
 function categorize_singles(key)
     local mastercategory = "singles"

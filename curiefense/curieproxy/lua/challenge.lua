@@ -28,7 +28,7 @@ function verified (handle, request_map)
 end
 
 function phase01(handle, request_map, reload_page)
-    handle:logDebug("ACL DENY BOT MATCHED! << phase01 in action >>")
+    -- handle:logDebug("ACL DENY BOT MATCHED! << phase01 in action >>")
     local contract = 3
     local ua = request_map.headers["user-agent"] or "never-provided"
 
@@ -41,7 +41,7 @@ function phase01(handle, request_map, reload_page)
         [[<script>]] .. code_block .. [[</script></head><body></body></html>]]
 
 
-    handle:logDebug(sfmt("005 ACL DENY BOT MATCHED! << pushing JS>>"))
+    -- handle:logDebug(sfmt("005 ACL DENY BOT MATCHED! << pushing JS>>"))
     local headers = {
         -- [":status"] = "247",
         ["Content-Type"] = "text/html; charset=utf-8",
@@ -63,25 +63,25 @@ function extract_zebra(headers)
 end
 
 function phase02(handle, request_map)
-    handle:logDebug("006 ACL DENY BOT MATCHED! << phase02 in action >>")
+    -- handle:logDebug("006 ACL DENY BOT MATCHED! << phase02 in action >>")
     local ua = request_map.headers["user-agent"]
-    handle:logDebug(sfmt("007 phase02 UA %s", ua))
+    -- handle:logDebug(sfmt("007 phase02 UA %s", ua))
     if ua then
         local workproof = extract_zebra(request_map.headers)
-        handle:logDebug(sfmt("008 phase02 workproof %s", workproof))
+        -- handle:logDebug(sfmt("008 phase02 workproof %s", workproof))
         if workproof then
             local rbzid = verify_workproof(workproof, ua)
-            handle:logDebug(sfmt("009 phase02 rbzid %s", rbzid))
+            -- handle:logDebug(sfmt("009 phase02 rbzid %s", rbzid))
             if rbzid then
                 local cookie = "rbzid=" .. rbzid:replace("=", "-") .. "; Path=/; HttpOnly"
                 local headers = { ["Set-Cookie"] = cookie }
                 tag_request(request_map, "challenge-phase02")
                 deny_request(request_map, {["reason"] = "challenge-phase02"}, true, "248", headers, "{}")
             else
-                handle:logDebug("010 phase02 NO rbzid!")
+                -- handle:logDebug("010 phase02 NO rbzid!")
             end
         else
-            handle:logDebug("011 phase02 NO workproof!")
+            -- handle:logDebug("011 phase02 NO workproof!")
         end
     end
 end

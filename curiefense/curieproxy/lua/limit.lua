@@ -39,7 +39,7 @@ function should_exclude(request_map, limit_set)
         for name, value in pairs(entries) do
             if request_map[section][name] then
                 if re_match(request_map[section][name], value) then
-                    request_map.handle:logDebug(string.format("limit excluding (%s)[%s]=='%s'", section, name, value))
+                    -- request_map.handle:logDebug(string.format("limit excluding (%s)[%s]=='%s'", section, name, value))
                     exclude = true
                     break
                 end
@@ -55,7 +55,7 @@ function should_include(request_map, limit_set)
         for name, value in pairs(entries) do
             if request_map[section][name] then
                 if not re_match(request_map[section][name], value) then
-                    request_map.handle:logDebug(string.format("limit NOT including (%s)[%s]=='%s'", section, name, value))
+                    -- request_map.handle:logDebug(string.format("limit NOT including (%s)[%s]=='%s'", section, name, value))
                     include = false
                     break
                 end
@@ -115,12 +115,12 @@ function unsorted_check(request_map, limit_ids, url_map_name)
     local limit_rules = globals.LimitRules
 
     -- for id, entry in pairs(limit_rules) do
-    --     request_map.handle:logDebug(string.format("-- limit lua LimitRules %s %s", id, entry.name))
+    -- --     request_map.handle:logDebug(string.format("-- limit lua LimitRules %s %s", id, entry.name))
     -- end
 
     for _, limit_id in ipairs(limit_ids) do
         local limit_set = limit_rules[limit_id]
-        -- request_map.handle:logDebug(string.format("limit check first loop currently on %s -- got %s within %s", limit_id, limit_set.name, limit_set))
+        -- -- request_map.handle:logDebug(string.format("limit check first loop currently on %s -- got %s within %s", limit_id, limit_set.name, limit_set))
         check_request(request_map, limit_set, url_map_name)
     end
 end
@@ -129,75 +129,75 @@ function build_key(request_map, limit_set, url_map_name)
     local handle = request_map.handle
     local key = ''
     for _, entry in ipairs(limit_set["key"]) do
-        handle:logDebug(string.format("limit build_key -- iterate key entries %s", _))
+        -- handle:logDebug(string.format("limit build_key -- iterate key entries %s", _))
         local section, name = next(entry)
-        handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
+        -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
         if section and name then
             local entry = request_map[section][name]
-            handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
+            -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
             if entry then
                 key = key .. entry
             else
-                handle:logDebug(string.format("limit build_key -- falsifying at section %s, name %s", section, name))
+                -- handle:logDebug(string.format("limit build_key -- falsifying at section %s, name %s", section, name))
                 return false
             end
         else
-            handle:logDebug(string.format("limit build_key -- falsifying at %s", _))
+            -- handle:logDebug(string.format("limit build_key -- falsifying at %s", _))
             return false
         end
     end
     key = string.format("%s%s%s", url_map_name, limit_set.id, key)
-    -- handle:logDebug(string.format("limit build_key -- key %s", key))
-    request_map.handle:logDebug(string.format("limit REQUEST KEY (%s)[%s]=='%s'", url_map_name, limit_set.id, key))
+    -- -- handle:logDebug(string.format("limit build_key -- key %s", key))
+    -- request_map.handle:logDebug(string.format("limit REQUEST KEY (%s)[%s]=='%s'", url_map_name, limit_set.id, key))
     local hashed_key = hashkey(key)
-    request_map.handle:logDebug(string.format("limit REQUEST KEY hashed (%s)", hashed_key))
+    -- request_map.handle:logDebug(string.format("limit REQUEST KEY hashed (%s)", hashed_key))
     return hashed_key
 end
 
 function check_request(request_map, limit_set, url_map_name)
     if limit_set then
-        -- request_map.handle:logDebug("check_request starting.")
+        -- -- request_map.handle:logDebug("check_request starting.")
 
-        -- request_map.handle:logDebug("check_request should exclude?")
+        -- -- request_map.handle:logDebug("check_request should exclude?")
         if      should_exclude(request_map, limit_set) then return false end
-        -- request_map.handle:logDebug("check_request should include?")
+        -- -- request_map.handle:logDebug("check_request should include?")
         if not  should_include(request_map, limit_set) then return false end
 
-        -- request_map.handle:logDebug("check_request got here, meanning, shoud include. hence, tagging matching rule")
+        -- -- request_map.handle:logDebug("check_request got here, meanning, shoud include. hence, tagging matching rule")
         -- every matching ratelimit rule is tagged by name
         tag_request(request_map, limit_set['name'])
 
         local key = build_key(request_map, limit_set, url_map_name)
-        request_map.handle:logDebug(string.format("check_request key built -- %s", key))
+        -- request_map.handle:logDebug(string.format("check_request key built -- %s", key))
         if not key then return false end
 
         local pairing_value = false
         local pair_name, pair_value = next(limit_set['pairwith'])
         if pair_name then
             pairing_value = request_map[pair_name][pair_value]
-            request_map.handle:logDebug(string.format(
-                "redis-limit pair builder %s %s %s", pair_name, pair_value, pairing_value
-            ))
+            -- request_map.handle:logDebug(string.format(
+                -- "redis-limit pair builder %s %s %s", pair_name, pair_value, pairing_value
+            -- ))
         end
 
         local limit = tonumber(limit_set.limit)
         local ttl = tonumber(limit_set.ttl)
 
         if limit == 0 then
-            request_map.handle:logDebug(string.format("limit zero - reacting"))
+            -- request_map.handle:logDebug(string.format("limit zero - reacting"))
             limit_react(request_map, limit_set.name, limit_set.action, key)
         end
 
         local reason = limit_set.name
 
-        request_map.handle:logDebug(string.format("check_request start counting -- limit %s ttl %s reason %s", limit, ttl, reason))
+        -- request_map.handle:logDebug(string.format("check_request start counting -- limit %s ttl %s reason %s", limit, ttl, reason))
         -- banned ?
         local ban_key = gen_ban_key(key)
 
         if redis_is_banned(ban_key) then
-            request_map.handle:logDebug(string.format(
-                "redis-limit KEY is BANNED", pair_name, pair_value, pairing_value
-            ))
+            -- request_map.handle:logDebug(string.format(
+            --     "redis-limit KEY is BANNED", pair_name, pair_value, pairing_value
+            -- ))
 
             if limit_set.action and limit_set.action.params then
                 limit_react(request_map, limit_set.name, limit_set.action.params.action, ban_key, ttl)
@@ -206,9 +206,9 @@ function check_request(request_map, limit_set, url_map_name)
             end
         end
 
-        request_map.handle:logDebug(string.format("not banned key - going with standard limit check"))
+        -- request_map.handle:logDebug(string.format("not banned key - going with standard limit check"))
         local xert = redis_check_limit(request_map, key, limit, ttl, pairing_value)
-        request_map.handle:logDebug(string.format("redis_check_limit xert  came back with %s", xert))
+        -- request_map.handle:logDebug(string.format("redis_check_limit xert  came back with %s", xert))
         if xert == 503 then
             limit_react(request_map, limit_set.name, limit_set.action, key, ttl)
         end
@@ -246,12 +246,12 @@ function redis_check_simple(request_map, redis_conn, key, threshold, ttl)
         end
     )
 
-    handle:logDebug(string.format("limit redis_check_simple -- type(%s), [%s]", type(result), result))
+    -- handle:logDebug(string.format("limit redis_check_simple -- type(%s), [%s]", type(result), result))
     if type(result) == "table" then
         current = result[1]
         expire = result[2]
 
-        handle:logDebug(string.format("limit redis_check_simple -- current (%s), expire[%s]", current, expire))
+        -- handle:logDebug(string.format("limit redis_check_simple -- current (%s), expire[%s]", current, expire))
 
         if "userdata: NULL" == tostring(current) then
             current = 0
@@ -272,11 +272,11 @@ function redis_check_simple(request_map, redis_conn, key, threshold, ttl)
         if current ~= nil and current > threshold then
             return 503
         else
-            handle:logDebug(string.format("limit --- %s < %s", current, threshold))
+            -- handle:logDebug(string.format("limit --- %s < %s", current, threshold))
             return 200
         end
     else
-        handle:logDebug(string.format("limit --- not a table, 200 is the answer"))
+        -- handle:logDebug(string.format("limit --- not a table, 200 is the answer"))
         return 200
     end
 end
@@ -336,7 +336,7 @@ function limit_react(request_map, rulename, action, key, ttl)
         action = { type = 'default' }
     end
 
-    handle:logDebug(string.format("limit react --- action %s", action.type))
+    -- handle:logDebug(string.format("limit react --- action %s", action.type))
 
     if action.type == "default" then
         deny_request(request_map, reason, true, "503")
@@ -351,9 +351,9 @@ function limit_react(request_map, rulename, action, key, ttl)
         deny_request(request_map, reason, true, action.params.status, action.params.headers, action.params.content)
     end
 
-    if action.type == "challenge" then
-        request_map.handle:logDebug("action.type == 'challenge'")
-    end
+    -- if action.type == "challenge" then
+    --     -- request_map.handle:logDebug("action.type == 'challenge'")
+    -- end
 
     if action.type == "redirect" then
         deny_request(request_map, reason, true, action.params.status, { location = action.params.location }, '')

@@ -4,13 +4,11 @@ local cjson     = require "cjson"
 local json_safe = require "cjson.safe"
 local rex       = require "rex_pcre2"
 local resty_md5 = require "resty.md5"
--- local str       = require "resty.string"
 
-local iputils   = require "lua.iputils"
 local maxmind   = require "lua.maxmind"
 local globals   = require "lua.globals"
 local accesslog = require "lua.accesslog"
-
+local iptools   =  require "iptools"
 
 local find      = string.find
 local gsub      = string.gsub
@@ -23,8 +21,7 @@ local gmatch    = string.gmatch
 local concat    = table.concat
 local insert    = table.insert
 
-local unsign    = iputils.unsign
-local ip2bin    = iputils.ip2bin
+local iptonum = iptools.iptonum
 
 local ipinfo    = maxmind.ipinfo
 
@@ -52,27 +49,21 @@ function new_request_map()
 end
 
 function map_headers(headers, map)
-    map.handle:logDebug("headers mapping started")
     for key, value in pairs(headers) do
         if key == "cookie" then
             map_cookies(value, map)
         else
             if startswith(key, ":") then
-                map.handle:logDebug("mapping http2 pseudo header " .. key)
+                -- map.handle:logDebug("mapping http2 pseudo header " .. key)
                 map.attrs[key:sub(2):lower()] = value
             else
                 map.headers[key:lower()] = value
             end
         end
     end
-    -- https://http2.github.io/http2-spec/#HttpRequest
-    -- if not map.headers.host then
-    --     map.headers.host = map.attrs.authority
-    -- end
 end
 
 function map_cookies(cookiestr, map)
-    map.handle:logDebug("cookies mapping started")
     local function kv_spliter (line)
         return line:split("=")
     end
@@ -86,7 +77,6 @@ function map_cookies(cookiestr, map)
 end
 
 function map_args(map)
-    map.handle:logDebug(">> args mapping started")
     local _uri = urldecode(map.attrs.path)
 
     -- query
@@ -98,7 +88,6 @@ function map_args(map)
         map.attrs.query = query
         local url_args = parse_query(query)
         for name, value in pairs(url_args) do
-            -- map.handle:logDebug(string.format("query arg: %s = %s", name, value))
             map.args[name] = value
         end
     else
@@ -108,7 +97,6 @@ function map_args(map)
     if not nobody:match(map.attrs.method) then
         local body = parse_body(map)
         for k,v in pairs(body) do
-            -- map.handle:logDebug(string.format("body arg: %s = %s", k, v))
             map.args[k] = urldecode(v)
         end
     end
@@ -121,16 +109,9 @@ function map_metadata(metadata, map)
 end
 
 function map_ip(headers, metadata, map)
-    map.handle:logDebug("remote ip detection started")
     local client_addr = "1.1.1.1"
     local xff = headers:get("x-forwarded-for")
     local hops = metadata:get("xff_trusted_hops") or "1"
-    map.handle:logInfo(string.format("XFF: %s", xff))
-    map.handle:logInfo(string.format("HOPS: %s", hops))
-
-    if not xff or not hops then
-        map.handle:logErr("XFF or trusted hops metadata missing. cannot determine IP address. going with 1.1.1.1")
-    end
 
     hops = tonumber(hops)
     local addrs = map_fn(xff:split(","), trim)
@@ -141,9 +122,7 @@ function map_ip(headers, metadata, map)
     else
         client_addr = addrs[#addrs-hops]
     end
-    map.handle:logInfo(string.format("remote ip is %s", client_addr))
     map.attrs.ip = client_addr
-    -- for backward compatibility
     map.attrs.remote_addr = client_addr
     map.attrs.ipnum = ip_to_num(client_addr)
 
@@ -156,8 +135,6 @@ function map_ip(headers, metadata, map)
     if asn then
         map.attrs.asn = tostring(asn)
         map.attrs.company = company
-        -- cross platform compatibility
-        -- map.attrs.organization = company
     end
 
 end
@@ -181,16 +158,11 @@ function tag_request(map, tags)
 end
 
 function map_request(handle)
-    handle:logDebug("mapping request")
     local headers = handle:headers()
-    -- local body = handle:body()
     local metadata = handle:metadata()
-
     local map = new_request_map()
-    handle:logDebug("new map initiated")
 
     map.handle = handle
-    handle:logDebug("handle stored in map")
 
     map_headers(headers, map)
     map_metadata(metadata, map)
@@ -203,8 +175,6 @@ end
 function deny_request(request_map, reason, block_mode, status, headers, content)
 
     local handle = request_map.handle
-    handle:logDebug(string.format("deny_request -- reason %s, block_mode %s, status %s, header %s, content %s",
-        reason.reason or reason.sig_id, block_mode, status, headers, content))
     status = status or "403"
     if not headers then
         headers = {}
@@ -216,23 +186,17 @@ function deny_request(request_map, reason, block_mode, status, headers, content)
             handle:headers():add(name, value)
         end
     end
-    -- set response headers
-    -- handle:headers():add("x-curiefense-deny", reason)
-
     -- set respose content
     content = content or "curiefense - request denied"
 
     request_map.attrs.blocked = true
     request_map.attrs.block_reason = reason
 
-    handle:logDebug(string.format("Request denied. reason: %s", reason))
     log_request(request_map)
 
 
     if block_mode then
         handle:respond( headers, content)
-    -- else
-    --     handle:headers():add("x-curiefense-deny", reason)
     end
 end
 
@@ -264,14 +228,11 @@ function parse_body(request_map)
         local length = buffer:length()
         local body = buffer:getBytes(0, length)
 
-        request_map.handle:logDebug(string.format("Request body: %s", body))
         if json_mode then
-            request_map.handle:logDebug("JSON parsing")
             local flat = {}
             flatten(json_decode(body), flat)
             return flat
         else
-            request_map.handle:logDebug("URL parsing")
             return parse_query(body)
         end
     else
@@ -365,7 +326,8 @@ function map_fn (T, fn)
 end
 
 function ip_to_num(addr)
-    return unsign(ip2bin(addr))
+    local longip = iptonum(addr) or 0
+    return tonumber (longip)
 end
 
 function nil_or_empty( input )
@@ -490,9 +452,7 @@ end
 
 function dump_table(handle, datatable)
     for k,v in pairs(datatable) do
-        if type(v) ~= "table" then
-            handle:logDebug(string.format("K: %s -- type(v) %s -- V: %s", k, type(v), v))
-        else
+        if type(v) == "table" then
             dump_table(handle, v)
         end
     end

@@ -21,7 +21,7 @@ local gmatch        = string.gmatch
 local concat        = table.concat
 local insert        = table.insert
 
-local json_decode   = json_safe.decode 
+local json_decode   = json_safe.decode
 
 local flatten       = utils.flatten
 
@@ -33,15 +33,15 @@ function parse_body(request_map)
     local length = buffer:length()
     local body = buffer:getBytes(0, length)
 
-    request_map.handle:logDebug(string.format("Request body: %s", body))
+    -- request_map.handle:logDebug(string.format("Request body: %s", body))
     if not body then
         return {}
     else
         if json_mode then
-            request_map.handle:logDebug("JSON parsing")
+            -- request_map.handle:logDebug("JSON parsing")
             return flatten(json_decode(body))
         else
-            request_map.handle:logDebug("URL parsing")
+            -- request_map.handle:logDebug("URL parsing")
             return parse_query(body)
         end
     end

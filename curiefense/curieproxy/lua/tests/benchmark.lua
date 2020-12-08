@@ -1,6 +1,6 @@
 --benchmark.lua
 
-profiler = require("profiler")
+profiler = require("lua.profiler")
 
 
 profiler.start()
