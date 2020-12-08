@@ -483,16 +483,13 @@ class EntryResource(Resource):
         "Update an entry in a document"
         if document not in models:
             abort(404, "document does not exist")
-        ## a bug is preventing us from releasing.
-        ## SKIPPING VALIDATION FOR NOW
-        ## LET FIX IT
-        # ~~ isValid = validateJson(request.json, document)
-        # ~~ if isValid:
-        data = marshal(request.json, models[document], skip_none=True)
-        res = current_app.backend.entries_update(config, document, entry, data)
-        return res
-        # ~~ else:
-        # ~~     abort(500, 'schema mismatched')
+        isValid = validateJson(request.json, document)
+        if isValid:
+            data = marshal(request.json, models[document], skip_none=True)
+            res = current_app.backend.entries_update(config, document, entry, data)
+            return res
+        else:
+            abort(500, 'schema mismatched')
     def delete(self, config, document, entry):
         "Delete an entry from a document"
         if document not in models:
