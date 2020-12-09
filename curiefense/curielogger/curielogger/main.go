@@ -89,6 +89,12 @@ var (
 		Name:      "session_tags_total",
 		Help:      "Number of requests per label",
 	}, []string{"tag"})
+
+	m_sql_query_latency = promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: namespace,
+		Name:      "sql_query_duration_seconds",
+		Help:      "Duration of SQL queries in seconds",
+	})
 )
 
 /***************/
@@ -330,6 +336,7 @@ func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) 
 			} else { log.Printf("[DEBUG]  @ no meta :(") }
 
 			// **** INSERT ****
+			now := time.Now()
 			if _, err := s.GetDB().Exec(context.Background(), `insert into logs
 (
 SampleRate,
@@ -548,6 +555,7 @@ ResponseCodeDetails
 			} else {
 				log.Printf("[ERROR] insert into pg: Error: %v", err)
 			}
+			m_sql_query_latency.Observe(time.Since(now).Seconds())
 		}
 	}
 	return err
