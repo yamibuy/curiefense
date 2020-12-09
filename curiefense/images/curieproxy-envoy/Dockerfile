@@ -1,4 +1,4 @@
-FROM envoyproxy/envoy:v1.16.2
+FROM envoyproxy/envoy:v1.16-latest
 
 RUN apt-get update && \
     apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python gcc make unzip && \
