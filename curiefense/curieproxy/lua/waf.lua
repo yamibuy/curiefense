@@ -16,6 +16,9 @@ local WAFBlock  = globals.WAFBlock
 local re_match  = utils.re_match
 
 
+local libinject_sqli = libinject.sqli
+local libinject_xss = libinject.xss
+
 local WAFRustSignatures = globals.WAFRustSignatures
 local WAFSignatures = globals.WAFSignatures
 
@@ -177,7 +180,8 @@ function check(waf_profile, request)
         end
         -- -- request.handle:logInfo(string.format("WAF inspection\nomit_entries: %s\nexclude_sigs: %s", json_encode(omit_entries), json_encode(exclude_sigs)))
         -- negative security
-        for name, value in pairs(request[section]) do
+        local r_section = request[section]
+        for name, value in pairs(r_section) do
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
 ---
                 if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
@@ -219,7 +223,6 @@ function check(waf_profile, request)
     return WAFPass, "waf-passed"
 end
 
-
 function detect_sqli(input)
     if (type(input) == 'table') then
         for _, v in ipairs(input) do
@@ -229,7 +232,7 @@ function detect_sqli(input)
             end
         end
     else
-        return libinject.sqli(input)
+        return libinject_sqli(input)
     end
 
     return false, nil
@@ -244,7 +247,7 @@ function detect_xss(input)
             end
         end
     else
-        return libinject.xss(input)
+        return libinject_xss(input)
     end
 
     return false, nil

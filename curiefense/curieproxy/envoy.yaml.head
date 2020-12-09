@@ -40,7 +40,7 @@ static_resources:
           http_filters:
           - name: envoy.filters.http.lua
             typed_config:
-              "@type": type.googleapis.com/envoy.config.filter.http.lua.v2.Lua
+              "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
               inline_code: |
                 local session = require "lua.session"
                 function envoy_on_request(handle)
