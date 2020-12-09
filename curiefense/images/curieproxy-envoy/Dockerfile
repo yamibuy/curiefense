@@ -1,4 +1,4 @@
-FROM envoyproxy/envoy:v1.14-latest
+FROM envoyproxy/envoy:v1.16.2
 
 RUN apt-get update && \
     apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python gcc make unzip && \
@@ -16,7 +16,7 @@ RUN luarocks install lrexlib-pcre2 && \
     luarocks install lua-resty-injection
 
 # Overwrite stripped envoy with full symbol
-COPY curieproxy/envoy-1.14.0 /usr/local/bin/envoy
+COPY curieproxy/envoy-1.16.2 /usr/local/bin/envoy
 
 COPY init/start_curiefense.sh /start_curiefense.sh
 
