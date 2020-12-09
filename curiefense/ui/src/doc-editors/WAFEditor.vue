@@ -221,7 +221,7 @@
 
 <script>
 
-import SerializedInput from '@/components/serializedInput'
+import SerializedInput from '@/components/SerializedInput'
 export default {
   name: 'WAFEditor',
   components: {SerializedInput},

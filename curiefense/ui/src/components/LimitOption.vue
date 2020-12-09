@@ -39,7 +39,7 @@
           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
         </div>
       </div>
-      <div class="column is-1">
+      <div class="column is-narrow">
         <button
           :class="['button', 'is-light', 'is-small', 'remove-icon', 'is-small', removable ? 'has-text-grey' : 'has-text-grey-light', removable ? '' : 'is-disabled']"
           :disabled="!removable"

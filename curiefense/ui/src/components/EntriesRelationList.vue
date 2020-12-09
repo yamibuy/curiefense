@@ -19,7 +19,7 @@
                   <tr v-for="(entry,entry_idx) in sectionsCurrentPage[section_idx]" :key="entry_idx" class="entry-row">
                     <td class="is-size-7 is-48-px has-text-centered has-text-weight-medium">
                       <span v-if="((entry_idx + 1) + ((sectionsCurrentPageIndex[section_idx] - 1) * rowsPerPage)) !== 1"
-                            class="is-small pointer"
+                            class="is-small pointer section-relation-toggle"
                             @click="toggleSectionRelation(section)"
                       >
                         {{ section.relation }}
@@ -40,9 +40,9 @@
                   </tr>
                   <tr v-if="newEntrySectionIndex !== section_idx && editable">
                     <td>
-                      <a class="is-size-7 light add" title="add new row" @click="clearNewEntryData(section_idx)"><i class="fas fa-plus"></i></a>
+                      <a class="is-size-7 light add add-entry-button" title="add new row" @click="clearNewEntryData(section_idx)"><i class="fas fa-plus"></i></a>
                       &nbsp;&middot;&nbsp;
-                      <a class="is-size-7 light remove" title="remove entire section" @click="removeSection(section_idx)"><i class="fas fa-trash"></i></a>
+                      <a class="is-size-7 light remove remove-section-button" title="remove entire section" @click="removeSection(section_idx)"><i class="fas fa-trash"></i></a>
                     </td>
                     <td colspan="4">
                     </td>
@@ -67,9 +67,9 @@
                       </textarea>
                     </td>
                     <td class="is-size-7 is-80-px">
-                      <a class="is-size-7 x-has-text-grey grey add" title="add new row" @click="addEntry(section, section_idx)"><i class="fas fa-check"></i> Add</a>
+                      <a class="is-size-7 x-has-text-grey grey add confirm-add-entry-button" title="add new row" @click="addEntry(section, section_idx)"><i class="fas fa-check"></i> Add</a>
                       <br/>
-                      <a class="is-size-7 x-has-text-grey grey remove" title="add new row" @click="clearNewEntryData(-1)"><i class="fas fa-times"></i> Cancel</a>
+                      <a class="is-size-7 x-has-text-grey grey remove" title="cancel add new row" @click="clearNewEntryData(-1)"><i class="fas fa-times"></i> Cancel</a>
                     </td>
                   </tr>
 
@@ -284,9 +284,6 @@ export default {
     removeSection(sectionIndex) {
       this.localRule.sections.splice(sectionIndex, 1)
       this.sectionsCurrentPageIndex.splice(sectionIndex, 1)
-      if (this.newEntrySectionIndex === sectionIndex) {
-        this.clearNewEntryData(-1)
-      }
       this.emitRuleUpdate()
     },
 
@@ -297,7 +294,7 @@ export default {
         if (entries.length > 1) {
           let a = entries[0].trim(),
               b = entries[1].trim(),
-              annotation = entries.length === 3 ? entries[2].trim() : null
+              annotation = entries.length >= 3 ? entries[2].trim() : null
 
           section.entries.push([this.newEntryCategory, [a, b], annotation])
         }
