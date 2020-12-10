@@ -12,3 +12,5 @@ crate-type = ["cdylib"]
 [dependencies]
 log = "0.4.8"
 proxy-wasm = "0.1.0"
+serde = { version = "1", features = ["derive"] }
+serde-json-wasm = "0.2.1"

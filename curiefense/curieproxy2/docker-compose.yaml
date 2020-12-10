@@ -1,0 +1,35 @@
+version: '2'
+services:
+
+  proxy:
+    build:
+      context: image
+#    image: istio/proxyv2:1.5.1
+#    entrypoint: ["/usr/local/bin/envoy", "-c", "/etc/envoy.yaml", "-l", "debug", "--service-cluster", "proxy"]
+#    volumes:
+#      - ./envoy.yaml:/etc/envoy.yaml
+#      - ./curiefense/curiefense.wasm:/etc/curiefense.wasm
+    networks:
+      - mesh
+    expose:
+      - "80"
+      - "8001"
+    ports:
+      - "18000:80"
+      - "18001:8001"
+
+  echo:
+    image: hashicorp/http-echo
+    command:
+      - '-text="Hello!"'
+    networks:
+      mesh:
+        aliases:
+          - echo
+    expose:
+      - "5678"
+    ports:
+      - "18080:5678"
+
+networks:
+  mesh: {}
