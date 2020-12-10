@@ -73,6 +73,35 @@ end
 --     return include
 -- end
 
+-- function build_key(request_map, limit_set, url_map_name)
+--     local handle = request_map.handle
+--     local key = ''
+--     for _, entry in ipairs(limit_set["key"]) do
+--         -- handle:logDebug(string.format("limit build_key -- iterate key entries %s", _))
+--         local section, name = next(entry)
+--         -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
+--         if section and name then
+--             local entry = request_map[section][name]
+--             -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
+--             if entry then
+--                 key = key .. entry
+--             else
+--                 -- handle:logDebug(string.format("limit build_key -- falsifying at section %s, name %s", section, name))
+--                 return false
+--             end
+--         else
+--             -- handle:logDebug(string.format("limit build_key -- falsifying at %s", _))
+--             return false
+--         end
+--     end
+--     key = string.format("%s%s%s", url_map_name, limit_set.id, key)
+--     -- -- handle:logDebug(string.format("limit build_key -- key %s", key))
+--     -- request_map.handle:logDebug(string.format("limit REQUEST KEY (%s)[%s]=='%s'", url_map_name, limit_set.id, key))
+--     local hashed_key = hashkey(key)
+--     -- request_map.handle:logDebug(string.format("limit REQUEST KEY hashed (%s)", hashed_key))
+--     return hashed_key
+-- end
+
 
 -- this function will extract all rules with limit 0 first, then
 -- sort remaining rules by $.limit in a descending order
@@ -129,35 +158,6 @@ function unsorted_check(request_map, limit_ids, url_map_name)
         check_request(request_map, limit_set, url_map_name)
     end
 end
-
--- function build_key(request_map, limit_set, url_map_name)
---     local handle = request_map.handle
---     local key = ''
---     for _, entry in ipairs(limit_set["key"]) do
---         -- handle:logDebug(string.format("limit build_key -- iterate key entries %s", _))
---         local section, name = next(entry)
---         -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
---         if section and name then
---             local entry = request_map[section][name]
---             -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
---             if entry then
---                 key = key .. entry
---             else
---                 -- handle:logDebug(string.format("limit build_key -- falsifying at section %s, name %s", section, name))
---                 return false
---             end
---         else
---             -- handle:logDebug(string.format("limit build_key -- falsifying at %s", _))
---             return false
---         end
---     end
---     key = string.format("%s%s%s", url_map_name, limit_set.id, key)
---     -- -- handle:logDebug(string.format("limit build_key -- key %s", key))
---     -- request_map.handle:logDebug(string.format("limit REQUEST KEY (%s)[%s]=='%s'", url_map_name, limit_set.id, key))
---     local hashed_key = hashkey(key)
---     -- request_map.handle:logDebug(string.format("limit REQUEST KEY hashed (%s)", hashed_key))
---     return hashed_key
--- end
 
 function check_request(request_map, limit_set, url_map_name)
     if limit_set then
