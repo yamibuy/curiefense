@@ -1,11 +1,10 @@
-use regex::RegexSet;
+use hyperscan::*;
 
-
-#[derive(Debug)]
 pub struct SigSet {
-    regex_set : Option<regex::RegexSet>,
-    regex_list : Vec<String>,
-    id_list: Vec<String>,
+    regex_set : Option<hyperscan::BlockDatabase>,
+    scratch: Option<Scratch>,
+    pattern_list : Vec<Pattern>,
+    id2user:  Vec<String>,
 }
 
 
@@ -13,8 +12,8 @@ pub struct SigSet {
 pub enum SigSetError {
     RegexSetNotCompiled,
     RegexSetAlreadyCompiled,
-    RegexCompileError(regex::Error),
-}
+    RegexCompileError(anyhow::Error),
+ }
 
 impl std::string::ToString for SigSetError {
     fn to_string(&self) -> String {
@@ -30,18 +29,24 @@ impl SigSet {
     pub fn new() -> SigSet {
         SigSet {
             regex_set: None,
-            regex_list: Vec::new(),
-            id_list: Vec::new(),
+            scratch: None,
+            pattern_list: Vec::new(),
+            id2user: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, regex: String, id: String) -> Result<(),SigSetError> {
+    pub fn add(&mut self, regex: String, user: String) -> Result<(),SigSetError> {
         match &self.regex_set {
             Some(_) => Err(SigSetError::RegexSetAlreadyCompiled),
             None => {
-                self.id_list.push(id);
-                self.regex_list.push(regex);
-                Ok(())
+                match regex.parse::<Pattern>() {
+                    Ok(pat) => {
+                        self.id2user.push(user);
+                        self.pattern_list.push(pat);
+                        Ok(())
+                    }
+                    Err(x) => Err(SigSetError::RegexCompileError(x)),
+                }
             }
         }
     }
@@ -49,55 +54,66 @@ impl SigSet {
     pub fn compile(&mut self) -> Result<(),SigSetError> {
         match &self.regex_set {
             Some(_) => Err(SigSetError::RegexSetAlreadyCompiled),
-            None => match RegexSet::new(&self.regex_list) {
-                    Ok(res) => {
-                        self.regex_set = Some(res);
+            None => {
+                match hyperscan::Patterns::from(self.pattern_list.clone()).build() {
+                    Ok(db) => {
+                        self.scratch = Some(db.alloc_scratch().unwrap());
+                        self.regex_set = Some(db);
                         Ok(())
                     },
-                Err(x) => Err(SigSetError::RegexCompileError(x)),
+                    Err(x) => Err(SigSetError::RegexCompileError(x)),
+                }
             }
         }
     }
 
     pub fn clear(&mut self) {
         self.regex_set = None;
-        self.regex_list = Vec::new();
-        self.id_list = Vec::new();
+        self.scratch = None;
+        self.pattern_list = Vec::new();
+        self.id2user = Vec::new();
     }
 
     pub fn is_match(&self, s: &String) -> Result<bool,SigSetError> {
-        match &self.regex_set {
-            None => Err(SigSetError::RegexSetNotCompiled),
-            Some(rs) => {
-                Ok(rs.is_match(s))
+        match (&self.regex_set,&self.scratch) {
+            (Some(rs),Some(scratch)) => match rs.scan(s, scratch, |_,_,_,_|{ Matching::Terminate}) {
+                Ok(_) => Ok(false),
+                _ => Ok(true)
             }
+            _ => Err(SigSetError::RegexSetNotCompiled)
         }
     }
 
     pub fn is_match_id(&self, s: &String) -> Result<Option<&String>,SigSetError> {
-        match &self.regex_set {
-            None => Err(SigSetError::RegexSetNotCompiled),
-            Some(rs) => {
-                let matches: Vec<_> = rs.matches(&s).into_iter().collect();
-                if matches.is_empty() {
-                    Ok(None)
-                }
-                else {
-                    Ok(Some(&self.id_list[matches[0]]))
-                }
+        match (&self.regex_set,&self.scratch) {
+            (Some(rs),Some(scratch)) => {
+                let mut match_id: Option<usize> = None;
+                match rs.scan(s, scratch, |id,_,_,_|{ match_id = Some(id as usize); Matching::Terminate}) { _ => {} }
+                Ok(match_id.map(|x| &self.id2user[x]))
             }
+            _ => Err(SigSetError::RegexSetNotCompiled),
         }
     }
 
+
     pub fn is_match_ids(&self, s: &String) -> Result<Vec<&String>,SigSetError> {
-        match &self.regex_set {
-            None => Err(SigSetError::RegexSetNotCompiled),
-            Some(rs) => {
-                let matches: Vec<_> = rs.matches(&s).into_iter().collect();
-                Ok(matches.into_iter().map(|x| &self.id_list[x]).collect())
+        match (&self.regex_set,&self.scratch) {
+            (Some(rs),Some(scratch)) => {
+                let mut match_ids: Vec<usize> = Vec::new();
+                match rs.scan(s, scratch, |id,_,_,_|{ 
+                    let uid: usize = id as usize;
+                    match match_ids.last() {
+                        Some(x) if *x == uid => {},
+                        _ => match_ids.push(uid)
+                    }
+                    Matching::Continue
+                }) { _ => {} };
+                Ok(match_ids.iter().map(|x| &self.id2user[*x]).collect())
             }
+            _ => Err(SigSetError::RegexSetNotCompiled),
         }
     }
+
 }
 
 
@@ -190,6 +206,8 @@ mod tests {
         assert!(r.unwrap().unwrap() == &s!("only As"));
         let r = ss.is_match_id(&s!("CCC"));
         assert!(r.unwrap().unwrap() == &s!("only Cs"));
+        let r = ss.is_match_id(&s!("CADCC"));
+        assert!(r.unwrap().is_none());
     }
 
     #[test]
@@ -202,6 +220,7 @@ mod tests {
 
         testEq!(ss.is_match_ids(&s!("AAAAA")),  vec!["starts with As"]);
         testEq!(ss.is_match_ids(&s!("AAAAABBBB")),  vec!["starts with As", "ends with Bs"]);
+        testEq!(ss.is_match_ids(&s!("CAAAAABBBBCC")),  vec![] as Vec<&String>);
     }
 
 

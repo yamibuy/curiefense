@@ -16,7 +16,8 @@ mlua_derive = "0.4"
 cidr = "0.1.1"
 rand = "0.7.3"
 md5 = "0.7.0"
-regex = "1.4.2"
+hyperscan = { version = "0.2", features = ["static"] }
 maxminddb = "0.16.0"
 urldecode = "0.1.1"
 urlencoding = "1.1.1"
+anyhow = {}

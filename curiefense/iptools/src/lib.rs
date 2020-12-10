@@ -326,12 +326,12 @@ impl mlua::UserData for SigSet {
     }
 }
 
-fn test_regex(_: &Lua, val:String) -> LuaResult<Option<String>> {
-    match regex::Regex::new(&val) {
-        Ok(_) => Ok(None),
-        Err(x) => Ok(Some(format!("{:?}", x).to_string()))
-    }
-}
+// fn test_regex(_: &Lua, val:String) -> LuaResult<Option<String>> {
+//     match regex::Regex::new(&val) {
+//         Ok(_) => Ok(None),
+//         Err(x) => Ok(Some(format!("{:?}", x).to_string()))
+//     }
+// }
 
 //////////////// MOD HASH ////////////////
 
@@ -387,7 +387,7 @@ fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("iptonum", lua.create_function(iptonum)?)?;
     exports.set("decodeurl", lua.create_function(decodeurl)?)?;
     exports.set("encodeurl", lua.create_function(encodeurl)?)?;
-    exports.set("test_regex", lua.create_function(test_regex)?)?;
+//    exports.set("test_regex", lua.create_function(test_regex)?)?;
     Ok(exports)
 }
 
