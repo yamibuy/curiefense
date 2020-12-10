@@ -203,7 +203,8 @@ function check(waf_profile, request)
     end
 
 
-    local matches = globals.WAFHScaDB:scan(hca_values, globals.WAFHScanScratch)
+
+    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
     for k,v in pairs(matches) do
         local matched_sigs = {}
