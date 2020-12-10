@@ -2,11 +2,8 @@ FROM envoyproxy/envoy:v1.16-latest
 
 RUN apt-get update && \
     apt-get -qq -y --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev \
-    python gcc make unzip libhyperscan4 libhyperscan-dev && \
-	rm -rf /var/lib/apt/lists/*
-
-## hyperscan
-## RUN apt install -qq -y libhyperscan5 libhyperscan-dev
+    python gcc g++ make unzip libhyperscan4 libhyperscan-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN luarocks install lrexlib-pcre2 && \
     luarocks install lua-cjson && \
