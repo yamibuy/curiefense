@@ -235,24 +235,9 @@ function maybe_reload(handle)
         URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
 
         WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
-        WAFRustSignatures:clear()
 
-        for id, sig  in pairs(WAFSignatures) do
-            local operand = sig.operand
-            local err = test_regex(operand)
-            if not err then
-                -- handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
-                WAFRustSignatures:add(sig.operand, sig.id)
-            end
-        end
+        build_hs_db(WAFSignatures)
 
-        local reg_compile = WAFRustSignatures:compile()
-
-        -- if not reg_compile then
-        --     -- handle:logErr("Failed to compile WAF signatures!")
-        -- else
-        --     -- handle:logDebug("WAF signatures compiled successfully!")
-        -- end
 
     end
 
