@@ -3,8 +3,9 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 local libinject = require "lua.resty.libinjection"
+local hscan     = require "hscan"
 
-local cjson = require "cjson"
+local cjson     = require "cjson"
 
 local json_encode   = cjson.encode
 
@@ -15,12 +16,13 @@ local WAFBlock  = globals.WAFBlock
 
 local re_match  = utils.re_match
 
-
 local libinject_sqli = libinject.sqli
 local libinject_xss = libinject.xss
 
 local WAFRustSignatures = globals.WAFRustSignatures
 local WAFSignatures = globals.WAFSignatures
+
+local hyperscan_scan = hscan.scan
 
 --[[
 comment -- multi line comment
@@ -168,8 +170,10 @@ function check(waf_profile, request)
     local omit_entries = {}
     local exclude_sigs = {}
     local sections = {"headers", "cookies", "args"}
+    -- local sections = {"args"}
 
     -- request.handle:logDebug(string.format("WAF inspection starts - with profile %s", waf_profile.name))
+    local hca_values = {}
 
     for _, section in ipairs(sections) do
         -- -- request.handle:logDebug("WAF inspecting section: " .. section)
@@ -183,9 +187,8 @@ function check(waf_profile, request)
         local r_section = request[section]
         for name, value in pairs(r_section) do
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
----
-                if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
 
+                if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
                     local detect, token = detect_sqli(value)
                     if detect then
                         return WAFBlock, gen_block_info(section, name, value,
@@ -197,29 +200,16 @@ function check(waf_profile, request)
                             { ["id"] = "libinjection", ["category"] = "xss", ["subcategory"] = "xss", ["msg"] = token })
                     end
                 end
----
-                local matched_sigs = WAFRustSignatures:is_match_ids(value)
 
-                if matched_sigs then
-                    -- request.handle:logInfo("WAFRustSignatures MATCHED IDS!")
-                    local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
-                    for _, msig in ipairs(matched_sigs) do
-                        -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
-                        if not section_exclude_ids[msig] then
-                            if globals.WAFSignatures then
-                                local waf_sig = globals.WAFSignatures[msig]
-                                -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
-                                return WAFBlock, gen_block_info(section, name, value, waf_sig)
-                            -- else
-                                -- request.handle:logInfo(string.format("WHY IS WAFSignatures == nil???"))
-                            end
-                        end
-                    end
-                end
+                table.append(hca_values, value)
             end
         end
     end
-
+    local results = hyperscan_scan (hca_values)
+    for k, v in pairs(results) do
+        return WAFBlock, gen_block_info("section", "name", "value",
+            { ["id"] = "hscan", ["category"] = "xss", ["subcategory"] = "xss", ["msg"] = "token" })
+    end
     return WAFPass, "waf-passed"
 end
 
