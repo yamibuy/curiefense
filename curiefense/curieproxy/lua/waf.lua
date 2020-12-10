@@ -3,7 +3,7 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 local libinject = require "lua.resty.libinjection"
-local hscan     = require "hscan"
+local hscan     = require "lua.hscan"
 
 local cjson     = require "cjson"
 

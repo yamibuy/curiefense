@@ -1,3 +1,5 @@
+module(..., package.seeall)
+
 luahs = require "luahs"
 
 hscandb = luahs.compile {
