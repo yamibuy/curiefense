@@ -1,7 +1,7 @@
 FROM docker.io/istio/proxyv2:1.5.10
 
 RUN apt-get update && \
-    apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python dumb-init gcc make unzip libhyperscan4 libhyperscan-dev && \
+    apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python dumb-init gcc g++ make unzip libhyperscan4 libhyperscan-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN luarocks install lrexlib-pcre2 && \
