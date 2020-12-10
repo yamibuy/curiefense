@@ -205,11 +205,34 @@ function check(waf_profile, request)
             end
         end
     end
-    local results = hyperscan_scan (hca_values)
-    for k, v in pairs(results) do
-        return WAFBlock, gen_block_info("section", "name", "value",
-            { ["id"] = "hscan", ["category"] = "xss", ["subcategory"] = "xss", ["msg"] = "token" })
+
+    local matches = hyperscan_scan (hca_values)
+
+    for k,v in pairs(matches) do
+        local matched_sigs = {}
+        if type(v) == "table" then
+            for k1, v1 in pairs(v) do
+                if v1.id then
+                    table.insert(matched_sigs, v1)
+                end
+            end
+        end
+
+        if #matched_sigs > 0 then
+            local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
+            for _, msig in ipairs(matched_sigs) do
+                -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
+                if not section_exclude_ids[msig] then
+                    if globals.WAFSignatures then
+                        local waf_sig = globals.WAFSignatures[msig]
+                        -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
+                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                    end
+                end
+            end
+        end
     end
+
     return WAFPass, "waf-passed"
 end
 
