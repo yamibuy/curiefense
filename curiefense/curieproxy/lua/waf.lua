@@ -3,9 +3,9 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 local libinject = require "lua.resty.libinjection"
+local globals   = require "lua.globals"
 
 local luahs     = require "luahs"
-local globals   = require "globals"
 local cjson     = require "cjson"
 
 local json_encode   = cjson.encode
