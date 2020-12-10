@@ -377,18 +377,6 @@ export default {
     updateEvent(option) {
       this.eventOption = { [option.type]: option.key }
     },
-    normalizeDocAction() {
-      // adding necessary fields to selectedDoc.action field
-      if (!this.selectedDoc.action) {
-        this.$set(this.selectedDoc, 'action', {})
-      }
-      if (!this.selectedDoc.action.params) {
-        this.$set(this.selectedDoc.action, 'params', {})
-      }
-      if (!this.selectedDoc.action.params.action) {
-        this.$set(this.selectedDoc.action.params, 'action', { type: 'default', params: {} })
-      }
-    },
     normalizeIncludesOrExcludes(value, include = true) {
       // converting includes/excludes from component arrays to selectedDoc objects
       const includeOrExcludeKey = include ? 'include' : 'exclude'
@@ -405,7 +393,6 @@ export default {
     }
   },
   mounted() {
-    this.normalizeDocAction()
     this.checkKeysValidity()
     this.checkIncludeOrExcludeValidity(true)
     this.checkIncludeOrExcludeValidity(false)
@@ -414,7 +401,6 @@ export default {
     selectedDoc(newValue) {
       this.includes = this.convertIncludesOrExcludes(newValue.include)
       this.excludes = this.convertIncludesOrExcludes(newValue.exclude)
-      this.normalizeDocAction()
       this.$forceUpdate()
     },
     includes(newValue) {

@@ -54,6 +54,8 @@ const Titles = {
   "traffic-overview": "Traffic Overview",
   "update-log": "Update log",
   "version-control": "Version Control",
+  "include": "Include",
+  "exclude": "Exclude",
 
   "headers-entry": "Header",
   "cookies-entry": "Cookie",
@@ -66,7 +68,8 @@ const Titles = {
   "urlmaps": "URL Maps",
   "wafprolicies": "WAF Policies",
   "wafrules": "WAF Signatures",
-  "tagrules": "Tag Rules"
+  "tagrules": "Tag Rules",
+  "flowcontrol": "Flow Control",
 }
 
 const LimitRulesTypes = {
@@ -221,6 +224,27 @@ const NewDocEntryFactory = {
           "self": "self"
         }
       }
+    },
+
+    flowcontrol() {
+        return  {
+            "id": UUID2(),
+            "name": "New Flow Control",
+            "ttl": 60,
+            "active": true,
+            "notes": "New Flow Control Notes and Remarks",
+            "key": [
+                {
+                    "attrs": "ip"
+                }
+            ],
+            "action": {
+                "type": "default"
+            },
+            "exclude": [],
+            "include": ["all"],
+            "sequence": []
+        }
     }
 
 }

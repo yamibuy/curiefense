@@ -9,6 +9,7 @@ DOCUMENTS_PATH = {
     "wafpolicies": "config/json/waf-profiles.json",
     "aclpolicies": "config/json/acl-profiles.json",
     "tagrules": "config/json/profiling-lists.json",
+    "flowcontrol": "config/json/flow-control.json",
 }
 
 BLOBS_PATH = {

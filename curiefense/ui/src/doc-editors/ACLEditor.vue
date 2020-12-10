@@ -50,9 +50,9 @@
                 <td>
                   <tag-autocomplete-input v-if="addNewColName === operation"
                                           ref="tagAutocompleteInput"
-                                          :clearInputAfterSelection="true"
-                                          :selectionType="'single'"
-                                          :autoFocus="true"
+                                          :clear-input-after-selection="true"
+                                          :selection-type="'single'"
+                                          :auto-focus="true"
                                           @keydown.esc="cancelAddNewTag"
                                           @tagSubmitted="addNewEntry(operation, $event)">
                   </tag-autocomplete-input>

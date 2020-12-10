@@ -102,9 +102,30 @@ export default {
       ignoreActions: this.ignore || []
     }
   },
+  mounted() {
+    this.normalizeAction()
+  },
   methods: {
     sendUpdate() {
       this.$emit('change', { ...this.selectedAction }, this.index)
+    },
+
+    normalizeAction() {
+      // adding necessary fields to selectedDoc.action field
+      if (!this.action) {
+        return
+      }
+      if (!this.action.params) {
+        this.$set(this.action, 'params', {})
+      }
+      if (!this.action.params.action) {
+        this.$set(this.action.params, 'action', { type: 'default', params: {} })
+      }
+    },
+  },
+  watch: {
+    action() {
+      this.normalizeAction()
     }
   }
 }

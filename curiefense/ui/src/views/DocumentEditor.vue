@@ -124,9 +124,9 @@
         ></component>
         <hr/>
         <git-history v-if="selectedDocID"
-                    :gitLog.sync="gitLog"
-                    :apiPath.sync="gitAPIPath"
-                    @restoreVersion="restoreGitVersion"></git-history>
+                     :gitLog.sync="gitLog"
+                     :apiPath.sync="gitAPIPath"
+                     @restoreVersion="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>
@@ -141,6 +141,7 @@ import WAFSigsEditor from '@/doc-editors/WAFSigsEditor.vue'
 import URLMapsEditor from '@/doc-editors/URLMapsEditor.vue'
 import RateLimitsEditor from '@/doc-editors/RateLimitsEditor.vue'
 import ProfilingListEditor from '@/doc-editors/ProfilingListEditor.vue'
+import FlowControlEditor from '@/doc-editors/FlowControlEditor'
 import GitHistory from '@/components/GitHistory.vue'
 import RequestsUtils from '@/assets/RequestsUtils'
 
@@ -175,6 +176,7 @@ export default {
 
       componentsMap: {
         'aclpolicies': {component: ACLEditor, title: 'ACL Policies'},
+        'flowcontrol': {component: FlowControlEditor, title: 'Flow Control'},
         'tagrules': {component: ProfilingListEditor, title: 'Tag Rules'},
         'ratelimits': {component: RateLimitsEditor, title: 'Rate Limits'},
         'urlmaps': {component: URLMapsEditor, title: 'URL Maps'},

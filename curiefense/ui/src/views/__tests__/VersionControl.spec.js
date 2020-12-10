@@ -14,7 +14,7 @@ describe('VersionControl.vue', () => {
         gitData = [
             {
                 'id': 'master',
-                'description': 'Update entry [__default__] of document [aclprofiles]',
+                'description': 'Update entry [__default__] of document [aclpolicies]',
                 'date': '2020-11-10T15:49:17+02:00',
                 'logs': [
                     {
@@ -23,7 +23,7 @@ describe('VersionControl.vue', () => {
                         'parents': [
                             'fc47a6cd9d7f254dd97875a04b87165cc484e075'
                         ],
-                        'message': 'Update entry [__default__] of document [aclprofiles]',
+                        'message': 'Update entry [__default__] of document [aclpolicies]',
                         'email': 'curiefense@reblaze.com',
                         'author': 'Curiefense API'
                     },
@@ -33,7 +33,7 @@ describe('VersionControl.vue', () => {
                         'parents': [
                             '5aba4a5b9d6faea1896ee8965c7aa651f76af63c'
                         ],
-                        'message': 'Update entry [__default__] of document [aclprofiles]',
+                        'message': 'Update entry [__default__] of document [aclpolicies]',
                         'email': 'curiefense@reblaze.com',
                         'author': 'Curiefense API'
                     },
@@ -43,7 +43,7 @@ describe('VersionControl.vue', () => {
                         'parents': [
                             '277c5d7bd0e2eb4b9d2944f7eefdfadf37ba8581'
                         ],
-                        'message': 'Update entry [__default__] of document [aclprofiles]',
+                        'message': 'Update entry [__default__] of document [aclpolicies]',
                         'email': 'curiefense@reblaze.com',
                         'author': 'Curiefense API'
                     },
@@ -53,7 +53,7 @@ describe('VersionControl.vue', () => {
                         'parents': [
                             '878b47deeddac94625fe7c759786f2df885ec541'
                         ],
-                        'message': 'Update entry [__default__] of document [aclprofiles]',
+                        'message': 'Update entry [__default__] of document [aclpolicies]',
                         'email': 'curiefense@reblaze.com',
                         'author': 'Curiefense API'
                     },
@@ -63,7 +63,7 @@ describe('VersionControl.vue', () => {
                         'parents': [
                             '93c180513fe7edeaf1c0ca69a67aa2a11374da4f'
                         ],
-                        'message': 'Update entry [__default__] of document [aclprofiles]',
+                        'message': 'Update entry [__default__] of document [aclpolicies]',
                         'email': 'curiefense@reblaze.com',
                         'author': 'Curiefense API'
                     },
@@ -73,7 +73,7 @@ describe('VersionControl.vue', () => {
                         'parents': [
                             '1662043d2a18d6ad2c9c94d6f826593ff5506354'
                         ],
-                        'message': 'Update entry [__default__] of document [aclprofiles]',
+                        'message': 'Update entry [__default__] of document [aclpolicies]',
                         'email': 'curiefense@reblaze.com',
                         'author': 'Curiefense API'
                     },
@@ -141,7 +141,7 @@ describe('VersionControl.vue', () => {
             if (path === '/conf/api/v1/configs/zzz_branch/v/') {
                 return Promise.resolve({data: gitData[1].logs})
             }
-            Promise.resolve({data: {}})
+            Promise.resolve({data: []})
         })
         wrapper = mount(VersionControl)
     })
