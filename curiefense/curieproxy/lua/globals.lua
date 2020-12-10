@@ -5,7 +5,7 @@ local json_safe   = require "cjson.safe"
 local socket      = require "socket"
 local lfs         = require "lfs"
 local iptools     = require "iptools"
-
+local luahs       = require "luahs"
 local preplists   = require "lua.preplists"
 
 local gen_list_entries  = preplists.gen_list_entries
@@ -19,7 +19,10 @@ URLMap          = nil
 ACLProfiles     = nil
 WAFProfiles     = nil
 WAFSignatures   = nil
-WAFRustSignatures   = iptools.new_sig_set()
+-- WAFRustSignatures   = iptools.new_sig_set()
+-- hyperscan
+WAFHScanDB      = nil
+WAFHScanScratch = nil
 ProfilingLists  = nil
 LimitRules      = nil
 
@@ -192,6 +195,30 @@ local lrt = load_and_reconstruct_taglist
 
 function reload(handle)
     maybe_reload(handle)
+end
+
+
+function build_hs_db( signatures )
+
+    local expressions = {}
+    for id, sig  in pairs(signatures) do
+        table.insert(expressions, {
+            expression = sig.operand,
+            id = tonumber(sig.id),
+            flags = {
+                luahs.pattern_flags.HS_FLAG_CASELESS,
+                luahs.pattern_flags.HS_FLAG_MULTILINE,
+                luahs.pattern_flags.HS_FLAG_DOTALL,
+            }
+        })
+    end
+
+    WAFHScanDB = luahs.compile ({
+        expressions = expressions,
+        mode = luahs.compile_mode.HS_MODE_VECTORED
+    })
+
+    WAFHScanScratch = WAFHScanDB:makeScratch()
 end
 
 function maybe_reload(handle)

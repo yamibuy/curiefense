@@ -3,30 +3,26 @@ module(..., package.seeall)
 local globals   = require "lua.globals"
 local utils     = require "lua.utils"
 local libinject = require "lua.resty.libinjection"
-local hscan     = require "lua.hscan"
 
+local luahs     = require "luahs"
+local globals   = require "globals"
 local cjson     = require "cjson"
 
 local json_encode   = cjson.encode
 
-local table_length = utils.table_length
+local table_length  = utils.table_length
 
-local WAFPass   = globals.WAFPass
-local WAFBlock  = globals.WAFBlock
 
 local re_match  = utils.re_match
 
 local libinject_sqli = libinject.sqli
 local libinject_xss = libinject.xss
 
+local WAFPass           = globals.WAFPass
+local WAFBlock          = globals.WAFBlock
 local WAFRustSignatures = globals.WAFRustSignatures
-local WAFSignatures = globals.WAFSignatures
+local WAFSignatures     = globals.WAFSignatures
 
-local hyperscan_scan = hscan.scan
-
---[[
-comment -- multi line comment
-]]
 
 function store_section(master_dict, key, subkey,  value)
     if master_dict[key] then
@@ -201,20 +197,19 @@ function check(waf_profile, request)
                     end
                 end
 
-                table.append(hca_values, value)
+                table.insert(hca_values, value)
             end
         end
     end
 
-    local matches = hyperscan_scan (hca_values)
+
+    local matches = globals.WAFHScaDB:scan(hca_values, globals.WAFHScanScratch)
 
     for k,v in pairs(matches) do
         local matched_sigs = {}
         if type(v) == "table" then
-            for k1, v1 in pairs(v) do
-                if v1.id then
-                    table.insert(matched_sigs, v1)
-                end
+            if v.id then
+                table.insert(matched_sigs, v.id)
             end
         end
 
@@ -224,7 +219,7 @@ function check(waf_profile, request)
                 -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
                 if not section_exclude_ids[msig] then
                     if globals.WAFSignatures then
-                        local waf_sig = globals.WAFSignatures[msig]
+                        local waf_sig = globals.WAFSignatures[tostring(msig)]
                         -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
                         return WAFBlock, gen_block_info(section, name, value, waf_sig)
                     end
