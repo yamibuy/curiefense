@@ -4,6 +4,9 @@ RUN apt-get update && \
     apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python gcc make unzip && \
 	rm -rf /var/lib/apt/lists/*
 
+## hyperscan
+RUN apt install -yk libhyperscan5 libhyperscan-dev
+
 RUN luarocks install lrexlib-pcre2 && \
     luarocks install lua-cjson && \
     luarocks install lua-resty-string && \
