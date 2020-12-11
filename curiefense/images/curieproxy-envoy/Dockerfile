@@ -1,23 +1,19 @@
-FROM ubuntu:18.04 as builder
+FROM envoyproxy/envoy:v1.16-latest as builder
 
 RUN apt-get update && \
-    apt-get -yq --no-install-recommends install cmake make libboost-dev libsqlite3-dev python ragel git gcc g++ && \
+    apt-get -yq --no-install-recommends install libhyperscan-dev make gcc curl libc6-dev pkg-config \
+                                                lua5.1 luajit liblua5.1-dev && \
 	rm -rf /var/lib/apt/lists/*
 
-WORKDIR /
-RUN git clone git://github.com/intel/hyperscan
-WORKDIR /hyperscan
-RUN cmake . -DBUILD_SHARED_LIBS=1
-RUN cmake --build .
-
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+COPY iptools/ /iptools/
+RUN bash -c "source $HOME/.cargo/env ; cd /iptools ; make -B"
 
 
 FROM envoyproxy/envoy:v1.16-latest
 
-COPY --from=builder /hyperscan/lib/*.so.5 /usr/lib/x86_64-linux-gnu/
-
 RUN apt-get update && \
-    apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python gcc make unzip && \
+    apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python gcc make unzip libhyperscan4 && \
 	rm -rf /var/lib/apt/lists/*
 
 RUN luarocks install lrexlib-pcre2 && \
@@ -38,6 +34,7 @@ COPY init/start_curiefense.sh /start_curiefense.sh
 
 COPY curieproxy/lua /lua
 COPY curieproxy/lua/shared-objects/*.so /usr/local/lib/lua/5.1/
+COPY --from=builder /iptools/iptools.so /usr/local/lib/lua/5.1/
 
 COPY curieproxy/config /bootstrap-config/config
 COPY curieproxy/envoy.yaml.* /etc/envoy/
