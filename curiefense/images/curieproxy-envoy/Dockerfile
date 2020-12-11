@@ -1,4 +1,20 @@
+FROM ubuntu:18.04 as builder
+
+RUN apt-get update && \
+    apt-get -yq --no-install-recommends install cmake make libboost-dev libsqlite3-dev python ragel git gcc g++ && \
+	rm -rf /var/lib/apt/lists/*
+
+WORKDIR /
+RUN git clone git://github.com/intel/hyperscan
+WORKDIR /hyperscan
+RUN cmake . -DBUILD_SHARED_LIBS=1
+RUN cmake --build .
+
+
+
 FROM envoyproxy/envoy:v1.16-latest
+
+COPY --from=builder /hyperscan/lib/*.so.5 /usr/lib/x86_64-linux-gnu/
 
 RUN apt-get update && \
     apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python gcc make unzip && \
