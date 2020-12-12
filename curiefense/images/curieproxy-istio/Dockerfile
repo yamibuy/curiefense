@@ -12,7 +12,8 @@ RUN luarocks install lrexlib-pcre2 && \
     luarocks install redis-lua && \
     luarocks install compat53 && \
     luarocks install mmdblua && \
-    luarocks install luaipc
+    luarocks install luaipc && \
+    luarocks install lua-resty-injection
 
 # Overwrite stripped envoy with full symbol
 COPY curieproxy/envoy-1.13.4 /usr/local/bin/envoy
