@@ -28,8 +28,8 @@ spec:
           image: {{ .Values.global.images.confserver }}:{{ .Values.global.settings.docker_tag }}
           {{ end }}
           env:
-            - name: "IF_NO_CONFIG_PULL_FROM"
-              value: "/bootstrap/confdb.bundle"
+            - name: "IF_NO_CONFIG_INIT_FROM"
+              value: "/bootstrap/confdb-initial-data/"
           volumeMounts:
           - mountPath: /config
             name: persistent-confdb

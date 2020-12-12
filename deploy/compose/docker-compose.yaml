@@ -72,7 +72,7 @@ services:
       - CURIE_BUCKET_LINK
       - INIT_GIT_ON_STARTUP=yes
       - BOOTSTRAP_BUCKET_ON_STARTUP=yes
-      - IF_NO_CONFIG_PULL_FROM=/bootstrap/confdb.bundle
+      - IF_NO_CONFIG_INIT_FROM=/bootstrap/confdb-initial-data/
     networks:
       - confnet
     ports:
