@@ -2,7 +2,7 @@ name: Run curieconf client Javascript (Jest) tests
 on: [push, pull_request]
 
 jobs:
-  build:
+  coverage:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,10 +18,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/curiefense/ui"
           npm i
 
-      - name: Run & publish unit test results
-        uses: mattallty/jest-github-action@v1.0.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          test-command: "npm test-coverage:unit"
-          working-directory: "ui"
+      - name: Run unit tests
+        run: |
+          cd "$GITHUB_WORKSPACE/curiefense/ui"
+          npm run test-coverage:unit
