@@ -8,6 +8,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Change directory to client
+        run: cd "$GITHUB_WORKSPACE/curiefense/ui"
+
       - name: Install modules
         run: yarn
 
