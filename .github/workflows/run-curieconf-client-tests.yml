@@ -18,19 +18,10 @@ jobs:
           cd "$GITHUB_WORKSPACE/curiefense/ui"
           npm i
 
-      - name: Run tests
-        run: |
-          cd "$GITHUB_WORKSPACE/curiefense/ui"
-          npm run test-coverage:unit
-
-      - name: Publish unit test results
-        uses: EnricoMi/publish-unit-test-result-action@70b5dd187f73f17a3b4ac0191e22bb9eec9bbb25
-        if: always()
+      - name: Run & publish unit test results
+        uses: mattallty/jest-github-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          check_name: Client Unit Test Results
-          comment_title: Client Unit Test Statistics
-          comment_on_pr: true
-          files: "$GITHUB_WORKSPACE/curiefense/ui/coverage/clover.xml"
-          report_individual_runs: true
-          deduplicate_classes_by_file_name: false
+          test-command: "npm test-coverage:unit"
+          working-directory: "curiefense/ui"
