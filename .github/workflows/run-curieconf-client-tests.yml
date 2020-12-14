@@ -24,4 +24,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test-command: "npm test-coverage:unit"
-          working-directory: "$GITHUB_WORKSPACE/curiefense/ui"
+          working-directory: "ui"
