@@ -8,11 +8,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Change directory to client
-        run: cd "$GITHUB_WORKSPACE/curiefense/ui"
-
       - name: Install modules
-        run: yarn
+        run: |
+          cd "$GITHUB_WORKSPACE/curiefense/ui"
+          yarn
 
       - name: Run tests
-        run: yarn test:unit
+        run: |
+          cd "$GITHUB_WORKSPACE/curiefense/ui"
+          yarn test:unit
