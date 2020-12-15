@@ -38,7 +38,7 @@
                     :title=" allPrior(operation) ? '[all] is set in a higher priorirty section' : '' ">
                   {{ tag }}
                 </td>
-                <td class="is-size-7 is-18-px">
+                <td class="is-size-7 width-20px">
                   <a title="remove entry"
                      class="is-small has-text-grey remove-entry-button"
                      @click="removeTag(operation, idx)">
@@ -57,9 +57,9 @@
                                           @tagSubmitted="addNewEntry(operation, $event)">
                   </tag-autocomplete-input>
                 </td>
-                <td class="is-size-7 is-18-px">
+                <td class="is-size-7 width-20px">
                   <a title="add new entry"
-                     class="is-size-7 is-18-px is-small has-text-grey add-new-entry-button"
+                     class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
                      @click="openTagInput(operation)">
                     +
                   </a>
@@ -99,9 +99,9 @@ export default {
         "force_deny": "background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;",
         "deny_bot": "background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;",
         "deny": "background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;",
-        "bypass": "background-color: hsl(141,  71%, 48%); margin: 1rem 0 0.5rem 0;",
-        "allow": "background-color: hsl(204,  86%, 53%); margin: 1rem 0 0.5rem 0;",
-        "allow_bot": "background-color: hsl(204,  86%, 53%); margin: 1rem 0 0.5rem 0;"
+        "bypass": "background-color: hsl(141, 71%, 48%); margin: 1rem 0 0.5rem 0;",
+        "allow": "background-color: hsl(204, 86%, 53%); margin: 1rem 0 0.5rem 0;",
+        "allow_bot": "background-color: hsl(204, 86%, 53%); margin: 1rem 0 0.5rem 0;"
       },
       titles: DatasetsUtils.Titles,
       addNewColName: null
@@ -170,12 +170,6 @@ export default {
 </script>
 
 <style scoped>
-.is-18-px {
-  min-width: 18px;
-  max-width: 18px;
-  width: 18px;
-}
-
 /deep/ .tag-input {
   font-size: 0.58rem
 }

@@ -76,7 +76,7 @@
                         :class=" duplicateTags[tag] ? 'has-text-danger' : '' ">
                       {{ tag }}
                     </td>
-                    <td class="is-size-7 is-18-px">
+                    <td class="is-size-7 width-20px">
                       <a title="remove entry"
                          class="is-small has-text-grey remove-filter-entry-button"
                          @click="removeTag(filter, tagIndex)">
@@ -95,9 +95,9 @@
                                               @tagSubmitted="addNewTag(filter, $event)">
                       </tag-autocomplete-input>
                     </td>
-                    <td class="is-size-7 is-18-px">
+                    <td class="is-size-7 width-20px">
                       <a title="add new entry"
-                         class="is-size-7 is-18-px is-small has-text-grey add-new-filter-entry-button"
+                         class="is-size-7 width-20px is-small has-text-grey add-new-filter-entry-button"
                          @click="openTagInput(filter)">
                         +
                       </a>
@@ -117,8 +117,8 @@
                   <table class="table is-narrow is-size-7 sequence-entries-table">
                     <tbody>
                     <tr class="sequence-entry-row method-entry-row">
-                      <td class="is-size-7 is-48-px sequence-entries-relation"></td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="is-size-7 width-50px sequence-entries-relation"></td>
+                      <td class="width-80px is-vcentered">
                         Method
                       </td>
                       <td colspan="2">
@@ -128,13 +128,13 @@
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-80-px"></td>
+                      <td class="width-80px"></td>
                     </tr>
                     <tr class="sequence-entry-row uri-entry-row">
-                      <td class="is-size-7 is-48-px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
+                      <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="width-80px is-vcentered">
                         URI
                       </td>
                       <td colspan="2">
@@ -144,16 +144,16 @@
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-80-px"></td>
+                      <td class="width-80px"></td>
                     </tr>
                     <tr class="sequence-entry-row host-entry-row">
-                      <td class="is-size-7 is-48-px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
+                      <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="width-80px is-vcentered">
                         Header
                       </td>
-                      <td class="is-100-px is-vcentered">
+                      <td class="width-100px is-vcentered">
                         host
                       </td>
                       <td>
@@ -163,24 +163,24 @@
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-80-px"></td>
+                      <td class="width-80px"></td>
                     </tr>
                     <tr v-for="(sequenceEntry, sequenceEntryIndex) in sequenceItemEntries(sequenceIndex)"
                         :key="sequenceEntryIndex"
                         class="sequence-entry-row">
-                      <td class="is-size-7 is-48-px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
+                      <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="width-80px is-vcentered">
                         {{ listEntryTypes[sequenceEntry[0]].title }}
                       </td>
-                      <td class="is-100-px">
+                      <td class="width-100px">
                         {{ sequenceEntry[1][0] }}
                       </td>
                       <td>
                         {{ sequenceEntry[1][1] }}
                       </td>
-                      <td class="is-80-px">
+                      <td class="width-80px">
                         <a class="is-small has-text-grey remove-entry-button"
                            title="Remove sequence entry"
                            @click="removeSequenceItemEntry(sequenceIndex, sequenceEntry[0], sequenceEntry[1][0])">
@@ -209,7 +209,7 @@
                           </select>
                         </div>
                       </td>
-                      <td class="is-size-7 is-100-px">
+                      <td class="is-size-7 width-100px">
                         <div class="control has-icons-left is-fullwidth new-entry-name">
                           <input class="input is-small new-entry-name-input"
                                  placeholder="Name"
@@ -225,7 +225,7 @@
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-size-7 is-80-px">
+                      <td class="is-size-7 width-80px">
                         <a class="is-size-7 x-has-text-grey grey add confirm-add-entry-button" title="add new row"
                            @click="addSequenceItemEntry(sequenceIndex)"><i class="fas fa-check"></i> Add</a>
                         <br/>
@@ -281,7 +281,7 @@ export default {
     return {
       filters: ['include', 'exclude'],
       barStyle: {
-        'include': 'background-color: hsl(141,  71%, 48%); margin: 1rem 0 0.5rem 0;',
+        'include': 'background-color: hsl(141, 71%, 48%); margin: 1rem 0 0.5rem 0;',
         'exclude': 'background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;',
       },
       addNewTagColName: null,
@@ -521,30 +521,6 @@ export default {
 
 .remove:hover {
   color: hsl(348, 100%, 61%)
-}
-
-.is-18-px {
-  min-width: 18px;
-  max-width: 18px;
-  width: 18px;
-}
-
-.is-48-px {
-  min-width: 40px;
-  max-width: 40px;
-  width: 48px;
-}
-
-.is-80-px {
-  min-width: 80px;
-  max-width: 80px;
-  width: 80px;
-}
-
-.is-100-px {
-  min-width: 100px;
-  max-width: 100px;
-  width: 100px;
 }
 
 </style>

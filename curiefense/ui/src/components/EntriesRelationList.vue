@@ -17,7 +17,7 @@
               <table class="table is-narrow entries-table">
                 <tbody>
                   <tr v-for="(entry,entry_idx) in sectionsCurrentPage[section_idx]" :key="entry_idx" class="entry-row">
-                    <td class="is-size-7 is-48-px has-text-centered has-text-weight-medium">
+                    <td class="is-size-7 width-50px has-text-centered has-text-weight-medium">
                       <span v-if="((entry_idx + 1) + ((sectionsCurrentPageIndex[section_idx] - 1) * rowsPerPage)) !== 1"
                             class="is-small pointer section-relation-toggle"
                             @click="toggleSectionRelation(section)"
@@ -30,7 +30,7 @@
                     <td :title="entry[2]" class="is-size-7 entry-annotation">
                       {{ entry[2] ? entry[2].substr(0, 60) : '' }}
                     </td>
-                    <td class="is-size-7 is-80-px">
+                    <td class="is-size-7 width-80px">
                       <a v-if="editable"
                          class="is-small has-text-grey remove-entry-button" title="remove entry"
                          @click="removeEntry(section, section_idx, entry_idx)">
@@ -40,9 +40,17 @@
                   </tr>
                   <tr v-if="newEntrySectionIndex !== section_idx && editable">
                     <td>
-                      <a class="is-size-7 light add add-entry-button" title="add new row" @click="clearNewEntryData(section_idx)"><i class="fas fa-plus"></i></a>
+                      <a class="is-size-7 has-text-grey-lighter add-entry-button"
+                         title="add new row"
+                         @click="clearNewEntryData(section_idx)">
+                        <i class="fas fa-plus"></i>
+                      </a>
                       &nbsp;&middot;&nbsp;
-                      <a class="is-size-7 light remove remove-section-button" title="remove entire section" @click="removeSection(section_idx)"><i class="fas fa-trash"></i></a>
+                      <a class="is-size-7 has-text-grey-lighter remove-section-button"
+                         title="remove entire section"
+                         @click="removeSection(section_idx)">
+                        <i class="fas fa-trash"></i>
+                      </a>
                     </td>
                     <td colspan="4">
                     </td>
@@ -66,10 +74,10 @@
                                 rows="3">
                       </textarea>
                     </td>
-                    <td class="is-size-7 is-80-px">
-                      <a class="is-size-7 x-has-text-grey grey add confirm-add-entry-button" title="add new row" @click="addEntry(section, section_idx)"><i class="fas fa-check"></i> Add</a>
+                    <td class="is-size-7 width-80px">
+                      <a class="is-size-7 has-text-grey add confirm-add-entry-button" title="add new row" @click="addEntry(section, section_idx)"><i class="fas fa-check"></i> Add</a>
                       <br/>
-                      <a class="is-size-7 x-has-text-grey grey remove" title="cancel add new row" @click="clearNewEntryData(-1)"><i class="fas fa-times"></i> Cancel</a>
+                      <a class="is-size-7 has-text-grey remove" title="cancel add new row" @click="clearNewEntryData(-1)"><i class="fas fa-times"></i> Cancel</a>
                     </td>
                   </tr>
 
@@ -325,7 +333,9 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss">
+@import "node_modules/bulma/sass/helpers/color.sass";
+
 .pointer { cursor: pointer; }
 
 .section {
@@ -334,18 +344,6 @@ export default {
 
 .section > .entries-table {
   margin-bottom: 0rem;
-}
-
-.is-80-px {
-  min-width: 80px;
-  max-width: 80px;
-  width: 80px;
-}
-
-.is-48-px {
-  min-width: 48px;
-  max-width: 48px;
-  width: 48px;
 }
 
 .relation-selection-wrapper {
@@ -373,17 +371,10 @@ export default {
   cursor: pointer;
 }
 
-.grey {
-  color: hsl(0, 0%, 48%)
+.add-entry-button:hover {
+  @extend .has-text-dark
 }
-
-.light {
-  color: hsl(0, 0%, 86%)
-}
-.add:hover {
-  color: hsl(0, 0%, 21%)
-}
-.remove:hover {
-  color: hsl(348, 100%, 61%)
+.remove-entry-button:hover {
+  @extend .has-text-danger
 }
 </style>

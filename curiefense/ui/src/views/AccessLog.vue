@@ -77,7 +77,7 @@
                           class="has-text-weight-medium is-family-secondary">{{ row.requestmethod }}</span> <span
                           :title="fulluri(row)">{{ suburi(row) }}</span></td>
 
-                      <td class="is-size-7 is-120-px">&#8593;{{ row.requestheadersbytes + row.requestbodybytes }}
+                      <td class="is-size-7 width-120px">&#8593;{{ row.requestheadersbytes + row.requestbodybytes }}
                         &#8595;{{ row.responseheadersbytes + row.responsebodybytes }}
                       </td>
 
@@ -87,7 +87,7 @@
                         {{ row.upstreamremoteaddress }}
                       </td>
                       <td v-else class="is-size-7">terminated</td>
-                      <td class="is-size-7 is-150-px">{{ isodate(row.starttime) }}</td>
+                      <td class="is-size-7 width-150px">{{ isodate(row.starttime) }}</td>
                       <td class="is-size-7" :rowspan="row_entry_idx === idx ? '2' : '1'">
                         <a class="has-text-grey" title="more details"
                         >{{ row_entry_idx === idx ? 'close' : 'expand' }}</a>
@@ -147,7 +147,7 @@
                                           class="is-pulled-right">{{ row.requestheadersbytes }} bytes</span></label>
                                       <table class="table is-narrow borderless is-fullwidth">
                                         <tr v-for="(value, name) in row.curiefense.headers" :key="name">
-                                          <td class="has-text-weight-medium is-size-7 is-200-px">{{ name }}</td>
+                                          <td class="has-text-weight-medium is-size-7 width-200px">{{ name }}</td>
                                           <td class="is-size-7">{{ value }}</td>
                                         </tr>
                                       </table>
@@ -157,7 +157,7 @@
                                       <label class="label">Cookies</label>
                                       <table class="table is-narrow borderless">
                                         <tr v-for="(value, name) in row.curiefense.cookies" :key="name">
-                                          <td class="has-text-weight-medium is-size-7 is-200-px">{{ name }}</td>
+                                          <td class="has-text-weight-medium is-size-7 width-200px">{{ name }}</td>
                                           <td class="is-size-7">{{ value }}</td>
                                         </tr>
                                       </table>
@@ -168,7 +168,7 @@
                                           class="is-pulled-right">{{ row.requestbodybytes }} bytes</span></label>
                                       <table class="table is-narrow borderless">
                                         <tr v-for="(value, name) in row.curiefense.args" :key="name">
-                                          <td class="has-text-weight-medium is-size-7 is-200-px">{{ name }}</td>
+                                          <td class="has-text-weight-medium is-size-7 width-200px">{{ name }}</td>
                                           <td class="is-size-7">{{ value }}</td>
                                         </tr>
                                       </table>
@@ -431,24 +431,6 @@ export default {
 
 </script>
 <style type="text/css" scoped>
-
-.is-200-px {
-  min-width: 200px;
-  max-width: 200px;
-  width: 200px;
-}
-
-.is-150-px {
-  min-width: 150px;
-  max-width: 150px;
-  width: 150px;
-}
-
-.is-120-px {
-  min-width: 120px;
-  max-width: 120px;
-  width: 120px;
-}
 
 tr.has-row-clickable > td {
   cursor: pointer;

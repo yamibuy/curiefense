@@ -22,7 +22,7 @@
           <table class="table">
             <thead>
             <tr>
-              <th class=" is-size-7 is-48-px"></th>
+              <th class="is-size-7 width-50px"></th>
               <th class="is-size-7">Name</th>
               <th class="is-size-7" colspan="2"><span>Match</span>&nbsp;<span><i
                   class="fas fa-sort-alpha-down"></i></span></th>
@@ -36,9 +36,9 @@
             <tr @click="changeSelectedMapEntry(idx)"
                 class="has-row-clickable"
                 :class=" map_entry_index === idx ? 'has-background-light borderless' : ''">
-              <td class="is-size-7 is-48-px has-text-right has-text-grey-light">{{ idx + 1 }}</td>
+              <td class="is-size-7 width-50px has-text-right has-text-grey-light">{{ idx + 1 }}</td>
               <td class="is-size-7">{{ map_entry.name }}</td>
-              <td class="is-size-7 is-360-px " colspan="2" :title="map_entry.match">{{ map_entry.match }}</td>
+              <td class="is-size-7 width-360px ellipsis" colspan="2" :title="map_entry.match">{{ map_entry.match }}</td>
               <td class="is-size-7 "
                   :class=" map_entry.waf_active ? 'has-text-success' : 'has-text-danger' "
                   :title=" map_entry.waf_active ? 'Active mode' : 'Learning mode' "
@@ -96,7 +96,7 @@
                               <th class="x-has-text-centered is-size-7 ">Description</th>
                               <th class="x-has-text-centered is-size-7 ">Threshold</th>
                               <th class="x-has-text-centered is-size-7 ">Timeframe</th>
-                              <th class="has-text-centered is-size-7 is-60-px">
+                              <th class="has-text-centered is-size-7 width-60px">
                                 <a v-if="limitRuleNames && map_entry.limit_ids && limitRuleNames.length > map_entry.limit_ids.length"
                                    class="has-text-grey-dark is-small" title="Add New"
                                    @click="limit_new_entry_mode_map_entry_id = map_entry.key">
@@ -124,7 +124,7 @@
                                 </td>
                                 <td class="is-size-7" v-if="limit_details(limit_id)">{{ limit_details(limit_id).ttl }}
                                 </td>
-                                <td class="has-text-centered  is-size-7 is-60-px">
+                                <td class="has-text-centered  is-size-7 width-60px">
                                   <a class="is-small has-text-grey" title="remove entry"
                                      @click="map_entry.limit_ids.splice(idx,1)"
                                   >remove</a>
@@ -143,7 +143,7 @@
                                     </div>
                                   </div>
                                 </td>
-                                <td class="has-text-centered  is-size-7 is-60-px">
+                                <td class="has-text-centered  is-size-7 width-60px">
                                   <a class="is-small has-text-grey" title="Add this entry"
                                      @click="map_entry.limit_ids.push(limit_new_entry_id); limit_new_entry_mode_map_entry_id = null"
                                   >add</a>
@@ -517,27 +517,6 @@ export default {
 }
 </script>
 <style type="text/css" scoped>
-
-.is-360-px {
-  min-width: 360px;
-  max-width: 360px;
-  width: 360px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.is-60-px {
-  min-width: 60px;
-  max-width: 60px;
-  width: 60px;
-}
-
-.is-48-px {
-  min-width: 48px;
-  max-width: 48px;
-  width: 48px;
-}
 
 .content table tbody tr:last-child td {
   border-bottom-width: 1px;
