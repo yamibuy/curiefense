@@ -476,7 +476,7 @@ export default {
     },
 
     referToRateLimit() {
-      this.$emit('switchDocType', 'limits')
+      this.$emit('switch-doc-type', 'limits')
     },
 
     wafacllimitProfileNames() {

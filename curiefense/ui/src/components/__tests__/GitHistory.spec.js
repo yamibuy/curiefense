@@ -142,14 +142,14 @@ describe('GitHistory.vue', () => {
             expect(firstDataRow.findAll('.restore-button').length).toEqual(0)
         })
 
-        test('should emit a restoreVersion event when restore button is clicked', async () => {
+        test('should emit a restore-version event when restore button is clicked', async () => {
             // 0 is the table header, 1 is our first data
             const firstDataRow = wrapper.findAll('tr').at(1)
             await firstDataRow.trigger('mouseover')
             const restoreButton = firstDataRow.find('.restore-button')
             await restoreButton.trigger('click')
-            expect(wrapper.emitted('restoreVersion')).toBeTruthy()
-            expect(wrapper.emitted('restoreVersion')[0]).toEqual([gitLog[0]])
+            expect(wrapper.emitted('restore-version')).toBeTruthy()
+            expect(wrapper.emitted('restore-version')[0]).toEqual([gitLog[0]])
         })
     })
 })

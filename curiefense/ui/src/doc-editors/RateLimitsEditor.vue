@@ -173,9 +173,9 @@
                 <div class="column">
                   <div class="control has-icons-left">
                     <tag-autocomplete-input v-show="newIncludeOrExcludeEntry.key === 'tags'"
-                                            :initialTag="newIncludeOrExcludeEntry.value"
-                                            :selectionType="'multiple'"
-                                            @tagChanged="newIncludeOrExcludeEntry.value = $event">
+                                            :initial-tag="newIncludeOrExcludeEntry.value"
+                                            :selection-type="'multiple'"
+                                            @tag-changed="newIncludeOrExcludeEntry.value = $event">
                     </tag-autocomplete-input>
                     <input v-show="newIncludeOrExcludeEntry.key !== 'tags'"
                            v-model="newIncludeOrExcludeEntry.value" type="text" class="input is-small">

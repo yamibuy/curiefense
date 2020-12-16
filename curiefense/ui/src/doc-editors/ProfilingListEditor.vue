@@ -46,9 +46,9 @@
             <div class="field">
               <label class="label is-small">Tags</label>
               <div class="control">
-                <tag-autocomplete-input :initialTag="selectedDocTags"
-                                        :selectionType="'multiple'"
-                                        @tagChanged="selectedDocTags = $event">
+                <tag-autocomplete-input :initial-tag="selectedDocTags"
+                                        :selection-type="'multiple'"
+                                        @tag-changed="selectedDocTags = $event">
                 </tag-autocomplete-input>
               </div>
             </div>
