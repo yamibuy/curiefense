@@ -31,7 +31,7 @@
         <div class="columns">
           <div class="column is-2" v-for="operation in operations" :key="operation">
             <p class="title is-7 is-uppercase">{{ titles[operation] }}</p>
-            <hr class="bar" :class="`bar-${operationClass(operation)}`"/>
+            <hr class="bar" :class="`bar-${operationClassName(operation)}`"/>
             <table class="table is-narrow is-fullwidth">
               <tbody>
               <tr v-for="(tag, idx) in selectedDoc[operation]" :key="idx">
@@ -156,8 +156,8 @@ export default {
       this.$emit('update:selectedDoc', this.selectedDoc)
     },
 
-    operationClass(operation) {
-      return operation.replaceAll('_', '-')
+    operationClassName(operation) {
+      return operation && operation.replace('_', '-')
     },
 
   },
