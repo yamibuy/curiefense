@@ -246,7 +246,6 @@ export default {
                 "relation": "OR"
               }
 
-              this.convertOldEntriesToNewEntries()
               this.selectedDoc.mdate = (new Date).toISOString()
             }
 
@@ -257,30 +256,7 @@ export default {
       this.localDoc.rule = rule
       this.emitDocUpdate()
     },
-
-    convertOldEntriesToNewEntries() {
-      // TODO - Temporary casting as we are changing the structure of profiling lists object
-      if (!this.localDoc?.rule) {
-        this.localDoc.rule = {
-          relation: 'AND',
-          sections: [{
-            relation: this.localDoc?.entries_relation || 'OR',
-            entries: this.localDoc?.entries || []
-          }]
-        }
-      }
-    },
-  },
-
-  watch: {
-    selectedDoc: {
-      handler: function () {
-        this.convertOldEntriesToNewEntries()
-      },
-      immediate: true,
-      deep: true
-    }
-  },
+  }
 
 }
 </script>

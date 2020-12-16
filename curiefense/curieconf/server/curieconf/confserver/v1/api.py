@@ -130,7 +130,6 @@ m_tagrule = api.model("Tag Rule", {
     "mdate": fields.String(required=True),
     "notes": fields.String(required=True),
     "active": fields.Boolean(required=True),
-    "entries_relation": fields.String(required=True),
     "tags": fields.List(fields.String()),
     "rule": AnyType(),
 })
@@ -260,6 +259,9 @@ with open(waf_policy_file_path) as json_file:
 tagrules_file_path = (base_path / "../json/tag-rules.schema").resolve()
 with open(tagrules_file_path) as json_file:
     tagrules_schema = json.load(json_file)
+flowcontrol_file_path = (base_path / "../json/flow-control.schema").resolve()
+with open(flowcontrol_file_path) as json_file:
+    flowcontrol_schema = json.load(json_file)
 
 schema_type_map = {
     "ratelimits": ratelimits_schema,
@@ -267,6 +269,7 @@ schema_type_map = {
     "wafpolicies": waf_policy_schema,
     "aclpolicies": acl_policy_schema,
     "tagrules": tagrules_schema,
+    "flowcontrol": flowcontrol_schema,
 }
 
 
