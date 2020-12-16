@@ -110,7 +110,7 @@ describe('ACLEditor.vue', () => {
         await Vue.nextTick()
         const newTag = 'test-tag'
         const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-        tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+        tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
         await Vue.nextTick()
         expect(wrapper.props('selectedDoc').bypass.includes(newTag)).toBeTruthy()
     })
@@ -121,7 +121,7 @@ describe('ACLEditor.vue', () => {
         await Vue.nextTick()
         const newTag = 't'
         const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-        tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+        tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
         await Vue.nextTick()
         expect(wrapper.props('selectedDoc').bypass.includes(newTag)).toBeFalsy()
     })

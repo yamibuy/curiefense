@@ -2,23 +2,20 @@
   <section>
     <div class="card">
       <div class="card-content">
-        <div class="media">
-          <div class="media-content">
-            <div class="columns">
-              <div class="column is-5">
-                <p class="subtitle is-6 has-text-grey" title="Document ID">{{ selectedDoc.id }}</p>
-              </div>
-              <div class="column"></div>
-            </div>
-          </div>
-        </div>
         <div class="content">
           <div class="columns">
             <div class="column is-4 col-pr col-25">
               <div class="field">
-                <label class="label is-small">Name</label>
+                <label class="label is-small">
+                  Name
+                  <span class="has-text-grey is-pulled-right document-id" title="Document id">
+                    {{ selectedDoc.id }}
+                  </span>
+                </label>
                 <div class="control">
-                  <input class="input is-small" type="text" placeholder="Document name" v-model="selectedDoc.name">
+                  <input class="input is-small document-name"
+                         placeholder="Document name"
+                         v-model="selectedDoc.name"/>
                 </div>
               </div>
             </div>
@@ -187,9 +184,9 @@
                 <div class="column">
                   <div class="control has-icons-left">
                     <tag-autocomplete-input v-show="newIncludeOrExcludeEntry.key === 'tags'"
-                                            :initialTag="newIncludeOrExcludeEntry.value"
-                                            :selectionType="'multiple'"
-                                            @tagChanged="newIncludeOrExcludeEntry.value = $event">
+                                            :initial-tag="newIncludeOrExcludeEntry.value"
+                                            :selection-type="'multiple'"
+                                            @tag-changed="newIncludeOrExcludeEntry.value = $event">
                     </tag-autocomplete-input>
                     <input v-show="newIncludeOrExcludeEntry.key !== 'tags'"
                            v-model="newIncludeOrExcludeEntry.value"

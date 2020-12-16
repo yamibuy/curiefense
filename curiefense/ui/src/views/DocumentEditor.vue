@@ -48,7 +48,7 @@
                 </div>
 
                 <p class="control"
-                   v-if="selectedDocType !== 'wafsigs'">
+                   v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small fork-document-button"
                           @click="forkDoc"
                           title="Duplicate Document"
@@ -71,7 +71,7 @@
                 </p>
 
                 <p class="control"
-                   v-if="selectedDocType !== 'wafsigs'">
+                   v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small new-document-button"
                           @click="addNewDoc()"
                           title="Add New Document">
@@ -82,7 +82,7 @@
                 </p>
 
                 <p class="control"
-                   v-if="selectedDocType !== 'wafsigs'">
+                   v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small save-document-button"
                           @click="saveChanges()"
                           title="Save changes">
@@ -93,7 +93,7 @@
                 </p>
 
                 <p class="control"
-                   v-if="selectedDocType !== 'wafsigs'">
+                   v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small has-text-danger delete-document-button"
                           @click="deleteDoc"
                           title="Delete Document"
@@ -118,15 +118,15 @@
             :selectedDoc.sync="selectedDoc"
             :docs.sync="docs"
             :apiPath="documentAPIPath"
+            @switch-doc-type="switchDocType"
             @update="selectedDoc = $event"
-            @switchDocType="switchDocType"
             ref="currentComponent"
         ></component>
         <hr/>
         <git-history v-if="selectedDocID"
-                     :gitLog.sync="gitLog"
-                     :apiPath.sync="gitAPIPath"
-                     @restoreVersion="restoreGitVersion"></git-history>
+                    :gitLog.sync="gitLog"
+                    :apiPath.sync="gitAPIPath"
+                    @restore-version="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>

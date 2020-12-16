@@ -186,7 +186,7 @@
         <hr/>
         <git-history :gitLog.sync="gitLog"
                      :apiPath.sync="gitAPIPath"
-                     @restoreVersion="restoreGitVersion"></git-history>
+                     @restore-version="restoreGitVersion"></git-history>
       </div>
     </div>
   </div>

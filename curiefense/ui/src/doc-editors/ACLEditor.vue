@@ -5,16 +5,19 @@
         <div class="media-content">
           <div class="columns">
             <div class="column">
-              <div class="field is-grouped">
-                <input class="input is-small is-fullwidth document-name"
-                       type="text"
-                       placeholder="Document name"
-                       v-model="selectedDoc.name">
+              <div class="field">
+                <label class="label is-small">
+                  Name
+                  <span class="has-text-grey is-pulled-right document-id" title="Document id">
+                    {{ selectedDoc.id }}
+                  </span>
+                </label>
+                <div class="control">
+                  <input class="input is-small document-name"
+                         placeholder="Document name"
+                         v-model="selectedDoc.name"/>
+                </div>
               </div>
-              <p class="subtitle is-6 has-text-grey document-id"
-                 title="Document ID">
-                {{ selectedDoc.id }}
-              </p>
             </div>
             <div class="column"></div>
             <div class="column">
@@ -53,7 +56,7 @@
                                           :selection-type="'single'"
                                           :auto-focus="true"
                                           @keydown.esc="cancelAddNewTag"
-                                          @tagSubmitted="addNewEntry(operation, $event)">
+                                          @tag-submitted="addNewEntry(operation, $event)">
                   </tag-autocomplete-input>
                 </td>
                 <td class="is-size-7 width-20px">
@@ -132,6 +135,7 @@ export default {
     },
 
     addNewEntry(section, entry) {
+      entry = entry.trim()
       if (entry && entry.length > 2) {
         this.selectedDoc[section].push(entry)
         this.$emit('update:selectedDoc', this.selectedDoc)

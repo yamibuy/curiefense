@@ -9,6 +9,7 @@
              aria-haspopup="true"
              aria-controls="dropdown-menu"
              @keydown.enter="selectTag"
+             @keydown.space="selectTag"
              @keydown.down='focusNextSuggestion'
              @keydown.up='focusPreviousSuggestion'
              @keydown.esc='closeDropdown'
@@ -50,6 +51,9 @@ export default {
     selectionType: {
       type: String,
       validator(val) {
+        if (!val) {
+          return false
+        }
         return ['single', 'multiple'].includes(val.toLowerCase())
       },
       default: 'single'
@@ -93,7 +97,7 @@ export default {
     // Filtering the tags based on the input
     matches() {
       return this.tagsSuggestions?.filter((str) => {
-        return str.includes(this.currentTag)
+        return str.includes(this.currentTag.toLowerCase())
       })
     },
 
@@ -104,16 +108,16 @@ export default {
     currentTag: {
       get: function () {
         let currentTag
-        if (this?.selectionType === 'multiple') {
+        if (this?.selectionType.toLowerCase() === 'multiple') {
           const tags = this.tag.split(' ')
-          currentTag = tags[tags.length - 1]
+          currentTag = tags[tags.length - 1].trim()
         } else {
           currentTag = this.tag.trim()
         }
         return currentTag
       },
       set: function (currentTag) {
-        if (this.selectionType === 'multiple') {
+        if (this.selectionType.toLowerCase() === 'multiple') {
           const tags = this.tag.split(' ')
           tags[tags.length - 1] = currentTag
           this.tag = tags.join(' ')
@@ -143,11 +147,11 @@ export default {
     },
 
     tagChanged() {
-      this.$emit('tagChanged', this.tag)
+      this.$emit('tag-changed', this.tag)
     },
 
     tagSubmitted() {
-      this.$emit('tagSubmitted', this.tag)
+      this.$emit('tag-submitted', this.tag)
     },
 
     closeDropdown() {
@@ -162,7 +166,7 @@ export default {
     async selectTag() {
       if (this.focusedSuggestionIndex !== -1) {
         this.currentTag = this.matches[this.focusedSuggestionIndex]
-      } else if (!this.tagsSuggestions.includes(this.currentTag)) {
+      } else if (!this.tagsSuggestions.includes(this.currentTag.toLowerCase())) {
         await this.addUnknownTagToDB(this.currentTag)
       }
       this.tagSubmitted()
@@ -203,16 +207,19 @@ export default {
     },
 
     async addUnknownTagToDB(tag) {
+      tag = tag.toLowerCase()
       const response = await RequestsUtils.sendRequest('GET', `db/${this.db}/k/${this.key}/`)
       const document = {...{tags: []}, ...response.data}
       document.tags.push(tag)
+      this.tagsSuggestions = document.tags || []
+      this.tagsSuggestions.sort()
       return RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, document)
           .then((response) => {
-            console.log(`saved key [${this.key}] to database [${this.db}]`)
+            console.log(`saved tag [${tag}] to database, it will now be available for autocomplete!`)
             return response
           })
           .catch((error) => {
-            console.log(`failed saving key [${this.key}] to database [${this.db}]`)
+            console.log(`failed saving tag [${tag}]`)
             throw error
           })
     },

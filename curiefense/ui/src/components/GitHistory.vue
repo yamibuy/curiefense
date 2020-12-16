@@ -97,7 +97,7 @@ export default {
 
   methods: {
     restoreVersion(commit) {
-      this.$emit('restoreVersion', commit)
+      this.$emit('restore-version', commit)
     },
 
     mouseLeave() {
