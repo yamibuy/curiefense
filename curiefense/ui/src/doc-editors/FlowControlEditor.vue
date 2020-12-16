@@ -92,7 +92,7 @@
                                               :selection-type="'single'"
                                               :auto-focus="true"
                                               @keydown.esc="cancelAddNewTag"
-                                              @tagSubmitted="addNewTag(filter, $event)">
+                                              @tag-submitted="addNewTag(filter, $event)">
                       </tag-autocomplete-input>
                     </td>
                     <td class="is-size-7 is-18-px">
