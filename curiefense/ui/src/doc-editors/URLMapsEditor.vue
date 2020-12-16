@@ -5,15 +5,21 @@
         <div class="media">
           <div class="media-content">
             <div class="columns">
-              <div class="column">
-                <div class="field is-grouped">
-                  <input class="input is-small is-fullwidth" type="text" placeholder="Document name"
-                         v-model="selectedDoc.name">
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label is-small">
+                    Name
+                    <span class="has-text-grey is-pulled-right document-id" title="Document id">
+                    {{ selectedDoc.id }}
+                  </span>
+                  </label>
+                  <div class="control">
+                    <input class="input is-small document-name"
+                           placeholder="Document name"
+                           v-model="selectedDoc.name"/>
+                  </div>
                 </div>
-                <p class="subtitle is-6 has-text-grey" title="Document ID">{{ selectedDoc.id }}</p>
               </div>
-              <div class="column"></div>
-              <div class="column"></div>
             </div>
           </div>
         </div>

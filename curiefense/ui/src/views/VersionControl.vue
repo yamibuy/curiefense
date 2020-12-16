@@ -121,6 +121,7 @@
         </div>
       </div>
       <div class="content">
+        <hr/>
         <git-history :gitLog.sync="gitLog"
                      :apiPath.sync="gitAPIPath"
                      @restore-version="restoreGitVersion">
