@@ -59,7 +59,7 @@
             </tr>
             </tbody>
           </table>
-          <span class="is-family-monospace  has-text-grey-lighter">{{ apiPath }}</span>
+          <span class="is-family-monospace has-text-grey-lighter">{{ apiPath }}</span>
         </div>
       </div>
     </div>

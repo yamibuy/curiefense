@@ -42,7 +42,6 @@
               <input
                   class="input is-small"
                   placeholder="123.45.87.219, Verizon, POST, /login"
-                  x-placeholder="type to filter the logs"
                   v-model="log_filter_input">
             </p>
             <p class="control">
@@ -62,12 +61,11 @@
                 <label class="label" v-else>{{ rows.length }} rows</label>
                 <div class="control">
                   <table class="table is-narrow is-fullwidth">
-                    <tbody v-for="(row, idx) in rows" :key="idx" style="border-bottom: 1px solid lightgray;">
+                    <tbody v-for="(row, idx) in rows" :key="idx" class="data-entry-wrapper">
                     <tr @click="row_entry_idx = (row_entry_idx === idx ? -1 : idx)"
                         class="has-row-clickable"
-                        :class="[row_entry_idx === idx ? ' has-background-white-bis' : '']"
-                    >
-                      <td class="is-size-7 has-text-centered  " :class="statuscode_class(row.responsecode)">
+                        :class="[row_entry_idx === idx ? ' has-background-white-bis' : '']">
+                      <td class="is-size-7 has-text-centered" :class="statuscode_class(row.responsecode)">
                         {{ row.responsecode }}
                       </td>
                       <td class="is-size-7" :title="row.curiefense.attrs.ip + ':' + row.downstreamremoteaddressport">
@@ -89,20 +87,21 @@
                       <td v-else class="is-size-7">terminated</td>
                       <td class="is-size-7 width-150px">{{ isodate(row.starttime) }}</td>
                       <td class="is-size-7" :rowspan="row_entry_idx === idx ? '2' : '1'">
-                        <a class="has-text-grey" title="more details"
-                        >{{ row_entry_idx === idx ? 'close' : 'expand' }}</a>
+                        <a class="has-text-grey" title="more details">
+                          {{ row_entry_idx === idx ? 'close' : 'expand' }}
+                        </a>
                       </td>
 
                     </tr>
                     <tr
                         v-if="row_entry_idx === idx"
                         class="expanded borderless has-background-white-bis">
-                      <td colspan="12" style="padding: 14px;">
+                      <td colspan="12" class="px-3 py-3">
                         <!--  TOP TILE -->
                         <div class="tile is-ancestor">
                           <div class="tile is-parent">
                             <article class="tile is-child box">
-                              <div class="content" style="overflow-wrap: anywhere;">
+                              <div class="content overflow-anywhere">
                                 <p class="is-size-7" title="URL">
                                   <span class="has-text-grey ">{{ row.curiefense.attrs.authority }}</span>
                                   <span class="has-text-grey-dark ">{{ row.curiefense.attrs.uri }}</span>
@@ -123,13 +122,18 @@
                         <div class="tile is-ancestor " v-if="row.curiefense.attrs.blocked">
                           <div class="tile is-parent ">
                             <article class="tile is-child box has-background-danger-light">
-                              <div class="content" style="overflow-wrap: anywhere;">
-                                <label class="has-text-weight-bold has-text-danger-dark">Risk details <span
-                                    class="has-text-family-uppercase"
-                                    v-if="row.curiefense.attrs.block_reason.initiator"
-                                >({{ row.curiefense.attrs.block_reason.initiator }})</span></label><br/>
-                                <pre class="is-size-7 is-family-code has-background-danger-light"
-                                     style="width: 932px; overflow-wrap: anywhere;">{{ break_reason(row.curiefense.attrs.block_reason) }}</pre>
+                              <div class="content overflow-anywhere">
+                                <label class="has-text-weight-bold has-text-danger-dark">
+                                  Risk details
+                                  <span class="has-text-family-uppercase"
+                                        v-if="row.curiefense.attrs.block_reason.initiator">
+                                    ({{ row.curiefense.attrs.block_reason.initiator }})
+                                  </span>
+                                </label>
+                                <br/>
+                                <pre class="is-size-7 is-family-code has-background-danger-light overflow-anywhere is-fullwidth">
+                                  {{ break_reason(row.curiefense.attrs.block_reason) }}
+                                </pre>
                               </div>
                             </article>
                           </div>
@@ -141,7 +145,7 @@
                             <div class="tile">
                               <div class="tile is-parent">
                                 <article class="tile is-child box">
-                                  <div class="content" style="overflow-wrap: anywhere;">
+                                  <div class="content overflow-anywhere">
                                     <section v-if="!isempty(row.curiefense.headers)">
                                       <label class="label">Headers<span
                                           class="is-pulled-right">{{ row.requestheadersbytes }} bytes</span></label>
@@ -458,6 +462,10 @@ section.tag2 {
   margin-bottom: 4px;
   vertical-align: middle;
   line-height: 1.5;
+}
+
+.data-entry-wrapper {
+  border-bottom: 1px solid lightgray;
 }
 
 </style>

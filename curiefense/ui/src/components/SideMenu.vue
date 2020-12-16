@@ -1,8 +1,8 @@
 <template>
 
-  <aside class="menu " style="position: fixed;">
+  <aside class="menu mt-3">
     <div v-for="(sectionItems, sectionTitle) in menuItems" :key="sectionTitle" class="menu-item">
-      <p class="menu-label" style="margin-top: 12px">
+      <p class="menu-label">
         {{ sectionTitle }}
       </p>
       <ul class="menu-list">

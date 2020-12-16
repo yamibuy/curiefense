@@ -1,3 +1,9 @@
+/* Imports */
+/* Note: only import what is needed */
+
+@import "node_modules/bulma/sass/utilities/_all.sass";
+@import "node_modules/bulma/sass/helpers/color.sass";
+
 /* Element width */
 
 .width-20px {
@@ -60,4 +66,33 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.overflow-anywhere {
+  overflow-wrap: anywhere;
+}
+
+/* Buttons */
+
+.add-button:hover {
+  @extend .has-text-dark;
+}
+
+.remove-button:hover {
+  @extend .has-text-danger;
+}
+
+/* Bulma enhancement */
+
+// Equivalent to 'has-text-light'
+$color-light: hsl(0, 0%, 96%);
+
+.columns-divided {
+  & > .column {
+    border-right: solid 2px $color-light;
+  }
+
+  & > .column:last-child {
+    border-right: 0;
+  }
 }

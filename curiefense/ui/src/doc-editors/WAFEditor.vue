@@ -21,10 +21,12 @@
           <div class="tile is-9">
             <table class="table is-fullwidth">
               <thead>
+              <tr>
                 <th></th>
                 <th class="has-text-centered">Headers</th>
                 <th class="has-text-centered">Cookies</th>
                 <th class="has-text-centered">Arguments</th>
+              </tr>
               </thead>
               <tbody>
                 <tr>
@@ -91,17 +93,22 @@
                         </th>
                       </thead>
                       <tbody>
-                        <tr v-if="newWAFLine === tab" style="background-color: hsl(48, 100%, 96%) ">
-                          <td style="padding: 0;">
-                            <table class="table is-fullwidth" style="background-color: hsl(48, 100%, 96%) ">
+                        <tr v-if="newWAFLine === tab"
+                            class="has-background-warning-light">
+                          <td class="px-0 py-0">
+                            <table class="table is-fullwidth has-background-warning-light">
                               <tr>
-                                <td style="width: 100px;">
+                                <td class="is-fullwidth">
                                   <div class="field">
                                     <div class="control ">
                                       <div class="select is-small">
                                         <select v-model="newEntry.type">
-                                          <option value="names">{{ dsutils.Titles.names }}</option>
-                                          <option value="regex">{{ dsutils.Titles.regex }}</option>
+                                          <option value="names">
+                                            {{ dsutils.Titles.names }}
+                                          </option>
+                                          <option value="regex">
+                                            {{ dsutils.Titles.regex }}
+                                          </option>
                                         </select>
                                       </div>
                                     </div>
@@ -111,7 +118,10 @@
                                   <div class="field">
                                     <div class="control">
                                       <div>
-                                        <input required class="input is-small" type="text" v-model="newEntry.key" :title="dsutils.Titles.names">
+                                        <input required class="input is-small"
+                                               type="text"
+                                               v-model="newEntry.key"
+                                               :title="dsutils.Titles.names">
                                       </div>
                                     </div>
                                   </div>
@@ -121,7 +131,10 @@
                           </td>
                           <td>
                               <p class="control has-icons-left">
-                                <input required class="input is-small" type="text" v-model="newEntry.reg" :title="dsutils.Titles.regex"/>
+                                <input required class="input is-small"
+                                       type="text"
+                                       v-model="newEntry.reg"
+                                       :title="dsutils.Titles.regex"/>
                                 <span class="icon is-small is-left has-text-grey">
                                   <i class="fas fa-code"></i>
                                 </span>
@@ -131,7 +144,7 @@
                           <td>
                             <serialized-input :placeholder="'comma separated sig IDs'" :value="newEntry.exclusions" :get-function="unpackExclusions" :set-function="packExclusions" @blur="newEntry.exclusions = $event"></serialized-input>
                           </td>
-                          <td class="has-text-centered  ">
+                          <td class="has-text-centered">
                             <button title="Add new parameter" class="button is-light is-small" @click="addNewParameter">
                               <span class="icon is-small"><i class="fas fa-plus fa-xs"></i></span>
                             </button>
@@ -158,7 +171,7 @@
                           </td>
                           <td><center><input type="checkbox" :checked="entry.restrict" /></center></td>
                           <td><serialized-input :placeholder="'comma separated sig IDs'" :value="entry.exclusions" :get-function="unpackExclusions" :set-function="packExclusions" @blur="entry.exclusions = $event"></serialized-input></td>
-                          <td class="has-text-centered  ">
+                          <td class="has-text-centered">
                             <button title="Delete entry"
                                 :data-curie="gen_row_key(tab, 'names', idx)"
                                 @click="deleteWAFRow"
@@ -192,7 +205,7 @@
                             <center><input type="checkbox" :checked="entry.restrict" /></center>
                           </td>
                           <td><serialized-input :placeholder="'comma separated sig IDs'" :value="entry.exclusions" :get-function="unpackExclusions" :set-function="packExclusions" @blur="entry.exclusions = $event"></serialized-input></td>
-                          <td class="has-text-centered  ">
+                          <td class="has-text-centered">
                             <button
                               :data-curie="gen_row_key(tab, 'regex', idx)"
                               @click="deleteWAFRow"
@@ -213,7 +226,7 @@
             </div>
           </div>
         </div>
-        <span class="is-family-monospace  has-text-grey-lighter">{{apiPath}}</span>
+        <span class="is-family-monospace has-text-grey-lighter">{{apiPath}}</span>
       </div>
     </div>
   </div>

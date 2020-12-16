@@ -1,7 +1,7 @@
 <template>
   <div class="limit-options">
     <div class="columns mb-0">
-      <div class="column has-text-right" v-if="label">
+      <div class="column is-2" v-if="label">
         <label class="is-small is-size-7 has-text-weight-bold">{{ label }}</label>
       </div>
       <div class="column">
@@ -39,14 +39,13 @@
           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
         </div>
       </div>
-      <div class="column is-narrow">
+      <div class="column is-narrow"
+           v-if="!!showRemove">
         <button
           :class="['button', 'is-light', 'is-small', 'remove-icon', 'is-small', removable ? 'has-text-grey' : 'has-text-grey-light', removable ? '' : 'is-disabled']"
           :disabled="!removable"
           title="click to remove"
-          @click="$emit('remove', index)"
-          v-if="!!showRemove"
-        >
+          @click="$emit('remove', index)">
           <span class="icon is-small"><i class="fas fa-trash fa-xs"></i></span>
         </button>
       </div>

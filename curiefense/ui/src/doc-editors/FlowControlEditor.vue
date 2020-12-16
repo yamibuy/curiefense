@@ -2,8 +2,8 @@
   <div class="card">
     <div class="card-content">
       <div class="content">
-        <div class="columns">
-          <div class="column is-5" style="border-right:solid 2px #f8f8f8; ">
+        <div class="columns columns-divided">
+          <div class="column is-5">
             <div class="field">
               <label class="label is-small">
                 Name
@@ -26,31 +26,35 @@
               </label>
             </div>
             <div class="field">
-              <label class="label is-small has-text-left form-label">TTL</label>
+              <label class="label is-small has-text-left form-label">
+                TTL
+              </label>
               <div class="control">
                 <input class="input is-small document-ttl" type="text" placeholder="New rate limit rule name"
                        v-model="selectedDoc.ttl">
               </div>
             </div>
             <div class="field">
-              <label class="label is-small has-text-left form-label">Count by</label>
+              <label class="label is-small has-text-left form-label">
+                Count by
+              </label>
               <div class="group-key">
-                <limit-option
-                    v-for="(option, idx) in selectedDoc.key"
-                    show-remove
-                    @remove="removeKey(idx)"
-                    @change="updateKeyOption"
-                    :removable="selectedDoc.key.length > 1"
-                    :index="idx"
-                    :option="generateOption(option)"
-                    :key="getOptionTextKey(option, idx)"/>
+                <limit-option v-for="(option, idx) in selectedDoc.key"
+                              show-remove
+                              @remove="removeKey(idx)"
+                              @change="updateKeyOption"
+                              :removable="selectedDoc.key.length > 1"
+                              :index="idx"
+                              :option="generateOption(option)"
+                              :key="getOptionTextKey(option, idx)"/>
                 <a title="Add new option rule"
                    class="is-text is-small is-size-7 ml-4 add-key-button"
                    @click="addKey()">
                   New entry
                 </a>
                 <br>
-                <p class="has-text-danger pl-3 mt-3 is-size-7 key-invalid" v-if="!keysAreValid">
+                <p class="has-text-danger pl-3 mt-3 is-size-7 key-invalid"
+                   v-if="!keysAreValid">
                   Count-by entries must be unique
                 </p>
               </div>
@@ -61,17 +65,26 @@
             <div class="field">
               <label class="label is-small">Notes</label>
               <div class="control">
-                <textarea class="is-small textarea document-notes" v-model="selectedDoc.notes" rows="2"></textarea>
+                <textarea class="is-small textarea document-notes"
+                          v-model="selectedDoc.notes"
+                          rows="2">
+                </textarea>
               </div>
             </div>
             <div class="columns">
-              <div class="column is-6 filter-column" v-for="filter in filters" :key="filter"
+              <div class="column is-6 filter-column"
+                   v-for="filter in filters"
+                   :key="filter"
                    :class="filter + '-filter-column'">
-                <p class="title is-7 is-uppercase">{{ titles[filter] }}</p>
-                <hr :style="barStyle[filter]"/>
+                <p class="title is-7 is-uppercase">
+                  {{ titles[filter] }}
+                </p>
+                <hr class="bar"
+                    :class="`bar-${filter}`"/>
                 <table class="table is-narrow is-fullwidth">
                   <tbody>
-                  <tr v-for="(tag, tagIndex) in selectedDoc[filter]" :key="tagIndex">
+                  <tr v-for="(tag, tagIndex) in selectedDoc[filter]"
+                      :key="tagIndex">
                     <td class="tag-cell"
                         :class=" duplicateTags[tag] ? 'has-text-danger' : '' ">
                       {{ tag }}
@@ -123,7 +136,8 @@
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small method-entry-input" v-model="sequenceItem.method"
+                          <input class="input is-small method-entry-input"
+                                 v-model="sequenceItem.method"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
@@ -139,7 +153,8 @@
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small uri-entry-input" v-model="sequenceItem.uri"
+                          <input class="input is-small uri-entry-input"
+                                 v-model="sequenceItem.uri"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
@@ -158,7 +173,8 @@
                       </td>
                       <td>
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small host-entry-input" v-model="sequenceItem.headers.host"
+                          <input class="input is-small host-entry-input"
+                                 v-model="sequenceItem.headers.host"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
@@ -190,11 +206,15 @@
                     </tr>
                     <tr v-if="newEntrySectionIndex !== sequenceIndex">
                       <td>
-                        <a class="is-size-7 light add add-entry-button" title="add new row"
-                           @click="setNewEntryIndex(sequenceIndex)"><i class="fas fa-plus"></i></a>
+                        <a class="is-size-7 has-text-grey-lighter add-button add-entry-button"
+                           title="add new row"
+                           @click="setNewEntryIndex(sequenceIndex)">
+                          <i class="fas fa-plus"></i></a>
                         &nbsp;&middot;&nbsp;
-                        <a class="is-size-7 light remove remove-section-button" title="remove entire section"
-                           @click="removeSequenceItem(sequenceIndex)"><i class="fas fa-trash"></i></a>
+                        <a class="is-size-7 has-text-grey-lighter remove-button remove-section-button"
+                           title="remove entire section"
+                           @click="removeSequenceItem(sequenceIndex)">
+                          <i class="fas fa-trash"></i></a>
                       </td>
                       <td colspan="4">
                       </td>
@@ -226,10 +246,12 @@
                         </div>
                       </td>
                       <td class="is-size-7 width-80px">
-                        <a class="is-size-7 x-has-text-grey grey add confirm-add-entry-button" title="add new row"
+                        <a class="is-size-7 has-text-grey add-button confirm-add-entry-button"
+                           title="add new row"
                            @click="addSequenceItemEntry(sequenceIndex)"><i class="fas fa-check"></i> Add</a>
                         <br/>
-                        <a class="is-size-7 x-has-text-grey grey remove" title="cancel add new row"
+                        <a class="is-size-7 has-text-grey remove-button"
+                           title="cancel add new row"
                            @click="setNewEntryIndex(-1)"><i class="fas fa-times"></i> Cancel</a>
                       </td>
                     </tr>
@@ -280,10 +302,6 @@ export default {
   data() {
     return {
       filters: ['include', 'exclude'],
-      barStyle: {
-        'include': 'background-color: hsl(141, 71%, 48%); margin: 1rem 0 0.5rem 0;',
-        'exclude': 'background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;',
-      },
       addNewTagColName: null,
       titles: DatasetsUtils.Titles,
       defaultSequenceItem: {
@@ -425,7 +443,7 @@ export default {
     addSequenceItemEntry(sequenceIndex) {
       const sequenceItem = this.localDoc.sequence[sequenceIndex]
       const newEntryName = this.newEntryItem.name.trim().toLowerCase()
-      const newEntryValue = this.newEntryItem.value.trim()
+      const newEntryValue = this.newEntryItem.value.trim().toLowerCase()
       if (newEntryName && newEntryValue && !Object.prototype.hasOwnProperty.call(sequenceItem[this.newEntryType], newEntryName)) {
         sequenceItem[this.newEntryType][newEntryName] = newEntryValue
       }
@@ -465,7 +483,22 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
+.bar {
+  margin: 1rem 0 0.5rem 0;
+}
+
+.bar-include {
+  @extend .has-background-success
+}
+
+.bar-exclude {
+  @extend .has-background-danger
+}
 
 .sequence-entries {
   margin-bottom: 0.75rem
@@ -503,24 +536,12 @@ export default {
   padding-right: 0
 }
 
-/deep/ .limit-actions {
+::v-deep .limit-actions {
   padding: 0
 }
 
-/deep/ .tag-input {
+::v-deep .tag-input {
   font-size: 0.58rem
-}
-
-.light {
-  color: hsl(0, 0%, 86%)
-}
-
-.add:hover {
-  color: hsl(0, 0%, 21%)
-}
-
-.remove:hover {
-  color: hsl(348, 100%, 61%)
 }
 
 </style>
