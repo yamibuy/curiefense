@@ -99,7 +99,6 @@ class TargetHelper():
         if path.startswith("/from-"):
             sourceip = path[6:path.index("/", 2)]
             headers['X-Forwarded-For'] = sourceip
-        print(headers)
         res = requests.request(method=method, url=self._base_url + path,
                                headers=headers, **kwargs)
         return res.status_code in [200, 404]
@@ -123,7 +122,6 @@ class UIHelper():
         }
         res = requests.post(self._base_url + "/logs/api/v1/exec/", json=data)
         for log in res.json():
-            print(log[0])
             if pattern in log[0]:
                 return True
         return False
@@ -497,10 +495,7 @@ class TestRateLimit:
 
 
 # --- Tag rules tests (formerly profiling lists) ---
-# XXX update tests to support "AND" relations when
-# https://github.com/curiefense/curiefense/issues/33 is done
-
-# XXX Add IP address / ASN / Country tests
+# XXX update tests to support "AND" relations
 
 TEST_TAGRULES = {
     "id": "e2e000000000",
@@ -511,14 +506,26 @@ TEST_TAGRULES = {
     "entries_relation": "OR",
     "active": True,
     "tags": ["e2e-test"],
-    "entries": [
-        ["cookies", ["e2e", "value"], "annotation"],
-        ["headers", ["e2e", "value"], "annotation"],
-        ["method", "(POST|PUT)", "annotation"],
-        ["path", "/e2e-tagrules-path/", "annotation"],
-        ["query", "e2e=value", "annotation"],
-        ["uri", "/e2e-tagrules-uri", "annotation"],
-    ],
+    "rule": {
+        "relation": "OR",
+        "sections": [
+            {
+                "relation": "OR",
+                "entries": [
+                    ["cookies", ["e2e", "value"], "annotation"],
+                    ["headers", ["e2e", "value"], "annotation"],
+                    ["method", "(POST|PUT)", "annotation"],
+                    ["path", "/e2e-tagrules-path/", "annotation"],
+                    ["query", "e2e=value", "annotation"],
+                    ["uri", "/e2e-tagrules-uri", "annotation"],
+                    ["ip", "0000:0000:0000:0000:0000:0000:0000:0001", "annotation"],
+                    ["ip", "199.0.0.1", "annotation"],
+                    ["country", "jp", "annotation"],
+                    ["asn", "13335", "annotation"],
+                ],
+            },
+        ],
+    },
 }
 
 
@@ -578,6 +585,24 @@ class TestTagRules:
             "/e2e-tagrules-uri") is not active
         assert target.is_reachable(
             "/e2e-tagrules-allowed-uri") is True
+
+    def test_ipv4(self, target, tagrules_config, active):
+        assert target.is_reachable("/from-199.0.0.1/") is not active
+        assert target.is_reachable("/from-199.0.0.2/") is True
+
+    def test_ipv6(self, target, tagrules_config, active):
+        assert target.is_reachable(
+            "/from-0000:0000:0000:0000:0000:0000:0000:0001/") is not active
+        assert target.is_reachable(
+            "/from-0000:0000:0000:0000:0000:0000:0000:0002/") is True
+
+    def test_country(self, target, tagrules_config, active):
+        # JP address (Softbank)
+        assert target.is_reachable("/from-126.0.0.0/") is not active
+
+    def test_asn(self, target, tagrules_config, active):
+        # ASN 13335
+        assert target.is_reachable("/from-1.1.1.1/") is not active
 
 
 # --- URL Maps tests ---
