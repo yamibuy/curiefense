@@ -35,32 +35,31 @@
               </div>
             </div>
             <div class="field">
-              <label class="label is-small has-text-left form-label">
-                Count by
-              </label>
-              <div class="group-key">
-                <limit-option v-for="(option, idx) in selectedDoc.key"
-                              show-remove
-                              @remove="removeKey(idx)"
-                              @change="updateKeyOption"
-                              :removable="selectedDoc.key.length > 1"
-                              :index="idx"
-                              :option="generateOption(option)"
-                              :key="getOptionTextKey(option, idx)"/>
-                <a title="Add new option rule"
-                   class="is-text is-small is-size-7 ml-4 add-key-button"
-                   @click="addKey()">
-                  New entry
-                </a>
-                <br>
-                <p class="has-text-danger pl-3 mt-3 is-size-7 key-invalid"
-                   v-if="!keysAreValid">
-                  Count-by entries must be unique
-                </p>
-              </div>
+              <limit-option v-for="(option, idx) in selectedDoc.key"
+                            label-separated-line
+                            wide-columns
+                            :label="idx === 0 ? 'Count by' : ''"
+                            show-remove
+                            @remove="removeKey(idx)"
+                            @change="updateKeyOption"
+                            :removable="selectedDoc.key.length > 1"
+                            :index="idx"
+                            :option="generateOption(option)"
+                            :key="getOptionTextKey(option, idx)"/>
+              <a title="Add new option rule"
+                 class="is-text is-small is-size-7 ml-3"
+                 @click="addKey()">
+                New entry
+              </a>
+              <p class="has-text-danger is-size-7 ml-3 mt-3"
+                 v-if="!keysAreValid">
+                Count-by entries must be unique
+              </p>
             </div>
             <div class="field">
-              <limit-action :action.sync="selectedDoc.action"/>
+              <limit-action :action.sync="selectedDoc.action"
+                            label-separated-line
+                            wide-columns/>
             </div>
             <div class="field">
               <label class="label is-small">Notes</label>
@@ -534,10 +533,6 @@ export default {
 
 .filter-column:last-of-type {
   padding-right: 0
-}
-
-::v-deep .limit-actions {
-  padding: 0
 }
 
 ::v-deep .tag-input {
