@@ -4,7 +4,7 @@
       <div class="media">
         <div class="media-content">
           <div class="columns">
-            <div class="column">
+            <div class="column is-4">
               <div class="field">
                 <label class="label is-small">
                   Name
@@ -18,9 +18,6 @@
                          v-model="selectedDoc.name"/>
                 </div>
               </div>
-            </div>
-            <div class="column"></div>
-            <div class="column">
             </div>
           </div>
         </div>

@@ -212,13 +212,13 @@ const NewDocEntryFactory = {
           "headers": {},
           "cookies": {},
           "args": {},
-          "attrs": {"tags": "whitelist"}
+          "attrs": {"tags": "allowlist"}
         },
         "include": {
           "headers": {},
           "cookies": {},
           "args": {},
-          "attrs": {"tags": "blacklist"}
+          "attrs": {"tags": "blocklist"}
         },
         "pairwith": {
           "self": "self"
