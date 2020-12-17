@@ -2,8 +2,8 @@
   <div class="card">
     <div class="card-content">
       <div class="content">
-        <div class="columns">
-          <div class="column is-5" style="border-right:solid 2px #f8f8f8; ">
+        <div class="columns columns-divided">
+          <div class="column is-5">
             <div class="field">
               <label class="label is-small">
                 Name
@@ -26,31 +26,35 @@
               </label>
             </div>
             <div class="field">
-              <label class="label is-small has-text-left form-label">TTL</label>
+              <label class="label is-small has-text-left form-label">
+                TTL
+              </label>
               <div class="control">
                 <input class="input is-small document-ttl" type="text" placeholder="New rate limit rule name"
                        v-model="selectedDoc.ttl">
               </div>
             </div>
             <div class="field">
-              <label class="label is-small has-text-left form-label">Count by</label>
+              <label class="label is-small has-text-left form-label">
+                Count by
+              </label>
               <div class="group-key">
-                <limit-option
-                    v-for="(option, idx) in selectedDoc.key"
-                    show-remove
-                    @remove="removeKey(idx)"
-                    @change="updateKeyOption"
-                    :removable="selectedDoc.key.length > 1"
-                    :index="idx"
-                    :option="generateOption(option)"
-                    :key="getOptionTextKey(option, idx)"/>
+                <limit-option v-for="(option, idx) in selectedDoc.key"
+                              show-remove
+                              @remove="removeKey(idx)"
+                              @change="updateKeyOption"
+                              :removable="selectedDoc.key.length > 1"
+                              :index="idx"
+                              :option="generateOption(option)"
+                              :key="getOptionTextKey(option, idx)"/>
                 <a title="Add new option rule"
                    class="is-text is-small is-size-7 ml-4 add-key-button"
                    @click="addKey()">
                   New entry
                 </a>
                 <br>
-                <p class="has-text-danger pl-3 mt-3 is-size-7 key-invalid" v-if="!keysAreValid">
+                <p class="has-text-danger pl-3 mt-3 is-size-7 key-invalid"
+                   v-if="!keysAreValid">
                   Count-by entries must be unique
                 </p>
               </div>
@@ -61,22 +65,31 @@
             <div class="field">
               <label class="label is-small">Notes</label>
               <div class="control">
-                <textarea class="is-small textarea document-notes" v-model="selectedDoc.notes" rows="2"></textarea>
+                <textarea class="is-small textarea document-notes"
+                          v-model="selectedDoc.notes"
+                          rows="2">
+                </textarea>
               </div>
             </div>
             <div class="columns">
-              <div class="column is-6 filter-column" v-for="filter in filters" :key="filter"
+              <div class="column is-6 filter-column"
+                   v-for="filter in filters"
+                   :key="filter"
                    :class="filter + '-filter-column'">
-                <p class="title is-7 is-uppercase">{{ titles[filter] }}</p>
-                <hr :style="barStyle[filter]"/>
+                <p class="title is-7 is-uppercase">
+                  {{ titles[filter] }}
+                </p>
+                <hr class="bar"
+                    :class="`bar-${filter}`"/>
                 <table class="table is-narrow is-fullwidth">
                   <tbody>
-                  <tr v-for="(tag, tagIndex) in selectedDoc[filter]" :key="tagIndex">
+                  <tr v-for="(tag, tagIndex) in selectedDoc[filter]"
+                      :key="tagIndex">
                     <td class="tag-cell"
                         :class=" duplicateTags[tag] ? 'has-text-danger' : '' ">
                       {{ tag }}
                     </td>
-                    <td class="is-size-7 is-18-px">
+                    <td class="is-size-7 width-20px">
                       <a title="remove entry"
                          class="is-small has-text-grey remove-filter-entry-button"
                          @click="removeTag(filter, tagIndex)">
@@ -95,9 +108,9 @@
                                               @tag-submitted="addNewTag(filter, $event)">
                       </tag-autocomplete-input>
                     </td>
-                    <td class="is-size-7 is-18-px">
+                    <td class="is-size-7 width-20px">
                       <a title="add new entry"
-                         class="is-size-7 is-18-px is-small has-text-grey add-new-filter-entry-button"
+                         class="is-size-7 width-20px is-small has-text-grey add-new-filter-entry-button"
                          @click="openTagInput(filter)">
                         +
                       </a>
@@ -117,70 +130,73 @@
                   <table class="table is-narrow is-size-7 sequence-entries-table">
                     <tbody>
                     <tr class="sequence-entry-row method-entry-row">
-                      <td class="is-size-7 is-48-px sequence-entries-relation"></td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="is-size-7 width-50px sequence-entries-relation"></td>
+                      <td class="width-80px is-vcentered">
                         Method
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small method-entry-input" v-model="sequenceItem.method"
+                          <input class="input is-small method-entry-input"
+                                 v-model="sequenceItem.method"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-80-px"></td>
+                      <td class="width-80px"></td>
                     </tr>
                     <tr class="sequence-entry-row uri-entry-row">
-                      <td class="is-size-7 is-48-px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
+                      <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="width-80px is-vcentered">
                         URI
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small uri-entry-input" v-model="sequenceItem.uri"
+                          <input class="input is-small uri-entry-input"
+                                 v-model="sequenceItem.uri"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-80-px"></td>
+                      <td class="width-80px"></td>
                     </tr>
                     <tr class="sequence-entry-row host-entry-row">
-                      <td class="is-size-7 is-48-px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
+                      <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="width-80px is-vcentered">
                         Header
                       </td>
-                      <td class="is-100-px is-vcentered">
+                      <td class="width-100px is-vcentered">
                         host
                       </td>
                       <td>
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small host-entry-input" v-model="sequenceItem.headers.host"
+                          <input class="input is-small host-entry-input"
+                                 v-model="sequenceItem.headers.host"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-80-px"></td>
+                      <td class="width-80px"></td>
                     </tr>
                     <tr v-for="(sequenceEntry, sequenceEntryIndex) in sequenceItemEntries(sequenceIndex)"
                         :key="sequenceEntryIndex"
                         class="sequence-entry-row">
-                      <td class="is-size-7 is-48-px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
+                      <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
-                      <td class="is-80-px is-vcentered">
+                      <td class="width-80px is-vcentered">
                         {{ listEntryTypes[sequenceEntry[0]].title }}
                       </td>
-                      <td class="is-100-px">
+                      <td class="width-100px">
                         {{ sequenceEntry[1][0] }}
                       </td>
                       <td>
                         {{ sequenceEntry[1][1] }}
                       </td>
-                      <td class="is-80-px">
+                      <td class="width-80px">
                         <a class="is-small has-text-grey remove-entry-button"
                            title="Remove sequence entry"
                            @click="removeSequenceItemEntry(sequenceIndex, sequenceEntry[0], sequenceEntry[1][0])">
@@ -190,11 +206,15 @@
                     </tr>
                     <tr v-if="newEntrySectionIndex !== sequenceIndex">
                       <td>
-                        <a class="is-size-7 light add add-entry-button" title="add new row"
-                           @click="setNewEntryIndex(sequenceIndex)"><i class="fas fa-plus"></i></a>
+                        <a class="is-size-7 has-text-grey-lighter add-button add-entry-button"
+                           title="add new row"
+                           @click="setNewEntryIndex(sequenceIndex)">
+                          <i class="fas fa-plus"></i></a>
                         &nbsp;&middot;&nbsp;
-                        <a class="is-size-7 light remove remove-section-button" title="remove entire section"
-                           @click="removeSequenceItem(sequenceIndex)"><i class="fas fa-trash"></i></a>
+                        <a class="is-size-7 has-text-grey-lighter remove-button remove-section-button"
+                           title="remove entire section"
+                           @click="removeSequenceItem(sequenceIndex)">
+                          <i class="fas fa-trash"></i></a>
                       </td>
                       <td colspan="4">
                       </td>
@@ -209,7 +229,7 @@
                           </select>
                         </div>
                       </td>
-                      <td class="is-size-7 is-100-px">
+                      <td class="is-size-7 width-100px">
                         <div class="control has-icons-left is-fullwidth new-entry-name">
                           <input class="input is-small new-entry-name-input"
                                  placeholder="Name"
@@ -225,11 +245,13 @@
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
-                      <td class="is-size-7 is-80-px">
-                        <a class="is-size-7 x-has-text-grey grey add confirm-add-entry-button" title="add new row"
+                      <td class="is-size-7 width-80px">
+                        <a class="is-size-7 has-text-grey add-button confirm-add-entry-button"
+                           title="add new row"
                            @click="addSequenceItemEntry(sequenceIndex)"><i class="fas fa-check"></i> Add</a>
                         <br/>
-                        <a class="is-size-7 x-has-text-grey grey remove" title="cancel add new row"
+                        <a class="is-size-7 has-text-grey remove-button"
+                           title="cancel add new row"
                            @click="setNewEntryIndex(-1)"><i class="fas fa-times"></i> Cancel</a>
                       </td>
                     </tr>
@@ -280,10 +302,6 @@ export default {
   data() {
     return {
       filters: ['include', 'exclude'],
-      barStyle: {
-        'include': 'background-color: hsl(141,  71%, 48%); margin: 1rem 0 0.5rem 0;',
-        'exclude': 'background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;',
-      },
       addNewTagColName: null,
       titles: DatasetsUtils.Titles,
       defaultSequenceItem: {
@@ -425,7 +443,7 @@ export default {
     addSequenceItemEntry(sequenceIndex) {
       const sequenceItem = this.localDoc.sequence[sequenceIndex]
       const newEntryName = this.newEntryItem.name.trim().toLowerCase()
-      const newEntryValue = this.newEntryItem.value.trim()
+      const newEntryValue = this.newEntryItem.value.trim().toLowerCase()
       if (newEntryName && newEntryValue && !Object.prototype.hasOwnProperty.call(sequenceItem[this.newEntryType], newEntryName)) {
         sequenceItem[this.newEntryType][newEntryName] = newEntryValue
       }
@@ -465,7 +483,22 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
+.bar {
+  margin: 1rem 0 0.5rem 0;
+}
+
+.bar-include {
+  @extend .has-background-success
+}
+
+.bar-exclude {
+  @extend .has-background-danger
+}
 
 .sequence-entries {
   margin-bottom: 0.75rem
@@ -503,48 +536,12 @@ export default {
   padding-right: 0
 }
 
-/deep/ .limit-actions {
+::v-deep .limit-actions {
   padding: 0
 }
 
-/deep/ .tag-input {
+::v-deep .tag-input {
   font-size: 0.58rem
-}
-
-.light {
-  color: hsl(0, 0%, 86%)
-}
-
-.add:hover {
-  color: hsl(0, 0%, 21%)
-}
-
-.remove:hover {
-  color: hsl(348, 100%, 61%)
-}
-
-.is-18-px {
-  min-width: 18px;
-  max-width: 18px;
-  width: 18px;
-}
-
-.is-48-px {
-  min-width: 40px;
-  max-width: 40px;
-  width: 48px;
-}
-
-.is-80-px {
-  min-width: 80px;
-  max-width: 80px;
-  width: 80px;
-}
-
-.is-100-px {
-  min-width: 100px;
-  max-width: 100px;
-  width: 100px;
 }
 
 </style>

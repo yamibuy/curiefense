@@ -1,10 +1,13 @@
 import FlowControlEditor from '@/doc-editors/FlowControlEditor'
-import {beforeEach, describe, expect, test} from '@jest/globals'
+import {beforeEach, describe, expect, test, jest} from '@jest/globals'
 import {mount} from '@vue/test-utils'
 import LimitOption from '@/components/LimitOption'
 import LimitAction from '@/components/LimitAction'
 import Vue from 'vue'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
+
+jest.mock('axios')
+import axios from 'axios'
 
 describe('FlowControlEditor.vue', () => {
     let docs
@@ -192,6 +195,27 @@ describe('FlowControlEditor.vue', () => {
     })
 
     describe('tags', () => {
+        beforeEach(() => {
+            const tagsData = {
+                data: {
+                    tags: [
+                        'united-states',
+                        'test-tag-1',
+                        'test-tag-2',
+                        'another-tag',
+                        'devops',
+                        'internal'
+                    ],
+                },
+            }
+            axios.get.mockImplementation((path) => {
+                if (path === `db/master/k/autocomplete/`) {
+                    return Promise.resolve(tagsData)
+                }
+                return Promise.resolve()
+            })
+        })
+
         test('should not have any warning in the tags table when there are no duplicate tags', () => {
             const tagsWithWarning = wrapper.findAll('.has-text-danger')
             expect(tagsWithWarning.length).toEqual(0)

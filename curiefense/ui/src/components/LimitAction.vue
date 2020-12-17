@@ -1,6 +1,6 @@
 <template>
   <div class="limit-actions">
-    <div class="columns is-gapless" style="margin-bottom: .75rem">
+    <div class="columns is-gapless mb-3">
       <div class="column is-3">
         <label class="label is-small has-text-left form-label">{{ title }}</label>
       </div>
@@ -48,7 +48,7 @@
             </div>
           </div>
           <div class="column is-12 additional" v-if="action && action.type === 'redirect'">
-            <p class="control is-fullwidth" style="margin-top: 3.5%">
+            <p class="control is-fullwidth mt-3">
               <input
                 class="input is-small"
                 type="text"
