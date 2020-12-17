@@ -228,13 +228,13 @@ describe('FlowControlEditor.vue', () => {
             newIncludeEntryButton.trigger('click')
             await Vue.nextTick()
             const firstTagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-            firstTagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+            firstTagAutocompleteInput.vm.$emit('tag-submitted', newTag)
             await Vue.nextTick()
             // add second
             newIncludeEntryButton.trigger('click')
             await Vue.nextTick()
             const secondTagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-            secondTagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+            secondTagAutocompleteInput.vm.$emit('tag-submitted', newTag)
             await Vue.nextTick()
             // check
             const tagsWithWarning = wrapper.findAll('.has-text-danger')
@@ -247,7 +247,7 @@ describe('FlowControlEditor.vue', () => {
             await Vue.nextTick()
             const newTag = 'test-tag'
             const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-            tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+            tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
             await Vue.nextTick()
             const includeFilterColumn = wrapper.find('.include-filter-column')
             const tagCells = includeFilterColumn.findAll('.tag-cell')
@@ -262,7 +262,7 @@ describe('FlowControlEditor.vue', () => {
             await Vue.nextTick()
             const newTag = 'test-tag'
             const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-            tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+            tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
             await Vue.nextTick()
             const excludeFilterColumn = wrapper.find('.exclude-filter-column')
             const tagCells = excludeFilterColumn.findAll('.tag-cell')
@@ -277,7 +277,7 @@ describe('FlowControlEditor.vue', () => {
             await Vue.nextTick()
             const newTag = 't'
             const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-            tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+            tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
             await Vue.nextTick()
             expect(wrapper.vm.selectedDoc.include.includes(newTag)).toBeFalsy()
         })
