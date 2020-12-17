@@ -1,8 +1,8 @@
 FROM docker.io/istio/proxyv2:1.5.10
 
 RUN apt-get update && \
-    apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python dumb-init gcc make unzip && \
-	rm -rf /var/lib/apt/lists/*
+    apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python dumb-init gcc g++ make unzip libhyperscan4 libhyperscan-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN luarocks install lrexlib-pcre2 && \
     luarocks install lua-cjson && \
@@ -12,7 +12,8 @@ RUN luarocks install lrexlib-pcre2 && \
     luarocks install redis-lua && \
     luarocks install compat53 && \
     luarocks install mmdblua && \
-    luarocks install luaipc
+    luarocks install luaipc && \
+    luarocks install lua-resty-injection
 
 # Overwrite stripped envoy with full symbol
 COPY curieproxy/envoy-1.13.4 /usr/local/bin/envoy

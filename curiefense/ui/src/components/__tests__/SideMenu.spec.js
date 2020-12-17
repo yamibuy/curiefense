@@ -17,7 +17,7 @@ describe('SideMenu.vue', () => {
     })
 
     test('should render all menu labels', () => {
-        const wantedMenuLabels = ['Configuration', 'Analytics', 'Git']
+        const wantedMenuLabels = ['Settings', 'Analytics', 'Git']
 
         const actualMenuLabels = wrapper.findAll('.menu-label')
         for (let i = 0; i < wantedMenuLabels.length; i++) {
@@ -38,12 +38,12 @@ describe('SideMenu.vue', () => {
 
     test('should render all Configuration menu items', () => {
         const wantedMenuItems = [
-            {path: '/config', title: 'Document Editor'},
-            {path: '/db', title: 'System Settings'},
-            {path: '/publish', title: 'Publish Configuration'}
+            {path: '/config', title: 'Policies & Rules'},
+            {path: '/db', title: 'System DB'},
+            {path: '/publish', title: 'Publish Changes'}
         ]
 
-        menuItemShouldContainWantedSectionItems('Configuration', wantedMenuItems)
+        menuItemShouldContainWantedSectionItems('Settings', wantedMenuItems)
     })
 
     test('should render all Analytics menu items', () => {

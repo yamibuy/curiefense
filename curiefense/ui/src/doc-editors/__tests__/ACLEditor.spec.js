@@ -74,7 +74,7 @@ describe('ACLEditor.vue', () => {
         })
         await Vue.nextTick()
         const tagCells = wrapper.findAll('.tag-cell')
-        const tagCellsCrossed = tagCells.filter((item) => item.element.style.textDecoration === 'line-through')
+        const tagCellsCrossed = tagCells.filter((item) => item.element.classList.contains('tag-crossed'))
         expect(tagCellsCrossed.length).toEqual(3)
     })
 
@@ -87,7 +87,7 @@ describe('ACLEditor.vue', () => {
         })
         await Vue.nextTick()
         const tagCells = wrapper.findAll('.tag-cell')
-        const tagCellsCrossed = tagCells.filter((item) => item.element.style.textDecoration === 'line-through')
+        const tagCellsCrossed = tagCells.filter((item) => item.element.classList.contains('tag-crossed'))
         expect(tagCellsCrossed.length).toEqual(0)
     })
 
@@ -100,7 +100,7 @@ describe('ACLEditor.vue', () => {
         })
         await Vue.nextTick()
         const tagCells = wrapper.findAll('.tag-cell')
-        const tagCellsCrossed = tagCells.filter((item) => item.element.style.textDecoration === 'line-through')
+        const tagCellsCrossed = tagCells.filter((item) => item.element.classList.contains('tag-crossed'))
         expect(tagCellsCrossed.length).toEqual(1)
     })
 
@@ -110,7 +110,7 @@ describe('ACLEditor.vue', () => {
         await Vue.nextTick()
         const newTag = 'test-tag'
         const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-        tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+        tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
         await Vue.nextTick()
         expect(wrapper.props('selectedDoc').bypass.includes(newTag)).toBeTruthy()
     })
@@ -121,7 +121,7 @@ describe('ACLEditor.vue', () => {
         await Vue.nextTick()
         const newTag = 't'
         const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-        tagAutocompleteInput.vm.$emit('tagSubmitted', newTag)
+        tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
         await Vue.nextTick()
         expect(wrapper.props('selectedDoc').bypass.includes(newTag)).toBeFalsy()
     })

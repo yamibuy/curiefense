@@ -5,7 +5,7 @@ local json_safe   = require "cjson.safe"
 local socket      = require "socket"
 local lfs         = require "lfs"
 local iptools     = require "iptools"
-
+local luahs       = require "luahs"
 local preplists   = require "lua.preplists"
 
 local gen_list_entries  = preplists.gen_list_entries
@@ -19,7 +19,10 @@ URLMap          = nil
 ACLProfiles     = nil
 WAFProfiles     = nil
 WAFSignatures   = nil
-WAFRustSignatures   = iptools.new_sig_set()
+-- WAFRustSignatures   = iptools.new_sig_set()
+-- hyperscan
+WAFHScanDB      = nil
+WAFHScanScratch = nil
 ProfilingLists  = nil
 LimitRules      = nil
 
@@ -194,6 +197,30 @@ function reload(handle)
     maybe_reload(handle)
 end
 
+
+function build_hs_db( signatures )
+
+    local expressions = {}
+    for id, sig  in pairs(signatures) do
+        table.insert(expressions, {
+            expression = sig.operand,
+            id = tonumber(sig.id),
+            flags = {
+                luahs.pattern_flags.HS_FLAG_CASELESS,
+                luahs.pattern_flags.HS_FLAG_MULTILINE,
+                luahs.pattern_flags.HS_FLAG_DOTALL,
+            }
+        })
+    end
+
+    WAFHScanDB = luahs.compile ({
+        expressions = expressions,
+        mode = luahs.compile_mode.HS_MODE_VECTORED
+    })
+
+    WAFHScanScratch = WAFHScanDB:makeScratch()
+end
+
 function maybe_reload(handle)
     -- handle:logDebug("MAYBE_RELOAD CONFIG ENTERED")
     local fname
@@ -208,24 +235,9 @@ function maybe_reload(handle)
         URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
 
         WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
-        WAFRustSignatures:clear()
 
-        for id, sig  in pairs(WAFSignatures) do
-            local operand = sig.operand
-            local err = test_regex(operand)
-            if not err then
-                -- handle:logDebug(string.format("adding to RustSig %s: (%s)", sig.id, sig.operand))
-                WAFRustSignatures:add(sig.operand, sig.id)
-            end
-        end
+        build_hs_db(WAFSignatures)
 
-        local reg_compile = WAFRustSignatures:compile()
-
-        -- if not reg_compile then
-        --     -- handle:logErr("Failed to compile WAF signatures!")
-        -- else
-        --     -- handle:logDebug("WAF signatures compiled successfully!")
-        -- end
 
     end
 

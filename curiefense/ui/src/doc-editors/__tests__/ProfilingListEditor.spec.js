@@ -1,5 +1,5 @@
 import ProfilingListEditor from '@/doc-editors/ProfilingListEditor'
-import {describe, test, expect} from '@jest/globals'
+import {describe, expect, test} from '@jest/globals'
 import {mount} from '@vue/test-utils'
 
 describe('ProfilingListEditor.vue', () => {
@@ -10,9 +10,14 @@ describe('ProfilingListEditor.vue', () => {
         'mdate': '2020-05-23T00:04:41',
         'notes': 'Tag API Requests',
         'active': true,
-        'entries_relation': 'OR',
         'tags': ['api'],
-        'entries': [['headers', ['content-type', '.*/(json|xml)'], 'content type'], ['headers', ['host', '.?ap[ip]\\.'], 'app or api in domain name'], ['method', '(POST|PUT|DELETE|PATCH)', 'Methods'], ['path', '/api/', 'api path'], ['uri', '/.+\\.json', 'URI JSON extention']]
+        'rule': {
+            'relation': 'OR',
+            'sections': [
+                {'relation': 'OR', 'entries': [['ip', '1.1.1.1', null]]},
+                {'relation': 'OR', 'entries': [['ip', '2.2.2.2', null]]},
+                {'relation': 'OR', 'entries': [['headers', ['headerrr', 'valueeee'], 'anooo']]}]
+        }
     }, {
         'id': '07656fbe',
         'name': 'devop internal demo',
@@ -20,9 +25,14 @@ describe('ProfilingListEditor.vue', () => {
         'mdate': '2020-05-23T00:04:41',
         'notes': 'this is my own list',
         'active': false,
-        'entries_relation': 'OR',
         'tags': ['internal', 'devops'],
-        'entries': [['ip', '12.34.56.78/32', 'testers'], ['ip', '98.76.54.0/24', 'monitoring'], ['ip', '!5.4.3.2/32', 'old monitoring'], ['path', '/test/app/status', 'monitoring path']]
+        'rule': {
+            'relation': 'OR',
+            'sections': [
+                {'relation': 'OR', 'entries': [['ip', '1.1.1.1', null]]},
+                {'relation': 'OR', 'entries': [['ip', '2.2.2.2', null]]},
+                {'relation': 'OR', 'entries': [['headers', ['headerrr', 'valueeee'], 'anooo']]}]
+        }
     }]
 
     test('should exist - STUB', () => {

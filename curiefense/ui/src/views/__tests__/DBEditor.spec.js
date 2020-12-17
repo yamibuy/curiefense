@@ -116,7 +116,7 @@ describe('DBEditor.vue', () => {
         axios.put.mockImplementation(() => Promise.resolve())
         putSpy = jest.spyOn(axios, 'put')
         const gitHistory = wrapper.findComponent(GitHistory)
-        gitHistory.vm.$emit('restoreVersion', wantedVersion)
+        gitHistory.vm.$emit('restore-version', wantedVersion)
         await Vue.nextTick()
         expect(putSpy).toHaveBeenCalledWith(`/conf/api/v1/db/system/v/${wantedVersion.version}/revert/`)
     })

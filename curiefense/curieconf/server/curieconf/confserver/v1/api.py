@@ -130,12 +130,12 @@ m_tagrule = api.model("Tag Rule", {
     "mdate": fields.String(required=True),
     "notes": fields.String(required=True),
     "active": fields.Boolean(required=True),
-    "entries_relation": fields.String(required=True),
     "tags": fields.List(fields.String()),
     "rule": AnyType(),
 })
 
-# Flow control
+
+# Flow Control
 
 m_flowcontrol = api.model("Flow Control", {
     "id": fields.String(required=True),
@@ -146,8 +146,9 @@ m_flowcontrol = api.model("Flow Control", {
     "action": fields.Raw(required=True),
     "include": fields.List(fields.String()),
     "exclude": fields.List(fields.String()),
+    "notes": fields.String(required=True),
+    "active": fields.Boolean(required=True),
 })
-
 
 
 ### mapping from doc name to model
@@ -159,6 +160,7 @@ models = {
     "wafpolicies": m_wafpolicy,
     "aclpolicies": m_aclpolicy,
     "tagrules": m_tagrule,
+    "flowcontrol": m_flowcontrol,
 }
 
 ### Other models
@@ -257,6 +259,9 @@ with open(waf_policy_file_path) as json_file:
 tagrules_file_path = (base_path / "../json/tag-rules.schema").resolve()
 with open(tagrules_file_path) as json_file:
     tagrules_schema = json.load(json_file)
+flowcontrol_file_path = (base_path / "../json/flow-control.schema").resolve()
+with open(flowcontrol_file_path) as json_file:
+    flowcontrol_schema = json.load(json_file)
 
 schema_type_map = {
     "ratelimits": ratelimits_schema,
@@ -264,6 +269,7 @@ schema_type_map = {
     "wafpolicies": waf_policy_schema,
     "aclpolicies": acl_policy_schema,
     "tagrules": tagrules_schema,
+    "flowcontrol": flowcontrol_schema,
 }
 
 
@@ -497,16 +503,13 @@ class EntryResource(Resource):
         "Update an entry in a document"
         if document not in models:
             abort(404, "document does not exist")
-        ## a bug is preventing us from releasing.
-        ## SKIPPING VALIDATION FOR NOW
-        ## LET FIX IT
-        # ~~ isValid = validateJson(request.json, document)
-        # ~~ if isValid:
-        data = marshal(request.json, models[document], skip_none=True)
-        res = current_app.backend.entries_update(config, document, entry, data)
-        return res
-        # ~~ else:
-        # ~~     abort(500, 'schema mismatched')
+        isValid = validateJson(request.json, document)
+        if isValid:
+            data = marshal(request.json, models[document], skip_none=True)
+            res = current_app.backend.entries_update(config, document, entry, data)
+            return res
+        else:
+            abort(500, 'schema mismatched')
     def delete(self, config, document, entry):
         "Delete an entry from a document"
         if document not in models:

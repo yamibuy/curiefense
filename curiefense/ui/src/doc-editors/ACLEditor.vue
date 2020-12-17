@@ -4,20 +4,20 @@
       <div class="media">
         <div class="media-content">
           <div class="columns">
-            <div class="column">
-              <div class="field is-grouped">
-                <input class="input is-small is-fullwidth document-name"
-                       type="text"
-                       placeholder="Document name"
-                       v-model="selectedDoc.name">
+            <div class="column is-4">
+              <div class="field">
+                <label class="label is-small">
+                  Name
+                  <span class="has-text-grey is-pulled-right document-id" title="Document id">
+                    {{ selectedDoc.id }}
+                  </span>
+                </label>
+                <div class="control">
+                  <input class="input is-small document-name"
+                         placeholder="Document name"
+                         v-model="selectedDoc.name"/>
+                </div>
               </div>
-              <p class="subtitle is-6 has-text-grey document-id"
-                 title="Document ID">
-                {{ selectedDoc.id }}
-              </p>
-            </div>
-            <div class="column"></div>
-            <div class="column">
             </div>
           </div>
         </div>
@@ -27,18 +27,17 @@
         <hr/>
         <div class="columns">
           <div class="column is-2" v-for="operation in operations" :key="operation">
-            <p class="title is-7 is-uppercase x-has-text-centered">{{ titles[operation] }}</p>
-            <hr :style="barStyle[operation]"/>
+            <p class="title is-7 is-uppercase">{{ titles[operation] }}</p>
+            <hr class="bar" :class="`bar-${operationClassName(operation)}`"/>
             <table class="table is-narrow is-fullwidth">
               <tbody>
               <tr v-for="(tag, idx) in selectedDoc[operation]" :key="idx">
                 <td class="tag-cell"
-                    :class=" duplicateTags[tag] ? 'has-text-danger' : '' "
-                    :style=" allPrior(operation) ? 'text-decoration: line-through; color: lightgray' : '' "
-                    :title=" allPrior(operation) ? '[all] is set in a higher priorirty section' : '' ">
+                    :class=" { 'has-text-danger': duplicateTags[tag], 'tag-crossed': allPrior(operation) }"
+                    :title=" allPrior(operation) ? '[all] is set in a higher priority section' : '' ">
                   {{ tag }}
                 </td>
-                <td class="is-size-7 is-18-px">
+                <td class="is-size-7 width-20px">
                   <a title="remove entry"
                      class="is-small has-text-grey remove-entry-button"
                      @click="removeTag(operation, idx)">
@@ -50,16 +49,16 @@
                 <td>
                   <tag-autocomplete-input v-if="addNewColName === operation"
                                           ref="tagAutocompleteInput"
-                                          :clearInputAfterSelection="true"
-                                          :selectionType="'single'"
-                                          :autoFocus="true"
+                                          :clear-input-after-selection="true"
+                                          :selection-type="'single'"
+                                          :auto-focus="true"
                                           @keydown.esc="cancelAddNewTag"
-                                          @tagSubmitted="addNewEntry(operation, $event)">
+                                          @tag-submitted="addNewEntry(operation, $event)">
                   </tag-autocomplete-input>
                 </td>
-                <td class="is-size-7 is-18-px">
+                <td class="is-size-7 width-20px">
                   <a title="add new entry"
-                     class="is-size-7 is-18-px is-small has-text-grey add-new-entry-button"
+                     class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
                      @click="openTagInput(operation)">
                     +
                   </a>
@@ -94,15 +93,7 @@ export default {
 
   data() {
     return {
-      operations: ["force_deny", "bypass", "allow_bot", "deny_bot", "allow", "deny"],
-      barStyle: {
-        "force_deny": "background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;",
-        "deny_bot": "background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;",
-        "deny": "background-color: hsl(348, 100%, 61%); margin: 1rem 0 0.5rem 0;",
-        "bypass": "background-color: hsl(141,  71%, 48%); margin: 1rem 0 0.5rem 0;",
-        "allow": "background-color: hsl(204,  86%, 53%); margin: 1rem 0 0.5rem 0;",
-        "allow_bot": "background-color: hsl(204,  86%, 53%); margin: 1rem 0 0.5rem 0;"
-      },
+      operations: ['force_deny', 'bypass', 'allow_bot', 'deny_bot', 'allow', 'deny'],
       titles: DatasetsUtils.Titles,
       addNewColName: null
     }
@@ -110,38 +101,38 @@ export default {
   computed: {
 
     duplicateTags() {
-      let doc = this.selectedDoc;
-      let allTags = this.ld.concat(doc["force_deny"], doc["bypass"], doc["allow_bot"], doc["deny_bot"], doc["allow"], doc["deny"]);
-      let dupTags = this.ld.filter(allTags, (val, i, iteratee) => this.ld.includes(iteratee, val, i + 1));
+      let doc = this.selectedDoc
+      let allTags = this.ld.concat(doc['force_deny'], doc['bypass'], doc['allow_bot'], doc['deny_bot'], doc['allow'], doc['deny'])
+      let dupTags = this.ld.filter(allTags, (val, i, iteratee) => this.ld.includes(iteratee, val, i + 1))
       return this.ld.fromPairs(this.ld.zip(dupTags, dupTags))
     },
-
 
   },
   methods: {
     // returns true if tag "all" is set in a higher priority section
     allPrior(self) {
       // top priority, skip
-      if (self === "force_deny") {
+      if (self === 'force_deny') {
         return false
       }
 
       let selfIdx = this.ld.indexOf(this.operations, self),
           doc = this.selectedDoc,
-          operations = this.operations;
+          operations = this.operations
 
       for (let idx = 0; idx < selfIdx; idx++) {
-        if (this.ld.indexOf(doc[operations[idx]], "all") > -1) {
+        if (this.ld.indexOf(doc[operations[idx]], 'all') > -1) {
           if (idx === 3)
             return false
           if (idx === 2)
-            return selfIdx === 3;
-          return true;
+            return selfIdx === 3
+          return true
         }
       }
     },
 
     addNewEntry(section, entry) {
+      entry = entry.trim()
       if (entry && entry.length > 2) {
         this.selectedDoc[section].push(entry)
         this.$emit('update:selectedDoc', this.selectedDoc)
@@ -160,7 +151,11 @@ export default {
       this.selectedDoc[section].splice(idx, 1)
       this.addNewColName = null
       this.$emit('update:selectedDoc', this.selectedDoc)
-    }
+    },
+
+    operationClassName(operation) {
+      return operation && operation.replace('_', '-')
+    },
 
   },
 
@@ -169,14 +164,45 @@ export default {
 
 </script>
 
-<style scoped>
-.is-18-px {
-  min-width: 18px;
-  max-width: 18px;
-  width: 18px;
+<style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
+.bar {
+  margin: 1rem 0 0.5rem 0;
 }
 
-/deep/ .tag-input {
+.bar-force-deny {
+  @extend .has-background-danger
+}
+
+.bar-deny-bot {
+  @extend .has-background-danger
+}
+
+.bar-deny {
+  @extend .has-background-danger
+}
+
+.bar-bypass {
+  @extend .has-background-success
+}
+
+.bar-allow {
+  @extend .has-background-info
+}
+
+.bar-allow-bot {
+  @extend .has-background-info
+}
+
+.tag-crossed {
+  @extend .has-text-grey-lighter;
+  text-decoration: line-through;
+}
+
+::v-deep .tag-input {
   font-size: 0.58rem
 }
 </style>

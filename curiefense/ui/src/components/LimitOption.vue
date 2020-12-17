@@ -1,29 +1,34 @@
 <template>
   <div class="limit-options">
-    <div class="columns mb-0">
-      <div class="column has-text-right" v-if="label">
-        <label class="is-small is-size-7 has-text-weight-bold">{{ label }}</label>
+    <label v-if="labelSeparatedLine && label"
+           class="label is-small is-size-7 has-text-left">
+      {{ label }}
+    </label>
+    <div class="columns mb-0"
+         :class="{'wide-columns': wideColumns}">
+      <div v-if="!labelSeparatedLine && label"
+           class="column is-2">
+        <label class="label is-small is-size-7">
+          {{ label }}
+        </label>
       </div>
       <div class="column">
         <div class="control select is-small is-fullwidth">
           <select v-model="selectedType">
             <option v-if="useDefaultSelf" value="self">HTTP request</option>
-            <option v-for="(value, id) in options" :selected="value === selectedType" :value="id" :key="id">{{ value }}</option>
+            <option v-for="(value, id) in options" :selected="value === selectedType" :value="id" :key="id">{{
+                value
+              }}
+            </option>
           </select>
         </div>
       </div>
       <div class="column" v-if="selectedType !== 'self'">
-        <div v-if="selectedType === 'headers'" :class="{control: true, 'is-fullwidth': true, 'has-icons-left': !useValue}">
+        <div v-if="isCategoryArgsCookiesHeaders(selectedType)"
+             :class="{control: true, 'is-fullwidth': true}"
+             class="has-icons-left">
           <input type="text" v-model="selectedKey" class="input is-small">
-          <span v-if="!useValue" class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
-        </div>
-        <div v-if="selectedType === 'cookies'" :class="{control: true, 'is-fullwidth': true, 'has-icons-left': !useValue}">
-          <input type="text" v-model="selectedKey" class="input is-small">
-          <span v-if="!useValue" class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
-        </div>
-        <div v-if="selectedType === 'args'" :class="{control: true, 'is-fullwidth': true, 'has-icons-left': !useValue}">
-          <input type="text" v-model="selectedKey" class="input is-small">
-          <span v-if="!useValue" class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
+          <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
         </div>
         <div class="control select is-small is-fullwidth" v-if="selectedType === 'attrs'">
           <div class="select is-fullwidth">
@@ -39,14 +44,13 @@
           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
         </div>
       </div>
-      <div class="column is-1">
+      <div class="column is-narrow"
+           v-if="!!showRemove">
         <button
-          :class="['button', 'is-light', 'is-small', 'remove-icon', 'is-small', removable ? 'has-text-grey' : 'has-text-grey-light', removable ? '' : 'is-disabled']"
-          :disabled="!removable"
-          title="click to remove"
-          @click="$emit('remove', index)"
-          v-if="!!showRemove"
-        >
+            :class="['button', 'is-light', 'is-small', 'remove-icon', 'is-small', removable ? 'has-text-grey' : 'has-text-grey-light', removable ? '' : 'is-disabled']"
+            :disabled="!removable"
+            title="click to remove"
+            @click="$emit('remove', index)">
           <span class="icon is-small"><i class="fas fa-trash fa-xs"></i></span>
         </button>
       </div>
@@ -58,7 +62,7 @@
 import DatasetsUtils from '@/assets/DatasetsUtils'
 
 export default {
-  name: "LimitOption",
+  name: 'LimitOption',
   props: {
     label: String,
     option: Object,
@@ -67,10 +71,12 @@ export default {
     showRemove: Boolean,
     useDefaultSelf: Boolean,
     useValue: Boolean,
+    labelSeparatedLine: Boolean,
+    wideColumns: Boolean,
     disabledOptions: Array
   },
   data() {
-    const { LimitRulesTypes, LimitAttributes } = DatasetsUtils
+    const {LimitRulesTypes, LimitAttributes} = DatasetsUtils
     const optionsData = {
       self: {
         type: 'self',
@@ -78,8 +84,8 @@ export default {
       }
     }
     Object.keys(LimitRulesTypes).forEach(ruleType => {
-      const { type, key = '', value } = this.option || {}
-      optionsData[ruleType] = { type, key, value }
+      const {type, key = '', value} = this.option || {}
+      optionsData[ruleType] = {type, key, value}
     })
     return {
       optionsData,
@@ -125,7 +131,23 @@ export default {
     }
   },
   updated() {
-    this.$emit('change', { ...this.selectedOption }, this.index)
+    this.$emit('change', {...this.selectedOption}, this.index)
+  },
+  methods: {
+    isCategoryArgsCookiesHeaders(category) {
+      return (new RegExp('(args|cookies|headers)')).test(category)
+    },
   }
 }
 </script>
+<style scoped lang="scss">
+.wide-columns {
+  & .column:first-child {
+    padding-left: 0
+  }
+
+  & .column:last-child {
+    padding-right: 0
+  }
+}
+</style>

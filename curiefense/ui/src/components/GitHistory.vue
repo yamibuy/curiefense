@@ -59,7 +59,7 @@
             </tr>
             </tbody>
           </table>
-          <span class="is-family-monospace  has-text-grey-lighter">{{ apiPath }}</span>
+          <span class="is-family-monospace has-text-grey-lighter">{{ apiPath }}</span>
         </div>
       </div>
     </div>
@@ -97,7 +97,7 @@ export default {
 
   methods: {
     restoreVersion(commit) {
-      this.$emit('restoreVersion', commit)
+      this.$emit('restore-version', commit)
     },
 
     mouseLeave() {

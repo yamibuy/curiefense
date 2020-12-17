@@ -2,8 +2,8 @@
   <div class="card">
     <div class="card-content">
       <div class="content">
-        <div class="columns">
-          <div class="column is-3" style="border-right:solid 2px #f8f8f8; ">
+        <div class="columns columns-divided">
+          <div class="column is-3">
             <div class="field">
               <label class="label is-small">Name
                   <span class="has-text-grey is-pulled-right" title="Rule Id">{{ selectedDoc.id }}</span>
@@ -46,9 +46,9 @@
             <div class="field">
               <label class="label is-small">Tags</label>
               <div class="control">
-                <tag-autocomplete-input :initialTag="selectedDocTags"
-                                        :selectionType="'multiple'"
-                                        @tagChanged="selectedDocTags = $event">
+                <tag-autocomplete-input :initial-tag="selectedDocTags"
+                                        :selection-type="'multiple'"
+                                        @tag-changed="selectedDocTags = $event">
                 </tag-autocomplete-input>
               </div>
             </div>
@@ -73,7 +73,7 @@
                           :readonly="readonly"></textarea>
               </div>
             </div>
-            <div style="padding-top:3rem">
+            <div class="pt-6">
               <div class="field">
                 <div class="control is-expanded">
                   <button class="button is-small has-text-danger-dark"
@@ -246,7 +246,6 @@ export default {
                 "relation": "OR"
               }
 
-              this.convertOldEntriesToNewEntries()
               this.selectedDoc.mdate = (new Date).toISOString()
             }
 
@@ -257,30 +256,7 @@ export default {
       this.localDoc.rule = rule
       this.emitDocUpdate()
     },
-
-    convertOldEntriesToNewEntries() {
-      // TODO - Temporary casting as we are changing the structure of profiling lists object
-      if (!this.localDoc?.rule) {
-        this.localDoc.rule = {
-          relation: 'AND',
-          sections: [{
-            relation: this.localDoc?.entries_relation || 'OR',
-            entries: this.localDoc?.entries || []
-          }]
-        }
-      }
-    },
-  },
-
-  watch: {
-    selectedDoc: {
-      handler: function () {
-        this.convertOldEntriesToNewEntries()
-      },
-      immediate: true,
-      deep: true
-    }
-  },
+  }
 
 }
 </script>
