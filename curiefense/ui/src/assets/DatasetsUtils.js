@@ -66,7 +66,7 @@ const Titles = {
   "aclpolicies": "ACL Policies",
   "ratelimits": "Rate Limits",
   "urlmaps": "URL Maps",
-  "wafprolicies": "WAF Policies",
+  "wafpolicies": "WAF Policies",
   "wafrules": "WAF Signatures",
   "tagrules": "Tag Rules",
   "flowcontrol": "Flow Control",
