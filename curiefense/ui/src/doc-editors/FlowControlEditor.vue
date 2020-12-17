@@ -47,11 +47,11 @@
                             :option="generateOption(option)"
                             :key="getOptionTextKey(option, idx)"/>
               <a title="Add new option rule"
-                 class="is-text is-small is-size-7 ml-3"
+                 class="is-text is-small is-size-7 ml-3 add-key-button"
                  @click="addKey()">
                 New entry
               </a>
-              <p class="has-text-danger is-size-7 ml-3 mt-3"
+              <p class="has-text-danger is-size-7 ml-3 mt-3 key-invalid"
                  v-if="!keysAreValid">
                 Count-by entries must be unique
               </p>
