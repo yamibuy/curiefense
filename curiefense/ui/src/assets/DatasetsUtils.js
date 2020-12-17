@@ -116,7 +116,7 @@ function UUID2() { return UUID().split("-")[4] }
 
 const NewDocEntryFactory = {
     aclpolicies() {
-        return  {
+        return {
           "id": UUID2(),
           "name": "NEW ACL",
 
@@ -212,13 +212,13 @@ const NewDocEntryFactory = {
           "headers": {},
           "cookies": {},
           "args": {},
-          "attrs": {"tags": "whitelist"}
+          "attrs": {"tags": "allowlist"}
         },
         "include": {
           "headers": {},
           "cookies": {},
           "args": {},
-          "attrs": {"tags": "blacklist"}
+          "attrs": {"tags": "blocklist"}
         },
         "pairwith": {
           "self": "self"
@@ -227,7 +227,7 @@ const NewDocEntryFactory = {
     },
 
     flowcontrol() {
-        return  {
+        return {
             "id": UUID2(),
             "name": "New Flow Control",
             "ttl": 60,
@@ -258,7 +258,7 @@ const LogsAPIVersion = "v1"
 const ACCESSLOG_COLUMNS_NAMES="rowid,ProtocolVersion,SampleRate,DownstreamRemoteAddress,DownstreamRemoteAddressPort,DownstreamLocalAddress,DownstreamLocalAddressPort,StartTime,TimeToLastRxByte,TimeToFirstUpstreamTxByte,TimeToLastUpstreamTxByte,TimeToFirstUpstreamRxByte,TimeToLastUpstreamRxByte,TimeToFirstDownstreamTxByte,TimeToLastDownstreamTxByte,UpstreamRemoteAddress,UpstreamRemoteAddressPort,UpstreamLocalAddress,UpstreamLocalAddressPort,UpstreamCluster,FailedLocalHealthcheck,NoHealthyUpstream,UpstreamRequestTimeout,LocalReset,UpstreamRemoteReset,UpstreamConnectionFailure,UpstreamConnectionTermination,UpstreamOverflow,NoRouteFound,DelayInjected,FaultInjected,RateLimited,UnauthorizedDetails,RateLimitServiceError,DownstreamConnectionTermination,UpstreamRetryLimitExceeded,StreamIdleTimeout,InvalidEnvoyRequestHeaders,DownstreamProtocolError,Curiefense,UpstreamTransportFailureReason,RouteName,DownstreamDirectRemoteAddress,DownstreamDirectRemoteAddressPort,TlsVersion,TlsCipherSuite,TlsSniHostname,LocalCertificateProperties,LocalCertificatePropertiesAltNames,PeerCertificateProperties,PeerCertificatePropertiesAltNames,TlsSessionId,RequestMethod,Scheme,Authority,Port,Path,UserAgent,Referer,ForwardedFor,RequestId,OriginalPath,RequestHeadersBytes,RequestBodyBytes,RequestHeaders,ResponseCode,ResponseHeadersBytes,ResponseBodyBytes,ResponseHeaders,ResponseTrailers,ResponseCodeDetails"
 
 
-const ACCESSLOG_SQL = `SELECT * FROM (SELECT *, CAST(row_to_json(row) as text) as json_row  FROM logs row) rows`;
+const ACCESSLOG_SQL = `SELECT * FROM (SELECT *, CAST(row_to_json(row) as text) as json_row FROM logs row) rows`;
 const ACCESSLOG_SQL_SUFFIX = " ORDER BY StartTime DESC LIMIT 2048"
 const ACCESSLOG_COLUMNS = ACCESSLOG_COLUMNS_NAMES.split(",")
 

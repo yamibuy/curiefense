@@ -2,8 +2,8 @@
   <div class="card">
     <div class="card-content">
       <div class="content">
-        <div class="columns">
-          <div class="column is-3" style="border-right:solid 2px #f8f8f8; ">
+        <div class="columns columns-divided">
+          <div class="column is-3">
             <div class="field">
               <label class="label is-small">Name
                   <span class="has-text-grey is-pulled-right" title="Rule Id">{{ selectedDoc.id }}</span>
@@ -73,7 +73,7 @@
                           :readonly="readonly"></textarea>
               </div>
             </div>
-            <div style="padding-top:3rem">
+            <div class="pt-6">
               <div class="field">
                 <div class="control is-expanded">
                   <button class="button is-small has-text-danger-dark"
