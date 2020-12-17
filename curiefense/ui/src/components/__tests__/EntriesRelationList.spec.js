@@ -415,6 +415,23 @@ describe('EntriesRelationList.vue', () => {
             expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['ip', '1.2.3.4', 'annotation'])
         })
 
+        test('should add new entry from input with general annotation when confirm button is clicked', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            const newEntryRow = component.find('.new-entry-row')
+            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
+            newEntryTextarea.setValue('1.2.3.4')
+            const newEntryAnnotation = newEntryRow.find('.new-entry-value-annotation-input')
+            newEntryAnnotation.setValue('annot')
+            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(3)
+            expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['ip', '1.2.3.4', 'annot'])
+        })
+
         test('should add multiple new entries from input when confirm button is clicked', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
@@ -431,7 +448,25 @@ describe('EntriesRelationList.vue', () => {
             expect(wrapper.vm.rule.sections[0].entries[3]).toEqual(['ip', '127.0.0.1', 'localhost'])
         })
 
-        test('should add new entries from multi-line input when confirm button is clicked', async () => {
+        test('should add multiple new entries with general annotation from input when confirm button is clicked', async () => {
+            const component = wrapper.findComponent(EntriesRelationList)
+            const addEntryButton = component.find('.add-entry-button')
+            addEntryButton.trigger('click')
+            await Vue.nextTick()
+            const newEntryRow = component.find('.new-entry-row')
+            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
+            newEntryTextarea.setValue('1.2.3.4\n127.0.0.1#localhost')
+            const newEntryAnnotation = newEntryRow.find('.new-entry-value-annotation-input')
+            newEntryAnnotation.setValue('annot')
+            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
+            confirmAddEntryButton.trigger('click')
+            await Vue.nextTick()
+            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(4)
+            expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['ip', '1.2.3.4', 'annot'])
+            expect(wrapper.vm.rule.sections[0].entries[3]).toEqual(['ip', '127.0.0.1', 'localhost'])
+        })
+
+        test('should add new entries from name-value input when confirm button is clicked', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
@@ -443,16 +478,18 @@ describe('EntriesRelationList.vue', () => {
             options.at(7).element.selected = true
             typeSelection.trigger('change')
             await Vue.nextTick()
-            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
-            newEntryTextarea.setValue('something\nright\nhere')
+            const newEntryInputName = newEntryRow.find('.new-entry-name-input')
+            newEntryInputName.setValue('something')
+            const newEntryInputValue = newEntryRow.find('.new-entry-value-annotation-input')
+            newEntryInputValue.setValue('right')
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()
             expect(wrapper.vm.rule.sections[0].entries.length).toEqual(3)
-            expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['headers', ['something', 'right'], 'here'])
+            expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['headers', ['something', 'right']])
         })
 
-        test('should trim and add new entries from multi-line input when confirm button is clicked if has too many lines', async () => {
+        test('should not add new entries from multi-line input when confirm button is clicked if has too few arguments', async () => {
             const component = wrapper.findComponent(EntriesRelationList)
             const addEntryButton = component.find('.add-entry-button')
             addEntryButton.trigger('click')
@@ -464,29 +501,10 @@ describe('EntriesRelationList.vue', () => {
             options.at(7).element.selected = true
             typeSelection.trigger('change')
             await Vue.nextTick()
-            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
-            newEntryTextarea.setValue('something\n11\n22\n33\n44\n55\n66')
-            const confirmAddEntryButton = component.find('.confirm-add-entry-button')
-            confirmAddEntryButton.trigger('click')
-            await Vue.nextTick()
-            expect(wrapper.vm.rule.sections[0].entries.length).toEqual(3)
-            expect(wrapper.vm.rule.sections[0].entries[2]).toEqual(['headers', ['something', '11'], '22'])
-        })
-
-        test('should not add new entries from multi-line input when confirm button is clicked if has too few lines', async () => {
-            const component = wrapper.findComponent(EntriesRelationList)
-            const addEntryButton = component.find('.add-entry-button')
-            addEntryButton.trigger('click')
-            await Vue.nextTick()
-            const newEntryRow = component.find('.new-entry-row')
-            const typeSelection = newEntryRow.find('.new-entry-type-selection')
-            typeSelection.trigger('click')
-            const options = typeSelection.findAll('option')
-            options.at(7).element.selected = true
-            typeSelection.trigger('change')
-            await Vue.nextTick()
-            const newEntryTextarea = newEntryRow.find('.new-entry-textarea')
-            newEntryTextarea.setValue('something')
+            const newEntryInputName = newEntryRow.find('.new-entry-name-input')
+            newEntryInputName.setValue('something')
+            const newEntryInputValue = newEntryRow.find('.new-entry-value-annotation-input')
+            newEntryInputValue.setValue('')
             const confirmAddEntryButton = component.find('.confirm-add-entry-button')
             confirmAddEntryButton.trigger('click')
             await Vue.nextTick()

@@ -6,14 +6,11 @@
           <div class="tile is-parent is-vertical">
             <div class="tile is-child box is-primary section"
                  v-for="(section, section_idx) in localRule.sections" :key="section_idx">
-              <!-- <div v-if="localRule.sections.length > 1 && id > 0"
-                   class="control is-expanded relation-selection-wrapper"> -->
-              <center v-if="localRule.sections.length > 1 && section_idx > 0">
-                  <span class="tag has-text-weight-semibold"
-                        style="margin-top: -24px; position: absolute!important"
-                  >{{ localRule.relation }}</span>
-              </center>
-              <!-- </div> -->
+              <div class="has-text-centered relation-selection-wrapper" v-if="localRule.sections.length > 1 && section_idx > 0">
+                  <span class="tag has-text-weight-semibold">
+                    {{ localRule.relation }}
+                  </span>
+              </div>
               <table class="table is-narrow entries-table mb-0">
                 <tbody>
                 <tr v-for="(entry,entry_idx) in sectionsCurrentPage[section_idx]" :key="entry_idx" class="entry-row">
@@ -24,11 +21,11 @@
                         {{ section.relation }}
                       </span>
                   </td>
-                  <td class="is-size-7 entry-category has-text-weight-medium width-200px">
+                  <td class="is-size-7 entry-category has-text-weight-medium width-100px">
                     {{ listEntryTypes[entry[0]].title }}
                   </td>
-                  <td class="is-size-7 entry-value width-200px"><span v-html="dualCell(entry[1])"></span></td>
-                  <td :title="entry[2]" class="is-size-7 entry-annotation width-200px">
+                  <td :title="dualCell(entry[1])" class="is-size-7 entry-value width-250px ellipsis"><span v-html="dualCell(entry[1])"></span></td>
+                  <td :title="entry[2]" class="is-size-7 entry-annotation width-250px ellipsis">
                     {{ entry[2] ? entry[2].substr(0, 60) : '' }}
                   </td>
                   <td class="is-size-7 width-80px">
@@ -67,7 +64,7 @@
                       </select>
                     </div>
                   </td>
-                  <td class="is-size-7 width-200px">
+                  <td class="is-size-7 width-250px">
                     <div v-if="isCategoryArgsCookiesHeaders(newEntryCategory)"
                          class="control has-icons-left is-fullwidth new-entry-name">
                       <input class="input is-small new-entry-name-input"
@@ -82,9 +79,9 @@
                               rows="3">
                     </textarea>
                   </td>
-                  <td class="is-size-7 width-200px">
-                    <div class="control has-icons-left is-fullwidth new-entry-value">
-                      <input class="input is-small new-entry-value-input"
+                  <td class="is-size-7 width-250px">
+                    <div class="control has-icons-left is-fullwidth new-entry-value-annotation">
+                      <input class="input is-small new-entry-value-annotation-input"
                              :placeholder="isCategoryArgsCookiesHeaders(newEntryCategory) ? 'Value' : 'Annotation'"
                              v-model="newEntryItem.secondAttr"/>
                       <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
@@ -351,6 +348,7 @@ export default {
     },
 
     removeEntry(section, sectionIndex, entry_idx) {
+      console.log(1111)
       let pointer = ((this.sectionsCurrentPageIndex[sectionIndex] - 1) * this.rowsPerPage) + entry_idx
       section.entries.splice(pointer, 1)
       if (section.entries.length === 0) {
@@ -372,19 +370,7 @@ export default {
 }
 
 .relation-selection-wrapper {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.relation-selection-wrapper:before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  border-top: 1px solid black;
-  background: black;
-  width: 100%;
-  transform: translateY(-50%);
+  margin-top: -1.5rem
 }
 
 .sections-wrapper {
