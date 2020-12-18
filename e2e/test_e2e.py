@@ -24,8 +24,6 @@ import time
 log = logging.getLogger("e2e")
 
 # --- Helpers ---
-# XXX set to "test" when https://github.com/curiefense/curiefense/issues/31 is
-# fixed
 TEST_CONFIG_NAME = "master"
 
 
@@ -495,7 +493,6 @@ class TestRateLimit:
 
 
 # --- Tag rules tests (formerly profiling lists) ---
-# XXX update tests to support "AND" relations
 
 TEST_TAGRULES = {
     "id": "e2e000000000",
@@ -522,6 +519,13 @@ TEST_TAGRULES = {
                     ["ip", "199.0.0.1", "annotation"],
                     ["country", "jp", "annotation"],
                     ["asn", "13335", "annotation"],
+                ],
+            },
+            {
+                "relation": "AND",
+                "entries": [
+                    ["path", "/e2e-and/", "annotation"],
+                    ["cookies", ["e2e-and", "value"], "annotation"],
                 ],
             },
         ],
@@ -604,8 +608,16 @@ class TestTagRules:
         # ASN 13335
         assert target.is_reachable("/from-1.1.1.1/") is not active
 
+    def test_and(self, target, tagrules_config, active):
+        assert target.is_reachable(
+            "/e2e-and/", cookies={"e2e-and": "value"}) is not active
+        assert target.is_reachable(
+            "/not-e2e-and/", cookies={"e2e-and": "value"}) is True
+        assert target.is_reachable(
+            "/e2e-and/", cookies={"not-e2e-and": "value"}) is True
 
 # --- URL Maps tests ---
+
 
 ACL_BYPASSALL = {
     "id": "e2e00ac10000",
