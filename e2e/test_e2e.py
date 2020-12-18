@@ -90,19 +90,18 @@ class TargetHelper():
     def __init__(self, base_url):
         self._base_url = base_url
 
-    def query(self, path="/", method="GET", headers=None, **kwargs):
+    def query(self, path="/", method="GET", headers=None, srcip=None, **kwargs):
         # specifying a path helps spot tests easily in the access log
         if headers is None:
             headers = {}
-        if path.startswith("/from-"):
-            sourceip = path[6:path.index("/", 2)]
-            headers['X-Forwarded-For'] = sourceip
+        if srcip is not None:
+            headers['X-Forwarded-For'] = srcip
         res = requests.request(method=method, url=self._base_url + path,
                                headers=headers, **kwargs)
         return res
 
-    def is_reachable(self, path="/", method="GET", headers=None, **kwargs):
-        res = self.query(path, method, headers, **kwargs)
+    def is_reachable(self, path="/", method="GET", headers=None, srcip=None, **kwargs):
+        res = self.query(path, method, headers, srcip, **kwargs)
         return res.status_code in [200, 404]
 
 
@@ -216,22 +215,22 @@ class TestACL:
 
     def test_ip_asn(self, acl, target):
         acl.reset_and_set_acl({"deny": "asn:1239"})
-        assert not target.is_reachable("/from-199.0.0.1/")
+        assert not target.is_reachable("/acl-asn", srcip="199.0.0.1")
         assert target.is_reachable("/")
 
     def test_ipv4(self, acl, target):
         acl.reset_and_set_acl({"deny": "ip:199-0-0-1"})
-        assert not target.is_reachable("/from-199.0.0.1/")
+        assert not target.is_reachable("/acl-ipv4", srcip="199.0.0.1")
         assert target.is_reachable("/")
 
     def test_geo(self, acl, target):
         acl.reset_and_set_acl({"deny": "geo:us"})
-        assert not target.is_reachable("/from-199.0.0.1/")
+        assert not target.is_reachable("/acl-geo", srcip="199.0.0.1")
         assert target.is_reachable("/")
 
     def test_ipv6(self, acl, target):
-        acl.reset_and_set_acl({"deny": "ip:0000-0000-0000-0000-0000-0000-0000-0001"})
-        assert not target.is_reachable("/from-0000:0000:0000:0000:0000:0000:0000:0001/")
+        acl.reset_and_set_acl({"deny": "ip:0000:0000:0000:0000:0000:0000:0000:0001"})
+        assert not target.is_reachable("/acl-ipv6", srcip="0000:0000:0000:0000:0000:0000:0000:0001")
         assert target.is_reachable("/")
 
 
@@ -596,22 +595,22 @@ class TestTagRules:
             "/e2e-tagrules-allowed-uri") is True
 
     def test_ipv4(self, target, tagrules_config, active):
-        assert target.is_reachable("/from-199.0.0.1/") is not active
-        assert target.is_reachable("/from-199.0.0.2/") is True
+        assert target.is_reachable("/tag-ipv4-1", srcip="199.0.0.1") is not active
+        assert target.is_reachable("/tag-ipv4-2", srcip="199.0.0.2") is True
 
     def test_ipv6(self, target, tagrules_config, active):
         assert target.is_reachable(
-            "/from-0000:0000:0000:0000:0000:0000:0000:0001/") is not active
+            "/tag-ipv6-1", srcip="0000:0000:0000:0000:0000:0000:0000:0001") is not active
         assert target.is_reachable(
-            "/from-0000:0000:0000:0000:0000:0000:0000:0002/") is True
+            "/tag-ipv6-2", srcip="0000:0000:0000:0000:0000:0000:0000:0002") is True
 
     def test_country(self, target, tagrules_config, active):
         # JP address (Softbank)
-        assert target.is_reachable("/from-126.0.0.0/") is not active
+        assert target.is_reachable("/tag-country", srcip="126.0.0.0") is not active
 
     def test_asn(self, target, tagrules_config, active):
         # ASN 13335
-        assert target.is_reachable("/from-1.1.1.1/") is not active
+        assert target.is_reachable("/tag-asn", srcip="1.1.1.1") is not active
 
     def test_and(self, target, tagrules_config, active):
         assert target.is_reachable(
