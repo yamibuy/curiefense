@@ -90,7 +90,7 @@ class TargetHelper():
     def __init__(self, base_url):
         self._base_url = base_url
 
-    def is_reachable(self, path="/", method="GET", headers=None, **kwargs):
+    def query(self, path="/", method="GET", headers=None, **kwargs):
         # specifying a path helps spot tests easily in the access log
         if headers is None:
             headers = {}
@@ -99,6 +99,10 @@ class TargetHelper():
             headers['X-Forwarded-For'] = sourceip
         res = requests.request(method=method, url=self._base_url + path,
                                headers=headers, **kwargs)
+        return res
+
+    def is_reachable(self, path="/", method="GET", headers=None, **kwargs):
+        res = self.query(path, method, headers, **kwargs)
         return res.status_code in [200, 404]
 
 
@@ -195,8 +199,9 @@ class TestACL:
 
     def test_deny_bot_all(self, acl, target):
         acl.reset_and_set_acl({"deny_bot": "all"})
-        # XXX test that there is a bot challenge
-        assert not target.is_reachable("/deny_bot-all")
+        res = target.query("/deny_bot-all")
+        assert res.status_code == 247
+        assert ";;window.rbzns={bereshit:" in res.text
 
     def test_allow_all(self, acl, target):
         acl.reset_and_set_acl({"allow": "all", "deny": "all"})
