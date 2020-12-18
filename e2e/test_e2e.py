@@ -239,7 +239,7 @@ class TestACL:
 # XXX test RateLimit conditions with attributes
 # XXX test RateLimit Event with attributes
 # XXX test RateLimit Actions
-# XXX test RateLimit Limit by attributes (other than path & uri)
+# XXX test RateLimit scope limit by attributes (provider, tags, query, method, company, country, authority)
 
 RL_RULES = []
 MAP_PATH = {
@@ -282,6 +282,7 @@ add_rl_rule("scope-headers", incl_headers={"include": "true"}, excl_headers={"ex
 add_rl_rule("scope-params", incl_args={"include": "true"}, excl_args={"exclude": "true"})
 add_rl_rule("scope-path", incl_attrs={"path": "/scope-path/include/"}, excl_attrs={"path": "/scope-path/include/exclude/"})
 add_rl_rule("scope-uri", incl_attrs={"uri": "/scope-uri/include/"}, excl_attrs={"uri": "/scope-uri/include/exclude/"})
+add_rl_rule("scope-ipv4", incl_attrs={"ip": "199.0.0.1"}, excl_attrs={"ip": "199.0.0.2"})
 # RL count by 1 value
 add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
 add_rl_rule("countby-headers", key=[{"headers": "countby"}])
@@ -402,6 +403,18 @@ class TestRateLimit:
         for i in range(1, 7):
             assert target.is_reachable(f"/scope-uri/include/exclude/{i}"), \
                 f"Request #{i} for uri should be allowed"
+
+    def test_ratelimit_scope_ipv4_include(self, target, ratelimit_config):
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-ipv4/included", srcip="199.0.0.1"), \
+                f"Request #{i} for included ipv4 should be allowed"
+        assert not target.is_reachable("/scope-ipv4/included", srcip="199.0.0.1"), \
+            f"Request #{i} for included ipv4 should not be allowed"
+
+    def test_ratelimit_scope_ipv4_exclude(self, target, ratelimit_config):
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-ipv4/excluded", srcip="199.0.0.2"), \
+                f"Request #{i} for excluded ipv4 should be allowed"
 
     def test_ratelimit_countby_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby": "1"}}
