@@ -20,6 +20,7 @@ import requests
 import string
 import subprocess
 import time
+from urllib.parse import urlparse
 
 log = logging.getLogger("e2e")
 
@@ -32,7 +33,7 @@ class CliHelper():
         self._base_url = base_url
         self._initial_version_cache = None
 
-    def call(self, args, inputjson=None) -> str:
+    def call(self, args, inputjson=None):
         logging.info("Calling CLI with arguments: %s", args)
         cmd = ["curieconfctl", "-u", self._base_url, "-o", "json"]
         cmd += args.split(" ")
@@ -103,6 +104,9 @@ class TargetHelper():
     def is_reachable(self, path="/", method="GET", headers=None, srcip=None, **kwargs):
         res = self.query(path, method, headers, srcip, **kwargs)
         return res.status_code in [200, 404]
+
+    def authority(self) -> str:
+        return urlparse(self._base_url).netloc
 
 
 @pytest.fixture(scope="session")
@@ -250,116 +254,126 @@ class TestACL:
 # XXX test RateLimit conditions with attributes
 # XXX test RateLimit Event with attributes
 # XXX test RateLimit Actions
-# XXX test RateLimit scope limit by attributes (provider, tags, query, authority)
+# XXX test RateLimit scope limit by attributes (provider)
 
-RL_RULES = []
-MAP_PATH = {
-}
-
-
-def add_rl_rule(path, **kwargs):
-    rule_id = f"e2e1{len(RL_RULES):0>9}"
-    MAP_PATH[path] = rule_id
-    RL_RULES.append({
-        "id": rule_id,
-        "name": "Rate Limit Rule 5/10 " + path,
-        "description": "5 requests per 10 seconds",
-        "ttl": "10",
-        "limit": "5",
-        "action": {
-            "type": "default",
-            "params": {"action": {"type": "default", "params": {}}},
-        },
-        "include": {
-            "cookies": kwargs.get("incl_cookies", {}),
-            "headers": kwargs.get("incl_headers", {}),
-            "args": kwargs.get("incl_args", {}),
-            "attrs": kwargs.get("incl_attrs", {}),
-        },
-        "exclude": {
-            "cookies": kwargs.get("excl_cookies", {}),
-            "headers": kwargs.get("excl_headers", {}),
-            "args": kwargs.get("excl_args", {}),
-            "attrs": kwargs.get("excl_attrs", {}),
-        },
-        "key": kwargs.get("key", {"attrs": "ip"}),
-        "pairwith": kwargs.get("pairwith", {"self": "self"}),
-    })
-
-
-# RL scope
-add_rl_rule("scope-cookies", incl_cookies={"include": "true"}, excl_cookies={"exclude": "true"})
-add_rl_rule("scope-headers", incl_headers={"include": "true"}, excl_headers={"exclude": "true"})
-add_rl_rule("scope-params", incl_args={"include": "true"}, excl_args={"exclude": "true"})
-add_rl_rule("scope-path", incl_attrs={"path": "/scope-path/include/"}, excl_attrs={"path": "/scope-path/include/exclude/"})
-add_rl_rule("scope-uri", incl_attrs={"uri": "/scope-uri/include/"}, excl_attrs={"uri": "/scope-uri/include/exclude/"})
-add_rl_rule("scope-ipv4-include", incl_attrs={"ip": IP4_US})
-add_rl_rule("scope-ipv4-exclude", excl_attrs={"ip": IP4_US})
-add_rl_rule("scope-country-include", incl_attrs={"country": "us"})
-add_rl_rule("scope-country-exclude", excl_attrs={"country": "us"})
-add_rl_rule("scope-company-include", incl_attrs={"company": "CLOUDFLARENET"})
-add_rl_rule("scope-company-exclude", excl_attrs={"company": "CLOUDFLARENET"})
-add_rl_rule("scope-asn-include", incl_attrs={"asn": "1239"})
-add_rl_rule("scope-asn-exclude", excl_attrs={"asn": "1239"})
-add_rl_rule("scope-method-include", incl_attrs={"method": "GET"})
-add_rl_rule("scope-method-exclude", excl_attrs={"method": "GET"})
-# RL count by 1 value
-add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
-add_rl_rule("countby-headers", key=[{"headers": "countby"}])
-add_rl_rule("countby-params", key=[{"args": "countby"}])
-# RL count by 2 value (same type)
-add_rl_rule("countby2-cookies", key=[{"cookies": "countby1"}, {"cookies": "countby2"}])
-add_rl_rule("countby2-headers", key=[{"headers": "countby1"}, {"headers": "countby2"}])
-add_rl_rule("countby2-params", key=[{"args": "countby1"}, {"args": "countby2"}])
-# RL count by 2 value (different type)
-add_rl_rule("countby-cookies-headers", key=[{"cookies": "countby"}, {"headers": "countby"}])
-add_rl_rule("countby-headers-params", key=[{"headers": "countby"}, {"args": "countby"}])
-add_rl_rule("countby-params-cookies", key=[{"args": "countby"}, {"cookies": "countby"}])
-# RL Event condition
-add_rl_rule("event-cookies", pairwith={"cookies": "event"})
-add_rl_rule("event-headers", pairwith={"headers": "event"})
-add_rl_rule("event-params", pairwith={"args": "event"})
-
-RL_URLMAP = [
-    {
-        "id": "__default__",
-        "name": "default entry",
-        "match": "__default__",
-        "map": [
-            {
-                "name": "default",
-                "match": "/",
-                "acl_profile": "__default__",
-                "acl_active": True,
-                "waf_profile": "__default__",
-                "waf_active": True,
-                "limit_ids": ["e2e100000000"],
-            }
-        ] + [
-            {
-                "name": k,
-                "match": f"/{k}/",
-                "acl_profile": "__default__",
-                "acl_active": True,
-                "waf_profile": "__default__",
-                "waf_active": True,
-                "limit_ids": [v],
-            } for k, v in MAP_PATH.items()]
+def gen_rl_rules(authority):
+    RL_RULES = []
+    MAP_PATH = {
     }
-]
+
+    def add_rl_rule(path, **kwargs):
+        rule_id = f"e2e1{len(RL_RULES):0>9}"
+        MAP_PATH[path] = rule_id
+        RL_RULES.append({
+            "id": rule_id,
+            "name": "Rate Limit Rule 5/10 " + path,
+            "description": "5 requests per 10 seconds",
+            "ttl": "10",
+            "limit": "5",
+            "action": {
+                "type": "default",
+                "params": {"action": {"type": "default", "params": {}}},
+            },
+            "include": {
+                "cookies": kwargs.get("incl_cookies", {}),
+                "headers": kwargs.get("incl_headers", {}),
+                "args": kwargs.get("incl_args", {}),
+                "attrs": kwargs.get("incl_attrs", {}),
+            },
+            "exclude": {
+                "cookies": kwargs.get("excl_cookies", {}),
+                "headers": kwargs.get("excl_headers", {}),
+                "args": kwargs.get("excl_args", {}),
+                "attrs": kwargs.get("excl_attrs", {}),
+            },
+            "key": kwargs.get("key", {"attrs": "ip"}),
+            "pairwith": kwargs.get("pairwith", {"self": "self"}),
+        })
+
+    # RL scope
+    add_rl_rule("scope-cookies", incl_cookies={"include": "true"}, excl_cookies={"exclude": "true"})
+    add_rl_rule("scope-headers", incl_headers={"include": "true"}, excl_headers={"exclude": "true"})
+    add_rl_rule("scope-params", incl_args={"include": "true"}, excl_args={"exclude": "true"})
+    add_rl_rule("scope-path", incl_attrs={"path": "/scope-path/include/"}, excl_attrs={"path": "/scope-path/include/exclude/"})
+    add_rl_rule("scope-uri", incl_attrs={"uri": "/scope-uri/include/"}, excl_attrs={"uri": "/scope-uri/include/exclude/"})
+    add_rl_rule("scope-ipv4-include", incl_attrs={"ip": IP4_US})
+    add_rl_rule("scope-ipv4-exclude", excl_attrs={"ip": IP4_US})
+    add_rl_rule("scope-country-include", incl_attrs={"country": "us"})
+    add_rl_rule("scope-country-exclude", excl_attrs={"country": "us"})
+    add_rl_rule("scope-company-include", incl_attrs={"company": "CLOUDFLARENET"})
+    add_rl_rule("scope-company-exclude", excl_attrs={"company": "CLOUDFLARENET"})
+    add_rl_rule("scope-asn-include", incl_attrs={"asn": "1239"})
+    add_rl_rule("scope-asn-exclude", excl_attrs={"asn": "1239"})
+    add_rl_rule("scope-method-include", incl_attrs={"method": "GET"})
+    add_rl_rule("scope-method-exclude", excl_attrs={"method": "GET"})
+    add_rl_rule("scope-tags-include", incl_attrs={"tags": "asn:1239"})
+    add_rl_rule("scope-tags-exclude", excl_attrs={"tags": "asn:1239"})
+    add_rl_rule("scope-query-include", incl_attrs={"query": "QUERY"})
+    add_rl_rule("scope-query-exclude", excl_attrs={"query": "QUERY"})
+    add_rl_rule("scope-authority-include", incl_attrs={"authority": authority})
+    add_rl_rule("scope-authority-exclude", excl_attrs={"authority": authority})
+    add_rl_rule("scope-other-authority-include", incl_attrs={"authority": "doesnotmatch"})
+    add_rl_rule("scope-other-authority-exclude", excl_attrs={"authority": "doesnotmatch"})
+
+    # RL count by 1 value
+    add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
+    add_rl_rule("countby-headers", key=[{"headers": "countby"}])
+    add_rl_rule("countby-params", key=[{"args": "countby"}])
+    # RL count by 2 value (same type)
+    add_rl_rule("countby2-cookies", key=[{"cookies": "countby1"}, {"cookies": "countby2"}])
+    add_rl_rule("countby2-headers", key=[{"headers": "countby1"}, {"headers": "countby2"}])
+    add_rl_rule("countby2-params", key=[{"args": "countby1"}, {"args": "countby2"}])
+    # RL count by 2 value (different type)
+    add_rl_rule("countby-cookies-headers", key=[{"cookies": "countby"}, {"headers": "countby"}])
+    add_rl_rule("countby-headers-params", key=[{"headers": "countby"}, {"args": "countby"}])
+    add_rl_rule("countby-params-cookies", key=[{"args": "countby"}, {"cookies": "countby"}])
+    # RL Event condition
+    add_rl_rule("event-cookies", pairwith={"cookies": "event"})
+    add_rl_rule("event-headers", pairwith={"headers": "event"})
+    add_rl_rule("event-params", pairwith={"args": "event"})
+
+    RL_URLMAP = [
+        {
+            "id": "__default__",
+            "name": "default entry",
+            "match": "__default__",
+            "map": [
+                {
+                    "name": "default",
+                    "match": "/",
+                    "acl_profile": "__default__",
+                    "acl_active": True,
+                    "waf_profile": "__default__",
+                    "waf_active": True,
+                    "limit_ids": ["e2e100000000"],
+                }
+            ] + [
+                {
+                    "name": k,
+                    "match": f"/{k}/",
+                    "acl_profile": "__default__",
+                    "acl_active": True,
+                    "waf_profile": "__default__",
+                    "waf_active": True,
+                    "limit_ids": [v],
+                } for k, v in MAP_PATH.items()]
+        }
+    ]
+    return (RL_RULES, RL_URLMAP)
 
 
 @pytest.fixture(scope="class")
-def ratelimit_config(cli):
+def ratelimit_config(cli, target):
     cli.revert_and_enable()
-    # Add rule RL_RULES
+    # Add new RL rules
     rl_rules = cli.call(f"doc get {TEST_CONFIG_NAME} ratelimits")
-    rl_rules.extend(RL_RULES)
+    (NEW_RULES, NEW_URLMAP) = gen_rl_rules(target.authority())
+    rl_rules.extend(NEW_RULES)
     cli.call(f"doc update {TEST_CONFIG_NAME} ratelimits /dev/stdin",
              inputjson=rl_rules)
-    # Apply RL_URLMAP
+    # Apply NEW_URLMAP
     cli.call(f"doc update {TEST_CONFIG_NAME} urlmaps /dev/stdin",
-             inputjson=RL_URLMAP)
+             inputjson=NEW_URLMAP)
     cli.publish_and_apply()
 
 
@@ -524,6 +538,67 @@ class TestRateLimit:
         assert not target.is_reachable("/scope-method-exclude/not-excluded", method="HEAD"), \
             "Request #6 for non excluded method should be denied"
 
+    def test_ratelimit_scope_tags_include(self, target, ratelimit_config):
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-tags-include/included", srcip=IP4_US), \
+                f"Request #{i} for included tags should be allowed"
+        assert not target.is_reachable("/scope-tags-include/included", srcip=IP4_US), \
+            "Request #6 for included tags should be denied"
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-tags-include/not-included", srcip=IP4_JP), \
+                f"Request #{i} for non included tags should be allowed"
+
+    def test_ratelimit_scope_tags_exclude(self, target, ratelimit_config):
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-tags-exclude/excluded", srcip=IP4_US), \
+                f"Request #{i} for excluded tags should be allowed"
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-tags-exclude/not-excluded", srcip=IP4_JP), \
+                f"Request #{i} for non excluded tags should be allowed"
+        assert not target.is_reachable("/scope-tags-exclude/not-excluded", srcip=IP4_JP), \
+            "Request #6 for non excluded tags should be denied"
+
+    def test_ratelimit_scope_query_include(self, target, ratelimit_config):
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-query-include/included?QUERY"), \
+                f"Request #{i} for included query should be allowed"
+        assert not target.is_reachable("/scope-query-include/included?QUERY"), \
+            "Request #6 for included query should be denied"
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-query-include/not-included?NOQUERY"), \
+                f"Request #{i} for non included query should be allowed"
+
+    def test_ratelimit_scope_query_exclude(self, target, ratelimit_config):
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-query-exclude/excluded?QUERY"), \
+                f"Request #{i} for excluded query should be allowed"
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-query-exclude/not-excluded?NOQUERY"), \
+                f"Request #{i} for non excluded query should be allowed"
+        assert not target.is_reachable("/scope-query-exclude/not-excluded?NOQUERY"), \
+            "Request #6 for non excluded query should be denied"
+
+    def test_ratelimit_scope_authority_include(self, target, ratelimit_config):
+        # XXX simplify by using Host header to change authority? XXX test when bug is fixed
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-authority-include/included"), \
+                f"Request #{i} for included authority should be allowed"
+        assert not target.is_reachable("/scope-authority-include/included"), \
+            "Request #6 for included authority should be denied"
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-other-authority-include/not-included"), \
+                f"Request #{i} for non included authority should be allowed"
+
+    def test_ratelimit_scope_authority_exclude(self, target, ratelimit_config):
+        # XXX simplify by using Host header to change authority? XXX test when bug is fixed
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-authority-exclude/excluded"), \
+                f"Request #{i} for excluded authority should be allowed"
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-other-authority-exclude/not-excluded"), \
+                f"Request #{i} for non excluded authority should be allowed"
+        assert not target.is_reachable("/scope-other-authority-exclude/not-excluded"), \
+            "Request #6 for non excluded authority should be denied"
 
     def test_ratelimit_countby_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby": "1"}}
