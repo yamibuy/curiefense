@@ -247,7 +247,7 @@ class TestACL:
 # XXX test RateLimit conditions with attributes
 # XXX test RateLimit Event with attributes
 # XXX test RateLimit Actions
-# XXX test RateLimit scope limit by attributes (provider, tags, query, method, company, country, authority)
+# XXX test RateLimit scope limit by attributes (provider, tags, query, method, company, authority)
 
 RL_RULES = []
 MAP_PATH = {
@@ -292,6 +292,8 @@ add_rl_rule("scope-path", incl_attrs={"path": "/scope-path/include/"}, excl_attr
 add_rl_rule("scope-uri", incl_attrs={"uri": "/scope-uri/include/"}, excl_attrs={"uri": "/scope-uri/include/exclude/"})
 add_rl_rule("scope-ipv4-include", incl_attrs={"ip": IP4_US})
 add_rl_rule("scope-ipv4-exclude", excl_attrs={"ip": IP4_US})
+add_rl_rule("scope-country-include", incl_attrs={"country": "us"})
+add_rl_rule("scope-country-exclude", excl_attrs={"country": "us"})
 # RL count by 1 value
 add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
 add_rl_rule("countby-headers", key=[{"headers": "countby"}])
@@ -432,6 +434,26 @@ class TestRateLimit:
                 f"Request #{i} for non excluded ipv4 should be allowed"
         assert not target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
             "Request #6 for included ipv4 should be denied"
+
+    def test_ratelimit_scope_country_include(self, target, ratelimit_config):
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-country-include/included", srcip=IP4_US), \
+                f"Request #{i} for included country should be allowed"
+        assert not target.is_reachable("/scope-country-include/included", srcip=IP4_US), \
+            "Request #6 for included country should be denied"
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-country-include/not-included", srcip=IP4_JP), \
+                f"Request #{i} for non included country should be allowed"
+
+    def test_ratelimit_scope_country_exclude(self, target, ratelimit_config):
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-country-exclude/excluded", srcip=IP4_US), \
+                f"Request #{i} for excluded country should be allowed"
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-country-exclude/not-excluded", srcip=IP4_JP), \
+                f"Request #{i} for non excluded country should be allowed"
+        assert not target.is_reachable("/scope-country-exclude/not-excluded", srcip=IP4_JP), \
+            "Request #6 for included country should be denied"
 
     def test_ratelimit_countby_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby": "1"}}
