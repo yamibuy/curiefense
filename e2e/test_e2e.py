@@ -233,6 +233,7 @@ class TestACL:
     def test_geo(self, acl, target):
         acl.reset_and_set_acl({"deny": "geo:us"})
         assert not target.is_reachable("/acl-geo", srcip=IP4_US)
+        assert target.is_reachable("/acl-geo", srcip=IP4_JP)
         assert target.is_reachable("/")
 
     def test_ipv6(self, acl, target):
