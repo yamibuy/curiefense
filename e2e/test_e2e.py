@@ -290,7 +290,8 @@ add_rl_rule("scope-headers", incl_headers={"include": "true"}, excl_headers={"ex
 add_rl_rule("scope-params", incl_args={"include": "true"}, excl_args={"exclude": "true"})
 add_rl_rule("scope-path", incl_attrs={"path": "/scope-path/include/"}, excl_attrs={"path": "/scope-path/include/exclude/"})
 add_rl_rule("scope-uri", incl_attrs={"uri": "/scope-uri/include/"}, excl_attrs={"uri": "/scope-uri/include/exclude/"})
-add_rl_rule("scope-ipv4", incl_attrs={"ip": "199.0.0.1"}, excl_attrs={"ip": "199.0.0.2"})
+add_rl_rule("scope-ipv4-include", incl_attrs={"ip": IP4_US})
+add_rl_rule("scope-ipv4-exclude", excl_attrs={"ip": IP4_US})
 # RL count by 1 value
 add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
 add_rl_rule("countby-headers", key=[{"headers": "countby"}])
@@ -414,15 +415,23 @@ class TestRateLimit:
 
     def test_ratelimit_scope_ipv4_include(self, target, ratelimit_config):
         for i in range(1, 6):
-            assert target.is_reachable("/scope-ipv4/included", srcip="199.0.0.1"), \
+            assert target.is_reachable("/scope-ipv4-include/included", srcip=IP4_US), \
                 f"Request #{i} for included ipv4 should be allowed"
-        assert not target.is_reachable("/scope-ipv4/included", srcip="199.0.0.1"), \
-            f"Request #{i} for included ipv4 should not be allowed"
+        assert not target.is_reachable("/scope-ipv4-include/included", srcip=IP4_US), \
+            "Request #6 for included ipv4 should be denied"
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-ipv4-include/not-included", srcip=IP4_JP), \
+                f"Request #{i} for non included ipv4 should be allowed"
 
     def test_ratelimit_scope_ipv4_exclude(self, target, ratelimit_config):
         for i in range(1, 7):
-            assert target.is_reachable("/scope-ipv4/excluded", srcip="199.0.0.2"), \
+            assert target.is_reachable("/scope-ipv4-exclude/excluded", srcip=IP4_US), \
                 f"Request #{i} for excluded ipv4 should be allowed"
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
+                f"Request #{i} for non excluded ipv4 should be allowed"
+        assert not target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
+            "Request #6 for included ipv4 should be denied"
 
     def test_ratelimit_countby_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby": "1"}}
@@ -440,14 +449,14 @@ class TestRateLimit:
         assert not target.is_reachable(f"/countby-{section}/2/6", **param2), \
             f"Request #6 with {section} countby 2 should be blocked"
         # assert not target.is_reachable(f"/countby-{section}/3/6"), \
-        #     f"Request #{i} with no {section} should not be allowed"
+        #     f"Request #{i} with no {section} should be denied"
         time.sleep(10)
         assert target.is_reachable(f"/countby-{section}/2/7", **param1), \
             f"Request #7 with {section} countby 1 should be allowed"
         assert target.is_reachable(f"/countby-{section}/2/7", **param2), \
             f"Request #7 with {section} countby 2 should be allowed"
         # assert target.is_reachable(f"/countby-{section}/3/7"), \
-        #     f"Request #{i} with no {section} should not be allowed"
+        #     f"Request #{i} with no {section} should be denied"
 
     def test_ratelimit_countby2_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby1": "1"}}
@@ -507,10 +516,10 @@ class TestRateLimit:
             assert target.is_reachable(f"/event-{section}/1/{i}", **params[i]), \
                 f"Request for value #{i+1} with {section} event should be allowed"
         assert not target.is_reachable(f"/event-{section}/1/{i}", **params[5]), \
-            f"Request for value #{i+1} with {section} event should not be allowed"
+            f"Request for value #{i+1} with {section} event should be denied"
         for i in range(5):
             assert not target.is_reachable(f"/event-{section}/1/{i}", **params[i]), \
-                f"Request for value #{i+1} with {section} event should not be allowed"
+                f"Request for value #{i+1} with {section} event should be denied"
         time.sleep(10)
         for i in range(5):
             assert target.is_reachable(f"/event-{section}/1/{i}", **params[i]), \
