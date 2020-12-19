@@ -111,6 +111,13 @@ def target(request):
     return TargetHelper(url)
 
 
+# geo=US, asn=1239
+IP4_US = "199.0.0.1"
+
+# geo=JP, asn=17676
+IP4_JP = "126.0.0.1"
+
+
 class UIHelper():
     def __init__(self, base_url):
         self._base_url = base_url
@@ -215,17 +222,17 @@ class TestACL:
 
     def test_ip_asn(self, acl, target):
         acl.reset_and_set_acl({"deny": "asn:1239"})
-        assert not target.is_reachable("/acl-asn", srcip="199.0.0.1")
+        assert not target.is_reachable("/acl-asn", srcip=IP4_US)
         assert target.is_reachable("/")
 
     def test_ipv4(self, acl, target):
         acl.reset_and_set_acl({"deny": "ip:199-0-0-1"})
-        assert not target.is_reachable("/acl-ipv4", srcip="199.0.0.1")
+        assert not target.is_reachable("/acl-ipv4", srcip=IP4_US)
         assert target.is_reachable("/")
 
     def test_geo(self, acl, target):
         acl.reset_and_set_acl({"deny": "geo:us"})
-        assert not target.is_reachable("/acl-geo", srcip="199.0.0.1")
+        assert not target.is_reachable("/acl-geo", srcip=IP4_US)
         assert target.is_reachable("/")
 
     def test_ipv6(self, acl, target):
@@ -533,7 +540,7 @@ TEST_TAGRULES = {
                     ["query", "e2e=value", "annotation"],
                     ["uri", "/e2e-tagrules-uri", "annotation"],
                     ["ip", "0000:0000:0000:0000:0000:0000:0000:0001", "annotation"],
-                    ["ip", "199.0.0.1", "annotation"],
+                    ["ip", IP4_US, "annotation"],
                     ["country", "jp", "annotation"],
                     ["asn", "13335", "annotation"],
                 ],
@@ -608,8 +615,8 @@ class TestTagRules:
             "/e2e-tagrules-allowed-uri") is True
 
     def test_ipv4(self, target, tagrules_config, active):
-        assert target.is_reachable("/tag-ipv4-1", srcip="199.0.0.1") is not active
-        assert target.is_reachable("/tag-ipv4-2", srcip="199.0.0.2") is True
+        assert target.is_reachable("/tag-ipv4-1", srcip=IP4_US) is not active
+        assert target.is_reachable("/tag-ipv4-2", srcip=IP4_JP) is True
 
     def test_ipv6(self, target, tagrules_config, active):
         assert target.is_reachable(
@@ -619,7 +626,7 @@ class TestTagRules:
 
     def test_country(self, target, tagrules_config, active):
         # JP address (Softbank)
-        assert target.is_reachable("/tag-country", srcip="126.0.0.0") is not active
+        assert target.is_reachable("/tag-country", srcip=IP4_JP) is not active
 
     def test_asn(self, target, tagrules_config, active):
         # ASN 13335
