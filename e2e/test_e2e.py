@@ -117,6 +117,8 @@ IP4_US = "199.0.0.1"
 # geo=JP, asn=17676
 IP4_JP = "126.0.0.1"
 
+# geo=AU, company=CLOUDFLARENET
+IP4_CLOUDFLARE = "1.1.1.1"
 
 class UIHelper():
     def __init__(self, base_url):
@@ -247,7 +249,7 @@ class TestACL:
 # XXX test RateLimit conditions with attributes
 # XXX test RateLimit Event with attributes
 # XXX test RateLimit Actions
-# XXX test RateLimit scope limit by attributes (provider, tags, query, method, company, authority)
+# XXX test RateLimit scope limit by attributes (provider, tags, query, method, authority)
 
 RL_RULES = []
 MAP_PATH = {
@@ -294,6 +296,8 @@ add_rl_rule("scope-ipv4-include", incl_attrs={"ip": IP4_US})
 add_rl_rule("scope-ipv4-exclude", excl_attrs={"ip": IP4_US})
 add_rl_rule("scope-country-include", incl_attrs={"country": "us"})
 add_rl_rule("scope-country-exclude", excl_attrs={"country": "us"})
+add_rl_rule("scope-company-include", incl_attrs={"company": "CLOUDFLARENET"})
+add_rl_rule("scope-company-exclude", excl_attrs={"company": "CLOUDFLARENET"})
 # RL count by 1 value
 add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
 add_rl_rule("countby-headers", key=[{"headers": "countby"}])
@@ -454,6 +458,26 @@ class TestRateLimit:
                 f"Request #{i} for non excluded country should be allowed"
         assert not target.is_reachable("/scope-country-exclude/not-excluded", srcip=IP4_JP), \
             "Request #6 for included country should be denied"
+
+    def test_ratelimit_scope_company_include(self, target, ratelimit_config):
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-company-include/included", srcip=IP4_CLOUDFLARE), \
+                f"Request #{i} for included company should be allowed"
+        assert not target.is_reachable("/scope-company-include/included", srcip=IP4_CLOUDFLARE), \
+            "Request #6 for included company should be denied"
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-company-include/not-included", srcip=IP4_US), \
+                f"Request #{i} for non included company should be allowed"
+
+    def test_ratelimit_scope_company_exclude(self, target, ratelimit_config):
+        for i in range(1, 7):
+            assert target.is_reachable("/scope-company-exclude/excluded", srcip=IP4_CLOUDFLARE), \
+                f"Request #{i} for excluded company should be allowed"
+        for i in range(1, 6):
+            assert target.is_reachable("/scope-company-exclude/not-excluded", srcip=IP4_US), \
+                f"Request #{i} for non excluded company should be allowed"
+        assert not target.is_reachable("/scope-company-exclude/not-excluded", srcip=IP4_US), \
+            "Request #6 for included company should be denied"
 
     def test_ratelimit_countby_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby": "1"}}
