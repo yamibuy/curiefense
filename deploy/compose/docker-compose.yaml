@@ -137,6 +137,8 @@ services:
       - CURIELOGGER_DBHOST=logdb
       - CURIELOGGER_DBUSER=postgres
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
+      - CURIELOGGER_LOGSTASH=logstash
+      # TODO add secrets for logstash
     networks:
       - curiemesh
     ports:
@@ -183,6 +185,61 @@ services:
     ports:
       - 30300:3000
 
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    restart: always
+    volumes:
+      - persistent_elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - node.name=es
+      - cluster.name=curiefense-es-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - curiemesh
+    ports:
+      - 9200:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.10.1
+    restart: always
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - curiemesh
+    ports:
+      - 5601:5601
+
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:7.10.1
+    restart: always
+    volumes:
+      - type: bind
+        source: ./logstash-pipeline.yaml
+        target: /usr/share/logstash/pipeline/logstash.yml
+        read_only: true
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - curiemesh
+    ports:
+      # beats input
+      - 5044:5044
+      # tcp input
+      - 5000:5000
+      # http input
+      - 5001:5001
+
 networks:
   curiemesh:
     name: curiemesh
@@ -195,6 +252,7 @@ volumes:
   # persistent volumes
   persistent_logdb:
   persistent_confdb:
+  persistent_elasticsearch:
   persistent_grafana:
   persistent_redis:
   persistent_prometheus:

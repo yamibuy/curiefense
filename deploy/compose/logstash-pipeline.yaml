@@ -1,0 +1,16 @@
+## TODO Move to a custom image. Disable inputs we do not use.
+
+input {
+    tcp {
+        port => 5000
+    }
+    http {
+        port => 5001
+    }
+}
+
+output {
+    elasticsearch {
+        hosts => "elasticsearch:9200"
+    }
+}
