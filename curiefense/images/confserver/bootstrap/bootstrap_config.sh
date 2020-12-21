@@ -23,11 +23,11 @@ if [ -n "$IF_NO_CONFIG_INIT_FROM" ]; then
 	cd "$TARGETDIR"
 	git init --bare
 	cd "$TARGETDIR/../"
-	mkdir -p bootstrap-repo
+	git clone confdb/ bootstrap-repo
 	cd bootstrap-repo
 	git config --global user.email "curiefense-bootstrap@reblaze.com"
 	git config --global user.name "Curiefense Bootstrap Script"
-	git init -b _internal_db
+	git checkout -b _internal_db
 	git commit --allow-empty -am "Initial empty content"
 	cp -R "$IF_NO_CONFIG_INIT_FROM/_internal_db/." .
 	git add .
@@ -44,6 +44,8 @@ if [ -n "$IF_NO_CONFIG_INIT_FROM" ]; then
 	git commit -m "Create config [master]"
 	git remote add db "$TARGETDIR"
 	git push --all db
+	cd ..
+	rm -rf bootstrap-repo
 	exit 0
 fi
 
