@@ -1,0 +1,3 @@
+^\S+ \S+ Starting curielogger v\S+
+^\S+ \S+ Prometheus exporter listening on :2112
+^\S+ \S+ GRPC server listening on :9001
