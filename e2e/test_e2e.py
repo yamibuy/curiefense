@@ -91,18 +91,19 @@ class TargetHelper():
     def __init__(self, base_url):
         self._base_url = base_url
 
-    def query(self, path="/", method="GET", headers=None, srcip=None, **kwargs):
+    def query(self, path="/", suffix="", method="GET", headers=None, srcip=None, *args, **kwargs):
         # specifying a path helps spot tests easily in the access log
         if headers is None:
             headers = {}
         if srcip is not None:
             headers['X-Forwarded-For'] = srcip
-        res = requests.request(method=method, url=self._base_url + path,
+        res = requests.request(method=method,
+                               url=self._base_url + path + suffix,
                                headers=headers, **kwargs)
         return res
 
-    def is_reachable(self, path="/", method="GET", headers=None, srcip=None, **kwargs):
-        res = self.query(path, method, headers, srcip, **kwargs)
+    def is_reachable(self, *args, **kwargs):
+        res = self.query(*args, **kwargs)
         return res.status_code in [200, 404]
 
     def authority(self) -> str:
