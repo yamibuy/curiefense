@@ -258,7 +258,6 @@ class TestACL:
 
 # --- Rate limit tests ---
 
-# XXX test RateLimit conditions with attributes
 # XXX test RateLimit Actions
 
 def gen_rl_rules(authority):
@@ -324,6 +323,17 @@ def gen_rl_rules(authority):
     add_rl_rule("countby-cookies", key=[{"cookies": "countby"}])
     add_rl_rule("countby-headers", key=[{"headers": "countby"}])
     add_rl_rule("countby-params", key=[{"args": "countby"}])
+    add_rl_rule("countby-ipv4", key=[{"attrs": "ip"}])
+    add_rl_rule("countby-ipv6", key=[{"attrs": "ip"}])
+    add_rl_rule("countby-provider", key=[{"attrs": "provider"}])
+    add_rl_rule("countby-uri", key=[{"attrs": "uri"}])
+    add_rl_rule("countby-path", key=[{"attrs": "path"}])
+    add_rl_rule("countby-tag", key=[{"attrs": "tag"}])
+    add_rl_rule("countby-query", key=[{"attrs": "query"}])
+    add_rl_rule("countby-method", key=[{"attrs": "method"}])
+    add_rl_rule("countby-company", key=[{"attrs": "company"}])
+    add_rl_rule("countby-country", key=[{"attrs": "country"}])
+    add_rl_rule("countby-authority", key=[{"attrs": "authority"}])
     # RL count by 2 value (same type)
     add_rl_rule("countby2-cookies", key=[{"cookies": "countby1"}, {"cookies": "countby2"}])
     add_rl_rule("countby2-headers", key=[{"headers": "countby1"}, {"headers": "countby2"}])
@@ -623,30 +633,96 @@ class TestRateLimit:
         assert not target.is_reachable("/scope-other-authority-exclude/not-excluded"), \
             "Request #6 for non excluded authority should be denied"
 
+    def ratelimit_countby_helper(self, target, name, param1, param2, nocount=False):
+        def disp(i):
+            # do not change URLs when countby is set to uri or path
+            if nocount:
+                return ""
+            else:
+                return i
+        for i in range(1, 6):
+            assert target.is_reachable(f"/countby-{name}/1/{disp(i)}", **param1), \
+                f"Request #{i} with {name} countby 1 should be allowed"
+            assert target.is_reachable(f"/countby-{name}/2/{disp(i)}", **param2), \
+                f"Request #{i} with {name} countby 2 should be allowed"
+            # empty {name} -> not counted
+            # assert target.is_reachable(f"/countby-{name}/3/{disp(i)}"), \
+            #     f"Request #{i} with no {name} should be allowed"
+        assert not target.is_reachable(f"/countby-{name}/2/{disp(6)}", **param1), \
+            f"Request #6 with {name} countby 1 should be blocked"
+        assert not target.is_reachable(f"/countby-{name}/2/{disp(6)}", **param2), \
+            f"Request #6 with {name} countby 2 should be blocked"
+        # assert not target.is_reachable(f"/countby-{name}/3/{disp(6)}"), \
+        #     f"Request #{i} with no {name} should be denied"
+        time.sleep(10)
+        assert target.is_reachable(f"/countby-{name}/2/{disp(7)}", **param1), \
+            f"Request #7 with {name} countby 1 should be allowed"
+        assert target.is_reachable(f"/countby-{name}/2/{disp(7)}", **param2), \
+            f"Request #7 with {name} countby 2 should be allowed"
+        # assert target.is_reachable(f"/countby-{name}/3/{disp(7)}"), \
+        #     f"Request #{i} with no {name} should be denied"
+
     def test_ratelimit_countby_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby": "1"}}
         param2 = {section: {"countby": "2"}}
-        for i in range(1, 6):
-            assert target.is_reachable(f"/countby-{section}/1/{i}", **param1), \
-                f"Request #{i} with {section} countby 1 should be allowed"
-            assert target.is_reachable(f"/countby-{section}/2/{i}", **param2), \
-                f"Request #{i} with {section} countby 2 should be allowed"
-            # empty {section} -> not counted
-            # assert target.is_reachable(f"/countby-{section}/3/{i}"), \
-            #     f"Request #{i} with no {section} should be allowed"
-        assert not target.is_reachable(f"/countby-{section}/2/6", **param1), \
-            f"Request #6 with {section} countby 1 should be blocked"
-        assert not target.is_reachable(f"/countby-{section}/2/6", **param2), \
-            f"Request #6 with {section} countby 2 should be blocked"
-        # assert not target.is_reachable(f"/countby-{section}/3/6"), \
-        #     f"Request #{i} with no {section} should be denied"
-        time.sleep(10)
-        assert target.is_reachable(f"/countby-{section}/2/7", **param1), \
-            f"Request #7 with {section} countby 1 should be allowed"
-        assert target.is_reachable(f"/countby-{section}/2/7", **param2), \
-            f"Request #7 with {section} countby 2 should be allowed"
-        # assert target.is_reachable(f"/countby-{section}/3/7"), \
-        #     f"Request #{i} with no {section} should be denied"
+        self.ratelimit_countby_helper(target, section, param1, param2)
+
+    def test_ratelimit_countby_ipv4(self, target, ratelimit_config):
+        param1 = {"srcip": IP4_US}
+        param2 = {"srcip": IP4_JP}
+        self.ratelimit_countby_helper(target, "ipv4", param1, param2)
+
+    def test_ratelimit_countby_ipv6(self, target, ratelimit_config):
+        param1 = {"srcip": IP6_1}
+        param2 = {"srcip": IP6_2}
+        self.ratelimit_countby_helper(target, "ipv6", param1, param2)
+
+    # def test_ratelimit_countby_provider(self, target, ratelimit_config):
+    #     param1 = ???
+    #     param2 = ???
+    #     self.ratelimit_countby_helper(target, "provider", param1, param2)
+    #     # XXX write a test for provider when the feature is visibly implemented
+
+    def test_ratelimit_countby_uri(self, target, ratelimit_config):
+        param1 = {}
+        param2 = {}
+        self.ratelimit_countby_helper(target, "uri", param1, param2, nocount=True)
+
+    def test_ratelimit_countby_path(self, target, ratelimit_config):
+        param1 = {}
+        param2 = {}
+        self.ratelimit_countby_helper(target, "path", param1, param2, nocount=True)
+
+    def test_ratelimit_countby_tag(self, target, ratelimit_config):
+        # changing the source IP will change the ip tag
+        param1 = {"srcip": IP6_1}
+        param2 = {"srcip": IP6_2}
+        self.ratelimit_countby_helper(target, "tag", param1, param2)
+
+    def test_ratelimit_countby_query(self, target, ratelimit_config):
+        param1 = {"suffix": "?QUERY-1"}
+        param2 = {"suffix": "?QUERY-2"}
+        self.ratelimit_countby_helper(target, "query", param1, param2)
+
+    def test_ratelimit_countby_method(self, target, ratelimit_config):
+        param1 = {"method": "HEAD"}
+        param2 = {"method": "GET"}
+        self.ratelimit_countby_helper(target, "method", param1, param2)
+
+    def test_ratelimit_countby_company(self, target, ratelimit_config):
+        param1 = {"srcip": IP4_US}
+        param2 = {"srcip": IP4_JP}
+        self.ratelimit_countby_helper(target, "company", param1, param2)
+
+    def test_ratelimit_countby_country(self, target, ratelimit_config):
+        param1 = {"srcip": IP4_US}
+        param2 = {"srcip": IP4_JP}
+        self.ratelimit_countby_helper(target, "country", param1, param2)
+
+    def test_ratelimit_countby_authority(self, target, ratelimit_config):
+        param1 = {"headers": {"Host": "authority-1"}}
+        param2 = {"headers": {"Host": "authority-2"}}
+        self.ratelimit_countby_helper(target, "authority", param1, param2)
 
     def test_ratelimit_countby2_section(self, target, ratelimit_config, section):
         param1 = {section: {"countby1": "1"}}
