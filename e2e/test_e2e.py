@@ -12,6 +12,8 @@
 # Wait until https://github.com/curiefense/curiefense/issues/48 is fixed
 # pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v1/ --base-ui-url http://localhost:30080 .
 
+# TODO add Flow Control tests
+
 import json
 import logging
 import pytest
@@ -258,7 +260,7 @@ class TestACL:
 
 # --- Rate limit tests ---
 
-# XXX test RateLimit Actions
+# TODO test RateLimit Actions
 
 def gen_rl_rules(authority):
     RL_RULES = []
@@ -343,7 +345,7 @@ def gen_rl_rules(authority):
     add_rl_rule("countby-headers-params", key=[{"headers": "countby"}, {"args": "countby"}])
     add_rl_rule("countby-params-cookies", key=[{"args": "countby"}, {"cookies": "countby"}])
     # RL Event condition
-    # XXX https://docs.curiefense.io/console/document-editor/rate-limits#the-event-option-changing-the-meaning-of-the-rate-limit mentions "attribute / Organization" and "attribute / Username", which are not in the UI anymore
+    # TODO https://docs.curiefense.io/console/document-editor/rate-limits#the-event-option-changing-the-meaning-of-the-rate-limit mentions "attribute / Organization" and "attribute / Username", which are not in the UI anymore
     add_rl_rule("event-cookies", pairwith={"cookies": "event"})
     add_rl_rule("event-headers", pairwith={"headers": "event"})
     add_rl_rule("event-params", pairwith={"args": "event"})
@@ -486,10 +488,10 @@ class TestRateLimit:
             "Request #6 for non excluded ipv4 should be denied"
 
     # def test_ratelimit_scope_provider_include(self, target, ratelimit_config):
-    #     # XXX write a test for provider when the feature is visibly implemented
+    #     # TODO write a test for provider when the feature is visibly implemented
 
     # def test_ratelimit_scope_provider_exclude(self, target, ratelimit_config):
-    #     # XXX write a test for provider when the feature is visibly implemented
+    #     # TODO write a test for provider when the feature is visibly implemented
 
     def test_ratelimit_scope_country_include(self, target, ratelimit_config):
         for i in range(1, 6):
@@ -681,7 +683,7 @@ class TestRateLimit:
     #     param1 = ???
     #     param2 = ???
     #     self.ratelimit_countby_helper(target, "provider", param1, param2)
-    #     # XXX write a test for provider when the feature is visibly implemented
+    #     # TODO write a test for provider when the feature is visibly implemented
 
     def test_ratelimit_countby_uri(self, target, ratelimit_config):
         param1 = {}
@@ -804,7 +806,7 @@ class TestRateLimit:
         self.ratelimit_event_param_helper(target, "ipv6", params)
 
     # def test_ratelimit_event_provider(self, target, ratelimit_config):
-    #     # XXX write a test for provider when the feature is visibly implemented
+    #     # TODO write a test for provider when the feature is visibly implemented
     #     params = ???
     #     self.ratelimit_event_param_helper(target, "provider", params)
 
