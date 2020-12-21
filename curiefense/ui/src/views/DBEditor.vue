@@ -22,6 +22,7 @@
 
                 <p class="control">
                   <button class="button is-small fork-database-button"
+                          :class="{'is-loading': isForkDBLoading}"
                           @click="forkDB"
                           title="Duplicate Database">
                     <span class="icon is-small">
@@ -42,6 +43,7 @@
 
                 <p class="control">
                   <button class="button is-small new-database-button"
+                          :class="{'is-loading': isNewDBLoading}"
                           @click="addNewDB()"
                           title="Add New Database">
                     <span class="icon is-small">
@@ -52,6 +54,7 @@
 
                 <p class="control">
                   <button class="button is-small has-text-danger delete-database-button"
+                          :class="{'is-loading': isDeleteDBLoading}"
                           @click="deleteDB()"
                           title="Delete Database"
                           :disabled="selectedDB === defaultDBName || databases.length <= 1">
@@ -80,6 +83,7 @@
 
                 <p class="control">
                   <button class="button is-small fork-key-button"
+                          :class="{'is-loading': isForkKeyLoading}"
                           @click="forkKey"
                           title="Duplicate Key">
                     <span class="icon is-small">
@@ -100,6 +104,7 @@
 
                 <p class="control">
                   <button class="button is-small new-key-button"
+                          :class="{'is-loading': isNewKeyLoading}"
                           @click="addNewKey()"
                           title="Add New Key">
                     <span class="icon is-small">
@@ -110,6 +115,7 @@
 
                 <p class="control">
                   <button class="button is-small save-button"
+                          :class="{'is-loading': isSaveDocLoading}"
                           @click="saveChanges"
                           title="Save changes"
                           :disabled="!isFormValid">
@@ -121,6 +127,7 @@
 
                 <p class="control">
                   <button class="button is-small has-text-danger delete-key-button"
+                          :class="{'is-loading': isDeleteKeyLoading}"
                           @click="deleteKey()"
                           title="Delete Key"
                           :disabled="(selectedDB === defaultDBName && selectedKey === defaultKeyName) || keys.length <= 1">
@@ -135,8 +142,11 @@
           </div>
         </div>
       </div>
-      <div class="content">
-        <hr/>
+
+      <hr/>
+
+      <div class="content"
+           v-if="selectedDB && selectedKey">
         <div class="card">
           <div class="card-content">
             <div class="content">
@@ -188,6 +198,36 @@
                      :apiPath.sync="gitAPIPath"
                      @restore-version="restoreGitVersion"></git-history>
       </div>
+
+      <div class="content no-data-wrapper"
+           v-else>
+        <div v-if="loadingDocCounter > 0">
+          <button class="button is-outlined is-text is-small is-loading document-loading">
+            Loading
+          </button>
+        </div>
+        <div v-else
+             class="no-data-message">
+          No data found!
+          <div>
+            <!--display correct message by priority (Database -> Key)-->
+            <span v-if="!selectedDB">
+              Missing database. To create a new one, click
+              <a title="Add New"
+                 @click="addNewDB()">
+                here
+              </a>
+            </span>
+            <span v-if="selectedDB && !selectedKey">
+              Missing key. To create a new one, click
+              <a title="Add New"
+                 @click="addNewKey()">
+                here
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -212,6 +252,16 @@ export default {
       selectedDB: null,
       dbNameInput: '',
       defaultDBName: 'system',
+
+      // Loading indicators
+      loadingDocCounter: 0,
+      isForkDBLoading: false,
+      isNewDBLoading: false,
+      isDeleteDBLoading: false,
+      isForkKeyLoading: false,
+      isNewKeyLoading: false,
+      isDeleteKeyLoading: false,
+      isSaveDocLoading: false,
 
       keys: [],
       selectedKey: null,
@@ -268,12 +318,14 @@ export default {
       Utils.validateInput(event, validator)
     },
 
-    loadDBs() {
-      RequestsUtils.sendRequest('GET', 'db/').then((response) => {
+    async loadDBs() {
+      this.setLoadingDocStatus(true)
+      await RequestsUtils.sendRequest('GET', 'db/').then((response) => {
         this.databases = response.data
         console.log('Databases: ', this.databases)
         this.loadFirstDB()
       })
+      this.setLoadingDocStatus(false)
     },
 
     loadFirstDB() {
@@ -286,10 +338,12 @@ export default {
     },
 
     async loadDB(db) {
+      this.setLoadingDocStatus(true)
       this.selectedDB = db
       this.dbNameInput = this.selectedDB
       this.selectedDBData = (await RequestsUtils.sendRequest('GET', `db/${this.selectedDB}/`)).data
       this.initDBKeys(this.selectedDB)
+      this.setLoadingDocStatus(false)
     },
 
     saveDB(db = this.selectedDB, data) {
@@ -304,7 +358,8 @@ export default {
       this.loadDB(this.selectedDB)
     },
 
-    deleteDB(db = this.selectedDB, disableAnnouncementMessages) {
+    async deleteDB(db = this.selectedDB, disableAnnouncementMessages) {
+      this.isDeleteDBLoading = true
       const db_index = this.ld.findIndex(this.databases, (database) => {
         return database === db
       })
@@ -315,13 +370,15 @@ export default {
         successMessage = `Database [${db}] deleted!`
         failureMessage = `Failed deleting database [${db}]!`
       }
-      RequestsUtils.sendRequest('DELETE', `db/${db}/`, null, successMessage, failureMessage)
+      await RequestsUtils.sendRequest('DELETE', `db/${db}/`, null, successMessage, failureMessage)
       if (!this.databases.includes(this.selectedDB)) {
         this.loadFirstDB()
       }
+      this.isDeleteDBLoading = false
     },
 
     async addNewDB(new_db, data) {
+      this.isNewDBLoading = true
       if (!new_db) {
         new_db = Utils.generateUniqueEntityName('new database', this.databases)
       }
@@ -329,11 +386,14 @@ export default {
         this.loadDB(new_db)
         this.databases.unshift(new_db)
       })
+      this.isNewDBLoading = false
     },
 
-    forkDB() {
+    async forkDB() {
+      this.isForkDBLoading = true
       const new_db = Utils.generateUniqueEntityName(this.selectedDB, this.databases, true)
-      this.addNewDB(new_db, this.selectedDBData)
+      await this.addNewDB(new_db, this.selectedDBData)
+      this.isForkDBLoading = false
     },
 
     downloadDB(event) {
@@ -368,7 +428,8 @@ export default {
       this.loadKey(this.selectedKey)
     },
 
-    deleteKey(key, disableAnnouncementMessages) {
+    async deleteKey(key, disableAnnouncementMessages) {
+      this.isDeleteKeyLoading = true
       const db = this.selectedDB
       if (!key) {
         key = this.selectedKey
@@ -383,30 +444,35 @@ export default {
         successMessage = `Key [${key}] in database [${db}] deleted!`
         failureMessage = `Failed deleting key [${key}] in database [${db}]!`
       }
-      RequestsUtils.sendRequest('DELETE', `db/${db}/k/${key}/`, null, successMessage, failureMessage)
+      await RequestsUtils.sendRequest('DELETE', `db/${db}/k/${key}/`, null, successMessage, failureMessage)
       if (!this.keys.includes(this.selectedKey)) {
         this.loadKey(this.keys[0])
       }
+      this.isDeleteKeyLoading = false
     },
 
     async addNewKey(new_key, new_document) {
+      this.isNewKeyLoading = true
       if (!new_key) {
         new_key = Utils.generateUniqueEntityName('new key', this.keys)
       }
       if (!new_document) {
         new_document = '{}'
       }
-      return this.saveKey(this.selectedDB, new_key, new_document).then(() => {
+      await this.saveKey(this.selectedDB, new_key, new_document).then(() => {
         this.selectedDBData[new_key] = JSON.parse(new_document)
         this.loadKey(new_key)
         this.keys.unshift(new_key)
       })
+      this.isNewKeyLoading = false
     },
 
-    forkKey() {
+    async forkKey() {
+      this.isForkKeyLoading = true
       const new_key = Utils.generateUniqueEntityName(this.selectedKey, this.keys, true)
       const new_document = this.ld.cloneDeep(this.document)
-      this.addNewKey(new_key, new_document)
+      await this.addNewKey(new_key, new_document)
+      this.isForkKeyLoading = false
     },
 
     downloadKey(event) {
@@ -420,6 +486,7 @@ export default {
     },
 
     async saveChanges() {
+      this.isSaveDocLoading = true
       // If DB name changed -> Save the data under the new name and remove the old database
       if (this.selectedDB !== this.dbNameInput) {
         const old_db = this.selectedDB
@@ -438,6 +505,7 @@ export default {
         this.selectedDBData[this.selectedKey] = JSON.parse(this.document)
       }
       await this.loadGitLog()
+      this.isSaveDocLoading = false
     },
 
     async loadGitLog() {
@@ -461,6 +529,15 @@ export default {
         this.loadKey(oldSelectedKey)
       }
       this.loadGitLog()
+    },
+
+    // Collect every request to display a loading indicator, the loading indicator will be displayed as long as at least one request is still active (counter > 0)
+    setLoadingDocStatus(isLoading) {
+      if (isLoading) {
+        this.loadingDocCounter++
+      } else {
+        this.loadingDocCounter--
+      }
     },
   },
 
