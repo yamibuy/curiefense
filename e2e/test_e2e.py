@@ -261,7 +261,7 @@ def gen_rl_rules(authority):
     MAP_PATH = {
     }
 
-    def add_rl_rule(path, **kwargs):
+    def add_rl_rule(path, limit=5, **kwargs):
         rule_id = f"e2e1{len(RL_RULES):0>9}"
         MAP_PATH[path] = rule_id
         RL_RULES.append({
@@ -269,7 +269,7 @@ def gen_rl_rules(authority):
             "name": "Rate Limit Rule 5/10 " + path,
             "description": "5 requests per 10 seconds",
             "ttl": "10",
-            "limit": "5",
+            "limit": f"{limit}",
             "action": {
                 "type": "default",
                 "params": {"action": {"type": "default", "params": {}}},
