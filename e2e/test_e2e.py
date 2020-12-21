@@ -577,23 +577,25 @@ class TestRateLimit:
             "Request #6 for non excluded tags should be denied"
 
     def test_ratelimit_scope_query_include(self, target, ratelimit_config):
+        # if "QUERY" is a substring of the query, rate limiting applies
         for i in range(1, 6):
             assert target.is_reachable("/scope-query-include/included?QUERY"), \
                 f"Request #{i} for included query should be allowed"
         assert not target.is_reachable("/scope-query-include/included?QUERY"), \
             "Request #6 for included query should be denied"
         for i in range(1, 7):
-            assert target.is_reachable("/scope-query-include/not-included?NOQUERY"), \
+            assert target.is_reachable("/scope-query-include/not-included?SOMETHINGELSE"), \
                 f"Request #{i} for non included query should be allowed"
 
     def test_ratelimit_scope_query_exclude(self, target, ratelimit_config):
+        # if "QUERY" is a substring of the query, rate limiting does not apply
         for i in range(1, 7):
             assert target.is_reachable("/scope-query-exclude/excluded?QUERY"), \
                 f"Request #{i} for excluded query should be allowed"
         for i in range(1, 6):
-            assert target.is_reachable("/scope-query-exclude/not-excluded?NOQUERY"), \
+            assert target.is_reachable("/scope-query-exclude/not-excluded?SOMETHINGELSE"), \
                 f"Request #{i} for non excluded query should be allowed"
-        assert not target.is_reachable("/scope-query-exclude/not-excluded?NOQUERY"), \
+        assert not target.is_reachable("/scope-query-exclude/not-excluded?SOMETHINGELSE"), \
             "Request #6 for non excluded query should be denied"
 
     def test_ratelimit_scope_authority_include(self, target, ratelimit_config):
