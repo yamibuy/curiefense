@@ -331,6 +331,16 @@ def gen_rl_rules(authority):
     add_rl_rule("event-cookies", pairwith={"cookies": "event"})
     add_rl_rule("event-headers", pairwith={"headers": "event"})
     add_rl_rule("event-params", pairwith={"args": "event"})
+    add_rl_rule("event-ip", pairwith={"args": "event"})
+    add_rl_rule("event-provider", pairwith={"args": "event"})
+    add_rl_rule("event-uri", pairwith={"args": "event"})
+    add_rl_rule("event-path", pairwith={"args": "event"})
+    add_rl_rule("event-tag", pairwith={"args": "event"})
+    add_rl_rule("event-query", pairwith={"args": "event"})
+    add_rl_rule("event-method", pairwith={"args": "event"})
+    add_rl_rule("event-company", pairwith={"args": "event"})
+    add_rl_rule("event-country", pairwith={"args": "event"})
+    add_rl_rule("event-authority", pairwith={"args": "event"})
 
     RL_URLMAP = [
         {
@@ -677,20 +687,67 @@ class TestRateLimit:
         assert target.is_reachable(f"/countby-{section}-{othersection}/2/7", **param12), \
             f"Request #7 with {section} countby 1&2 should be allowed"
 
+    def ratelimit_event_param_helper(self, target, name, suffix="", threshold=5, **params):
+        for i in range(threshold):
+            assert target.is_reachable(f"/event-{name}/1/{i}{suffix}", **params[i]), \
+                f"Request for value #{i+1} with {name} event should be allowed"
+        assert not target.is_reachable(f"/event-{name}/1/{i}{suffix}", **params[threshold]), \
+            f"Request for value #{i+1} with {name} event should be denied"
+        for i in range(threshold):
+            assert not target.is_reachable(f"/event-{name}/1/{i}{suffix}", **params[i]), \
+                f"Request for value #{i+1} with {name} event should be denied"
+        time.sleep(10)
+        for i in range(threshold):
+            assert target.is_reachable(f"/event-{name}/1/{i}{suffix}", **params[i]), \
+                f"Request for value #{i+1} with {name} event should be allowed"
+
     def test_ratelimit_event_section(self, target, ratelimit_config, section):
         params = [{section: {"event": f"{i}"}} for i in range(1, 7)]
-        for i in range(5):
-            assert target.is_reachable(f"/event-{section}/1/{i}", **params[i]), \
-                f"Request for value #{i+1} with {section} event should be allowed"
-        assert not target.is_reachable(f"/event-{section}/1/{i}", **params[5]), \
-            f"Request for value #{i+1} with {section} event should be denied"
-        for i in range(5):
-            assert not target.is_reachable(f"/event-{section}/1/{i}", **params[i]), \
-                f"Request for value #{i+1} with {section} event should be denied"
-        time.sleep(10)
-        for i in range(5):
-            assert target.is_reachable(f"/event-{section}/1/{i}", **params[i]), \
-                f"Request for value #{i+1} with {section} event should be allowed"
+        self.ratelimit_event_param_helper(target, section, **params)
+
+    # def test_ratelimit_event_ip(self, target, ratelimit_config):
+    #     params = [{"srcip": f"199.0.0.{i}"} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "ip", **params)
+
+    # def test_ratelimit_event_provider(self, target, ratelimit_config):
+    #     # XXX write a test for provider when the feature is visibly implemented
+    #     # params = ???
+    #     self.ratelimit_event_param_helper(target, "provider", **params)
+
+    # def test_ratelimit_event_uri(self, target, ratelimit_config):
+    #     # URI is different for each query, nothing more needs changing
+    #     params = [{} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "uri", **params)
+
+    # def test_ratelimit_event_path(self, target, ratelimit_config):
+    #     # Path is different for each query, nothing more needs changing
+    #     params = [{} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "path", **params)
+
+    # def test_ratelimit_event_tag(self, target, ratelimit_config):
+    #     # changing the source IP will change the ip tag
+    #     params = [{"srcip": f"199.0.0.{i}"} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "tag", **params)
+
+    # def test_ratelimit_event_query(self, target, ratelimit_config):
+    #     params = [{"suffix": f"?QUERY-{i}"} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "query", **params)
+
+    # def test_ratelimit_event_method(self, target, ratelimit_config):
+    #     params = [{section: {"event": f"199.0.0.{i}"}} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "method", **params)
+
+    # def test_ratelimit_event_company(self, target, ratelimit_config):
+    #     params = [{section: {"event": f"199.0.0.{i}"}} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "company", **params)
+
+    # def test_ratelimit_event_country(self, target, ratelimit_config):
+    #     params = [{section: {"event": f"199.0.0.{i}"}} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "country", **params)
+
+    # def test_ratelimit_event_authority(self, target, ratelimit_config):
+    #     params = [{section: {"event": f"199.0.0.{i}"}} for i in range(1, 7)]
+    #     self.ratelimit_event_param_helper(target, "authority", **params)
 
 
 # --- Tag rules tests (formerly profiling lists) ---
