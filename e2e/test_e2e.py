@@ -116,14 +116,20 @@ def target(request):
     return TargetHelper(url)
 
 
-# geo=US, asn=1239
+# geo=US, company=SPRINTLINK, asn=1239
 IP4_US = "199.0.0.1"
 
-# geo=JP, asn=17676
+# geo=JP, company=Softbank BB Corp., asn=17676
 IP4_JP = "126.0.0.1"
 
-# geo=AU, company=CLOUDFLARENET
-IP4_CLOUDFLARE = "1.1.1.1"
+# geo=AU, company=CLOUDFLARENET, asn=13335
+IP4_CLOUDFLARE = "1.0.0.0"
+
+# geo=FR, company=Orange, asn=3215
+IP4_ORANGE = "2.0.0.0"
+
+IP6_1 = "0000:0000:0000:0000:0000:0000:0000:0001"
+IP6_2 = "0000:0000:0000:0000:0000:0000:0000:0002"
 
 
 class UIHelper():
@@ -246,7 +252,7 @@ class TestACL:
 
     def test_ipv6(self, acl, target):
         acl.reset_and_set_acl({"deny": "ip:0000:0000:0000:0000:0000:0000:0000:0001"})
-        assert not target.is_reachable("/acl-ipv6", srcip="0000:0000:0000:0000:0000:0000:0000:0001")
+        assert not target.is_reachable("/acl-ipv6", srcip=IP6_1)
         assert target.is_reachable("/")
 
 
@@ -774,7 +780,7 @@ TEST_TAGRULES = {
                     ["path", "/e2e-tagrules-path/", "annotation"],
                     ["query", "e2e=value", "annotation"],
                     ["uri", "/e2e-tagrules-uri", "annotation"],
-                    ["ip", "0000:0000:0000:0000:0000:0000:0000:0001", "annotation"],
+                    ["ip", IP6_1, "annotation"],
                     ["ip", IP4_US, "annotation"],
                     ["country", "jp", "annotation"],
                     ["asn", "13335", "annotation"],
@@ -855,9 +861,9 @@ class TestTagRules:
 
     def test_ipv6(self, target, tagrules_config, active):
         assert target.is_reachable(
-            "/tag-ipv6-1", srcip="0000:0000:0000:0000:0000:0000:0000:0001") is not active
+            "/tag-ipv6-1", srcip=IP6_1) is not active
         assert target.is_reachable(
-            "/tag-ipv6-2", srcip="0000:0000:0000:0000:0000:0000:0000:0002") is True
+            "/tag-ipv6-2", srcip=IP6_2) is True
 
     def test_country(self, target, tagrules_config, active):
         # JP address (Softbank)
