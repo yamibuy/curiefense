@@ -78,11 +78,13 @@ function sorted_limit_rules( limit_rules, limit_ids )
     -- split
     for _, limit_id in ipairs(limit_ids) do
         local rule = limit_rules[limit_id]
-        local limit = tonumber(rule.limit)
-        if limit == 0 then
-            table.insert(zeros, rule)
-        else
-            table.insert(others, rule)
+        if rule then
+            local limit = tonumber(rule.limit)
+            if limit == 0 then
+                table.insert(zeros, rule)
+            else
+                table.insert(others, rule)
+            end
         end
     end
     -- sort
