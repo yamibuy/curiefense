@@ -260,7 +260,6 @@ class TestACL:
 
 # XXX test RateLimit conditions with attributes
 # XXX test RateLimit Actions
-# XXX test RateLimit scope limit by attributes (provider)
 
 def gen_rl_rules(authority):
     RL_RULES = []
@@ -475,6 +474,12 @@ class TestRateLimit:
                 f"Request #{i} for non excluded ipv4 should be allowed"
         assert not target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
             "Request #6 for non excluded ipv4 should be denied"
+
+    # def test_ratelimit_scope_provider_include(self, target, ratelimit_config):
+    #     # XXX write a test for provider when the feature is visibly implemented
+
+    # def test_ratelimit_scope_provider_exclude(self, target, ratelimit_config):
+    #     # XXX write a test for provider when the feature is visibly implemented
 
     def test_ratelimit_scope_country_include(self, target, ratelimit_config):
         for i in range(1, 6):
