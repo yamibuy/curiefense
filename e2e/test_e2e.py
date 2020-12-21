@@ -1081,26 +1081,26 @@ WAF_PARAM_CONSTRAINTS = {
     "names": [
         {
             "key": "name-norestrict",
-            "reg": "value",
+            "reg": "[v]+[a]{1}l?u*e",
             "restrict": False,
             "exclusions": {"100140": 1}
         },
         {
             "key": "name-restrict",
-            "reg": "value",
+            "reg": "[v]+[a]{1}l?u*e",
             "restrict": True,
             "exclusions": {}
         }
     ],
     "regex": [
         {
-            "key": "regex-norestrict",
+            "key": "reg[e]x{1}-norestrict",
             "reg": "[v]+[a]{1}l?u*e",
             "restrict": False,
             "exclusions": {"100140": 1}
         },
         {
-            "key": "regex-restrict",
+            "key": "reg[e]x{1}-restrict",
             "reg": "[v]+[a]{1}l?u*e",
             "restrict": True,
             "exclusions": {}
