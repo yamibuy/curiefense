@@ -50,9 +50,10 @@
                 <p class="control"
                    v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small fork-document-button"
+                          :class="{'is-loading': isForkLoading}"
                           @click="forkDoc"
                           title="Duplicate Document"
-                          :disabled="!selectedDoc.name">
+                          :disabled="!selectedDoc">
                     <span class="icon is-small">
                       <i class="fas fa-clone"></i>
                     </span>
@@ -73,6 +74,7 @@
                 <p class="control"
                    v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small new-document-button"
+                          :class="{'is-loading': isNewLoading}"
                           @click="addNewDoc()"
                           title="Add New Document">
                     <span class="icon is-small">
@@ -84,6 +86,7 @@
                 <p class="control"
                    v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small save-document-button"
+                          :class="{'is-loading': isSaveLoading}"
                           @click="saveChanges()"
                           title="Save changes">
                     <span class="icon is-small">
@@ -95,9 +98,10 @@
                 <p class="control"
                    v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small has-text-danger delete-document-button"
+                          :class="{'is-loading': isDeleteLoading}"
                           @click="deleteDoc"
                           title="Delete Document"
-                          :disabled="selectedDoc.id === '__default__' || isDocReferenced || docs.length <= 1">
+                          :disabled="selectedDoc && (selectedDoc.id === '__default__' || isDocReferenced || docs.length <= 1)">
                     <span class="icon is-small">
                       <i class="fas fa-trash"></i>
                     </span>
@@ -110,8 +114,10 @@
         </div>
       </div>
 
-      <div class="content">
-        <hr/>
+      <hr/>
+
+      <div class="content document-editor-wrapper"
+           v-if="selectedBranch && selectedDocType && selectedDoc">
         <component
             :is="currentEditorComponent.component"
             :selectedBranch.sync="selectedBranch"
@@ -120,13 +126,46 @@
             :apiPath="documentAPIPath"
             @switch-doc-type="switchDocType"
             @update="selectedDoc = $event"
-            ref="currentComponent"
-        ></component>
+            ref="currentComponent">
+        </component>
         <hr/>
         <git-history v-if="selectedDocID"
-                    :gitLog.sync="gitLog"
-                    :apiPath.sync="gitAPIPath"
-                    @restore-version="restoreGitVersion"></git-history>
+                     :gitLog.sync="gitLog"
+                     :apiPath.sync="gitAPIPath"
+                     @restore-version="restoreGitVersion"></git-history>
+      </div>
+
+      <div class="content no-data-wrapper"
+           v-else>
+        <div v-if="loadingDocCounter > 0">
+          <button class="button is-outlined is-text is-small is-loading document-loading">
+            Loading
+          </button>
+        </div>
+        <div v-else
+             class="no-data-message">
+          No data found!
+          <div>
+            <!--display correct message by priority (Branch -> Document type -> Document)-->
+            <span v-if="!selectedBranch">
+              Missing branch. To be redirected to Version Control page where you will be able to create a new one, click
+              <a title="Add New"
+                 @click="referToVersionControl()">
+                here
+              </a>
+            </span>
+            <span v-if="selectedBranch && !selectedDocType">
+              Missing document type. Please select one from the dropdown above
+            </span>
+            <span v-if="selectedBranch && selectedDocType && !selectedDoc">
+              Missing document. To create a new one, click
+              <a title="Add New"
+                 @click="addNewDoc()">
+                here
+              </a>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -156,15 +195,22 @@ export default {
     return {
       configs: [],
 
+      // Loading indicators
+      loadingDocCounter: 0,
+      isForkLoading: false,
+      isNewLoading: false,
+      isSaveLoading: false,
+      isDeleteLoading: false,
+
       // To prevent deletion of docs referenced by URLmaps
       referencedIDsACL: [],
       referencedIDsWAF: [],
       referencedIDsLimits: [],
 
-      // ...
       selectedBranch: null,
       branchDocTypes: null,
-      selectedDocType: null,
+      // Starting with the first doc type in componentsMap
+      selectedDocType: 'aclpolicies',
 
       docs: [],
       docIdNames: [],
@@ -186,7 +232,6 @@ export default {
 
       apiRoot: DatasetsUtils.ConfAPIRoot,
       apiVersion: DatasetsUtils.ConfAPIVersion,
-
     }
   },
   computed: {
@@ -213,7 +258,7 @@ export default {
 
     selectedDoc: {
       get() {
-        return this.docs[this.selectedDocIndex] || {}
+        return this.docs[this.selectedDocIndex]
       },
       set(newDoc) {
         this.$set(this.docs, this.selectedDocIndex, newDoc)
@@ -257,10 +302,16 @@ export default {
 
     async loadConfigs(counter_only) {
       // store configs
-      const response = await RequestsUtils.sendRequest('GET', 'configs/')
-      let configs = response.data
+      let configs
+      try {
+        const response = await RequestsUtils.sendRequest('GET', 'configs/')
+        configs = response.data
+      } catch (err) {
+        console.log('Error while attempting to get configs')
+        console.log(err)
+      }
       if (!counter_only) {
-        console.log('this.configs', configs)
+        console.log('loaded configs: ', configs)
         this.configs = configs
         // pick first branch name as selected
         this.selectedBranch = this.branchNames[0]
@@ -275,9 +326,9 @@ export default {
       console.log('config counters', this.branches, this.commits)
     },
 
-    initDocTypes() {
+    async initDocTypes() {
       let doctype = this.selectedDocType = Object.keys(this.componentsMap)[0]
-      this.loadDocs(doctype)
+      await this.loadDocs(doctype)
     },
 
     updateDocIdNames() {
@@ -289,16 +340,21 @@ export default {
           })
     },
 
-    loadDocs(doctype) {
+    async loadDocs(doctype) {
       let branch = this.selectedBranch
-      RequestsUtils.sendRequest('GET', `configs/${branch}/d/${doctype}/`).then((response) => {
+      try {
+        const response = await RequestsUtils.sendRequest('GET', `configs/${branch}/d/${doctype}/`)
         this.docs = response.data
-        this.updateDocIdNames()
-        if (this.docIdNames && this.docIdNames.length && this.docIdNames[0].length) {
-          this.selectedDocID = this.docIdNames[0][0]
-        }
-        this.loadGitLog()
-      })
+      } catch (err) {
+        console.log('Error while attempting to load documents')
+        console.log(err)
+        this.docs = []
+      }
+      this.updateDocIdNames()
+      if (this.docIdNames && this.docIdNames.length && this.docIdNames[0].length) {
+        this.selectedDocID = this.docIdNames[0][0]
+      }
+      this.loadGitLog()
     },
 
     loadGitLog(interaction) {
@@ -315,16 +371,18 @@ export default {
           }
         })
       }
-
     },
 
-    switchBranch() {
+    async switchBranch() {
+      this.setLoadingDocStatus(true)
       this.resetGitLog()
-      this.initDocTypes()
+      await this.initDocTypes()
       this.loadReferencedDocsIDs()
+      this.setLoadingDocStatus(false)
     },
 
-    switchDocType(docType) {
+    async switchDocType(docType) {
+      this.setLoadingDocStatus(true)
       if (!docType) {
         docType = this.selectedDocType
       } else {
@@ -333,7 +391,8 @@ export default {
       this.docs = []
       this.selectedDocID = null
       this.resetGitLog()
-      this.loadDocs(docType)
+      await this.loadDocs(docType)
+      this.setLoadingDocStatus(false)
     },
 
     downloadDoc() {
@@ -346,24 +405,29 @@ export default {
       element.setAttribute('download', this.selectedDocType + '.json')
     },
 
-    forkDoc() {
-      let new_doc = this.ld.cloneDeep(this.selectedDoc)
-      new_doc.name = 'copy of ' + new_doc.name
-      new_doc.id = DatasetsUtils.UUID2()
-      this.addNewDoc(new_doc)
+    async forkDoc() {
+      this.isForkLoading = true
+      let docToAdd = this.ld.cloneDeep(this.selectedDoc)
+      docToAdd.name = 'copy of ' + docToAdd.name
+      docToAdd.id = DatasetsUtils.UUID2()
+      await this.addNewDoc(docToAdd)
+      this.isForkLoading = false
     },
 
-    addNewDoc(new_doc) {
-      if (!new_doc) {
-        new_doc = this.newDoc()
+    async addNewDoc(docToAdd) {
+      this.isNewLoading = true
+      if (!docToAdd) {
+        docToAdd = this.newDoc()
       }
       this.resetGitLog()
-      this.docs.unshift(new_doc)
-      this.selectedDocID = new_doc.id
-      this.saveChanges('POST')
+      this.docs.unshift(docToAdd)
+      this.selectedDocID = docToAdd.id
+      await this.saveChanges('POST')
+      this.isNewLoading = false
     },
 
-    saveChanges(methodName) {
+    async saveChanges(methodName) {
+      this.isSaveLoading = true
       if (!methodName) {
         methodName = 'PUT'
       }
@@ -372,7 +436,7 @@ export default {
         url_trail += `${this.selectedDocID}/`
       const doc = this.selectedDoc
 
-      RequestsUtils.sendRequest(methodName, url_trail, doc, 'Changes saved!', 'Failed while saving changes!')
+      await RequestsUtils.sendRequest(methodName, url_trail, doc, 'Changes saved!', 'Failed while saving changes!')
           .then(() => {
             this.updateDocIdNames()
             this.loadGitLog(true)
@@ -381,16 +445,20 @@ export default {
               this.loadReferencedDocsIDs()
             }
           })
+      this.isSaveLoading = false
     },
 
-    deleteDoc() {
+    async deleteDoc() {
+      this.isDeleteLoading = true
       this.docs.splice(this.selectedDocIndex, 1)
-      RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, 'Document deleted!', 'Failed while deleting document!')
+      await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, 'Document deleted!', 'Failed while deleting document!')
           .then(() => {
             this.updateDocIdNames()
+            this.loadGitLog(true)
           })
       this.selectedDocID = this.docs[0].id
       this.resetGitLog()
+      this.isDeleteLoading = false
     },
 
     async loadReferencedDocsIDs() {
@@ -424,13 +492,52 @@ export default {
       this.updateDocIdNames()
       this.loadGitLog()
     },
+
+    referToVersionControl() {
+      this.$router.push('/versioncontrol')
+    },
+
+    // Collect every request to display a loading indicator, the loading indicator will be displayed as long as at least one request is still active (counter > 0)
+    setLoadingDocStatus(isLoading) {
+      if (isLoading) {
+        this.loadingDocCounter++
+      } else {
+        this.loadingDocCounter--
+      }
+    },
   },
 
   async created() {
+    this.setLoadingDocStatus(true)
     await this.loadConfigs()
     this.loadReferencedDocsIDs()
+    this.setLoadingDocStatus(false)
   }
 
 }
 
 </script>
+<style scoped>
+.no-data-wrapper {
+  /* Magic number! The page looks empty without content */
+  min-height: 50vh;
+  /* Magic number! Delayed the display of loading indicator as to not display it in short loads */
+  animation: delayedDisplay 300ms;
+}
+
+@keyframes delayedDisplay {
+  0% {
+    opacity: 0
+  }
+  50% {
+    opacity: 0
+  }
+  51% {
+    opacity: 1
+  }
+  100% {
+    opacity: 1
+  }
+}
+
+</style>
