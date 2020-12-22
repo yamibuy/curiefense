@@ -261,14 +261,16 @@ class TestACL:
 # --- Rate limit tests ---
 
 # TODO test RateLimit Actions
-
 def gen_rl_rules(authority):
     RL_RULES = []
-    MAP_PATH = {
-    }
+    MAP_PATH = {}
 
-    def add_rl_rule(path, limit=5, **kwargs):
+    def add_rl_rule(path, limit=5, action_ext=None, subaction_ext=None, **kwargs):
         rule_id = f"e2e1{len(RL_RULES):0>9}"
+        if subaction_ext is None:
+            subaction_ext = {}
+        if action_ext is None:
+            action_ext = {}
         MAP_PATH[path] = rule_id
         RL_RULES.append({
             "id": rule_id,
@@ -277,8 +279,15 @@ def gen_rl_rules(authority):
             "ttl": "10",
             "limit": f"{limit}",
             "action": {
-                "type": "default",
-                "params": {"action": {"type": "default", "params": {}}},
+                "type": kwargs.get("action", "default"),
+                "params": {
+                    "action": {
+                        "type": kwargs.get("subaction", "default"),
+                        "params": kwargs.get("subaction_params", {}),
+                        **subaction_ext
+                    }
+                },
+                **action_ext,
             },
             "include": {
                 "cookies": kwargs.get("incl_cookies", {}),
@@ -297,11 +306,30 @@ def gen_rl_rules(authority):
         })
 
     # RL scope
-    add_rl_rule("scope-cookies", incl_cookies={"include": "true"}, excl_cookies={"exclude": "true"})
-    add_rl_rule("scope-headers", incl_headers={"include": "true"}, excl_headers={"exclude": "true"})
-    add_rl_rule("scope-params", incl_args={"include": "true"}, excl_args={"exclude": "true"})
-    add_rl_rule("scope-path", incl_attrs={"path": "/scope-path/include/"}, excl_attrs={"path": "/scope-path/include/exclude/"})
-    add_rl_rule("scope-uri", incl_attrs={"uri": "/scope-uri/include/"}, excl_attrs={"uri": "/scope-uri/include/exclude/"})
+    add_rl_rule(
+        "scope-cookies",
+        incl_cookies={"include": "true"},
+        excl_cookies={"exclude": "true"},
+    )
+    add_rl_rule(
+        "scope-headers",
+        incl_headers={"include": "true"},
+        excl_headers={"exclude": "true"},
+    )
+    add_rl_rule(
+        "scope-params", incl_args={"include": "true"},
+        excl_args={"exclude": "true"}
+    )
+    add_rl_rule(
+        "scope-path",
+        incl_attrs={"path": "/scope-path/include/"},
+        excl_attrs={"path": "/scope-path/include/exclude/"},
+    )
+    add_rl_rule(
+        "scope-uri",
+        incl_attrs={"uri": "/scope-uri/include/"},
+        excl_attrs={"uri": "/scope-uri/include/exclude/"},
+    )
     add_rl_rule("scope-ipv4-include", incl_attrs={"ip": IP4_US})
     add_rl_rule("scope-ipv4-exclude", excl_attrs={"ip": IP4_US})
     add_rl_rule("scope-country-include", incl_attrs={"country": "us"})
@@ -330,7 +358,7 @@ def gen_rl_rules(authority):
     add_rl_rule("countby-provider", key=[{"attrs": "provider"}])
     add_rl_rule("countby-uri", key=[{"attrs": "uri"}])
     add_rl_rule("countby-path", key=[{"attrs": "path"}])
-    add_rl_rule("countby-tag", key=[{"attrs": "tag"}])
+    add_rl_rule("countby-tag", key=[{"attrs": "tags"}])
     add_rl_rule("countby-query", key=[{"attrs": "query"}])
     add_rl_rule("countby-method", key=[{"attrs": "method"}])
     add_rl_rule("countby-company", key=[{"attrs": "company"}])
@@ -360,6 +388,54 @@ def gen_rl_rules(authority):
     add_rl_rule("event-company", pairwith={"args": "event"}, limit=3)
     add_rl_rule("event-country", pairwith={"args": "event"}, limit=3)
     add_rl_rule("event-authority", pairwith={"args": "event"})
+    # action
+    add_rl_rule("action-challenge", action="challenge")
+    add_rl_rule("action-monitor", action="monitor")
+    add_rl_rule(
+        "action-response", action="response",
+        action_ext={"status": 123, "content": "Response body"},
+    )
+    add_rl_rule(
+        "action-redirect", action="redirect",
+        action_ext={"status": "124", "location": "/redirect/"},
+    )
+    add_rl_rule(
+        "action-ban-default",
+        action="ban", subaction="default", action_ext={"ttl": 10},
+        subaction_params={"action": {"type": "default", "params": {}}},
+    )
+    add_rl_rule(
+        "action-ban-challenge",
+        action="ban", subaction="challenge", action_ext={"ttl": 10},
+        subaction_params={"action": {"type": "default", "params": {}}},
+    )
+    add_rl_rule(
+        "action-ban-monitor",
+        action="ban", subaction="monitor", action_ext={"ttl": 10},
+        subaction_params={"action": {"type": "default", "params": {}}},
+    )
+    add_rl_rule(
+        "action-ban-response",
+        action="ban", subaction="response", action_ext={"ttl": 10},
+        subaction_ext={"status": 123, "content": "Response body"},
+        subaction_params={"action": {"type": "default", "params": {}}},
+    )
+    add_rl_rule(
+        "action-ban-redirect",
+        action="ban", subaction="redirect", action_ext={"ttl": 10},
+        subaction_ext={"status": "124", "location": "/redirect/"},
+        subaction_params={"action": {"type": "default", "params": {}}},
+    )
+    add_rl_rule(
+        "action-ban-header",
+        action="ban", subaction="header", action_ext={"ttl": 10},
+        subaction_ext={"headers": "Header-Name"},
+        subaction_params={"action": {"type": "default", "params": {}}},
+    )
+    add_rl_rule(
+        "action-header", action="header",
+        action_ext={"headers": "Header-Name"},
+    )
 
     RL_URLMAP = [
         {
