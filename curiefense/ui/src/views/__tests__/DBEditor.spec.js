@@ -1,11 +1,11 @@
 import DBEditor from '@/views/DBEditor'
-import {describe, test, expect, jest, beforeEach, afterEach} from '@jest/globals'
+import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals'
 import {shallowMount} from '@vue/test-utils'
 import GitHistory from '@/components/GitHistory'
 import Vue from 'vue'
+import axios from 'axios'
 
 jest.mock('axios')
-import axios from 'axios'
 
 describe('DBEditor.vue', () => {
     let wrapper
@@ -52,7 +52,7 @@ describe('DBEditor.vue', () => {
             if (path === `/conf/api/v1/db/${db}/k/${key}/v/`) {
                 return Promise.resolve({data: dbKeyLogs})
             }
-            Promise.resolve({data: {}})
+            return Promise.resolve({data: {}})
         })
         wrapper = shallowMount(DBEditor)
         await Vue.nextTick()
@@ -355,6 +355,161 @@ describe('DBEditor.vue', () => {
             saveKeyButton.trigger('click')
             await Vue.nextTick()
             expect(putSpy).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('no data', () => {
+        test('should display correct message when there is no database list data', (done) => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/db/') {
+                    return Promise.resolve({data: []})
+                }
+                return Promise.resolve({data: {}})
+            })
+            wrapper = shallowMount(DBEditor)
+            // allow all requests to finish
+            setImmediate(() => {
+                const noDataMessage = wrapper.find('.no-data-message')
+                expect(noDataMessage.element).toBeDefined()
+                expect(noDataMessage.text().toLowerCase()).toContain('no data found!')
+                expect(noDataMessage.text().toLowerCase()).toContain('missing database.')
+                done()
+            })
+        })
+
+        test('should display correct message when there is no key data', (done) => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/db/') {
+                    return Promise.resolve({data: ['system', 'databaseCopy', 'anotherDB']})
+                }
+                const db = wrapper.vm.selectedDB
+                if (path === `/conf/api/v1/db/${db}/`) {
+                    return Promise.resolve({data: {}})
+                }
+                return Promise.resolve({
+                    data: {}
+                })
+            })
+            wrapper = shallowMount(DBEditor)
+            // allow all requests to finish
+            setImmediate(() => {
+                const noDataMessage = wrapper.find('.no-data-message')
+                expect(noDataMessage.element).toBeDefined()
+                expect(noDataMessage.text().toLowerCase()).toContain('no data found!')
+                expect(noDataMessage.text().toLowerCase()).toContain('missing key.')
+                done()
+            })
+        })
+    })
+
+    describe('loading indicator', () => {
+        test('should display loading indicator when databases list not loaded', async () => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/db/') {
+                    return new Promise(() => {
+                    })
+                }
+                return Promise.resolve({data: []})
+            })
+            wrapper = shallowMount(DBEditor)
+            await Vue.nextTick()
+            const docLoadingIndicator = wrapper.find('.document-loading')
+            expect(docLoadingIndicator.element).toBeDefined()
+        })
+
+        test('should display loading indicator when database not loaded', async () => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/db/') {
+                    return Promise.resolve({data: ['system', 'databaseCopy', 'anotherDB']})
+                }
+                const db = wrapper.vm.selectedDB
+                if (path === `/conf/api/v1/db/${db}/`) {
+                    return new Promise(() => {
+                    })
+                }
+                Promise.resolve({data: {}})
+            })
+            wrapper = shallowMount(DBEditor)
+            await Vue.nextTick()
+            const docLoadingIndicator = wrapper.find('.document-loading')
+            expect(docLoadingIndicator.element).toBeDefined()
+        })
+
+        test('should display loading indicator when saving document changes', async () => {
+            axios.put.mockImplementation(() => new Promise(() => {
+            }))
+            const saveDocumentButton = wrapper.find('.save-button')
+            saveDocumentButton.trigger('click')
+            await Vue.nextTick()
+            expect(saveDocumentButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when forking database', async () => {
+            axios.post.mockImplementation(() => new Promise(() => {
+            }))
+            const forkDatabaseButton = wrapper.find('.fork-database-button')
+            forkDatabaseButton.trigger('click')
+            await Vue.nextTick()
+            expect(forkDatabaseButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when adding a new database', async () => {
+            axios.post.mockImplementation(() => new Promise(() => {
+            }))
+            const newDatabaseButton = wrapper.find('.new-database-button')
+            newDatabaseButton.trigger('click')
+            await Vue.nextTick()
+            expect(newDatabaseButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when deleting a database', (done) => {
+            axios.put.mockImplementation(() => Promise.resolve())
+            axios.delete.mockImplementation(() => new Promise(() => {
+            }))
+            // create new database so we can delete it
+            const newDatabaseButton = wrapper.find('.new-database-button')
+            newDatabaseButton.trigger('click')
+            setImmediate(async () => {
+                const deleteDatabaseButton = wrapper.find('.delete-database-button')
+                deleteDatabaseButton.trigger('click')
+                await Vue.nextTick()
+                expect(deleteDatabaseButton.element.classList).toContain('is-loading')
+                done()
+            })
+        })
+
+        test('should display loading indicator when forking key', async () => {
+            axios.post.mockImplementation(() => new Promise(() => {
+            }))
+            const forkKeyButton = wrapper.find('.fork-key-button')
+            forkKeyButton.trigger('click')
+            await Vue.nextTick()
+            expect(forkKeyButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when adding a new key', async () => {
+            axios.post.mockImplementation(() => new Promise(() => {
+            }))
+            const newKeyButton = wrapper.find('.new-key-button')
+            newKeyButton.trigger('click')
+            await Vue.nextTick()
+            expect(newKeyButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when deleting a key', (done) => {
+            axios.put.mockImplementation(() => Promise.resolve())
+            axios.delete.mockImplementation(() => new Promise(() => {
+            }))
+            // create new database so we can delete it
+            const newDatabaseButton = wrapper.find('.new-key-button')
+            newDatabaseButton.trigger('click')
+            setImmediate(async () => {
+                const deleteDatabaseButton = wrapper.find('.delete-key-button')
+                deleteDatabaseButton.trigger('click')
+                await Vue.nextTick()
+                expect(deleteDatabaseButton.element.classList).toContain('is-loading')
+                done()
+            })
         })
     })
 })

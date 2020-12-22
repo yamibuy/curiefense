@@ -1,12 +1,12 @@
 import DocumentEditor from '@/views/DocumentEditor'
-import {describe, test, expect, beforeEach, jest, afterEach} from '@jest/globals'
+import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals'
 import {shallowMount} from '@vue/test-utils'
 import GitHistory from '@/components/GitHistory'
 import Vue from 'vue'
 import DatasetsUtils from '@/assets/DatasetsUtils'
+import axios from 'axios'
 
 jest.mock('axios')
-import axios from 'axios'
 
 describe('DocumentEditor.vue', () => {
     let wrapper
@@ -17,6 +17,7 @@ describe('DocumentEditor.vue', () => {
     let profilingListDocs
     let profilingListDocsLogs
     let urlMapsDocs
+    let urlMapsDocsLogs
     let flowControlDocs
     beforeEach(async () => {
         gitData = [
@@ -458,39 +459,39 @@ describe('DocumentEditor.vue', () => {
         ]
         aclGitOldVersion = [
             {
-                "id": "__default__",
-                "name": "default-acl",
-                "allow": [],
-                "allow_bot": [
-                    "google"
+                'id': '__default__',
+                'name': 'default-acl',
+                'allow': [],
+                'allow_bot': [
+                    'google'
                 ],
-                "deny_bot": [],
-                "bypass": [
-                    "internal"
+                'deny_bot': [],
+                'bypass': [
+                    'internal'
                 ],
-                "deny": [
-                    "tor"
+                'deny': [
+                    'tor'
                 ],
-                "force_deny": [
-                    "china"
+                'force_deny': [
+                    'china'
                 ]
             },
             {
-                "id": "5828321c37e0",
-                "name": "copy of default-acl",
-                "allow": [],
-                "allow_bot": [
-                    "google"
+                'id': '5828321c37e0',
+                'name': 'copy of default-acl',
+                'allow': [],
+                'allow_bot': [
+                    'google'
                 ],
-                "deny_bot": [],
-                "bypass": [
-                    "internal"
+                'deny_bot': [],
+                'bypass': [
+                    'internal'
                 ],
-                "deny": [
-                    "tor"
+                'deny': [
+                    'tor'
                 ],
-                "force_deny": [
-                    "china"
+                'force_deny': [
+                    'china'
                 ]
             }
         ]
@@ -608,6 +609,20 @@ describe('DocumentEditor.vue', () => {
                 ]
             }
         ]
+        urlMapsDocsLogs = [
+            [
+                {
+                    'version': '1662043d2a18d6ad2c9c94d6f826593ff5506354',
+                    'date': '2020-11-08T21:31:41+01:00',
+                    'parents': [
+                        '16379cdf39501574b4a2f5a227b82a4454884b84'
+                    ],
+                    'message': 'Create config [master]\n',
+                    'email': 'curiefense@reblaze.com',
+                    'author': 'Curiefense API'
+                }
+            ]
+        ]
         flowControlDocs = [
             {
                 'exclude': [],
@@ -669,6 +684,9 @@ describe('DocumentEditor.vue', () => {
             }
             if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/`) {
                 return Promise.resolve({data: urlMapsDocs})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/e/${docID}/v/`) {
+                return Promise.resolve({data: urlMapsDocsLogs[0]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/flowcontrol/`) {
                 return Promise.resolve({data: flowControlDocs})
@@ -759,6 +777,9 @@ describe('DocumentEditor.vue', () => {
         const options = docTypeSelection.findAll('option')
         options.at(4).element.selected = true
         docTypeSelection.trigger('change')
+        // allow the get request to complete
+        await Vue.nextTick()
+        // allow the vue's v-if loading indicator to digest
         await Vue.nextTick()
 
         const doc = wrapper.vm.selectedDoc
@@ -859,5 +880,130 @@ describe('DocumentEditor.vue', () => {
         gitHistory.vm.$emit('restore-version', wantedVersion)
         await Vue.nextTick()
         expect(putSpy).toHaveBeenCalledWith(`/conf/api/v1/configs/master/d/aclpolicies/v/${wantedVersion.version}/revert/`)
+    })
+
+    describe('no data', () => {
+        test('should display correct message when there is no branch data', (done) => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/configs/') {
+                    return Promise.resolve({data: []})
+                }
+                return Promise.resolve({data: []})
+            })
+            wrapper = shallowMount(DocumentEditor)
+            // allow all requests to finish
+            setImmediate(() => {
+                const noDataMessage = wrapper.find('.no-data-message')
+                expect(noDataMessage.element).toBeDefined()
+                expect(noDataMessage.text().toLowerCase()).toContain('no data found!')
+                expect(noDataMessage.text().toLowerCase()).toContain('missing branch.')
+                done()
+            })
+        })
+
+        test('should display correct message when there is no doc type data', (done) => {
+            // it is not possible to get to this state from the UI, but we protect from it anyway
+            wrapper.vm.selectedDocType = null
+            // allow all requests to finish
+            setImmediate(() => {
+                const noDataMessage = wrapper.find('.no-data-message')
+                expect(noDataMessage.element).toBeDefined()
+                expect(noDataMessage.text().toLowerCase()).toContain('no data found!')
+                expect(noDataMessage.text().toLowerCase()).toContain('missing document type.')
+                done()
+            })
+        })
+
+        test('should display correct message when there is no doc data', (done) => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/configs/') {
+                    return Promise.resolve({data: gitData})
+                }
+                return Promise.resolve({data: []})
+            })
+            wrapper = shallowMount(DocumentEditor)
+            // allow all requests to finish
+            setImmediate(() => {
+                const noDataMessage = wrapper.find('.no-data-message')
+                expect(noDataMessage.element).toBeDefined()
+                expect(noDataMessage.text().toLowerCase()).toContain('no data found!')
+                expect(noDataMessage.text().toLowerCase()).toContain('missing document.')
+                done()
+            })
+        })
+    })
+
+    describe('loading indicator', () => {
+        test('should display loading indicator when branch not loaded', async () => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/configs/') {
+                    return new Promise(() => {
+                    })
+                }
+                return Promise.resolve({data: []})
+            })
+            wrapper = shallowMount(DocumentEditor)
+            await Vue.nextTick()
+            const docLoadingIndicator = wrapper.find('.document-loading')
+            expect(docLoadingIndicator.element).toBeDefined()
+        })
+
+        test('should display loading indicator when doc not loaded', async () => {
+            axios.get.mockImplementation((path) => {
+                if (path === '/conf/api/v1/configs/') {
+                    return Promise.resolve({data: gitData})
+                }
+                const branch = wrapper.vm.selectedBranch
+                if (path === `/conf/api/v1/configs/${branch}/d/aclpolicies/`) {
+                    return new Promise(() => {
+                    })
+                }
+                return Promise.resolve({data: []})
+            })
+            wrapper = shallowMount(DocumentEditor)
+            await Vue.nextTick()
+            const docLoadingIndicator = wrapper.find('.document-loading')
+            expect(docLoadingIndicator.element).toBeDefined()
+        })
+
+        test('should display loading indicator when saving document changes', async () => {
+            axios.put.mockImplementation(() => new Promise(() => {
+            }))
+            const saveDocumentButton = wrapper.find('.save-document-button')
+            saveDocumentButton.trigger('click')
+            await Vue.nextTick()
+            expect(saveDocumentButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when forking document', async () => {
+            axios.post.mockImplementation(() => new Promise(() => {
+            }))
+            const forkDocumentButton = wrapper.find('.fork-document-button')
+            forkDocumentButton.trigger('click')
+            await Vue.nextTick()
+            expect(forkDocumentButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when adding a new document', async () => {
+            axios.post.mockImplementation(() => new Promise(() => {
+            }))
+            const newDocumentButton = wrapper.find('.new-document-button')
+            newDocumentButton.trigger('click')
+            await Vue.nextTick()
+            expect(newDocumentButton.element.classList).toContain('is-loading')
+        })
+
+        test('should display loading indicator when deleting a document', async () => {
+            axios.delete.mockImplementation(() => new Promise(() => {
+            }))
+            // create new document so we can delete it
+            const newDocumentButton = wrapper.find('.new-document-button')
+            newDocumentButton.trigger('click')
+            await Vue.nextTick()
+            const deleteDocumentButton = wrapper.find('.delete-document-button')
+            deleteDocumentButton.trigger('click')
+            await Vue.nextTick()
+            expect(deleteDocumentButton.element.classList).toContain('is-loading')
+        })
     })
 })

@@ -118,7 +118,7 @@ const NewDocEntryFactory = {
     aclpolicies() {
         return {
           "id": UUID2(),
-          "name": "NEW ACL",
+          "name": "New ACL Policy",
 
           "allow": [],
           "allow_bot": [],
@@ -132,7 +132,7 @@ const NewDocEntryFactory = {
     wafpolicies() {
       return {
         "id": UUID2(),
-        "name": "NEW WAF",
+        "name": "New WAF Policy",
         "ignore_alphanum": true,
 
         "max_header_length": 1024,
@@ -161,7 +161,7 @@ const NewDocEntryFactory = {
     tagrules() {
       return {
         "id": UUID2(),
-        "name": "New Profiling List",
+        "name": "New Tag Rules",
         "source": "self-managed",
         "mdate": (new Date()).toISOString(),
         "notes": "New List Notes and Remarks",
@@ -178,7 +178,7 @@ const NewDocEntryFactory = {
     urlmaps () {
       return {
         "id": UUID2(),
-        "name": "NEW URL MAP",
+        "name": "New URL Map",
         "match": "__default__",
         "map": [
           {
