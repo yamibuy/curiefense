@@ -336,8 +336,8 @@ def gen_rl_rules(authority):
     add_rl_rule("scope-country-exclude", excl_attrs={"country": "us"})
     add_rl_rule("scope-company-include", incl_attrs={"company": "CLOUDFLARENET"})
     add_rl_rule("scope-company-exclude", excl_attrs={"company": "CLOUDFLARENET"})
-    add_rl_rule("scope-asn-include", incl_attrs={"asn": "1239"})
-    add_rl_rule("scope-asn-exclude", excl_attrs={"asn": "1239"})
+    add_rl_rule("scope-provider-include", incl_attrs={"asn": "1239"})
+    add_rl_rule("scope-provider-exclude", excl_attrs={"asn": "1239"})
     add_rl_rule("scope-method-include", incl_attrs={"method": "GET"})
     add_rl_rule("scope-method-exclude", excl_attrs={"method": "GET"})
     add_rl_rule("scope-tags-include", incl_attrs={"tags": "asn:1239"})
@@ -355,7 +355,8 @@ def gen_rl_rules(authority):
     add_rl_rule("countby-params", key=[{"args": "countby"}])
     add_rl_rule("countby-ipv4", key=[{"attrs": "ip"}])
     add_rl_rule("countby-ipv6", key=[{"attrs": "ip"}])
-    add_rl_rule("countby-provider", key=[{"attrs": "provider"}])
+    # "Provider" in the UI maps to "asn"
+    add_rl_rule("countby-provider", key=[{"attrs": "asn"}])
     add_rl_rule("countby-uri", key=[{"attrs": "uri"}])
     add_rl_rule("countby-path", key=[{"attrs": "path"}])
     add_rl_rule("countby-tag", key=[{"attrs": "tags"}])
@@ -377,17 +378,18 @@ def gen_rl_rules(authority):
     add_rl_rule("event-cookies", pairwith={"cookies": "event"})
     add_rl_rule("event-headers", pairwith={"headers": "event"})
     add_rl_rule("event-params", pairwith={"args": "event"})
-    add_rl_rule("event-ipv4", pairwith={"args": "event"})
-    add_rl_rule("event-ipv6", pairwith={"args": "event"})
-    # add_rl_rule("event-provider", pairwith={"args": "event"})
-    add_rl_rule("event-uri", pairwith={"args": "event"})
-    add_rl_rule("event-path", pairwith={"args": "event"})
-    add_rl_rule("event-tag", pairwith={"args": "event"})
-    add_rl_rule("event-query", pairwith={"args": "event"})
-    add_rl_rule("event-method", pairwith={"args": "event"}, limit=3)
-    add_rl_rule("event-company", pairwith={"args": "event"}, limit=3)
-    add_rl_rule("event-country", pairwith={"args": "event"}, limit=3)
-    add_rl_rule("event-authority", pairwith={"args": "event"})
+    add_rl_rule("event-ipv4", pairwith={"attrs": "ip"})
+    add_rl_rule("event-ipv6", pairwith={"attrs": "ip"})
+    # "Provider" in the UI maps to "asn"
+    add_rl_rule("event-provider", pairwith={"attrs": "asn"}, limit=3)
+    add_rl_rule("event-uri", pairwith={"attrs": "uri"})
+    add_rl_rule("event-path", pairwith={"attrs": "path"})
+    add_rl_rule("event-tag", pairwith={"attrs": "tags"})
+    add_rl_rule("event-query", pairwith={"attrs": "query"})
+    add_rl_rule("event-method", pairwith={"attrs": "method"}, limit=3)
+    add_rl_rule("event-company", pairwith={"attrs": "company"}, limit=3)
+    add_rl_rule("event-country", pairwith={"attrs": "country"}, limit=3)
+    add_rl_rule("event-authority", pairwith={"attrs": "authority"})
     # action
     add_rl_rule("action-challenge", action="challenge")
     add_rl_rule("action-monitor", action="monitor")
@@ -563,12 +565,6 @@ class TestRateLimit:
         assert not target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
             "Request #6 for non excluded ipv4 should be denied"
 
-    # def test_ratelimit_scope_provider_include(self, target, ratelimit_config):
-    #     # TODO write a test for provider when the feature is visibly implemented
-
-    # def test_ratelimit_scope_provider_exclude(self, target, ratelimit_config):
-    #     # TODO write a test for provider when the feature is visibly implemented
-
     def test_ratelimit_scope_country_include(self, target, ratelimit_config):
         for i in range(1, 6):
             assert target.is_reachable("/scope-country-include/included", srcip=IP4_US), \
@@ -609,25 +605,27 @@ class TestRateLimit:
         assert not target.is_reachable("/scope-company-exclude/not-excluded", srcip=IP4_US), \
             "Request #6 for non excluded company should be denied"
 
-    def test_ratelimit_scope_asn_include(self, target, ratelimit_config):
+    def test_ratelimit_scope_provider_include(self, target, ratelimit_config):
+        # "provider" means "asn"
         for i in range(1, 6):
-            assert target.is_reachable("/scope-asn-include/included", srcip=IP4_US), \
-                f"Request #{i} for included asn should be allowed"
-        assert not target.is_reachable("/scope-asn-include/included", srcip=IP4_US), \
-            "Request #6 for included asn should be denied"
+            assert target.is_reachable("/scope-provider-include/included", srcip=IP4_US), \
+                f"Request #{i} for included provider should be allowed"
+        assert not target.is_reachable("/scope-provider-include/included", srcip=IP4_US), \
+            "Request #6 for included provider should be denied"
         for i in range(1, 7):
-            assert target.is_reachable("/scope-asn-include/not-included", srcip=IP4_JP), \
-                f"Request #{i} for non included asn should be allowed"
+            assert target.is_reachable("/scope-provider-include/not-included", srcip=IP4_JP), \
+                f"Request #{i} for non included provider should be allowed"
 
-    def test_ratelimit_scope_asn_exclude(self, target, ratelimit_config):
+    def test_ratelimit_scope_provider_exclude(self, target, ratelimit_config):
+        # "provider" means "asn"
         for i in range(1, 7):
-            assert target.is_reachable("/scope-asn-exclude/excluded", srcip=IP4_US), \
-                f"Request #{i} for excluded asn should be allowed"
+            assert target.is_reachable("/scope-provider-exclude/excluded", srcip=IP4_US), \
+                f"Request #{i} for excluded provider should be allowed"
         for i in range(1, 6):
-            assert target.is_reachable("/scope-asn-exclude/not-excluded", srcip=IP4_JP), \
-                f"Request #{i} for non excluded asn should be allowed"
-        assert not target.is_reachable("/scope-asn-exclude/not-excluded", srcip=IP4_JP), \
-            "Request #6 for non excluded asn should be denied"
+            assert target.is_reachable("/scope-provider-exclude/not-excluded", srcip=IP4_JP), \
+                f"Request #{i} for non excluded provider should be allowed"
+        assert not target.is_reachable("/scope-provider-exclude/not-excluded", srcip=IP4_JP), \
+            "Request #6 for non excluded provider should be denied"
 
     def test_ratelimit_scope_method_include(self, target, ratelimit_config):
         for i in range(1, 6):
@@ -755,11 +753,11 @@ class TestRateLimit:
         param2 = {"srcip": IP6_2}
         self.ratelimit_countby_helper(target, "ipv6", param1, param2)
 
-    # def test_ratelimit_countby_provider(self, target, ratelimit_config):
-    #     param1 = ???
-    #     param2 = ???
-    #     self.ratelimit_countby_helper(target, "provider", param1, param2)
-    #     # TODO write a test for provider when the feature is visibly implemented
+    def test_ratelimit_countby_provider(self, target, ratelimit_config):
+        # "provider" means "asn"
+        param1 = {"srcip": IP4_US}
+        param2 = {"srcip": IP4_JP}
+        self.ratelimit_countby_helper(target, "provider", param1, param2)
 
     def test_ratelimit_countby_uri(self, target, ratelimit_config):
         param1 = {}
@@ -881,10 +879,11 @@ class TestRateLimit:
         params = [{"srcip": f"0000:0000:0000:0000:0000:0000:0000:000{i}"} for i in range(1, 7)]
         self.ratelimit_event_param_helper(target, "ipv6", params)
 
-    # def test_ratelimit_event_provider(self, target, ratelimit_config):
-    #     # TODO write a test for provider when the feature is visibly implemented
-    #     params = ???
-    #     self.ratelimit_event_param_helper(target, "provider", params)
+    def test_ratelimit_event_provider(self, target, ratelimit_config):
+        # "provider" means "asn"
+        params = [{"srcip": ip} for ip in (IP4_US, IP4_JP, IP4_CLOUDFLARE,
+                                           IP4_ORANGE)]
+        self.ratelimit_event_param_helper(target, "provider", params)
 
     def test_ratelimit_event_uri(self, target, ratelimit_config):
         # URI is different for each query, nothing more needs changing
