@@ -54,10 +54,19 @@ export default {
 
 }
 </script>
-<style scoped>
+<style scoped lang="scss">
+.menu-item {
+  margin-top: 1.5rem;
+
+  &:first-child {
+    margin-top: 0
+  }
+}
+
 .menu-label {
   color: #8F99A3;
   font-weight: 700;
+  margin-bottom: 0;
 }
 
 .menu-list a {

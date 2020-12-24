@@ -23,14 +23,14 @@
                   </div>
                 </div>
                 <div class="control">
-                  <span class="icon is-small">
-                    <i class="mdi mdi-dark mdi-source-branch"></i>
+                  <span class="icon is-small is-vcentered">
+                    <svg-icon type="mdi" :path="mdiSourceBranchPath"></svg-icon>
                   </span>
                   <span class="is-size-7 git-branches">{{ branches }} branches</span>
                 </div>
                 <div class="control">
-                  <span class="icon is-small">
-                    <i class="mdi mdi-dark mdi-source-commit"></i>
+                  <span class="icon is-small is-vcentered">
+                    <svg-icon type="mdi" :path="mdiSourceCommitPath"></svg-icon>
                   </span>
                   <span class="is-size-7 git-commits">{{ commits }} commits</span>
                 </div>
@@ -183,17 +183,22 @@ import ProfilingListEditor from '@/doc-editors/ProfilingListEditor.vue'
 import FlowControlEditor from '@/doc-editors/FlowControlEditor'
 import GitHistory from '@/components/GitHistory.vue'
 import RequestsUtils from '@/assets/RequestsUtils'
+import SvgIcon from '@jamescoyle/vue-icon'
+import { mdiSourceBranch, mdiSourceCommit } from '@mdi/js'
 
 export default {
 
   name: 'DocumentEditor',
   props: {},
   components: {
-    GitHistory
+    GitHistory,
+    SvgIcon
   },
   data() {
     return {
       configs: [],
+      mdiSourceBranchPath: mdiSourceBranch,
+      mdiSourceCommitPath: mdiSourceCommit,
 
       // Loading indicators
       loadingDocCounter: 0,

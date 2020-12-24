@@ -1,8 +1,8 @@
 /* Imports */
 /* Note: only import what is needed */
 
-@import "node_modules/bulma/sass/utilities/_all.sass";
-@import "node_modules/bulma/sass/helpers/color.sass";
+@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
 
 /* Element width */
 
@@ -78,6 +78,10 @@
   overflow-wrap: anywhere;
 }
 
+.is-vcentered {
+  vertical-align: middle;
+}
+
 /* Buttons */
 
 .add-button:hover {
@@ -86,6 +90,19 @@
 
 .remove-button:hover {
   @extend .has-text-danger;
+}
+
+/* Pseudo elements */
+
+.suffix::after {
+  position: absolute;
+  right: 0.5rem;
+  display: block;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
 }
 
 /* Bulma enhancement */

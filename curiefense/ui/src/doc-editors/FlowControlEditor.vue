@@ -29,7 +29,7 @@
               <label class="label is-small has-text-left form-label">
                 TTL
               </label>
-              <div class="control">
+              <div class="control seconds-suffix">
                 <input class="input is-small document-ttl" type="text" placeholder="New rate limit rule name"
                        v-model="selectedDoc.ttl">
               </div>
@@ -143,37 +143,34 @@
                       </td>
                       <td class="width-80px"></td>
                     </tr>
-                    <tr class="sequence-entry-row uri-entry-row">
+                    <tr class="sequence-entry-row host-entry-row">
                       <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
                       <td class="width-80px is-vcentered">
-                        URI
+                        Host
                       </td>
                       <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small uri-entry-input"
-                                 v-model="sequenceItem.uri"
+                          <input class="input is-small host-entry-input"
+                                 v-model="sequenceItem.headers.host"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
                       </td>
                       <td class="width-80px"></td>
                     </tr>
-                    <tr class="sequence-entry-row host-entry-row">
+                    <tr class="sequence-entry-row uri-entry-row">
                       <td class="is-size-7 width-50px has-text-centered is-vcentered has-text-grey-light has-text-weight-medium sequence-entries-relation">
                         AND
                       </td>
                       <td class="width-80px is-vcentered">
-                        Header
+                        Path
                       </td>
-                      <td class="width-100px is-vcentered">
-                        host
-                      </td>
-                      <td>
+                      <td colspan="2">
                         <div class="control has-icons-left is-fullwidth">
-                          <input class="input is-small host-entry-input"
-                                 v-model="sequenceItem.headers.host"
+                          <input class="input is-small uri-entry-input"
+                                 v-model="sequenceItem.uri"
                                  @input="emitDocUpdate"/>
                           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                         </div>
@@ -484,8 +481,10 @@ export default {
 
 <style scoped lang="scss">
 
+@import 'src/assets/styles/main.scss';
 @import 'node_modules/bulma/sass/utilities/_all.sass';
 @import 'node_modules/bulma/sass/helpers/color.sass';
+@import 'node_modules/bulma/sass/helpers/typography.sass';
 
 .bar {
   margin: 1rem 0 0.5rem 0;
@@ -533,6 +532,13 @@ export default {
 
 .filter-column:last-of-type {
   padding-right: 0
+}
+
+.seconds-suffix::after {
+  @extend .is-size-7;
+  @extend .suffix;
+  content: 'seconds';
+  padding-right: 60px;
 }
 
 ::v-deep .tag-input {

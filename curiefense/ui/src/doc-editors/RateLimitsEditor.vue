@@ -45,7 +45,7 @@
                 <label class="label is-small">
                   TTL
                 </label>
-                <div class="control">
+                <div class="control seconds-suffix">
                   <input class="input is-small"
                          type="text"
                          placeholder="New rate limit rule name"
@@ -393,7 +393,10 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+
+@import 'src/assets/styles/main.scss';
+@import 'node_modules/bulma/sass/helpers/typography.sass';
 
 .form-label {
   padding-top: 0.25rem;
@@ -407,6 +410,13 @@ table.inner-table td, table.inner-table th {
   border: 0;
   padding-left: 0;
   padding-right: 0;
+}
+
+.seconds-suffix::after {
+  @extend .is-size-7;
+  @extend .suffix;
+  content: 'seconds';
+  padding-right: 60px;
 }
 
 </style>
