@@ -86,7 +86,11 @@
                   @click="bucketNameClicked(bucket.name)">
                 <td class="is-size-7">
                   <span class="icon is-small is-vcentered">
-                    <svg-icon type="mdi" :path="mdiBucketPath"></svg-icon>
+                    <svg :width="14"
+                         :height="14"
+                         :viewBox="'0 0 24 24'">
+                      <path :d="mdiBucketPath"/>
+                    </svg>
                   </span>
                   &nbsp;
                   <span class="is-vcentered">{{ bucket.name }}</span>
@@ -114,7 +118,6 @@
 
 import DatasetsUtils from '@/assets/DatasetsUtils.js'
 import RequestsUtils from '@/assets/RequestsUtils'
-import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiBucket } from '@mdi/js'
 
 export default {
@@ -122,9 +125,7 @@ export default {
   name: 'Publish',
   props: {},
 
-  components: {
-    SvgIcon
-  },
+  components: {},
 
   data() {
     return {
