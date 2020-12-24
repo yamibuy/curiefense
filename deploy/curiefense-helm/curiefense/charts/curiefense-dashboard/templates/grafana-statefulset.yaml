@@ -1,3 +1,4 @@
+{{- if .Values.global.enable.grafana }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -63,3 +64,4 @@ spec:
       resources:
         requests:
           storage: {{ .Values.global.storage.grafana_storage_size }}
+{{ end }}

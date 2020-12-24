@@ -1,3 +1,4 @@
+{{- if .Values.global.enable.prometheus }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -12,3 +13,4 @@ spec:
     targetPort: 9090
   selector:
     app.kubernetes.io/name: prometheus
+{{ end }}
