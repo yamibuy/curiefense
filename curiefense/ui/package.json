@@ -10,6 +10,7 @@
     "test-coverage:unit": "jest --collect-coverage"
   },
   "dependencies": {
+    "ace-builds": "^1.4.12",
     "axios": "^0.19.2",
     "bootstrap": "^4.5.0",
     "bulma": "^0.9.0",

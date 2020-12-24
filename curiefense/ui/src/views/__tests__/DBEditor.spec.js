@@ -4,6 +4,7 @@ import {shallowMount} from '@vue/test-utils'
 import GitHistory from '@/components/GitHistory'
 import Vue from 'vue'
 import axios from 'axios'
+import Ace from 'ace-builds/src-noconflict/ace.js'
 
 jest.mock('axios')
 
@@ -54,6 +55,32 @@ describe('DBEditor.vue', () => {
             }
             return Promise.resolve({data: {}})
         })
+        Ace.edit = () => {
+            const editObj = {}
+            let callbackFunc
+            let value
+            editObj.setTheme = () => {
+            }
+            editObj.getSession = () => {
+                return {
+                    setMode: () => {
+                    },
+                    on: (trigger, callback) => {
+                        if (trigger === 'change') {
+                            callbackFunc = callback
+                        }
+                    }
+                }
+            }
+            editObj.setValue = (newVal) => {
+                value = newVal
+                if (callbackFunc) {
+                    callbackFunc()
+                }
+            }
+            editObj.getValue = () => value
+            return editObj
+        }
         wrapper = shallowMount(DBEditor)
         await Vue.nextTick()
     })
@@ -289,7 +316,41 @@ describe('DBEditor.vue', () => {
             expect(putSpy).toHaveBeenCalledWith(`/conf/api/v1/db/new database/k/key/`, doc)
         })
 
-        test('should not be able to save key changes if document is an invalid json', async () => {
+        test('should be able to save key changes when using ace editor', (done) => {
+            // setTimeout to allow the editor to be fully loaded before we interact with it
+            setTimeout(async () => {
+                const doc = {
+                    buckets: {},
+                    foo: 'bar'
+                }
+                wrapper.vm.editor.setValue(JSON.stringify(doc))
+                await Vue.nextTick()
+                const saveKeyButton = wrapper.find('.save-button')
+                saveKeyButton.trigger('click')
+                await Vue.nextTick()
+                expect(putSpy).toHaveBeenCalledWith(`/conf/api/v1/db/new database/k/key/`, doc)
+                done()
+            }, 300)
+        })
+
+        test('should not be able to save key changes if document is an invalid json when using ace editor', (done) => {
+            // setTimeout to allow the editor to be fully loaded before we interact with it
+            setTimeout(async () => {
+                const doc = '{'
+                wrapper.vm.editor.setValue(doc)
+                await Vue.nextTick()
+                const saveKeyButton = wrapper.find('.save-button')
+                saveKeyButton.trigger('click')
+                await Vue.nextTick()
+                expect(putSpy).not.toHaveBeenCalled()
+                done()
+            }, 300)
+        })
+
+        test('should not be able to save key changes if document is an invalid json when not using ace editor', async () => {
+            wrapper.vm.editor = null
+            wrapper.vm.isAceEditor = false
+            await Vue.nextTick()
             const doc = '{'
             const documentInput = wrapper.find('.document-input')
             documentInput.element.value = doc

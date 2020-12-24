@@ -5,7 +5,8 @@ module.exports = {
         '^.+\\.(js|jsx)?$': 'babel-jest'
     },
     moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1'
+        '^@/(.*)$': '<rootDir>/src/$1',
+        "ace-builds": "<rootDir>/node_modules/ace-builds"
     },
     testMatch: [
         '<rootDir>/**/*.spec.(js|jsx|ts|tsx)'

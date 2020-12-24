@@ -181,12 +181,16 @@
               <div class="field">
                 <label class="label">Document</label>
                 <div class="control">
+
+                  <div v-if="isAceEditor"
+                       id="editor">
+                  </div>
                   <textarea
+                      v-else
                       @input="validateInput($event, isNewDocumentValid)"
                       rows="20"
                       class="is-family-monospace textarea document-input"
-                      v-model="document"
-                  >
+                      v-model="document">
                   </textarea>
                 </div>
               </div>
@@ -238,6 +242,8 @@ import DatasetsUtils from '@/assets/DatasetsUtils.js'
 import Utils from '@/assets/Utils.js'
 import GitHistory from '@/components/GitHistory'
 import RequestsUtils from '@/assets/RequestsUtils'
+import Ace from 'ace-builds/src-noconflict/ace.js'
+import 'ace-builds/webpack-resolver.js'
 
 export default {
 
@@ -262,6 +268,10 @@ export default {
       isNewKeyLoading: false,
       isDeleteKeyLoading: false,
       isSaveDocLoading: false,
+
+      // Ace json editor
+      editor: null,
+      isAceEditor: true,
 
       keys: [],
       selectedKey: null,
@@ -415,6 +425,7 @@ export default {
       this.selectedKey = key
       this.keyNameInput = this.selectedKey
       this.document = JSON.stringify(this.selectedDBData[key], null, 2)
+      this.editor?.setValue(this.document, -1)
       this.loadGitLog()
     },
 
@@ -539,6 +550,41 @@ export default {
         this.loadingDocCounter--
       }
     },
+
+    loadJsonEditor() {
+      const editorLoaderInterval = setInterval(() => {
+        let failedCounter = 0
+        try {
+          // maxLines - maximum number of lines to be displayed in the editor
+          // maxLines - editor will adjust height to number of actual lines up to this amount and then add a scrollbar
+          this.editor = Ace.edit('editor', {
+            maxLines: 30
+          })
+          this.editor.setTheme('ace/theme/xcode')
+          this.editor.getSession().setMode('ace/mode/json')
+          this.editor.getSession().on('change', () => {
+            this.document = this.editor.getValue()
+          })
+          this.editor.setValue(this.document, -1)
+          this.isAceEditor = true
+          console.log('Successfully loaded json editor')
+          clearInterval(editorLoaderInterval)
+        } catch (err) {
+          failedCounter++
+          console.log('Could not load json editor, trying again')
+        }
+        if (failedCounter > 20) {
+          // If cannot load the editor after 2 seconds, display a normal textarea instead
+          console.log('Could not load json editor for over 2 seconds, using a simplified editor instead')
+          this.isAceEditor = false
+          clearInterval(editorLoaderInterval)
+        }
+      }, 100)
+    },
+  },
+
+  mounted() {
+    this.loadJsonEditor()
   },
 
   created() {
@@ -548,3 +594,9 @@ export default {
 }
 
 </script>
+<style scoped>
+#editor {
+  width: 100%;
+  height: 500px;
+}
+</style>
