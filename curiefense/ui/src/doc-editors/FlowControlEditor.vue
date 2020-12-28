@@ -534,11 +534,16 @@ export default {
   padding-right: 0
 }
 
+.seconds-suffix {
+  input {
+    padding-right: 60px;
+  }
+}
+
 .seconds-suffix::after {
   @extend .is-size-7;
   @extend .suffix;
   content: 'seconds';
-  padding-right: 60px;
 }
 
 ::v-deep .tag-input {

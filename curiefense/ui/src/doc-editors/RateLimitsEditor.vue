@@ -412,11 +412,16 @@ table.inner-table td, table.inner-table th {
   padding-right: 0;
 }
 
+.seconds-suffix {
+  input {
+    padding-right: 60px;
+  }
+}
+
 .seconds-suffix::after {
   @extend .is-size-7;
   @extend .suffix;
   content: 'seconds';
-  padding-right: 60px;
 }
 
 </style>
