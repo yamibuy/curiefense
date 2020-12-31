@@ -23,6 +23,7 @@ import DBEditor from '@/views/DBEditor.vue'
 import Publish from '@/views/Publish.vue'
 import AccessLog from '@/views/AccessLog.vue'
 import VersionControl from "@/views/VersionControl";
+import DocumentSearch from '@/views/DocumentSearch'
 
 const routes = [
   {
@@ -33,6 +34,7 @@ const routes = [
       { path: 'publish', name: 'Publish', component: Publish },
       { path: 'accesslog', name: 'AccessLog', component: AccessLog },
       { path: 'versioncontrol', name: 'VersionControl', component: VersionControl },
+      { path: 'search', name: 'DocumentSearch', component: DocumentSearch },
     ]
   },
   {

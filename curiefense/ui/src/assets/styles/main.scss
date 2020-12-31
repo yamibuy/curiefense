@@ -74,6 +74,30 @@
   white-space: nowrap;
 }
 
+// Note: Manually add height to elements using this class. default 1.5rem
+.vertical-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: normal;
+  max-height: 1.5rem;
+}
+
+// Adds a shadow to scrollable boxes if there is an option to scroll down or up
+.scrollbox-shadowed {
+  background: /* Shadow covers */
+          linear-gradient(white 30%, rgba(255, 255, 255, 0)),
+          linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%,
+            /* Shadows */
+          radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
+          radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
+  background-repeat: no-repeat;
+  background-color: white;
+  background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+
+  /* Opera doesn't support this in the shorthand */
+  background-attachment: local, local, scroll, scroll;
+}
+
 .overflow-anywhere {
   overflow-wrap: anywhere;
 }

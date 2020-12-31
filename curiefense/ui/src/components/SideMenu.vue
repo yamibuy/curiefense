@@ -12,6 +12,16 @@
                        :class="{ 'is-active': currentRoutePath === menuItemKey }">
             {{ menuItemDetails.title }}
           </router-link>
+          <ul v-if="menuItemDetails.items"
+              class="my-0">
+            <li v-for="(menuSubItemDetails, menuSubItemKey) in menuItemDetails.items" :key="menuSubItemKey">
+              <router-link :data-curie="menuSubItemKey"
+                           :to="menuSubItemKey"
+                           :class="{ 'is-active': currentRoutePath === menuSubItemKey }">
+                {{ menuSubItemDetails.title }}
+              </router-link>
+            </li>
+          </ul>
         </li>
       </ul>
     </div>
@@ -30,7 +40,12 @@ export default {
       selectedMenuItem: null,
       menuItems: {
         Settings: {
-          '/config': {'title': 'Policies & Rules'},
+          '/config': {
+            'title': 'Policies & Rules',
+            'items': {
+              '/search': {'title': 'Search'}
+            }
+          },
           '/db': {'title': 'System DB'},
           '/publish': {'title': 'Publish Changes'},
         },
@@ -64,13 +79,13 @@ export default {
 }
 
 .menu-label {
-  color: #8F99A3;
+  color: #8f99a3;
   font-weight: 700;
   margin-bottom: 0;
 }
 
 .menu-list a {
-  color: #0F1D38;
+  color: #0f1d38;
   font-size: 14px;
   font-weight: 700;
 }
