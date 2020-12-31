@@ -31,7 +31,7 @@ describe('SideMenu.vue', () => {
             .filter(item => item.text().includes(menuItemName))
         const sectionItems = menuItem.at(0).findAll('.section-item')
         for (let i = 0; i < wantedSectionItems.length; i++) {
-            expect(sectionItems.at(i).text()).toEqual(wantedSectionItems[i].title)
+            expect(sectionItems.at(i).text()).toContain(wantedSectionItems[i].title)
             expect(sectionItems.at(i).html()).toContain(`to="${wantedSectionItems[i].path}"`)
         }
     }
