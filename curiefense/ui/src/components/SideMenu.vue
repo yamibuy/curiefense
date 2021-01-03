@@ -9,7 +9,7 @@
         <li v-for="(menuItemDetails, menuItemKey) in sectionItems" :key="menuItemKey" class="section-item">
           <router-link :data-curie="menuItemKey"
                        :to="menuItemKey"
-                       :class="{ 'is-active': currentRoutePath === menuItemKey }">
+                       :class="{ 'is-active': currentRoutePath.includes(menuItemKey) }">
             {{ menuItemDetails.title }}
           </router-link>
           <ul v-if="menuItemDetails.items"
@@ -17,7 +17,7 @@
             <li v-for="(menuSubItemDetails, menuSubItemKey) in menuItemDetails.items" :key="menuSubItemKey">
               <router-link :data-curie="menuSubItemKey"
                            :to="menuSubItemKey"
-                           :class="{ 'is-active': currentRoutePath === menuSubItemKey }">
+                           :class="{ 'is-active': currentRoutePath.includes(menuSubItemKey) }">
                 {{ menuSubItemDetails.title }}
               </router-link>
             </li>

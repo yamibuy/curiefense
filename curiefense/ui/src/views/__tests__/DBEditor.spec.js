@@ -98,7 +98,7 @@ describe('DBEditor.vue', () => {
             if (path === '/conf/api/v1/db/') {
                 return Promise.resolve({data: []})
             }
-            Promise.resolve({data: {}})
+            return Promise.resolve({data: {}})
         })
         wrapper = shallowMount(DBEditor)
         // allow all requests to finish
@@ -488,7 +488,7 @@ describe('DBEditor.vue', () => {
                     return new Promise(() => {
                     })
                 }
-                Promise.resolve({data: {}})
+                return Promise.resolve({data: {}})
             })
             wrapper = shallowMount(DBEditor)
             await Vue.nextTick()

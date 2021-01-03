@@ -141,7 +141,7 @@ describe('VersionControl.vue', () => {
             if (path === '/conf/api/v1/configs/zzz_branch/v/') {
                 return Promise.resolve({data: gitData[1].logs})
             }
-            Promise.resolve({data: []})
+            return Promise.resolve({data: []})
         })
         wrapper = mount(VersionControl)
     })

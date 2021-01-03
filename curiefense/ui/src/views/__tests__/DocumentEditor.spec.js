@@ -10,6 +10,8 @@ jest.mock('axios')
 
 describe('DocumentEditor.vue', () => {
     let wrapper
+    let mockRoute
+    let mockRouter
     let gitData
     let aclDocs
     let aclDocsLogs
@@ -697,9 +699,24 @@ describe('DocumentEditor.vue', () => {
             if (path === '/conf/api/v1/configs/zzz_branch/v/') {
                 return Promise.resolve({data: gitData[1].logs})
             }
-            Promise.resolve({data: []})
+            return Promise.resolve({data: []})
         })
-        wrapper = shallowMount(DocumentEditor)
+        mockRoute = {
+            params: {
+                branch: 'master',
+                doc_type: 'aclpolicies',
+                doc_id: '__default__'
+            }
+        }
+        mockRouter = {
+            push: jest.fn()
+        }
+        wrapper = shallowMount(DocumentEditor, {
+            mocks: {
+                $route: mockRoute,
+                $router: mockRouter
+            }
+        })
         await Vue.nextTick()
     })
     afterEach(() => {
@@ -770,26 +787,25 @@ describe('DocumentEditor.vue', () => {
         })
     })
 
-    test('should refresh referenced IDs lists after saving url map entity', async () => {
+    test('should refresh referenced IDs lists after saving url map entity', (done) => {
         // switch to url map entity type
         const docTypeSelection = wrapper.find('.doc-type-selection')
         docTypeSelection.trigger('click')
         const options = docTypeSelection.findAll('option')
         options.at(4).element.selected = true
         docTypeSelection.trigger('change')
-        // allow the get request to complete
-        await Vue.nextTick()
-        // allow the vue's v-if loading indicator to digest
-        await Vue.nextTick()
-
-        const doc = wrapper.vm.selectedDoc
-        doc.name = `${doc.name} changed`
-        axios.put.mockImplementation(() => Promise.resolve())
-        const getSpy = jest.spyOn(axios, 'get')
-        const saveDocumentButton = wrapper.find('.save-document-button')
-        saveDocumentButton.trigger('click')
-        await Vue.nextTick()
-        expect(getSpy).toHaveBeenCalledWith(`/conf/api/v1/configs/master/d/urlmaps/`)
+        // allow all requests to finish
+        setImmediate(async () => {
+            const doc = wrapper.vm.selectedDoc
+            doc.name = `${doc.name} changed`
+            axios.put.mockImplementation(() => Promise.resolve())
+            const getSpy = jest.spyOn(axios, 'get')
+            const saveDocumentButton = wrapper.find('.save-document-button')
+            saveDocumentButton.trigger('click')
+            await Vue.nextTick()
+            expect(getSpy).toHaveBeenCalledWith(`/conf/api/v1/configs/master/d/urlmaps/`)
+            done()
+        })
     })
 
     test('should be able to save document changes', async () => {
@@ -890,7 +906,12 @@ describe('DocumentEditor.vue', () => {
                 }
                 return Promise.resolve({data: []})
             })
-            wrapper = shallowMount(DocumentEditor)
+            wrapper = shallowMount(DocumentEditor, {
+                mocks: {
+                    $route: mockRoute,
+                    $router: mockRouter
+                }
+            })
             // allow all requests to finish
             setImmediate(() => {
                 const noDataMessage = wrapper.find('.no-data-message')
@@ -921,7 +942,12 @@ describe('DocumentEditor.vue', () => {
                 }
                 return Promise.resolve({data: []})
             })
-            wrapper = shallowMount(DocumentEditor)
+            wrapper = shallowMount(DocumentEditor, {
+                mocks: {
+                    $route: mockRoute,
+                    $router: mockRouter
+                }
+            })
             // allow all requests to finish
             setImmediate(() => {
                 const noDataMessage = wrapper.find('.no-data-message')
@@ -942,7 +968,12 @@ describe('DocumentEditor.vue', () => {
                 }
                 return Promise.resolve({data: []})
             })
-            wrapper = shallowMount(DocumentEditor)
+            wrapper = shallowMount(DocumentEditor, {
+                mocks: {
+                    $route: mockRoute,
+                    $router: mockRouter
+                }
+            })
             await Vue.nextTick()
             const docLoadingIndicator = wrapper.find('.document-loading')
             expect(docLoadingIndicator.element).toBeDefined()
@@ -960,7 +991,12 @@ describe('DocumentEditor.vue', () => {
                 }
                 return Promise.resolve({data: []})
             })
-            wrapper = shallowMount(DocumentEditor)
+            wrapper = shallowMount(DocumentEditor, {
+                mocks: {
+                    $route: mockRoute,
+                    $router: mockRouter
+                }
+            })
             await Vue.nextTick()
             const docLoadingIndicator = wrapper.find('.document-loading')
             expect(docLoadingIndicator.element).toBeDefined()

@@ -22,7 +22,7 @@
                 <div class="control">
                   <div class="select is-small">
                     <select v-model="selectedSearchType"
-                            class="doc-type-selection">
+                            class="search-type-selection">
                       <option v-for="(searchType, propertyName) in searchTypeMap"
                               :key="propertyName"
                               :value="propertyName">
@@ -34,7 +34,7 @@
                 <div class="control has-icons-left">
                   <input class="input is-small search-input"
                          placeholder="Search"
-                         v-model="searchValueDebounced"/>
+                         v-model="searchValue"/>
                   <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-search"></i></span>
                 </div>
               </div>
@@ -50,7 +50,7 @@
       <hr/>
 
       <div class="content document-editor-wrapper"
-           v-if="true">
+           v-if="filteredDocs && filteredDocs.length > 0">
         <table class="table">
           <thead>
           <tr>
@@ -66,38 +66,39 @@
           <tbody>
           <tr v-for="(doc, index) in filteredDocs"
               :key="index"
+              class="result-row"
               @mouseleave="mouseLeave()"
               @mouseover="mouseOver(index)">
-            <td class="is-size-7 is-vcentered py-3 ellipsis width-100px"
-                :title="doc.docType"
-                v-html="highlightSearchValue(doc.docType)">
+            <td class="is-size-7 py-3 ellipsis width-100px doc-type-cell"
+                :title="componentsMap[doc.docType].title"
+                v-html="highlightSearchValue(componentsMap[doc.docType].title)">
             </td>
-            <td class="is-size-7 is-vcentered py-3 ellipsis width-150px"
+            <td class="is-size-7 py-3 ellipsis width-150px doc-id-cell"
                 :title="doc.id"
                 v-html="highlightSearchValue(doc.id)">
             </td>
-            <td class="is-size-7 is-vcentered py-3 ellipsis width-200px"
+            <td class="is-size-7 py-3 ellipsis width-200px doc-name-cell"
                 :title="doc.name"
                 v-html="highlightSearchValue(doc.name)">
             </td>
-            <td class="is-size-7 is-vcentered py-3 width-200px"
+            <td class="is-size-7 py-3 width-200px doc-description-cell"
                 :title="doc.notes || doc.description">
               <div class="vertical-scroll scrollbox-shadowed"
                    v-html="highlightSearchValue(doc.notes || doc.description)">
               </div>
             </td>
-            <td class="is-size-7 is-vcentered py-3 width-200px"
+            <td class="is-size-7 py-3 width-200px doc-tags-cell"
                 :title="doc.tags">
               <div class="vertical-scroll scrollbox-shadowed"
                    v-html="highlightSearchValue(doc.tags)">
               </div>
             </td>
-            <td class="is-size-7 is-vcentered py-3 width-150px">
+            <td class="is-size-7 py-3 width-150px doc-connections-cell">
               <div class="vertical-scroll scrollbox-shadowed"
                    v-html="connectionsDisplayText(doc)">
               </div>
             </td>
-            <td class="is-size-7 is-vcentered py-3 width-10px">
+            <td class="is-size-7 width-50px">
               <p class="control has-text-centered" v-if="rowOverIndex === index">
                 <a class="button is-small link-button"
                    @click="goToDocument(doc)"
@@ -113,18 +114,18 @@
         </table>
       </div>
 
-      <!--      <div class="content no-data-wrapper"-->
-      <!--           v-else>-->
-      <!--        <div v-if="loadingDocCounter > 0">-->
-      <!--          <button class="button is-outlined is-text is-small is-loading document-loading">-->
-      <!--            Loading-->
-      <!--          </button>-->
-      <!--        </div>-->
-      <!--        <div v-else-->
-      <!--             class="no-data-message">-->
-      <!--          No data found!-->
-      <!--        </div>-->
-      <!--      </div>-->
+      <div class="content no-data-wrapper"
+           v-else>
+        <div v-if="loadingCounter > 0">
+          <button class="button is-outlined is-text is-small is-loading document-loading">
+            Loading
+          </button>
+        </div>
+        <div v-else
+             class="no-data-message">
+          No data found!
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -138,7 +139,6 @@ import RateLimitsEditor from '@/doc-editors/RateLimitsEditor.vue'
 import ProfilingListEditor from '@/doc-editors/ProfilingListEditor.vue'
 import FlowControlEditor from '@/doc-editors/FlowControlEditor'
 import RequestsUtils from '@/assets/RequestsUtils'
-import _ from 'lodash'
 
 export default {
 
@@ -154,6 +154,7 @@ export default {
       selectedSearchType: 'all',
       searchValue: '',
       rowOverIndex: null,
+      loadingCounter: 0,
 
       searchTypeMap: {
         'all': {
@@ -171,7 +172,7 @@ export default {
         'doctype': {
           title: 'Document Type',
           filter: (doc) => {
-            return this.searchValueRegex.test(doc.docType)
+            return this.searchValueRegex.test(this.componentsMap[doc.docType].title)
           }
         },
         'id': {
@@ -230,22 +231,13 @@ export default {
 
     filteredDocs() {
       return this.docs.filter((doc) => {
-        return this.searchTypeMap[this.selectedSearchType].filter(doc, this.searchValueDebounced)
+        return this.searchTypeMap[this.selectedSearchType].filter(doc, this.searchValue)
       })
     },
 
     searchValueRegex() {
       return new RegExp(this.searchValue, 'gi')
     },
-
-    searchValueDebounced: {
-      get() {
-        return this.searchValue
-      },
-      set: _.debounce(function (newValue) {
-        this.searchValue = newValue
-      }, 300)
-    }
 
   },
 
@@ -274,7 +266,7 @@ export default {
           const response = await RequestsUtils.sendRequest('GET', `configs/${branch}/d/${doctype}/`)
           for (let j = 0; j < response.data.length; j++) {
             const doc = response.data[j]
-            doc.docType = this.componentsMap[doctype].title
+            doc.docType = doctype
             doc.tags = doc.tags ? doc.tags.join(', ').toLowerCase() : ''
             // Build connections based on document type
             if (doctype === 'urlmaps') {
@@ -386,7 +378,17 @@ export default {
     },
 
     goToDocument(doc) {
-      console.log(doc)
+      const docRoute = `/config/${this.selectedBranch}/${doc.docType}/${doc.id}`
+      this.$router.push(docRoute)
+    },
+
+    // Collect every request to display a loading indicator, the loading indicator will be displayed as long as at least one request is still active (counter > 0)
+    setLoadingStatus(isLoading) {
+      if (isLoading) {
+        this.loadingCounter++
+      } else {
+        this.loadingCounter--
+      }
     },
 
     mouseLeave() {
@@ -400,7 +402,9 @@ export default {
   },
 
   async created() {
+    this.setLoadingStatus(true)
     await this.loadConfigs()
+    this.setLoadingStatus(false)
   }
 
 }

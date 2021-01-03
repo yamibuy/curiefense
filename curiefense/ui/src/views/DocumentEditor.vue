@@ -8,7 +8,7 @@
               <div class="field is-grouped">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedBranch" @change="switchBranch" class="branch-selection">
+                    <select v-model="selectedBranch" @change="switchBranch()" class="branch-selection">
                       <option v-for="name in branchNames" :key="name" :value="name">{{ name }}</option>
                     </select>
                   </div>
@@ -49,7 +49,7 @@
               <div class="field is-grouped is-pulled-right">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedDocID" @change="loadGitLog()" class="doc-selection">
+                    <select v-model="selectedDocID" @change="switchDocID()" class="doc-selection">
                       <option v-for="pair in docIdNames" :key="pair[0]" :value="pair[0]">{{ pair[1] }}</option>
                     </select>
                   </div>
@@ -155,17 +155,17 @@
           No data found!
           <div>
             <!--display correct message by priority (Branch -> Document type -> Document)-->
-            <span v-if="!selectedBranch">
+            <span v-if="!branchNames.includes(selectedBranch)">
               Missing branch. To be redirected to Version Control page where you will be able to create a new one, click
               <a title="Add New"
                  @click="referToVersionControl()">
                 here
               </a>
             </span>
-            <span v-if="selectedBranch && !selectedDocType">
+            <span v-else-if="!Object.keys(componentsMap).includes(selectedDocType)">
               Missing document type. Please select one from the dropdown above
             </span>
-            <span v-if="selectedBranch && selectedDocType && !selectedDoc">
+            <span v-else-if="!docIdNames.find((docIdName) => docIdName.includes(selectedDoc))">
               Missing document. To create a new one, click
               <a title="Add New"
                  @click="addNewDoc()">
@@ -200,6 +200,13 @@ export default {
   components: {
     GitHistory
   },
+  watch: {
+    $route: async() => {
+      this.setLoadingDocStatus(true)
+      await this.setSelectedDataFromRouteParams()
+      this.setLoadingDocStatus(false)
+    }
+  },
   data() {
     return {
       configs: [],
@@ -219,7 +226,6 @@ export default {
       referencedIDsLimits: [],
 
       selectedBranch: null,
-      branchDocTypes: null,
       // Starting with the first doc type in componentsMap
       selectedDocType: 'aclpolicies',
 
@@ -301,6 +307,22 @@ export default {
   },
 
   methods: {
+
+    setCurrentRoute() {
+      const currentRoute = `/config/${this.selectedBranch}/${this.selectedDocType}/${this.selectedDocID}`
+      if (this.$route.path !== currentRoute) {
+        console.log('Document not found. moving to ' + currentRoute)
+        this.$router.push(currentRoute)
+      }
+    },
+    
+    async setSelectedDataFromRouteParams() {
+      this.selectedBranch = this.$route.params.branch
+      this.selectedDocType = this.$route.params.doc_type
+      await this.loadDocs(this.selectedDocType)
+      this.selectedDocID = this.$route.params.doc_id
+      this.setCurrentRoute()
+    },
 
     resetGitLog() {
       this.gitLog = []
@@ -384,11 +406,15 @@ export default {
       }
     },
 
-    async switchBranch() {
+    async switchBranch(branch) {
       this.setLoadingDocStatus(true)
+      if (branch) {
+        this.selectedBranch = branch
+      }
       this.resetGitLog()
       await this.initDocTypes()
       this.loadReferencedDocsIDs()
+      this.setCurrentRoute()
       this.setLoadingDocStatus(false)
     },
 
@@ -403,6 +429,17 @@ export default {
       this.selectedDocID = null
       this.resetGitLog()
       await this.loadDocs(docType)
+      this.setCurrentRoute()
+      this.setLoadingDocStatus(false)
+    },
+
+    async switchDocID(docID) {
+      this.setLoadingDocStatus(true)
+      if (docID) {
+        this.selectedDocID = docID
+      }
+      this.loadGitLog()
+      this.setCurrentRoute()
       this.setLoadingDocStatus(false)
     },
 
@@ -434,6 +471,7 @@ export default {
       this.docs.unshift(docToAdd)
       this.selectedDocID = docToAdd.id
       await this.saveChanges('POST')
+      this.setCurrentRoute()
       this.isNewLoading = false
     },
 
@@ -469,6 +507,7 @@ export default {
           })
       this.selectedDocID = this.docs[0].id
       this.resetGitLog()
+      this.setCurrentRoute()
       this.isDeleteLoading = false
     },
 
@@ -522,6 +561,7 @@ export default {
     this.setLoadingDocStatus(true)
     await this.loadConfigs()
     this.loadReferencedDocsIDs()
+    this.setSelectedDataFromRouteParams()
     this.setLoadingDocStatus(false)
   }
 
