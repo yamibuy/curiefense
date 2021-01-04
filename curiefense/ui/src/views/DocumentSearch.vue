@@ -375,20 +375,20 @@ export default {
     connectionsDisplayText(doc) {
       let connections = ''
       if (doc.connectedACL && doc.connectedACL.length > 0) {
-        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedACL.join('<br/>'))
-        connections = connections.concat(`<b>${this.componentsMap['aclpolicies'].title}:</b><br/>${highlightedConnectedEntities}</br>`)
+        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedACL.join('<br>'))
+        connections = connections.concat(`<b>${this.componentsMap['aclpolicies'].title}:</b><br>${highlightedConnectedEntities}<br>`)
       }
       if (doc.connectedWAF && doc.connectedWAF.length > 0) {
-        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedWAF.join('<br/>'))
-        connections = connections.concat(`<b>${this.componentsMap['wafpolicies'].title}:</b><br/>${highlightedConnectedEntities}</br>`)
+        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedWAF.join('<br>'))
+        connections = connections.concat(`<b>${this.componentsMap['wafpolicies'].title}:</b><br>${highlightedConnectedEntities}<br>`)
       }
       if (doc.connectedRateLimits && doc.connectedRateLimits.length > 0) {
-        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedRateLimits.join('<br/>'))
-        connections = connections.concat(`<b>${this.componentsMap['ratelimits'].title}:</b><br/>${highlightedConnectedEntities}</br>`)
+        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedRateLimits.join('<br>'))
+        connections = connections.concat(`<b>${this.componentsMap['ratelimits'].title}:</b><br>${highlightedConnectedEntities}<br>`)
       }
       if (doc.connectedURLMaps && doc.connectedURLMaps.length > 0) {
-        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedURLMaps.join('<br/>'))
-        connections = connections.concat(`<b>${this.componentsMap['urlmaps'].title}:</b><br/>${highlightedConnectedEntities}</br>`)
+        const highlightedConnectedEntities = this.highlightSearchValue(doc.connectedURLMaps.join('<br>'))
+        connections = connections.concat(`<b>${this.componentsMap['urlmaps'].title}:</b><br>${highlightedConnectedEntities}<br>`)
       }
       return connections
     },

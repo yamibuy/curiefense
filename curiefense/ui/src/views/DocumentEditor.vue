@@ -69,14 +69,14 @@
                 </p>
 
                 <p class="control">
-                  <a class="button is-small"
+                  <button class="button is-small"
                      @click="downloadDoc"
                      title="Download Document x">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
 
-                  </a>
+                  </button>
                 </p>
 
                 <p class="control"
@@ -201,10 +201,12 @@ export default {
     GitHistory
   },
   watch: {
-    $route: async() => {
-      this.setLoadingDocStatus(true)
-      await this.setSelectedDataFromRouteParams()
-      this.setLoadingDocStatus(false)
+    $route: {
+      handler: async function() {
+        this.setLoadingDocStatus(true)
+        await this.setSelectedDataFromRouteParams()
+        this.setLoadingDocStatus(false)
+      }
     }
   },
   data() {

@@ -2,7 +2,7 @@ import FlowControlEditor from '@/doc-editors/FlowControlEditor'
 import {beforeEach, describe, expect, test, jest} from '@jest/globals'
 import {mount} from '@vue/test-utils'
 import LimitOption from '@/components/LimitOption'
-import LimitAction from '@/components/LimitAction'
+import ResponseAction from '@/components/ResponseAction'
 import Vue from 'vue'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
 
@@ -99,8 +99,8 @@ describe('FlowControlEditor.vue', () => {
         })
 
         test('should have limit action component with correct data', () => {
-            const limitActionComponent = wrapper.findComponent(LimitAction)
-            expect(limitActionComponent.vm.action).toEqual(docs[0].action)
+            const ResponseActionComponent = wrapper.findComponent(ResponseAction)
+            expect(ResponseActionComponent.vm.action).toEqual(docs[0].action)
         })
 
         test('should have correct notes in input', () => {

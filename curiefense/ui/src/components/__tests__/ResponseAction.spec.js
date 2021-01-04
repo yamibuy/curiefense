@@ -1,10 +1,10 @@
-import LimitAction from '@/components/LimitAction'
+import ResponseAction from '@/components/ResponseAction'
 import {describe, test, expect} from '@jest/globals'
 import {mount} from '@vue/test-utils'
 
-describe('LimitAction.vue', () => {
+describe('ResponseAction.vue', () => {
     test('should exist - STUB', () => {
-        const wrapper = mount(LimitAction)
+        const wrapper = mount(ResponseAction)
         expect(wrapper).toBeTruthy()
     })
 })

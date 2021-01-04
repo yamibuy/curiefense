@@ -82,7 +82,8 @@
                               @change="updateEvent"/>
               </div>
               <div>
-                <limit-action :action.sync="selectedDoc.action"/>
+                <response-action :action.sync="selectedDoc.action"
+                is-single-input-column/>
               </div>
               <div>
                 <hr>
@@ -208,7 +209,7 @@
 </template>
 
 <script>
-import LimitAction from '@/components/LimitAction.vue'
+import ResponseAction from '@/components/ResponseAction.vue'
 import LimitOption from '@/components/LimitOption.vue'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
 
@@ -219,7 +220,7 @@ export default {
     apiPath: String
   },
   components: {
-    LimitAction,
+    ResponseAction,
     LimitOption,
     TagAutocompleteInput
   },

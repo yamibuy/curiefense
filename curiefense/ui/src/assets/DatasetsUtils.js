@@ -92,10 +92,10 @@ const LimitAttributes = {
   "authority": "Authority",
 }
 
-const LimitActions = {
-  "default": {"title": "Default (503)"},
+const ResponseActions = {
+  "default": {"title": "503 Service Unavailable"},
   "challenge": {"title": "Challenge"},
-  "monitor": {"title": "Monitor"},
+  "monitor": {"title": "Tag Only"},
   "response": {"title": "Response", "params": {"status": "", "content": ""}},
   "redirect": {"title": "Redirect", "params": {"status": "30[12378]", "location": "https?://.+"}},
   "ban": {"title": "Ban", "params": {"ttl": "[0-9]+", "action": { "type": "default", "params": {} } }},
@@ -272,7 +272,7 @@ export default {
   RangeToCIDR,
   CIDRToRange,
   Titles,
-  LimitActions,
+  ResponseActions,
   LimitAttributes,
   LimitRulesTypes,
   UUID,

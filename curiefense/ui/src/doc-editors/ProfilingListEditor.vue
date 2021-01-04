@@ -6,7 +6,7 @@
           <div class="column is-3">
             <div class="field">
               <label class="label is-small">Name
-                  <span class="has-text-grey is-pulled-right" title="Rule Id">{{ selectedDoc.id }}</span>
+                <span class="has-text-grey is-pulled-right" title="Rule Id">{{ selectedDoc.id }}</span>
               </label>
               <div class="control">
                 <input class="input is-small"
@@ -15,7 +15,7 @@
                        :readonly="readonly"/>
               </div>
               <p class="subtitle is-7 has-text-grey">
-                {{ secentries }}
+                {{ sectionsEntriesDisplay }}
               </p>
             </div>
             <div class="field">
@@ -34,11 +34,15 @@
                 <label class="label is-small">Sections Relation</label>
                 <div class="tags has-addons">
                   <span class="tag pointer"
-                    :class="localDoc.rule.relation == 'AND' ? 'is-info xis-light is-selected' : ''" @click="setRuleRelation('AND')"
-                  >AND</span>
+                        :class="localDoc.rule.relation === 'AND' ? 'is-info xis-light is-selected' : ''"
+                        @click="setRuleRelation('AND')">
+                    AND
+                  </span>
                   <span class="tag pointer"
-                      :class="localDoc.rule.relation == 'OR' ? 'is-info xis-light is-selected' : ''" @click="setRuleRelation('OR')"
-                  >OR</span>
+                        :class="localDoc.rule.relation === 'OR' ? 'is-info xis-light is-selected' : ''"
+                        @click="setRuleRelation('OR')">
+                    OR
+                  </span>
                 </div>
               </div>
             </div>
@@ -64,6 +68,12 @@
                 <input class="input is-small" v-model="selectedDoc.source"
                        :readonly="readonly"/>
               </div>
+            </div>
+
+            <div class="field">
+              <response-action :action.sync="selectedDoc.action"
+                               label-separated-line
+                               wide-columns/>
             </div>
 
             <div class="field">
@@ -102,7 +112,7 @@
 <script>
 
 import _ from 'lodash'
-
+import ResponseAction from '@/components/ResponseAction'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
 import RequestsUtils from '@/assets/RequestsUtils'
 import EntriesRelationList from '@/components/EntriesRelationList'
@@ -111,6 +121,7 @@ export default {
   name: 'ProfilingListEditor',
 
   components: {
+    ResponseAction,
     EntriesRelationList,
     TagAutocompleteInput
   },
@@ -121,10 +132,10 @@ export default {
   },
 
   computed: {
-    secentries() {
-      let s = 'section' + ((this.localDoc.rule.sections.length !== 1) ? 's' : ''),
-          e = 'entr' + ((this.localDocTotalEntries !== 1) ? 'ies' : 'y')
-      return `${this.localDoc.rule.sections.length} ${s}\t|\t${this.localDocTotalEntries} ${e}`
+    sectionsEntriesDisplay() {
+      let sectionsCounter = (this.localDoc?.rule?.sections?.length !== 1) ? 'sections' : 'section'
+      let entriesCounter = (this.localDocTotalEntries !== 1) ? 'entries' : 'entry'
+      return `${this.localDoc?.rule?.sections?.length} ${sectionsCounter}\t|\t${this.localDocTotalEntries} ${entriesCounter}`
     },
     readonly() {
       return this.selectedDoc.source === 'reblaze-managed'
@@ -173,7 +184,7 @@ export default {
       if (relation)
         this.localDoc.rule.relation = relation
       else // toggle
-        this.localDoc.rule.relation = (this.localDoc.rule.relation === 'AND') ? "OR": "AND"
+        this.localDoc.rule.relation = (this.localDoc.rule.relation === 'AND') ? 'OR' : 'AND'
 
       this.emitDocUpdate()
     },
@@ -236,14 +247,14 @@ export default {
             }
             if (entries.length > 0) {
               let new_section = {
-                relation: "OR",
+                relation: 'OR',
                 entries: entries
               }
               this.selectedDoc.rule = {
-                "sections": [
+                'sections': [
                   new_section
                 ],
-                "relation": "OR"
+                'relation': 'OR'
               }
 
               this.selectedDoc.mdate = (new Date).toISOString()
@@ -262,7 +273,10 @@ export default {
 </script>
 
 <style scoped>
-.pointer { cursor: pointer; }
+.pointer {
+  cursor: pointer;
+}
+
 .rule-relation-toggle {
   cursor: pointer;
 }

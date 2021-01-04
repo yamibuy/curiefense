@@ -57,7 +57,7 @@
               </p>
             </div>
             <div class="field">
-              <limit-action :action.sync="selectedDoc.action"
+              <response-action :action.sync="selectedDoc.action"
                             label-separated-line
                             wide-columns/>
             </div>
@@ -276,7 +276,7 @@
 
 <script>
 
-import LimitAction from '@/components/LimitAction'
+import ResponseAction from '@/components/ResponseAction'
 import LimitOption from '@/components/LimitOption'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
 import DatasetsUtils from '@/assets/DatasetsUtils'
@@ -290,7 +290,7 @@ export default {
   },
 
   components: {
-    LimitAction,
+    ResponseAction,
     LimitOption,
     TagAutocompleteInput
   },
