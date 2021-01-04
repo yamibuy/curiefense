@@ -6,10 +6,12 @@
         "waf-entry-match": {
             "type": "object",
             "properties": {
-                "reg": { "type": "string" },
+                "key": { "type": ["null", "string"] },
+                "reg": { "type": ["null", "string"] },
                 "restrict": { "type": "boolean" },
+                "mask": { "type": "boolean" },
                 "exclusions": {
-                    "type": "object",
+                    "type": ["null", "object"],
                     "additionalProperties": { "type": "integer" }
                 }
             }

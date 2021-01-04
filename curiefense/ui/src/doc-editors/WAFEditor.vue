@@ -88,24 +88,27 @@
                   <td>
                     <table class="table is-fullwidth is-hoverable" v-if="selectedDoc && selectedDoc[tab]">
                       <thead>
-                      <th class="has-text-centered">Parameter</th>
-                      <th class="has-text-centered">Matching Value</th>
-                      <th class="has-text-centered">Restrict?</th>
-                      <th class="has-text-centered">Exclude Sig</th>
-                      <th class="has-text-centered">
-                        <a
-                            v-show="newWAFLine !== tab"
-                            class="has-text-grey-dark is-small" title="Add new parameter"
-                            @click="newWAFLine = tab; newEntry = genNewEntry()">
-                          <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                        </a>
-                        <a
-                            v-show="newWAFLine === tab"
-                            class="has-text-grey-dark is-small" title="Cancel adding new parameter"
-                            @click="newWAFLine = null">
-                          <span class="icon is-small"><i class="fas fa-minus"></i></span>
-                        </a>
-                      </th>
+                      <tr>
+                        <th class="has-text-centered">Parameter</th>
+                        <th class="has-text-centered">Matching Value</th>
+                        <th class="has-text-centered">Restrict?</th>
+                        <th class="has-text-centered">Mask?</th>
+                        <th class="has-text-centered">Exclude Sig</th>
+                        <th class="has-text-centered">
+                          <a
+                              v-show="newWAFLine !== tab"
+                              class="has-text-grey-dark is-small" title="Add new parameter"
+                              @click="newWAFLine = tab; newEntry = genNewEntry()">
+                            <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                          </a>
+                          <a
+                              v-show="newWAFLine === tab"
+                              class="has-text-grey-dark is-small" title="Cancel adding new parameter"
+                              @click="newWAFLine = null">
+                            <span class="icon is-small"><i class="fas fa-minus"></i></span>
+                          </a>
+                        </th>
+                      </tr>
                       </thead>
                       <tbody>
                         <tr v-if="newWAFLine === tab"
@@ -160,6 +163,11 @@
                             <input type="checkbox" v-model="newEntry.restrict"/>
                           </label>
                         </td>
+                        <td class="has-text-centered">
+                          <label class="checkbox">
+                            <input type="checkbox" v-model="newEntry.mask"/>
+                          </label>
+                        </td>
                         <td>
                           <serialized-input :placeholder="'comma separated sig IDs'" :value="newEntry.exclusions"
                                             :get-function="unpackExclusions" :set-function="packExclusions"
@@ -195,6 +203,11 @@
                         <td class="has-text-centered">
                           <label class="checkbox">
                             <input type="checkbox" :checked="entry.restrict"/>
+                          </label>
+                        </td>
+                        <td class="has-text-centered">
+                          <label class="checkbox">
+                            <input type="checkbox" v-model="entry.mask"/>
                           </label>
                         </td>
                         <td>
@@ -237,6 +250,11 @@
                         <td class="has-text-centered">
                           <label class="checkbox">
                             <input type="checkbox" :checked="entry.restrict"/>
+                          </label>
+                        </td>
+                        <td class="has-text-centered">
+                          <label class="checkbox">
+                            <input type="checkbox" :checked="entry.mask"/>
                           </label>
                         </td>
                         <td>
@@ -299,6 +317,7 @@ export default {
         key: null,
         reg: null,
         restrict: false,
+        mask: false,
         exclusions: null
       }
     },
