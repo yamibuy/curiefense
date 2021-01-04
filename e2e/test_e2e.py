@@ -359,7 +359,6 @@ def gen_rl_rules(authority):
     add_rl_rule("countby-provider", key=[{"attrs": "asn"}])
     add_rl_rule("countby-uri", key=[{"attrs": "uri"}])
     add_rl_rule("countby-path", key=[{"attrs": "path"}])
-    add_rl_rule("countby-tag", key=[{"attrs": "tags"}])
     add_rl_rule("countby-query", key=[{"attrs": "query"}])
     add_rl_rule("countby-method", key=[{"attrs": "method"}])
     add_rl_rule("countby-company", key=[{"attrs": "company"}])
@@ -768,12 +767,6 @@ class TestRateLimit:
         param1 = {}
         param2 = {}
         self.ratelimit_countby_helper(target, "path", param1, param2, nocount=True)
-
-    def test_ratelimit_countby_tag(self, target, ratelimit_config):
-        # changing the source IP will change the ip tag
-        param1 = {"srcip": IP6_1}
-        param2 = {"srcip": IP6_2}
-        self.ratelimit_countby_helper(target, "tag", param1, param2)
 
     def test_ratelimit_countby_query(self, target, ratelimit_config):
         param1 = {"suffix": "?QUERY-1"}
