@@ -153,7 +153,7 @@ export default {
     },
     action: {
       get() {
-        return this.objectWithAction.action
+        return this.objectWithAction?.action
       },
       set(newAction) {
         this.$set(this.objectWithAction, 'action', newAction)

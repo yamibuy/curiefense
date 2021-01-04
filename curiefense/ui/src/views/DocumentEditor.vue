@@ -319,13 +319,11 @@ export default {
     },
     
     async setSelectedDataFromRouteParams() {
-      this.setLoadingDocStatus(true)
       this.selectedBranch = this.$route.params.branch || this.branchNames[0]
       this.selectedDocType = this.$route.params.doc_type || Object.keys(this.componentsMap)[0]
       await this.loadDocs(this.selectedDocType)
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
       this.goToRoute()
-      this.setLoadingDocStatus(false)
     },
 
     resetGitLog() {
@@ -352,6 +350,8 @@ export default {
         this.configs = configs
         // pick first branch name as selected
         this.selectedBranch = this.branchNames[0]
+        // get branch document types
+        this.initDocTypes()
       }
       // counters
       this.commits = this.ld.sum(this.ld.map(this.ld.map(configs, 'logs'), (logs) => {

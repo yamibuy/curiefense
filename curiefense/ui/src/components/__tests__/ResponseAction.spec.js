@@ -4,7 +4,13 @@ import {mount} from '@vue/test-utils'
 
 describe('ResponseAction.vue', () => {
     test('should exist - STUB', () => {
-        const wrapper = mount(ResponseAction)
+        const wrapper = mount(ResponseAction, {
+            propsData: {
+                objectWithAction: {
+                    action: {}
+                }
+            }
+        })
         expect(wrapper).toBeTruthy()
     })
 })
