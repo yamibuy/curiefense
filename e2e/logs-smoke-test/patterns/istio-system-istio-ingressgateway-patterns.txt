@@ -1,0 +1,25 @@
+^Curiefense installed.
+^Now starting istio pilot.
+^Run mode is \[SYNC_ONCE\]
+^Run mode is \[PERIODIC_SYNC\]
+^Synchronizing once
+^Creating configuration \[/config/configs/\S+\]
+^Pulling new version of \[config/\S+\]
+^\s*\S+: \S+$
+^Pulling \S+\.json$
+^Synchronizing conf every 10 seconds
+^Sleeping
+^'/bootstrap-config\S*' -> '/config/\S+'
+^\S+T\S+Z	info	
+^\s*$
+^\s*\S+:$
+^\S+T\S+Z	warn	Missing JWT token, can't use in process SDS ./var/run/secrets/tokens/istio-tokenstat ./var/run/secrets/tokens/istio-token: no such file or directory
+^\S+T\S+Z	warn	failed to read pod labels: open ./etc/istio/pod/labels: no such file or directory
+^\S+T\S+Z	warn	Unable to unmarshal --proxyAdminPort: invalid character '-' in numeric literal
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[config\] \[\S+\] Listener connection limit runtime key envoy.resource_limits.listener.\S*.connection_limit is empty. There are currently no limitations on the number of accepted connections for listener \S*.
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[main\] \[\S+\] there is no configured limit to the number of allowed active connections. Set a limit via the runtime key overload.global_downstream_max_connections
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[config\] \[\S+\] gRPC config stream closed: \S+
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[config\] \[\S+\] gRPC config stream closed: \S+, no healthy upstream
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[config\] \[\S+\] Unable to establish new stream
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[filter\] \[\S+\] Mixer Report failed with: UNAVAILABLE:no healthy upstream
+^\[Envoy \(Epoch 0\)\] \[[^]]+\]\[\S+\]\[warning\]\[lua\] \[\S+\] script log: CIDR \S+ could not be parsed
