@@ -125,7 +125,7 @@
       <hr/>
 
       <div class="content document-editor-wrapper"
-           v-if="selectedBranch && selectedDocType && selectedDoc">
+           v-if="!loadingDocCounter && selectedBranch && selectedDocType && selectedDoc">
         <component
             :is="currentEditorComponent.component"
             :selectedBranch.sync="selectedBranch"
@@ -320,8 +320,11 @@ export default {
     
     async setSelectedDataFromRouteParams() {
       this.selectedBranch = this.$route.params.branch || this.branchNames[0]
+      const prevDocType = this.selectedDocType
       this.selectedDocType = this.$route.params.doc_type || Object.keys(this.componentsMap)[0]
-      await this.loadDocs(this.selectedDocType)
+      if (prevDocType !== this.selectedDocType) {
+        await this.loadDocs(this.selectedDocType)
+      }
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
       this.goToRoute()
     },
@@ -348,10 +351,6 @@ export default {
       if (!counter_only) {
         console.log('loaded configs: ', configs)
         this.configs = configs
-        // pick first branch name as selected
-        this.selectedBranch = this.branchNames[0]
-        // get branch document types
-        this.initDocTypes()
       }
       // counters
       this.commits = this.ld.sum(this.ld.map(this.ld.map(configs, 'logs'), (logs) => {
@@ -456,15 +455,18 @@ export default {
     },
 
     async forkDoc() {
+      this.setLoadingDocStatus(true)
       this.isForkLoading = true
       let docToAdd = this.ld.cloneDeep(this.selectedDoc)
       docToAdd.name = 'copy of ' + docToAdd.name
       docToAdd.id = DatasetsUtils.UUID2()
       await this.addNewDoc(docToAdd)
       this.isForkLoading = false
+      this.setLoadingDocStatus(false)
     },
 
     async addNewDoc(docToAdd) {
+      this.setLoadingDocStatus(true)
       this.isNewLoading = true
       if (!docToAdd) {
         docToAdd = this.newDoc()
@@ -475,6 +477,7 @@ export default {
       await this.saveChanges('POST')
       this.goToRoute()
       this.isNewLoading = false
+      this.setLoadingDocStatus(false)
     },
 
     async saveChanges(methodName) {
@@ -500,6 +503,7 @@ export default {
     },
 
     async deleteDoc() {
+      this.setLoadingDocStatus(true)
       this.isDeleteLoading = true
       this.docs.splice(this.selectedDocIndex, 1)
       await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, 'Document deleted!', 'Failed while deleting document!')
@@ -511,6 +515,7 @@ export default {
       this.resetGitLog()
       this.goToRoute()
       this.isDeleteLoading = false
+      this.setLoadingDocStatus(false)
     },
 
     async loadReferencedDocsIDs() {
@@ -562,6 +567,7 @@ export default {
   async created() {
     this.setLoadingDocStatus(true)
     await this.loadConfigs()
+    await this.initDocTypes()
     this.loadReferencedDocsIDs()
     this.setSelectedDataFromRouteParams()
     this.setLoadingDocStatus(false)

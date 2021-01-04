@@ -21,7 +21,7 @@ describe('DocumentEditor.vue', () => {
     let urlMapsDocs
     let urlMapsDocsLogs
     let flowControlDocs
-    beforeEach(async () => {
+    beforeEach((done) => {
         gitData = [
             {
                 'id': 'master',
@@ -717,7 +717,10 @@ describe('DocumentEditor.vue', () => {
                 $router: mockRouter
             }
         })
-        await Vue.nextTick()
+        // allow all requests to finish
+        setImmediate(() => {
+            done()
+        })
     })
     afterEach(() => {
         jest.clearAllMocks()
@@ -826,6 +829,7 @@ describe('DocumentEditor.vue', () => {
         forkedDoc.name = `copy of ${forkedDoc.name}`
         axios.post.mockImplementation(() => Promise.resolve())
         const postSpy = jest.spyOn(axios, 'post')
+        await Vue.nextTick()
         const forkDocumentButton = wrapper.find('.fork-document-button')
         forkDocumentButton.trigger('click')
         await Vue.nextTick()
