@@ -119,7 +119,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
 
-    request.handle:logErr("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
+    -- request.handle:logErr("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
 
     if num_entries > max_count then
         local msg = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
@@ -134,7 +134,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 return WAFBlock, gen_block_info(section, name, value, {["msg"] = msg})
             end
 
-            if ignore_alphanum and re_match(value, "^\\w$") then
+            if ignore_alphanum and re_match(value, "^[A-Za-z0-9]+$") then
                 store_section(omit_entries, section, name, true)
             else
                 name_rule = name_rules[name]
