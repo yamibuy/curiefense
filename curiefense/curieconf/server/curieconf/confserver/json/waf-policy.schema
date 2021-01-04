@@ -9,7 +9,7 @@
                 "reg": { "type": "string" },
                 "restrict": { "type": "boolean" },
                 "exclusions": {
-                    "type": "object",
+                    "type": ["object", "null"],
                     "additionalProperties": { "type": "integer" }
                 }
             }
