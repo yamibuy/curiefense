@@ -11,6 +11,10 @@
             "internal",
             "devops"
         ],
+        "action": {
+            "type": "monitor",
+            "params": {}
+        },
         "entries": [
             [
                 "ip",

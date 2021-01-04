@@ -82,8 +82,7 @@
                               @change="updateEvent"/>
               </div>
               <div>
-                <response-action :action.sync="selectedDoc.action"
-                is-single-input-column/>
+                <response-action :object-with-action.sync="selectedDoc"/>
               </div>
               <div>
                 <hr>
@@ -134,12 +133,10 @@
                             <option value="asn">Provider</option>
                             <option value="uri">URI</option>
                             <option value="path">Path</option>
-                            <option value="tags">Tags</option>
                             <option value="query">Query</option>
                             <option value="method">Method</option>
                             <option value="company">Company</option>
                             <option value="country">Country</option>
-                            <option value="authority">Authority</option>
                           </select>
                         </div>
                         <div v-else class="control">

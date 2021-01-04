@@ -27,8 +27,8 @@
     },
     "action": {
       "type": "object",
-      "title": "Limit Reached Action",
-      "description": "Action to take when receiving requests over the threshold"
+      "title": "Flow Broken Action",
+      "description": "Action to take when receiving requests breaking this flow"
     },
     "key": {
       "type": "array",

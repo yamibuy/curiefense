@@ -130,6 +130,7 @@ m_tagrule = api.model("Tag Rule", {
     "mdate": fields.String(required=True),
     "notes": fields.String(required=True),
     "active": fields.Boolean(required=True),
+    "action": fields.Raw(required=True),
     "tags": fields.List(fields.String()),
     "rule": AnyType(),
 })

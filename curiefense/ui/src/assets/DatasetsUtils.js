@@ -168,6 +168,9 @@ const NewDocEntryFactory = {
         "entries_relation": "OR",
         "active": true,
         "tags": [],
+        "action": {
+          "type": "monitor"
+        },
         "rule": {
             "relation": "OR",
             "sections": []

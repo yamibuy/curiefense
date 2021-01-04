@@ -310,21 +310,22 @@ export default {
 
   methods: {
 
-    setCurrentRoute() {
+    goToRoute() {
       const currentRoute = `/config/${this.selectedBranch}/${this.selectedDocType}/${this.selectedDocID}`
       if (this.$route.path !== currentRoute) {
-        console.log('Document not found. moving to ' + currentRoute)
+        console.log('Switching document, new document path: ' + currentRoute)
         this.$router.push(currentRoute)
       }
     },
     
     async setSelectedDataFromRouteParams() {
-      // Load data from route params or take first dropdown item if no data was provided
+      this.setLoadingDocStatus(true)
       this.selectedBranch = this.$route.params.branch || this.branchNames[0]
       this.selectedDocType = this.$route.params.doc_type || Object.keys(this.componentsMap)[0]
       await this.loadDocs(this.selectedDocType)
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
-      this.setCurrentRoute()
+      this.goToRoute()
+      this.setLoadingDocStatus(false)
     },
 
     resetGitLog() {
@@ -351,8 +352,6 @@ export default {
         this.configs = configs
         // pick first branch name as selected
         this.selectedBranch = this.branchNames[0]
-        // get branch document types
-        this.initDocTypes()
       }
       // counters
       this.commits = this.ld.sum(this.ld.map(this.ld.map(configs, 'logs'), (logs) => {
@@ -417,7 +416,7 @@ export default {
       this.resetGitLog()
       await this.initDocTypes()
       this.loadReferencedDocsIDs()
-      this.setCurrentRoute()
+      this.goToRoute()
       this.setLoadingDocStatus(false)
     },
 
@@ -432,7 +431,7 @@ export default {
       this.selectedDocID = null
       this.resetGitLog()
       await this.loadDocs(docType)
-      this.setCurrentRoute()
+      this.goToRoute()
       this.setLoadingDocStatus(false)
     },
 
@@ -442,7 +441,7 @@ export default {
         this.selectedDocID = docID
       }
       this.loadGitLog()
-      this.setCurrentRoute()
+      this.goToRoute()
       this.setLoadingDocStatus(false)
     },
 
@@ -474,7 +473,7 @@ export default {
       this.docs.unshift(docToAdd)
       this.selectedDocID = docToAdd.id
       await this.saveChanges('POST')
-      this.setCurrentRoute()
+      this.goToRoute()
       this.isNewLoading = false
     },
 
@@ -510,7 +509,7 @@ export default {
           })
       this.selectedDocID = this.docs[0].id
       this.resetGitLog()
-      this.setCurrentRoute()
+      this.goToRoute()
       this.isDeleteLoading = false
     },
 

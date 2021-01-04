@@ -71,9 +71,10 @@
             </div>
 
             <div class="field">
-              <response-action :action.sync="selectedDoc.action"
+              <response-action :object-with-action.sync="selectedDoc"
                                label-separated-line
-                               wide-columns/>
+                               wide-columns
+                               is-single-input-column/>
             </div>
 
             <div class="field">

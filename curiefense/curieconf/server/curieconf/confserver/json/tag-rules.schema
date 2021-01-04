@@ -44,6 +44,11 @@
       },
       "uniqueItems": true
     },
+    "action": {
+        "type": "object",
+        "title": "Rule Broken Action",
+        "description": "Action to take when receiving requests breaking this rule"
+    },
     "rule": {
       "type": "object",
       "uniqueItems": true,
