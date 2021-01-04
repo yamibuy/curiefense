@@ -317,10 +317,11 @@ export default {
     },
     
     async setSelectedDataFromRouteParams() {
-      this.selectedBranch = this.$route.params.branch
-      this.selectedDocType = this.$route.params.doc_type
+      // Load data from route params or take first dropdown item if no data was provided
+      this.selectedBranch = this.$route.params.branch || this.branchNames[0]
+      this.selectedDocType = this.$route.params.doc_type || Object.keys(this.componentsMap)[0]
       await this.loadDocs(this.selectedDocType)
-      this.selectedDocID = this.$route.params.doc_id
+      this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
       this.setCurrentRoute()
     },
 

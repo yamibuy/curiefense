@@ -100,7 +100,7 @@
             </td>
             <td class="is-size-7 width-50px">
               <p class="control has-text-centered" v-if="rowOverIndex === index">
-                <a class="button is-small link-button"
+                <a class="button is-small go-to-link-button"
                    @click="goToDocument(doc)"
                    title="Go to document">
                     <span class="icon is-small">
@@ -257,7 +257,10 @@ export default {
       this.configs = configs
       // pick first branch name as selected
       this.selectedBranch = this.branchNames[0]
-      // load all docs
+      this.loadDocs()
+    },
+
+    async loadDocs() {
       const docTypes = Object.keys(this.componentsMap)
       for (let i = 0; i < docTypes.length; i++) {
         let doctype = docTypes[i]
@@ -267,7 +270,24 @@ export default {
           for (let j = 0; j < response.data.length; j++) {
             const doc = response.data[j]
             doc.docType = doctype
-            doc.tags = doc.tags ? doc.tags.join(', ').toLowerCase() : ''
+            // Build tags based on document type
+            if (doctype === 'aclpolicies') {
+              const forceDenyTags = doc.force_deny.filter(Boolean).join(', ').toLowerCase()
+              const bypassTags = doc.bypass.filter(Boolean).join(', ').toLowerCase()
+              const allowBotTags = doc.allow_bot.filter(Boolean).join(', ').toLowerCase()
+              const denyBotTags = doc.deny_bot.filter(Boolean).join(', ').toLowerCase()
+              const allowTags = doc.allow.filter(Boolean).join(', ').toLowerCase()
+              const denyTags = doc.deny.filter(Boolean).join(', ').toLowerCase()
+              doc.tags = [forceDenyTags, bypassTags, allowBotTags, denyBotTags, allowTags, denyTags].filter(Boolean).join(', ')
+            }
+            if (doctype === 'flowcontrol') {
+              const includeTags = doc.include.filter(Boolean).join(', ').toLowerCase()
+              const excludeTags = doc.exclude.filter(Boolean).join(', ').toLowerCase()
+              doc.tags = [includeTags, excludeTags].filter(Boolean).join(', ')
+            }
+            if (doctype === 'tagrules') {
+              doc.tags = doc.tags.filter(Boolean).join(', ').toLowerCase()
+            }
             // Build connections based on document type
             if (doctype === 'urlmaps') {
               this.buildURLMapConnections(doc)
@@ -285,7 +305,7 @@ export default {
             this.docs.push(doc)
           }
         } catch (err) {
-          console.log('Error while attempting to load documents')
+          console.log(`Error while attempting to load document: ${doctype}`)
           console.log(err)
         }
       }
@@ -374,7 +394,7 @@ export default {
     },
 
     async switchBranch() {
-      await this.initDocTypes()
+      await this.loadDocs()
     },
 
     goToDocument(doc) {

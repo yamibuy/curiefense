@@ -348,7 +348,6 @@ export default {
     },
 
     removeEntry(section, sectionIndex, entry_idx) {
-      console.log(1111)
       let pointer = ((this.sectionsCurrentPageIndex[sectionIndex] - 1) * this.rowsPerPage) + entry_idx
       section.entries.splice(pointer, 1)
       if (section.entries.length === 0) {

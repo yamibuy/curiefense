@@ -30,32 +30,17 @@ const routes = [
             {
                 path: 'config',
                 name: 'DocumentEditor',
-                component: {
-                    render(c) {
-                        return c('router-view')
-                    }
-                },
-                redirect: '/config/branch',
+                component: DocumentEditor,
                 children: [
                     {
                         path: ':branch',
                         name: 'DocumentEditor/Branch',
-                        component: {
-                            render(c) {
-                                return c('router-view')
-                            }
-                        },
-                        redirect: '/config/branch/doc_type',
+                        component: DocumentEditor,
                         children: [
                             {
                                 path: ':doc_type',
                                 name: 'DocumentEditor/Branch/DocType',
-                                component: {
-                                    render(c) {
-                                        return c('router-view')
-                                    }
-                                },
-                                redirect: '/config/branch/doc_type/doc_id',
+                                component: DocumentEditor,
                                 children: [
                                     {
                                         path: ':doc_id',

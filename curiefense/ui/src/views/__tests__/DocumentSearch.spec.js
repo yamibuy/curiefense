@@ -3,18 +3,29 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 import {shallowMount} from '@vue/test-utils'
 import axios from 'axios'
 import Vue from 'vue'
+
 jest.useFakeTimers()
 jest.mock('axios')
 
 describe('DocumentSearch.vue', () => {
     let wrapper
+    let mockRouter
     let gitData
     let aclDocs
     let profilingListDocs
     let urlMapsDocs
     let flowControlDocs
+    let rateLimitDocs
+    let wafDocs
     beforeEach((done) => {
-        gitData = ['master']
+        gitData = [
+            {
+                id: 'master'
+            },
+            {
+                id: 'zzz_branch'
+            }
+        ]
         aclDocs = [
             {
                 'id': '__default__',
@@ -149,7 +160,7 @@ describe('DocumentSearch.vue', () => {
                         'acl_active': false,
                         'waf_profile': '__default__',
                         'waf_active': false,
-                        'limit_ids': []
+                        'limit_ids': ['f971e92459e2']
                     }
                 ]
             }
@@ -192,6 +203,36 @@ describe('DocumentSearch.vue', () => {
                 'id': 'c03dabe4b9ca'
             }
         ]
+        rateLimitDocs = [
+            {
+                'id': 'f971e92459e2',
+                'name': 'Rate Limit Example Rule 5/60',
+                'description': '5 requests per minute',
+                'ttl': '60',
+                'limit': '5',
+                'action': {'type': 'default'},
+                'include': {'headers': {}, 'cookies': {}, 'args': {}, 'attrs': {}},
+                'exclude': {'headers': {}, 'cookies': {}, 'args': {}, 'attrs': {}},
+                'key': [{'attrs': 'ip'}],
+                'pairwith': {'self': 'self'}
+            }
+        ]
+        wafDocs = [
+            {
+                'id': '01b2abccc275',
+                'name': 'default waf',
+                'ignore_alphanum': true,
+                'max_header_length': 1024,
+                'max_cookie_length': 1024,
+                'max_arg_length': 1024,
+                'max_headers_count': 42,
+                'max_cookies_count': 42,
+                'max_args_count': 512,
+                'args': {'names': [], 'regex': []},
+                'headers': {'names': [], 'regex': []},
+                'cookies': {'names': [], 'regex': []}
+            }
+        ]
         axios.get.mockImplementation((path) => {
             if (path === '/conf/api/v1/configs/') {
                 return Promise.resolve({data: gitData})
@@ -210,14 +251,21 @@ describe('DocumentSearch.vue', () => {
                 return Promise.resolve({data: flowControlDocs})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/ratelimits/`) {
-                return Promise.resolve({data: []})
+                return Promise.resolve({data: rateLimitDocs})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/wafpolicies/`) {
-                return Promise.resolve({data: []})
+                return Promise.resolve({data: wafDocs})
             }
             return Promise.resolve({data: []})
         })
-        wrapper = shallowMount(DocumentSearch)
+        mockRouter = {
+            push: jest.fn()
+        }
+        wrapper = shallowMount(DocumentSearch, {
+            mocks: {
+                $router: mockRouter
+            }
+        })
         // allow all requests to finish
         setImmediate(() => {
             done()
@@ -227,9 +275,9 @@ describe('DocumentSearch.vue', () => {
         jest.clearAllMocks()
     })
 
-    function isItemInFilteredDocs(item) {
+    function isItemInFilteredDocs(item, doctype) {
         const isInModel = wrapper.vm.filteredDocs.some((doc) => {
-            return doc.id === item.id
+            return doc.id === item.id && doc.docType === doctype
         })
         const isInView = wrapper.findAll('.doc-id-cell').filter((w) => {
             return w.text().includes(item.id)
@@ -241,18 +289,64 @@ describe('DocumentSearch.vue', () => {
         return wrapper.findAll('.result-row').length
     }
 
-    test('should display all documents if not filtered', () => {
-        expect(isItemInFilteredDocs(aclDocs[0])).toBeTruthy()
-        expect(isItemInFilteredDocs(aclDocs[1])).toBeTruthy()
-        expect(isItemInFilteredDocs(profilingListDocs[0])).toBeTruthy()
-        expect(isItemInFilteredDocs(profilingListDocs[1])).toBeTruthy()
-        expect(isItemInFilteredDocs(urlMapsDocs[0])).toBeTruthy()
-        expect(isItemInFilteredDocs(flowControlDocs[0])).toBeTruthy()
-        expect(numberOfFilteredDocs()).toEqual(6)
+    test('should be able to switch branches through dropdown', (done) => {
+        const branchSelection = wrapper.find('.branch-selection')
+        branchSelection.trigger('click')
+        const options = branchSelection.findAll('option')
+        options.at(1).element.selected = true
+        branchSelection.trigger('change')
+        // allow all requests to finish
+        setImmediate(() => {
+            expect(branchSelection.element.selectedIndex).toEqual(1)
+            done()
+        })
+    })
+
+    test('should display all documents on startup', () => {
+        expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
+        expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
+        expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
+        expect(isItemInFilteredDocs(profilingListDocs[1], 'tagrules')).toBeTruthy()
+        expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+        expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+        expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
+        expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
+        expect(numberOfFilteredDocs()).toEqual(8)
     })
 
     describe('filters', () => {
-        test('should filter correctly with filter all',  async() => {
+        test('should filter correctly if filter changed after input', async () => {
+            // switch filter type
+            let searchTypeSelection = wrapper.find('.search-type-selection')
+            searchTypeSelection.trigger('click')
+            let options = searchTypeSelection.findAll('option')
+            options.at(1).element.selected = true
+            searchTypeSelection.trigger('change')
+            await Vue.nextTick()
+
+            const searchInput = wrapper.find('.search-input')
+            searchInput.element.value = 'default'
+            searchInput.trigger('input')
+            await Vue.nextTick()
+
+            // switch filter type
+            searchTypeSelection = wrapper.find('.search-type-selection')
+            searchTypeSelection.trigger('click')
+            options = searchTypeSelection.findAll('option')
+            options.at(0).element.selected = true
+            searchTypeSelection.trigger('change')
+            await Vue.nextTick()
+
+            expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
+            expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+            expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(6)
+        })
+
+        test('should filter correctly with filter all', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -265,14 +359,16 @@ describe('DocumentSearch.vue', () => {
             searchInput.element.value = 'default'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(aclDocs[0])).toBeTruthy()
-            expect(isItemInFilteredDocs(aclDocs[1])).toBeTruthy()
-            expect(isItemInFilteredDocs(profilingListDocs[0])).toBeTruthy()
-            expect(isItemInFilteredDocs(urlMapsDocs[0])).toBeTruthy()
-            expect(numberOfFilteredDocs()).toEqual(4)
+            expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
+            expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+            expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(6)
         })
 
-        test('should filter correctly with filter document type',  async() => {
+        test('should filter correctly with filter document type', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -282,15 +378,14 @@ describe('DocumentSearch.vue', () => {
             await Vue.nextTick()
 
             const searchInput = wrapper.find('.search-input')
-            searchInput.element.value = 'acl'
+            searchInput.element.value = 'flow'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(aclDocs[0])).toBeTruthy()
-            expect(isItemInFilteredDocs(aclDocs[1])).toBeTruthy()
-            expect(numberOfFilteredDocs()).toEqual(2)
+            expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(1)
         })
 
-        test('should filter correctly with filter id',  async() => {
+        test('should filter correctly with filter id', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -300,15 +395,14 @@ describe('DocumentSearch.vue', () => {
             await Vue.nextTick()
 
             const searchInput = wrapper.find('.search-input')
-            searchInput.element.value = '__default__'
+            searchInput.element.value = 'c03dabe4b9ca'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(aclDocs[0])).toBeTruthy()
-            expect(isItemInFilteredDocs(urlMapsDocs[0])).toBeTruthy()
-            expect(numberOfFilteredDocs()).toEqual(2)
+            expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(1)
         })
 
-        test('should filter correctly with filter name',  async() => {
+        test('should filter correctly with filter name', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -318,15 +412,14 @@ describe('DocumentSearch.vue', () => {
             await Vue.nextTick()
 
             const searchInput = wrapper.find('.search-input')
-            searchInput.element.value = '__default__'
+            searchInput.element.value = 'default entry'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(aclDocs[0])).toBeTruthy()
-            expect(isItemInFilteredDocs(urlMapsDocs[0])).toBeTruthy()
-            expect(numberOfFilteredDocs()).toEqual(2)
+            expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(1)
         })
 
-        test('should filter correctly with filter description',  async() => {
+        test('should filter correctly with filter description', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -339,11 +432,11 @@ describe('DocumentSearch.vue', () => {
             searchInput.element.value = 'default'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(profilingListDocs[0])).toBeTruthy()
+            expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
             expect(numberOfFilteredDocs()).toEqual(1)
         })
 
-        test('should filter correctly with filter tags',  async() => {
+        test('should filter correctly with filter tags', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -353,15 +446,14 @@ describe('DocumentSearch.vue', () => {
             await Vue.nextTick()
 
             const searchInput = wrapper.find('.search-input')
-            searchInput.element.value = 'internal'
+            searchInput.element.value = 'china'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(aclDocs[0])).toBeTruthy()
-            expect(isItemInFilteredDocs(profilingListDocs[1])).toBeTruthy()
-            expect(numberOfFilteredDocs()).toEqual(2)
+            expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(1)
         })
 
-        test('should filter correctly with filter connections',  async() => {
+        test('should filter correctly with filter connections', async () => {
             // switch filter type
             const searchTypeSelection = wrapper.find('.search-type-selection')
             searchTypeSelection.trigger('click')
@@ -371,12 +463,44 @@ describe('DocumentSearch.vue', () => {
             await Vue.nextTick()
 
             const searchInput = wrapper.find('.search-input')
-            searchInput.element.value = '__default__'
+            searchInput.element.value = 'default'
             searchInput.trigger('input')
             await Vue.nextTick()
-            expect(isItemInFilteredDocs(aclDocs[1])).toBeTruthy()
-            expect(isItemInFilteredDocs(urlMapsDocs[0])).toBeTruthy()
-            expect(numberOfFilteredDocs()).toEqual(2)
+            expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
+            expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+            expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
+            expect(numberOfFilteredDocs()).toEqual(3)
+        })
+    })
+
+    describe('go to link', () => {
+        test('should not render go to link button when not hovering over a row', () => {
+            expect(wrapper.findAll('.go-to-link-button').length).toEqual(0)
+        })
+
+        test('should render a single go to link button when hovering over a row', async () => {
+            // 0 is the table header, 1 is our first data
+            const firstDataRow = wrapper.findAll('tr').at(1)
+            await firstDataRow.trigger('mouseover')
+            expect(firstDataRow.findAll('.go-to-link-button').length).toEqual(1)
+        })
+
+        test('should stop rendering the go to link button when no longer hovering over a row', async () => {
+            // 0 is the table header, 1 is our first data
+            const firstDataRow = wrapper.findAll('tr').at(1)
+            await firstDataRow.trigger('mouseover')
+            await firstDataRow.trigger('mouseleave')
+            expect(firstDataRow.findAll('.go-to-link-button').length).toEqual(0)
+        })
+
+        test('should change route when go to link button is clicked', async () => {
+            // 0 is the table header, 1 is our first data
+            const firstDataRow = wrapper.findAll('tr').at(1)
+            await firstDataRow.trigger('mouseover')
+            const goToLinkButton = firstDataRow.find('.go-to-link-button')
+            await goToLinkButton.trigger('click')
+            expect(mockRouter.push).toHaveBeenCalledTimes(1)
+            expect(mockRouter.push).toHaveBeenCalledWith('/config/master/urlmaps/__default__')
         })
     })
 })
