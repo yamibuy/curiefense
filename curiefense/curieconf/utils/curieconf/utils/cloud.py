@@ -22,7 +22,10 @@ def get_bucket(url):
         if pth.startswith("/"):
             pth = pth[1:]
         if u.scheme == "gs":
-            storage = get_driver(DriverName.GOOGLESTORAGE)(os.path.dirname(u.path))
+            credentials_path = os.environ.get(
+                "GOOGLE_APPLICATION_CREDENTIALS",
+                "/var/run/secrets/gs/gs.json")
+            storage = get_driver(DriverName.GOOGLESTORAGE)(credentials_path)
         elif u.scheme == "s3":
             akey = os.environ.get("CURIE_S3_ACCESS_KEY")
             skey = os.environ.get("CURIE_S3_SECRET_KEY")
