@@ -15,8 +15,8 @@ local table_length  = utils.table_length
 
 local re_match  = utils.re_match
 
-local libinject_sqli = libinject.sqli
-local libinject_xss = libinject.xss
+local libinject_sqli    = libinject.sqli
+local libinject_xss     = libinject.xss
 
 local WAFPass           = globals.WAFPass
 local WAFBlock          = globals.WAFBlock
@@ -119,6 +119,8 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
 
+    -- request.handle:logErr("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
+
     if num_entries > max_count then
         local msg = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
         return WAFBlock, gen_block_info(section, '-', '-', {["msg"] = msg})
@@ -132,7 +134,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 return WAFBlock, gen_block_info(section, name, value, {["msg"] = msg})
             end
 
-            if ignore_alphanum and re_match(value, "^\\w$") then
+            if ignore_alphanum and re_match(value, "^[A-Za-z0-9]+$") then
                 store_section(omit_entries, section, name, true)
             else
                 name_rule = name_rules[name]
@@ -196,13 +198,13 @@ function check(waf_profile, request)
                             { ["id"] = "libinjection", ["category"] = "xss", ["subcategory"] = "xss", ["msg"] = token })
                     end
                 end
-
+                -- we need to identify the source of the matching for next for loop
+                -- to avoid excluded sigs
+                -- table.insert(hca_values, string.format("%s:::%s:::%s", section, name, value))
                 table.insert(hca_values, value)
             end
         end
     end
-
-
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
@@ -230,6 +232,7 @@ function check(waf_profile, request)
     end
 
     return WAFPass, "waf-passed"
+
 end
 
 function detect_sqli(input)
