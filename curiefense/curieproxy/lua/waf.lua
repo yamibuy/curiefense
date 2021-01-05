@@ -235,6 +235,7 @@ function check(waf_profile, request)
     end
 
     return WAFPass, "waf-passed"
+
 end
 
 function detect_sqli(input)
