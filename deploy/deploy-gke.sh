@@ -7,9 +7,9 @@
 
 BASEDIR="$(dirname "$(readlink -f "$0")")" 
 if [ -z "$KUBECONFIG" ]; then
-	KUBECONFIG="$(mktemp kubeconfig.XXXXX)"
-	export KUBECONFIG
-	echo "KUBECONFIG is set to $KUBECONFIG"
+    KUBECONFIG="$(readlink -f $(mktemp kubeconfig.XXXXX))"
+    export KUBECONFIG
+    echo "KUBECONFIG is set to $KUBECONFIG"
 fi
 CLUSTER_NAME="${CLUSTER_NAME:-curiefense-perftest-gks}"
 S3CFG_PATH=${S3CFG_PATH:-~/s3cfg.yaml}
