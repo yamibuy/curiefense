@@ -4,9 +4,10 @@ import {shallowMount} from '@vue/test-utils'
 import GitHistory from '@/components/GitHistory'
 import Vue from 'vue'
 import axios from 'axios'
-import Ace from 'ace-builds/src-noconflict/ace.js'
+import JSONEditor from 'jsoneditor'
 
 jest.mock('axios')
+jest.mock('jsoneditor')
 
 describe('DBEditor.vue', () => {
     let wrapper
@@ -38,6 +39,24 @@ describe('DBEditor.vue', () => {
             'version': 'ff59eb0e6d230c077dfa503c9f2d4aacec1b72ab',
             'parents': ['a34f979217215060861b58b3f270e82580c20efb']
         }]
+        JSONEditor.mockImplementation((container, options) => {
+            let value = {}
+            let onChangeFunc
+            if (options.onChange) {
+                onChangeFunc = options.onChange
+            }
+            return {
+                set: (newValue) => {
+                    value = newValue
+                    if (typeof onChangeFunc === 'function') {
+                        onChangeFunc()
+                    }
+                },
+                get: () => {
+                    return value
+                }
+            }
+        })
         axios.get.mockImplementation((path) => {
             if (path === '/conf/api/v1/db/') {
                 return Promise.resolve({data: ['system', 'databaseCopy', 'anotherDB']})
@@ -55,32 +74,6 @@ describe('DBEditor.vue', () => {
             }
             return Promise.resolve({data: {}})
         })
-        Ace.edit = () => {
-            const editObj = {}
-            let callbackFunc
-            let value
-            editObj.setTheme = () => {
-            }
-            editObj.getSession = () => {
-                return {
-                    setMode: () => {
-                    },
-                    on: (trigger, callback) => {
-                        if (trigger === 'change') {
-                            callbackFunc = callback
-                        }
-                    }
-                }
-            }
-            editObj.setValue = (newVal) => {
-                value = newVal
-                if (callbackFunc) {
-                    callbackFunc()
-                }
-            }
-            editObj.getValue = () => value
-            return editObj
-        }
         wrapper = shallowMount(DBEditor)
         await Vue.nextTick()
     })
@@ -316,14 +309,14 @@ describe('DBEditor.vue', () => {
             expect(putSpy).toHaveBeenCalledWith(`/conf/api/v1/db/new database/k/key/`, doc)
         })
 
-        test('should be able to save key changes when using ace editor', (done) => {
+        test('should use correct values when saving key changes when using json editor', (done) => {
             // setTimeout to allow the editor to be fully loaded before we interact with it
             setTimeout(async () => {
                 const doc = {
                     buckets: {},
                     foo: 'bar'
                 }
-                wrapper.vm.editor.setValue(JSON.stringify(doc))
+                wrapper.vm.editor.set(doc)
                 await Vue.nextTick()
                 const saveKeyButton = wrapper.find('.save-button')
                 saveKeyButton.trigger('click')
@@ -333,23 +326,9 @@ describe('DBEditor.vue', () => {
             }, 300)
         })
 
-        test('should not be able to save key changes if document is an invalid json when using ace editor', (done) => {
-            // setTimeout to allow the editor to be fully loaded before we interact with it
-            setTimeout(async () => {
-                const doc = '{'
-                wrapper.vm.editor.setValue(doc)
-                await Vue.nextTick()
-                const saveKeyButton = wrapper.find('.save-button')
-                saveKeyButton.trigger('click')
-                await Vue.nextTick()
-                expect(putSpy).not.toHaveBeenCalled()
-                done()
-            }, 300)
-        })
-
-        test('should not be able to save key changes if document is an invalid json when not using ace editor', async () => {
+        test('should not be able to save key changes if document is an invalid json when not using json editor', async () => {
             wrapper.vm.editor = null
-            wrapper.vm.isAceEditor = false
+            wrapper.vm.isJsonEditor = false
             await Vue.nextTick()
             const doc = '{'
             const documentInput = wrapper.find('.document-input')
@@ -360,6 +339,28 @@ describe('DBEditor.vue', () => {
             saveKeyButton.trigger('click')
             await Vue.nextTick()
             expect(putSpy).not.toHaveBeenCalled()
+        })
+
+        test('should not render normal text area if json editor has been loaded', (done) => {
+            // setTimeout to allow the editor to be fully loaded before we interact with it
+            setTimeout(async () => {
+                const documentInput = wrapper.find('.document-input')
+                expect(documentInput.element).toBeUndefined()
+                done()
+            }, 300)
+        })
+
+        test('should default to normal text area when json editor cannot be loaded after 2 seconds', (done) => {
+            JSONEditor.mockImplementation(() => {
+                throw 'ouchie'
+            })
+            wrapper = shallowMount(DBEditor)
+            // setTimeout to allow the editor to be fully loaded before we interact with it
+            setTimeout(async () => {
+                const documentInput = wrapper.find('.document-input')
+                expect(documentInput.element).toBeDefined()
+                done()
+            }, 2300)
         })
 
         test('should not be able to save key changes if database name is empty', async () => {
