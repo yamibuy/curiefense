@@ -1,24 +1,29 @@
 import TagAutocompleteInput from '@/components/TagAutocompleteInput'
-import {describe, test, expect, beforeEach, jest, afterEach} from '@jest/globals'
+import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals'
 import {mount} from '@vue/test-utils'
 import Vue from 'vue'
+import axios from 'axios'
+import AutocompleteInput from '@/components/AutocompleteInput'
 
 jest.mock('axios')
-import axios from 'axios'
 
 describe('TagAutocompleteInput.vue', () => {
     let wrapper
     let tagsData
-    beforeEach(() => {
+    beforeEach(async () => {
         tagsData = {
             data: {
-                tags: [
-                    'united-states',
-                    'test-tag-1',
-                    'test-tag-2',
-                    'another-tag',
+                legitimate: [
+                    'internal',
                     'devops',
-                    'internal'
+                    'allowlist'
+                ],
+                malicious: [
+                    'malware',
+                    'blocklist'
+                ],
+                neutral: [
+                    'all'
                 ],
             },
         }
@@ -29,105 +34,22 @@ describe('TagAutocompleteInput.vue', () => {
                 clearInputAfterSelection: false
             }
         })
+        await Vue.nextTick()
     })
     afterEach(() => {
         jest.clearAllMocks()
     })
 
-    test('should have dropdown hidden on init', () => {
-        expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeFalsy()
-    })
-
-    test('should have dropdown hidden after typing in input if empty', async () => {
-        axios.get.mockImplementation(() => Promise.resolve({data: {}}))
-        wrapper = mount(TagAutocompleteInput)
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        await Vue.nextTick()
-        expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeFalsy()
-    })
-
-    test('should have dropdown displayed after typing in input', async () => {
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        await Vue.nextTick()
-        expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeTruthy()
-    })
-
-    test('should emit changed tag when input changes', async () => {
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        await Vue.nextTick()
-        expect(wrapper.emitted('tag-changed')).toBeTruthy()
-        expect(wrapper.emitted('tag-changed')[0]).toEqual(['tag'])
-    })
-
-    test('should show correct filtered tags in dropdown ordered alphabetically', async () => {
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        await Vue.nextTick()
-        const dropdownItems = wrapper.findAll('.dropdown-item')
-        expect(dropdownItems.length).toEqual(3)
-        expect(dropdownItems.at(0).text()).toEqual('another-tag')
-        expect(dropdownItems.at(1).text()).toEqual('test-tag-1')
-        expect(dropdownItems.at(2).text()).toEqual('test-tag-2')
-    })
-
-    test('should show correct filtered tags in dropdown ordered alphabetically regardless of casing', async () => {
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'TaG'
-        input.trigger('input')
-        await Vue.nextTick()
-        const dropdownItems = wrapper.findAll('.dropdown-item')
-        expect(dropdownItems.length).toEqual(3)
-        expect(dropdownItems.at(0).text()).toEqual('another-tag')
-        expect(dropdownItems.at(1).text()).toEqual('test-tag-1')
-        expect(dropdownItems.at(2).text()).toEqual('test-tag-2')
-    })
-
-    test('should re-assign the input when prop changes', async () => {
-        const newTag = 'another'
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        wrapper.setProps({initialTag: newTag})
-        await Vue.nextTick()
-        expect(input.element.value).toEqual(newTag)
-    })
-
-    test('should have dropdown hidden when prop changes', async () => {
-        const newTag = 'another'
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        wrapper.setProps({initialTag: newTag})
-        await Vue.nextTick()
-        expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeFalsy()
-    })
-
-    test('should have dropdown hidden when prop changes to the same value', async () => {
-        const tag = 'tag'
-        const input = wrapper.find('.tag-input')
-        input.element.value = tag
-        input.trigger('input')
-        wrapper.setProps({initialTag: tag})
-        await Vue.nextTick()
-        expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeTruthy()
-    })
-
-    test('should clear tag input when selected', async () => {
-        wrapper.setProps({clearInputAfterSelection: true})
-        const input = wrapper.find('.tag-input')
-        input.element.value = 'tag'
-        input.trigger('input')
-        wrapper.setData({focusedSuggestionIndex: 2})
-        input.trigger('keydown.enter')
-        await Vue.nextTick()
-        expect(input.element.value).toEqual('')
+    test('should send correct tags to AutocompleteInput ordered alphabetically regardless of group', async () => {
+        const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+        const suggestionProp = autocompleteInput.props('suggestions')
+        expect(suggestionProp.length).toEqual(6)
+        expect(suggestionProp[0].value).toEqual('all')
+        expect(suggestionProp[1].value).toEqual('allowlist')
+        expect(suggestionProp[2].value).toEqual('blocklist')
+        expect(suggestionProp[3].value).toEqual('devops')
+        expect(suggestionProp[4].value).toEqual('internal')
+        expect(suggestionProp[5].value).toEqual('malware')
     })
 
     test('should send request to create new DB if missing on component creation', (done) => {
@@ -141,7 +63,7 @@ describe('TagAutocompleteInput.vue', () => {
         Vue.nextTick()
     })
 
-    test('should not send request to create new DB exists on component creation', async () => {
+    test('should not send request to create new DB if exists on component creation', async () => {
         const spy = jest.spyOn(axios, 'post')
         wrapper = mount(TagAutocompleteInput, {})
         await Vue.nextTick()
@@ -150,14 +72,13 @@ describe('TagAutocompleteInput.vue', () => {
 
     test('should send request to create new key in DB if missing on component creation', (done) => {
         axios.get.mockImplementation((path) => {
-            if (path === '/conf/api/v1/db/') {
-                return Promise.resolve(['system'])
-            } else {
-                return Promise.reject()
+            if (path === '/conf/api/v1/db/system/') {
+                return Promise.resolve({data: {}})
             }
+            return Promise.reject()
         })
         axios.put.mockImplementationOnce((path) => {
-            expect(path).toEqual('/conf/api/v1/db/system/k/autocomplete/')
+            expect(path).toEqual('/conf/api/v1/db/system/k/tags/')
             done()
             return Promise.resolve()
         })
@@ -169,161 +90,205 @@ describe('TagAutocompleteInput.vue', () => {
         const spy = jest.spyOn(axios, 'put')
         wrapper = mount(TagAutocompleteInput, {})
         await Vue.nextTick()
-        expect(spy).not.toHaveBeenCalledWith('db/system/k/autocomplete')
+        expect(spy).not.toHaveBeenCalledWith('db/system/k/tags')
     })
 
-    test('should send request to add tag to DB if unknown tag selected', (done) => {
+    test('should send request to add tag neutral list in DB if unknown tag selected - selectionType single', async (done) => {
+        wrapper = mount(TagAutocompleteInput, {
+            propsData: {
+                selectionType: 'single'
+            }
+        })
+        await Vue.nextTick()
+        const autocompleteInput = wrapper.findComponent(AutocompleteInput)
         const newTagName = 'tag-of-doom'
         axios.put.mockImplementationOnce((path, data) => {
-            expect(data.tags).toContain(newTagName)
+            expect(data.neutral).toContain(newTagName)
             done()
             return Promise.resolve()
         })
-        const input = wrapper.find('.tag-input')
-        input.element.value = newTagName
-        input.trigger('input')
-        input.trigger('keydown.enter')
+        autocompleteInput.vm.$emit('value-submitted', newTagName)
         Vue.nextTick()
     })
 
-    describe('keyboard control', () => {
-        let input
-        let dropdownItems
+    test('should send request to add tag neutral list in DB if unknown tag selected - selectionType multiple', async (done) => {
+        wrapper = mount(TagAutocompleteInput, {
+            propsData: {
+                selectionType: 'multiple'
+            }
+        })
+        await Vue.nextTick()
+        const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+        const tag1 = 'tag-1'
+        const tag2 = 'tag-2'
+        const tag3 = 'tag-3'
+        axios.put.mockImplementationOnce((path, data) => {
+            expect(data.neutral).not.toContain(tag1)
+            expect(data.neutral).not.toContain(tag2)
+            expect(data.neutral).toContain(tag3)
+            done()
+            return Promise.resolve()
+        })
+        autocompleteInput.vm.$emit('value-submitted', `${tag1} ${tag2} ${tag3}`)
+        Vue.nextTick()
+    })
+
+    test('should not send request to add tag neutral list in DB if known tag selected', async () => {
+        const spy = jest.spyOn(axios, 'put')
+        const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+        const newTagName = 'internal'
+        autocompleteInput.vm.$emit('value-submitted', newTagName)
+        await Vue.nextTick()
+        expect(spy).not.toHaveBeenCalledWith('db/system/k/tags/')
+    })
+
+    describe('tags group prefix', () => {
         beforeEach(async () => {
-            input = wrapper.find('.tag-input')
-            input.element.value = 'tag'
-            input.trigger('input')
-            dropdownItems = wrapper.findAll('.dropdown-item')
-        })
-
-        test('should focus on next item when down arrow is pressed', async () => {
-            input.trigger('keydown.down')
+            tagsData = {
+                data: {
+                    legitimate: [
+                        '000 - legitimate'
+                    ],
+                    malicious: [
+                        '111 - malicious'
+                    ],
+                    neutral: [
+                        '222 - neutral'
+                    ],
+                },
+            }
+            axios.get.mockImplementation(() => Promise.resolve(tagsData))
+            wrapper = mount(TagAutocompleteInput)
             await Vue.nextTick()
-            expect(dropdownItems.at(0).element.classList.contains('is-active')).toBeTruthy()
         })
 
-        test('should focus on previous item when up arrow is pressed', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.up')
-            await Vue.nextTick()
-            expect(dropdownItems.at(1).element.classList.contains('is-active')).toBeTruthy()
+        test('should add correct prefix to tags based on their group - legitimate', async () => {
+            const tagsSuggestions = wrapper.vm.tagsSuggestions
+            const titleString = 'title="legitimate"'
+            const classesString = 'class="dot legitimate"'
+            expect(tagsSuggestions[0].prefix).toContain(titleString)
+            expect(tagsSuggestions[0].prefix).toContain(classesString)
         })
 
-        test('should not focus on next item when down arrow is pressed if focused on last element', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.down')
-            await Vue.nextTick()
-            expect(dropdownItems.at(2).element.classList.contains('is-active')).toBeTruthy()
+        test('should add correct prefix to tags based on their group - malicious', async () => {
+            const tagsSuggestions = wrapper.vm.tagsSuggestions
+            const titleString = 'title="malicious"'
+            const classesString = 'class="dot malicious"'
+            expect(tagsSuggestions[1].prefix).toContain(titleString)
+            expect(tagsSuggestions[1].prefix).toContain(classesString)
         })
 
-        test('should not focus on any item when up arrow is pressed if focused on input', async () => {
-            wrapper.setData({focusedSuggestionIndex: -1})
-            input.trigger('keydown.up')
-            await Vue.nextTick()
-            expect(dropdownItems.at(0).element.classList.contains('is-active')).toBeFalsy()
-            expect(dropdownItems.at(1).element.classList.contains('is-active')).toBeFalsy()
-            expect(dropdownItems.at(2).element.classList.contains('is-active')).toBeFalsy()
-        })
-
-        test('should select focused tag when enter is pressed', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.enter')
-            await Vue.nextTick()
-            expect(input.element.value).toEqual('test-tag-2')
-        })
-
-        test('should select input tag when enter is pressed and there is no focused tag', async () => {
-            wrapper.setData({focusedSuggestionIndex: -1})
-            input.element.value = 'test-tag-1'
-            input.trigger('input')
-            input.trigger('keydown.enter')
-            await Vue.nextTick()
-            expect(input.element.value).toEqual('test-tag-1')
-        })
-
-        test('should emit selected tag when enter is pressed', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.enter')
-            expect(wrapper.emitted('tag-submitted')).toBeTruthy()
-            expect(wrapper.emitted('tag-submitted')[0]).toEqual(['test-tag-2'])
-        })
-
-        test('should select focused tag when space is pressed', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.space')
-            await Vue.nextTick()
-            expect(input.element.value).toEqual('test-tag-2')
-        })
-
-        test('should select input tag when space is pressed and there is no focused tag', async () => {
-            wrapper.setData({focusedSuggestionIndex: -1})
-            input.element.value = 'test-tag-1'
-            input.trigger('input')
-            input.trigger('keydown.space')
-            await Vue.nextTick()
-            expect(input.element.value).toEqual('test-tag-1')
-        })
-
-        test('should emit selected tag when space is pressed', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.space')
-            expect(wrapper.emitted('tag-submitted')).toBeTruthy()
-            expect(wrapper.emitted('tag-submitted')[0]).toEqual(['test-tag-2'])
-        })
-
-        test('should select tag when clicked', async () => {
-            dropdownItems.at(1).trigger('click')
-            await Vue.nextTick()
-            expect(input.element.value).toEqual('test-tag-1')
-        })
-
-        test('should emit selected tag when clicked', async () => {
-            dropdownItems.at(1).trigger('click')
-            expect(wrapper.emitted('tag-submitted')).toBeTruthy()
-            expect(wrapper.emitted('tag-submitted')[0]).toEqual(['test-tag-1'])
-        })
-
-        test('should have dropdown hidden when esc is pressed', async () => {
-            input.trigger('keydown.esc')
-            await Vue.nextTick()
-            expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeFalsy()
+        test('should add correct prefix to tags based on their group - neutral', async () => {
+            const tagsSuggestions = wrapper.vm.tagsSuggestions
+            const titleString = 'title="neutral"'
+            const classesString = 'class="dot neutral"'
+            expect(tagsSuggestions[2].prefix).toContain(titleString)
+            expect(tagsSuggestions[2].prefix).toContain(classesString)
         })
     })
 
-    describe('multiple tags selection', () => {
-        let input
+    describe('props propagation and event bubbling', () => {
+        let propInitialTag = 'test'
+        let propClearInputAfterSelection = true
+        let propAutoFocus = true
+        let propSelectionType = 'multiple'
         beforeEach(async () => {
             wrapper = mount(TagAutocompleteInput, {
                 propsData: {
-                    autoFocus: true,
-                    selectionType: 'multiple'
+                    initialTag: propInitialTag,
+                    clearInputAfterSelection: propClearInputAfterSelection,
+                    autoFocus: propAutoFocus,
+                    selectionType: propSelectionType
                 }
             })
-            input = wrapper.find('.tag-input')
-            input.element.value = 'devops tag'
-            input.trigger('input')
-        })
-
-        test('should filter suggestion based on last word in input', async () => {
-            const dropdownItems = wrapper.findAll('.dropdown-item')
-            expect(dropdownItems.length).toEqual(3)
-            expect(dropdownItems.at(0).text()).toEqual('another-tag')
-            expect(dropdownItems.at(1).text()).toEqual('test-tag-1')
-            expect(dropdownItems.at(2).text()).toEqual('test-tag-2')
-        })
-
-        test('should only change last word in input when selecting tag with enter', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.enter')
             await Vue.nextTick()
-            expect(input.element.value).toEqual('devops test-tag-2')
         })
 
-        test('should only change last word in input when selecting tag with space', async () => {
-            wrapper.setData({focusedSuggestionIndex: 2})
-            input.trigger('keydown.space')
+        test('should propagate initialTag correctly to AutocompleteInput', async () => {
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            const prop = autocompleteInput.props('initialValue')
+            expect(prop).toEqual(propInitialTag)
+        })
+
+        test('should propagate clearInputAfterSelection correctly to AutocompleteInput', async () => {
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            const prop = autocompleteInput.props('clearInputAfterSelection')
+            expect(prop).toEqual(propClearInputAfterSelection)
+        })
+
+        test('should propagate autoFocus correctly to AutocompleteInput', async () => {
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            const prop = autocompleteInput.props('autoFocus')
+            expect(prop).toEqual(propAutoFocus)
+        })
+
+        test('should propagate selectionType correctly to AutocompleteInput', async () => {
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            const prop = autocompleteInput.props('selectionType')
+            expect(prop).toEqual(propSelectionType)
+        })
+
+        test('should bubble value-changed event as tag-changed', async () => {
+            const emitValue = 'some-value'
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('value-changed', emitValue)
             await Vue.nextTick()
-            expect(input.element.value).toEqual('devops test-tag-2')
+            expect(wrapper.emitted('tag-changed')).toBeTruthy()
+            expect(wrapper.emitted('tag-changed')[0]).toEqual([emitValue])
+        })
+
+        test('should bubble value-submitted event as tag-submitted', async () => {
+            const emitValue = 'some-value'
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('value-submitted', emitValue)
+            await Vue.nextTick()
+            expect(wrapper.emitted('tag-submitted')).toBeTruthy()
+            expect(wrapper.emitted('tag-submitted')[0]).toEqual([emitValue])
+        })
+
+        test('should bubble keyup event', async () => {
+            const emitValue = 'enter'
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('keyup', emitValue)
+            await Vue.nextTick()
+            expect(wrapper.emitted('keyup')).toBeTruthy()
+            expect(wrapper.emitted('keyup')[0]).toEqual([emitValue])
+        })
+
+        test('should bubble keydown event', async () => {
+            const emitValue = 'enter'
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('keydown', emitValue)
+            await Vue.nextTick()
+            expect(wrapper.emitted('keydown')).toBeTruthy()
+            expect(wrapper.emitted('keydown')[0]).toEqual([emitValue])
+        })
+
+        test('should bubble keypress event', async () => {
+            const emitValue = 'enter'
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('keypress', emitValue)
+            await Vue.nextTick()
+            expect(wrapper.emitted('keypress')).toBeTruthy()
+            expect(wrapper.emitted('keypress')[0]).toEqual([emitValue])
+        })
+
+        test('should bubble focus event', async () => {
+            const emitValue = new Event('focus')
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('focus', emitValue)
+            await Vue.nextTick()
+            expect(wrapper.emitted('focus')).toBeTruthy()
+            expect(wrapper.emitted('focus')[0]).toEqual([emitValue])
+        })
+
+        test('should bubble blur event', async () => {
+            const emitValue = new Event('blur')
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('blur', emitValue)
+            await Vue.nextTick()
+            expect(wrapper.emitted('blur')).toBeTruthy()
+            expect(wrapper.emitted('blur')[0]).toEqual([emitValue])
         })
     })
 

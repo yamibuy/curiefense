@@ -1,35 +1,18 @@
 <template>
 
-  <div class="dropdown"
-       :class="{'is-active': suggestionsVisible}">
-    <div class="dropdown-trigger">
-      <input v-model="tag"
-             type="text"
-             class="tag-input input is-small"
-             aria-haspopup="true"
-             aria-controls="dropdown-menu"
-             @keydown.enter="selectTag"
-             @keydown.space="selectTag"
-             @keydown.down='focusNextSuggestion'
-             @keydown.up='focusPreviousSuggestion'
-             @keydown.esc='closeDropdown'
-             @input="openDropdown(); tagChanged()"
-             ref="tagInput"/>
-    </div>
-    <div class="dropdown-menu"
-         id="dropdown-menu"
-         role="menu">
-      <div class="dropdown-content">
-        <a v-for="(suggestion, index) in matches"
-           :class="{'is-active': isSuggestionFocused(index)}"
-           @click="suggestionClick(index)"
-           :key="index"
-           class="dropdown-item">
-          {{ suggestion }}
-        </a>
-      </div>
-    </div>
-  </div>
+  <autocomplete-input
+      :suggestions="tagsSuggestions"
+      :initial-value="initialTag"
+      :clear-input-after-selection="clearInputAfterSelection"
+      :auto-focus="autoFocus"
+      :selection-type="selectionType"
+      @value-changed="tagChanged"
+      @value-submitted="tagSubmitted"
+      @keyup="bubbleEvent('keyup', $event)"
+      @keydown="bubbleEvent('keydown', $event)"
+      @keypress="bubbleEvent('keypress', $event)"
+      @focus="bubbleEvent('focus', $event)"
+      @blur="bubbleEvent('blur', $event)"/>
 
 </template>
 
@@ -37,9 +20,14 @@
 
 import DatasetsUtils from '@/assets/DatasetsUtils'
 import RequestsUtils from '@/assets/RequestsUtils'
+import AutocompleteInput from '@/components/AutocompleteInput'
 
 export default {
   name: 'TagAutocompleteInput',
+
+  components: {
+    AutocompleteInput
+  },
 
   props: {
     initialTag: {
@@ -60,24 +48,6 @@ export default {
     }
   },
 
-  watch: {
-    initialTag: function (newVal) {
-      if (this.tag !== newVal) {
-        this.tag = newVal
-        this.closeDropdown()
-      }
-    }
-  },
-
-  mounted() {
-    ['keyup', 'keydown', 'keypress', 'focus', 'blur'].map(event => {
-      this.$refs.tagInput.addEventListener(event, $event => this.$emit(event, $event))
-    })
-    if (this.autoFocus) {
-      this.$refs.tagInput.focus()
-    }
-  },
-
   data() {
     return {
       tag: this.initialTag,
@@ -85,7 +55,16 @@ export default {
       tagsSuggestions: [],
       focusedSuggestionIndex: -1,
       db: 'system',
-      key: 'autocomplete',
+      key: 'tags',
+
+      defaultKeyData: {
+        legitimate: [],
+        malicious: [],
+        neutral: []
+      },
+      defaultDatabaseData: {
+        tags: this.defaultKeyData
+      },
 
       apiRoot: DatasetsUtils.ConfAPIRoot,
       apiVersion: DatasetsUtils.ConfAPIVersion,
@@ -94,37 +73,15 @@ export default {
 
   computed: {
 
-    // Filtering the tags based on the input
-    matches() {
-      return this.tagsSuggestions?.filter((str) => {
-        return str.includes(this.currentTag.toLowerCase())
-      })
-    },
-
-    suggestionsVisible() {
-      return this.currentTag !== '' && this.matches?.length !== 0 && this.open
-    },
-
-    currentTag: {
-      get: function () {
-        let currentTag
-        if (this?.selectionType.toLowerCase() === 'multiple') {
-          const tags = this.tag.split(' ')
-          currentTag = tags[tags.length - 1].trim()
-        } else {
-          currentTag = this.tag.trim()
-        }
-        return currentTag
-      },
-      set: function (currentTag) {
-        if (this.selectionType.toLowerCase() === 'multiple') {
-          const tags = this.tag.split(' ')
-          tags[tags.length - 1] = currentTag
-          this.tag = tags.join(' ')
-        } else {
-          this.tag = currentTag.trim()
-        }
+    currentTag() {
+      let currentTag
+      if (this?.selectionType.toLowerCase() === 'multiple') {
+        const tags = this.tag.split(' ')
+        currentTag = tags[tags.length - 1].trim()
+      } else {
+        currentTag = this.tag.trim()
       }
+      return currentTag
     },
 
   },
@@ -134,93 +91,79 @@ export default {
     loadAutocompleteSuggestions() {
       RequestsUtils.sendRequest('GET', `db/${this.db}/k/${this.key}/`)
           .then(response => {
-            this.tagsSuggestions = response.data?.tags || []
-            this.tagsSuggestions.sort()
+            this.buildTagsSuggestionsFromData(response.data)
           })
           .catch(() => {
-            this.createAutocompleteDBKey()
+            // key does not exist, check if db exists
+            RequestsUtils.sendRequest('GET', `db/${this.db}/`)
+                .then(() => {
+                  // db exits, key does not exist -> create a key
+                  RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, this.defaultKeyData)
+                })
+                .catch(async () => {
+                  // db doest not exist, key does not exist -> create a db with key
+                  await RequestsUtils.sendRequest('POST', `db/${this.db}/`, this.defaultDatabaseData)
+                })
           })
     },
 
-    openDropdown() {
-      this.open = true
+    buildTagsSuggestionsFromData(data) {
+      data = {...this.defaultKeyData, ...data}
+      const legitimateTags = data.legitimate.map((item) => {
+        return {
+          prefix: '<span class="dot legitimate" title="legitimate"></span>',
+          value: item
+        }
+      })
+      const maliciousTags = data.malicious.map((item) => {
+        return {
+          prefix: '<span class="dot malicious" title="malicious"></span>',
+          value: item
+        }
+      })
+      const neutralTags = data.neutral.map((item) => {
+        return {
+          prefix: '<span class="dot neutral" title="neutral"></span>',
+          value: item
+        }
+      })
+      this.tagsSuggestions = [].concat(legitimateTags, maliciousTags, neutralTags)
+      this.tagsSuggestions = this.ld.sortBy(this.tagsSuggestions, 'value')
     },
 
-    tagChanged() {
+    bubbleEvent(eventName, event) {
+      this.$emit(eventName, event)
+    },
+
+    tagChanged(newTag) {
+      this.tag = newTag
       this.$emit('tag-changed', this.tag)
     },
 
-    tagSubmitted() {
+    tagSubmitted(newTag) {
+      this.tag = newTag
+      // if submitting a tag we don't recognize -> add it to the DB
+      if (!this.tagsSuggestions.find((suggestion) => {
+        return suggestion.value === this.currentTag.toLowerCase()
+      })) {
+        this.addUnknownTagToDB(this.currentTag)
+      }
       this.$emit('tag-submitted', this.tag)
-    },
-
-    closeDropdown() {
-      this.open = false
-    },
-
-    suggestionClick(index) {
-      this.focusedSuggestionIndex = index
-      this.selectTag()
-    },
-
-    async selectTag() {
-      if (this.focusedSuggestionIndex !== -1) {
-        this.currentTag = this.matches[this.focusedSuggestionIndex]
-      } else if (!this.tagsSuggestions.includes(this.currentTag.toLowerCase())) {
-        await this.addUnknownTagToDB(this.currentTag)
-      }
-      this.tagSubmitted()
-      this.tagChanged()
-      this.focusedSuggestionIndex = -1
-      this.$refs.tagInput.focus()
-      this.open = false
-      if (this.clearInputAfterSelection) {
-        this.tag = ''
-      }
-    },
-
-    focusPreviousSuggestion() {
-      if (this.focusedSuggestionIndex > -1)
-        this.focusedSuggestionIndex--
-    },
-
-    focusNextSuggestion() {
-      if (this.focusedSuggestionIndex < this.matches.length - 1)
-        this.focusedSuggestionIndex++
-    },
-
-    isSuggestionFocused(index) {
-      return index === this.focusedSuggestionIndex
-    },
-
-    async createAutocompleteDBKey() {
-      // if database doesn't exist, create it and wait until it's created
-      await RequestsUtils.sendRequest('GET', `db/${this.db}/`)
-          .catch(async () => {
-            await RequestsUtils.sendRequest('POST', `db/${this.db}/`, {})
-          })
-      // if key doesn't exist, create it
-      RequestsUtils.sendRequest('GET', `db/${this.db}/k/${this.key}/`)
-          .catch(() => {
-            RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, {})
-          })
     },
 
     async addUnknownTagToDB(tag) {
       tag = tag.toLowerCase()
+      // get current tags from db
       const response = await RequestsUtils.sendRequest('GET', `db/${this.db}/k/${this.key}/`)
-      const document = {...{tags: []}, ...response.data}
-      document.tags.push(tag)
-      this.tagsSuggestions = document.tags || []
-      this.tagsSuggestions.sort()
-      return RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, document)
-          .then((response) => {
+      const document = {...this.defaultKeyData, ...response.data}
+      // add new tag to neutral group
+      document.neutral.push(tag)
+      // save to DB
+      RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, document)
+          .then(() => {
+            // rebuild the tags suggestion list after a successful save
+            this.buildTagsSuggestionsFromData(document)
             console.log(`saved tag [${tag}] to database, it will now be available for autocomplete!`)
-            return response
-          })
-          .catch((error) => {
-            console.log(`failed saving tag [${tag}]`)
-            throw error
           })
     },
 
@@ -232,8 +175,30 @@ export default {
 }
 </script>
 
-<style scoped>
-.dropdown, .dropdown-trigger, .dropdown-menu {
-  width: 100%
+<style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
+::v-deep .dot {
+  @extend .has-background-info;
+  height: 0.5rem;
+  width: 0.5rem;
+  margin-right: 0.25rem;
+  margin-left: -0.25rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+::v-deep .dot.legitimate {
+  @extend .has-background-success;
+}
+
+::v-deep .dot.malicious {
+  @extend .has-background-danger;
+}
+
+::v-deep .dot.neutral {
+  @extend .has-background-grey-light ;
 }
 </style>
