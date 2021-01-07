@@ -219,6 +219,7 @@ function waf_section_match(first_match, sections, request, exclude_sigs)
                 end
             end
         end
+
     end
 
     return WAFPass, "waf-passed"
@@ -236,13 +237,13 @@ function check(waf_profile, request)
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
     
-    request.handle:logDebug("WAF Hyperscan results " .. json_encode(matches))
+    request.handle:logErr("WAF Hyperscan results " .. json_encode(matches))
     
     -- not nil
     local zoo, first_match = next(matches)
 
-    request.handle:logDebug("WAF Hyperscan results zoo" .. json_encode(zoo))
-    request.handle:logDebug("WAF Hyperscan results first_match" .. json_encode(first_match))
+    request.handle:logErr("WAF Hyperscan results zoo" .. json_encode(zoo))
+    request.handle:logErr("WAF Hyperscan results first_match" .. json_encode(first_match))
 
     if first_match then
         return waf_section_match(first_match, sections, request, exclude_sigs)
