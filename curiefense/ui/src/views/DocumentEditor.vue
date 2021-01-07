@@ -228,8 +228,7 @@ export default {
       referencedIDsLimits: [],
 
       selectedBranch: null,
-      // Starting with the first doc type in componentsMap
-      selectedDocType: 'aclpolicies',
+      selectedDocType: null,
 
       docs: [],
       docIdNames: [],
@@ -321,8 +320,10 @@ export default {
     async setSelectedDataFromRouteParams() {
       this.selectedBranch = this.$route.params.branch || this.branchNames[0]
       const prevDocType = this.selectedDocType
+      console.log(this.selectedDocType)
       this.selectedDocType = this.$route.params.doc_type || Object.keys(this.componentsMap)[0]
-      if (prevDocType !== this.selectedDocType) {
+      console.log(this.selectedDocType)
+      if (!prevDocType || prevDocType !== this.selectedDocType) {
         await this.loadDocs(this.selectedDocType)
       }
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
@@ -567,9 +568,8 @@ export default {
   async created() {
     this.setLoadingDocStatus(true)
     await this.loadConfigs()
-    await this.initDocTypes()
-    this.loadReferencedDocsIDs()
     this.setSelectedDataFromRouteParams()
+    this.loadReferencedDocsIDs()
     this.setLoadingDocStatus(false)
   }
 
