@@ -202,32 +202,25 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
     return hca_values
 end
 
-function waf_section_match(matches, sections, omit_entries, exclude_sigs)
-    for k,v in pairs(matches) do
-        local matched_sigs = {}
-        if type(v) == "table" then
-            if v.id then
-                table.insert(matched_sigs, v.id)
-            end
-        end
+function waf_section_match(first_match, sections, request, exclude_sigs)
 
-        if #matched_sigs > 0 then
-            for _, section in ipairs(sections) do
-                local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
-                for _, msig in ipairs(matched_sigs) do
-                    -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
-                    if not section_exclude_ids[msig] then
-                        if globals.WAFSignatures then
-                            local waf_sig = globals.WAFSignatures[tostring(msig)]
-                            -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
-                            return WAFBlock, gen_block_info(section, name, value, waf_sig)
-                        end
-                    end
+    local sigid = first_match.id
+    local waf_sig = globals.WAFSignatures[sigid]
+    local patt = waf_sig.operand
+
+    for section, section_entries in pairs(exclude_sigs) do
+        for name, ex_sig_ids in pairs(section_entries) do
+            local value = request[section][name]
+            if re_match(value, patt) then
+                if not ex_sig_ids[sigid] then
+                    return WAFBlock, gen_block_info(section, name, value, waf_sig)
                 end
             end
         end
     end
 
+    return WAFPass, "waf-passed"
+    
 end
 
 function check(waf_profile, request)
@@ -241,8 +234,9 @@ function check(waf_profile, request)
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
     -- not nil
-    if next(matches) then
-        return waf_section_match(matches, sections, omit_entries, exclude_sigs)
+    local zoo, first_match = next(matches)
+    if first_match then
+        return waf_section_match(first_match, sections, request, exclude_sigs)
     else
         return WAFPass, "waf-passed"
     end
