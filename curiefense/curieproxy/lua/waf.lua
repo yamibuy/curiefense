@@ -231,14 +231,14 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
                         request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, sigid))
                         return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
                     end
-                    -- find an ID which is not within the exclude_sigs
-                    for _, matched_id in ipairs(matched_ids) do
-                        if not exclude_sigs[section_name][name][matched_id] then
-                            waf_sig = globals.WAFSignatures[tostring(matched_id)]
-                            request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, matched_id))
-                            return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
-                        end
-                    end
+                    -- -- find an ID which is not within the exclude_sigs
+                    -- for _, matched_id in ipairs(matched_ids) do
+                    --     if not exclude_sigs[section_name][name][matched_id] then
+                    --         waf_sig = globals.WAFSignatures[tostring(matched_id)]
+                    --         request.handle:logErr(string.format("WAF section match BLOCK2 %s %s %s %s", section_name, name, value, matched_id))
+                    --         return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
+                    --     end
+                    -- end
                 end
             end
         end
