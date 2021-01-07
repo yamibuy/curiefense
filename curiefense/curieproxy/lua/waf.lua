@@ -220,7 +220,7 @@ function waf_section_match(first_match, sections, request, exclude_sigs)
     end
 
     return WAFPass, "waf-passed"
-    
+
 end
 
 function check(waf_profile, request)
@@ -233,6 +233,11 @@ function check(waf_profile, request)
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
+    
+    if matches then
+        request.handle:logDebug("WAF Hyperscan results " .. json_encode(matches))
+    end
+    
     -- not nil
     local zoo, first_match = next(matches)
     if first_match then
