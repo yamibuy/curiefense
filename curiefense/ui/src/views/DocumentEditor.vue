@@ -69,14 +69,14 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <a class="button is-small"
                      @click="downloadDoc"
-                     title="Download Document x">
+                     title="Download Document">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
 
-                  </button>
+                  </a>
                 </p>
 
                 <p class="control"
@@ -303,7 +303,12 @@ export default {
         return this.referencedIDsLimits.includes(this.selectedDocID)
       }
       return false
-    }
+    },
+
+    newDoc() {
+      let factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
+      return factory && factory()
+    },
 
   },
 
@@ -327,16 +332,12 @@ export default {
         await this.loadDocs(this.selectedDocType)
       }
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
+      this.addMissingDefaultsToDoc()
       this.goToRoute()
     },
 
     resetGitLog() {
       this.gitLog = []
-    },
-
-    newDoc() {
-      let factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
-      return factory && factory()
     },
 
     async loadConfigs(counter_only) {
@@ -388,6 +389,7 @@ export default {
       this.updateDocIdNames()
       if (this.docIdNames && this.docIdNames.length && this.docIdNames[0].length) {
         this.selectedDocID = this.docIdNames[0][0]
+        this.addMissingDefaultsToDoc()
       }
       this.loadGitLog()
     },
@@ -439,6 +441,7 @@ export default {
       this.setLoadingDocStatus(true)
       if (docID) {
         this.selectedDocID = docID
+        this.addMissingDefaultsToDoc()
       }
       this.loadGitLog()
       this.goToRoute()
@@ -470,7 +473,7 @@ export default {
       this.setLoadingDocStatus(true)
       this.isNewLoading = true
       if (!docToAdd) {
-        docToAdd = this.newDoc()
+        docToAdd = this.newDoc
       }
       this.resetGitLog()
       this.docs.unshift(docToAdd)
@@ -513,6 +516,7 @@ export default {
             this.loadGitLog(true)
           })
       this.selectedDocID = this.docs[0].id
+      this.addMissingDefaultsToDoc()
       this.resetGitLog()
       this.goToRoute()
       this.isDeleteLoading = false
@@ -549,6 +553,11 @@ export default {
       this.docs = response.data
       this.updateDocIdNames()
       this.loadGitLog()
+    },
+
+    addMissingDefaultsToDoc() {
+      this.selectedDoc = {...this.newDoc,...this.selectedDoc}
+      return this.selectedDoc
     },
 
     referToVersionControl() {

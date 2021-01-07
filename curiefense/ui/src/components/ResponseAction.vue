@@ -38,8 +38,10 @@
       <div v-if="labelDisplayedInline && isSingleInputColumn"
            class="column is-2 pt-0">
       </div>
-      <div class="column"
-           :class="{'is-5': labelDisplayedInline && !isSingleInputColumn,
+      <div
+          v-if="action && (action.type === 'response' || action.type === 'redirect' || action.type === 'ban' || action.type === 'request_header')"
+          class="column"
+          :class="{'is-5': labelDisplayedInline && !isSingleInputColumn,
                     'is-6': !labelDisplayedInline && !isSingleInputColumn,
                     'is-10 pt-0': labelDisplayedInline && isSingleInputColumn,
                     'is-12 pt-0': !labelDisplayedInline && isSingleInputColumn,
@@ -101,12 +103,12 @@
       </template>
     </div>
     <div class="content" v-if="action && action.type === 'ban' && action.params.action">
-      <response-action :object-with-action.sync="action.params.action"
+      <response-action :object-with-action.sync="action.params"
                        :label-separated-line="labelSeparatedLine"
                        :wide-columns="wideColumns"
                        :is-single-input-column="isSingleInputColumn"
                        :ignore="['ban']"
-                       caption="Ban action"/>
+                       label="Ban action"/>
     </div>
   </div>
 </template>
@@ -118,7 +120,10 @@ export default {
   name: 'ResponseAction',
   props: {
     objectWithAction: Object,
-    caption: String,
+    label: {
+      type: String,
+      default: 'Action'
+    },
     ignore: Array,
     labelSeparatedLine: Boolean,
     wideColumns: Boolean,
@@ -126,25 +131,10 @@ export default {
   },
 
   data() {
-    const ResponseActions = DatasetsUtils.ResponseActions
-    const availableActions = {}
-    Object.keys(ResponseActions).forEach(actionType => {
-      availableActions[actionType] = {
-        type: actionType,
-        params: ResponseActions[actionType].params
-            ? {...ResponseActions[actionType].params}
-            : {}
-      }
-    })
-    const options = this.ld.pickBy({...ResponseActions}, (value, key) => {
-      return !this.ignore || !this.ignore.includes(key)
-    })
     return {
-      options,
-      selectedAction: this.action,
-      availableActions,
-      label: this.caption || 'Action',
-      ignoreActions: this.ignore || []
+      options: this.ld.pickBy({...DatasetsUtils.ResponseActions}, (value, key) => {
+        return !this.ignore || !this.ignore.includes(key)
+      })
     }
   },
   computed: {
@@ -164,19 +154,15 @@ export default {
     this.normalizeAction()
   },
   methods: {
-    sendUpdate() {
-      this.$emit('change', {...this.selectedAction}, this.index)
-    },
-
     normalizeAction() {
       // adding necessary fields to action field
       this.action = {
         ...{
           params: {
             action: {
-              type: 'default'
-            },
-            params: {}
+              type: 'default',
+              params: {}
+            }
           }
         },
         ...this.action

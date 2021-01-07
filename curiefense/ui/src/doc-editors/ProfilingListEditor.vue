@@ -27,7 +27,6 @@
                 Active
               </label>
             </div>
-
             <div class="field">
 
               <div class="control" v-if="editable">
@@ -46,7 +45,6 @@
                 </div>
               </div>
             </div>
-
             <div class="field">
               <label class="label is-small">Tags</label>
               <div class="control">
@@ -56,7 +54,6 @@
                 </tag-autocomplete-input>
               </div>
             </div>
-
             <div class="field">
               <a v-if="selectedDoc && selectedDoc.source && selectedDoc.source.indexOf('http') === 0"
                  class="is-small has-text-grey is-size-7 is-pulled-right"
@@ -69,14 +66,12 @@
                        :readonly="readonly"/>
               </div>
             </div>
-
             <div class="field">
               <response-action :object-with-action.sync="selectedDoc"
                                label-separated-line
                                wide-columns
                                is-single-input-column/>
             </div>
-
             <div class="field">
               <label class="label is-small">Notes</label>
               <div class="control">
@@ -85,7 +80,7 @@
               </div>
             </div>
             <div class="pt-6">
-              <div class="field">
+              <div class="field" v-if="editable">
                 <div class="control is-expanded">
                   <button class="button is-small has-text-danger-dark"
                           title="Remove all sections"

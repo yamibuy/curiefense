@@ -34,7 +34,7 @@
                 <p class="control">
                   <a class="button is-small"
                      @click="downloadDB"
-                     title="Download Database x">
+                     title="Download Database">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
@@ -95,7 +95,7 @@
                 <p class="control">
                   <a class="button is-small"
                      @click="downloadKey"
-                     title="Download Key x">
+                     title="Download Key">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
