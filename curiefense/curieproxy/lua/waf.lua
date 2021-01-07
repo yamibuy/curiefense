@@ -204,8 +204,15 @@ end
 
 function waf_section_match(first_match, sections, request, exclude_sigs)
 
+    request.handle:logErr("WAF Hyperscan first_match " .. json_encode(first_match))
+    request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
+    request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
+
     local sigid = first_match.id
     local waf_sig = globals.WAFSignatures[tostring(sigid)]
+    
+    request.handle:logErr("WAF Hyperscan matched SIG " .. json_encode(waf_sig))
+
     if waf_sig then
         local patt = waf_sig.operand
 
