@@ -207,8 +207,6 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
     request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
     request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
 
-
-
     local matched_ids = {}
     for idx, entry in pairs(hyperscan_matches) do
         local sig_id = entry.id
@@ -222,7 +220,7 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
 
     for _, section_name in ipairs(sections) do
 
-        request.handle:logErr(string.format("WAF section match %s %s" , section_name, json_encode(sections)))
+        request.handle:logErr(string.format("WAF section match %s %s" , section_name, json_encode(request[section_name])))
         for name, value in pairs(request[section_name]) do
             for _, sigid in ipairs(matched_ids) do
                 local waf_sig = globals.WAFSignatures[tostring(sigid)]
@@ -230,11 +228,14 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
                 if re_match(value, patt) then
                     -- exclude_sigs is empty or contains no entries for this section's entry
                     if not exclude_sigs[section_name] or not exclude_sigs[section_name][name] then
+                        request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, sigid))
                         return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
                     end
                     -- find an ID which is not within the exclude_sigs
                     for _, matched_id in ipairs(matched_ids) do
                         if not exclude_sigs[section_name][name][matched_id] then
+                            waf_sig = globals.WAFSignatures[tostring(matched_id)]
+                            request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, matched_id))
                             return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
                         end
                     end
