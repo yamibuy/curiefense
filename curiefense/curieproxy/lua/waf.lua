@@ -213,7 +213,7 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
     for idx, entry in pairs(hyperscan_matches) do
         local sig_id = entry.id
         if sig_id then
-            table.insert(matched_ids, sig_id)
+            table.insert(matched_ids, tostring(sig_id))
         end
     end
 
