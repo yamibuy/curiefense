@@ -206,14 +206,16 @@ function waf_section_match(first_match, sections, request, exclude_sigs)
 
     local sigid = first_match.id
     local waf_sig = globals.WAFSignatures[sigid]
-    local patt = waf_sig.operand
+    if waf_sig then
+        local patt = waf_sig.operand
 
-    for section, section_entries in pairs(exclude_sigs) do
-        for name, ex_sig_ids in pairs(section_entries) do
-            local value = request[section][name]
-            if re_match(value, patt) then
-                if not ex_sig_ids[sigid] then
-                    return WAFBlock, gen_block_info(section, name, value, waf_sig)
+        for section, section_entries in pairs(exclude_sigs) do
+            for name, ex_sig_ids in pairs(section_entries) do
+                local value = request[section][name]
+                if re_match(value, patt) then
+                    if not ex_sig_ids[sigid] then
+                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                    end
                 end
             end
         end
