@@ -340,8 +340,6 @@ def gen_rl_rules(authority):
     add_rl_rule("scope-provider-exclude", excl_attrs={"asn": "1239"})
     add_rl_rule("scope-method-include", incl_attrs={"method": "GET"})
     add_rl_rule("scope-method-exclude", excl_attrs={"method": "GET"})
-    add_rl_rule("scope-tags-include", incl_attrs={"tags": "asn:1239"})
-    add_rl_rule("scope-tags-exclude", excl_attrs={"tags": "asn:1239"})
     add_rl_rule("scope-query-include", incl_attrs={"query": "QUERY"})
     add_rl_rule("scope-query-exclude", excl_attrs={"query": "QUERY"})
     add_rl_rule("scope-authority-include", incl_attrs={"authority": authority})
@@ -645,26 +643,6 @@ class TestRateLimit:
                 f"Request #{i} for non excluded method should be allowed"
         assert not target.is_reachable("/scope-method-exclude/not-excluded", method="HEAD"), \
             "Request #4 for non excluded method should be denied"
-
-    def test_ratelimit_scope_tags_include(self, target, ratelimit_config):
-        for i in range(1, 4):
-            assert target.is_reachable("/scope-tags-include/included", srcip=IP4_US), \
-                f"Request #{i} for included tags should be allowed"
-        assert not target.is_reachable("/scope-tags-include/included", srcip=IP4_US), \
-            "Request #4 for included tags should be denied"
-        for i in range(1, 5):
-            assert target.is_reachable("/scope-tags-include/not-included", srcip=IP4_JP), \
-                f"Request #{i} for non included tags should be allowed"
-
-    def test_ratelimit_scope_tags_exclude(self, target, ratelimit_config):
-        for i in range(1, 5):
-            assert target.is_reachable("/scope-tags-exclude/excluded", srcip=IP4_US), \
-                f"Request #{i} for excluded tags should be allowed"
-        for i in range(1, 4):
-            assert target.is_reachable("/scope-tags-exclude/not-excluded", srcip=IP4_JP), \
-                f"Request #{i} for non excluded tags should be allowed"
-        assert not target.is_reachable("/scope-tags-exclude/not-excluded", srcip=IP4_JP), \
-            "Request #4 for non excluded tags should be denied"
 
     def test_ratelimit_scope_query_include(self, target, ratelimit_config):
         # if "QUERY" is a substring of the query, rate limiting applies
