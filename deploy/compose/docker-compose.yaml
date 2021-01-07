@@ -213,6 +213,8 @@ services:
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      TELEMETRY_ENABLED: "false"
+      TELEMETRY_OPTIN: "false"
     networks:
       - curiemesh
     ports:
