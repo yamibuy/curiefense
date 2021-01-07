@@ -202,31 +202,45 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
     return hca_values
 end
 
-function waf_section_match(first_match, sections, request, exclude_sigs)
-
-    request.handle:logErr("WAF Hyperscan first_match " .. json_encode(first_match))
+function waf_section_match(hyperscan_matches, request, exclude_sigs)
+    request.handle:logErr("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
     request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
     request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
 
-    local sigid = first_match.id
-    local waf_sig = globals.WAFSignatures[tostring(sigid)]
-    
-    request.handle:logErr("WAF Hyperscan matched SIG " .. json_encode(waf_sig))
 
-    if waf_sig then
-        local patt = waf_sig.operand
 
-        for section, section_entries in pairs(exclude_sigs) do
-            for name, ex_sig_ids in pairs(section_entries) do
-                local value = request[section][name]
+    local matched_ids = {}
+    for idx, entry in pairs(hyperscan_matches) do
+        local sig_id = entry.id
+        if sig_id then
+            table.insert(matched_ids, sig_id)
+        end
+    end
+
+    -- different order for speed
+    local sections = {"args", "headers", "cookies"}
+
+    for _, section_name in ipairs(sections) do
+
+        request.handle:logErr(string.format("WAF section match %s %s" , section_name, json_encode(sections)))
+        for name, value in pairs(request[section_name]) do
+            for _, sigid in ipairs(matched_ids) do
+                local waf_sig = globals.WAFSignatures[tostring(sigid)]
+                local patt = waf_sig.operand
                 if re_match(value, patt) then
-                    if not ex_sig_ids[sigid] then
-                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                    -- exclude_sigs is empty or contains no entries for this section's entry
+                    if not exclude_sigs[section_name] or not exclude_sigs[section_name][name] then
+                        return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
+                    end
+                    -- find an ID which is not within the exclude_sigs
+                    for _, matched_id in ipairs(matched_ids) do
+                        if not exclude_sigs[section_name][name][matched_id] then
+                            return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
+                        end
                     end
                 end
             end
         end
-
     end
 
     return WAFPass, "waf-passed"
@@ -237,24 +251,23 @@ function check(waf_profile, request)
     local omit_entries = {}
     local exclude_sigs = {}
     local sections = {"headers", "cookies", "args"}
-    -- local sections = {"args"}
 
     local hca_values = iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
 
-    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)    
-    -- request.handle:logErr("WAF Hyperscan results " .. json_encode(matches))
-    
-    -- not nil
-    local idx, first_match = next(matches)
+    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
-    -- request.handle:logErr("WAF Hyperscan results first_match" .. json_encode(first_match))
-
-    if first_match then
-        return waf_section_match(first_match, sections, request, exclude_sigs)
-    else
+    if not matches then
         return WAFPass, "waf-passed"
     end
 
+    -- not nil
+    local idx, first_match = next(matches)
+
+    if first_match then
+        return waf_section_match(matches, sections, request, exclude_sigs)
+    else
+        return WAFPass, "waf-passed"
+    end
 end
 
 function detect_sqli(input)
