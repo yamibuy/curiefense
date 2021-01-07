@@ -39,7 +39,9 @@ local _match = rex.match
 
 function re_match(subj, patt, cf )
     cf = cf or 'im'
-    return _match(subj, patt, 1, cf)
+    if type(subj) == "string" and type(patt) == "string" then
+        return _match(subj, patt, 1, cf)
+    end
 end
 
 function new_request_map()

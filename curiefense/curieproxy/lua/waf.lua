@@ -15,8 +15,8 @@ local table_length  = utils.table_length
 
 local re_match  = utils.re_match
 
-local libinject_sqli = libinject.sqli
-local libinject_xss = libinject.xss
+local libinject_sqli    = libinject.sqli
+local libinject_xss     = libinject.xss
 
 local WAFPass           = globals.WAFPass
 local WAFBlock          = globals.WAFBlock
@@ -119,6 +119,8 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
 
+    -- request.handle:logErr("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
+
     if num_entries > max_count then
         local msg = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
         return WAFBlock, gen_block_info(section, '-', '-', {["msg"] = msg})
@@ -132,7 +134,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 return WAFBlock, gen_block_info(section, name, value, {["msg"] = msg})
             end
 
-            if ignore_alphanum and re_match(value, "^\\w$") then
+            if ignore_alphanum and re_match(value, "^[A-Za-z0-9]+$") then
                 store_section(omit_entries, section, name, true)
             else
                 name_rule = name_rules[name]
@@ -160,14 +162,7 @@ end
 -- function wafsig_re_match(input, request)
 --     return WAFRustSignatures:is_match_ids(input)
 -- end
-
-
-function check(waf_profile, request)
-    local omit_entries = {}
-    local exclude_sigs = {}
-    local sections = {"headers", "cookies", "args"}
-    -- local sections = {"args"}
-
+function iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
     -- request.handle:logDebug(string.format("WAF inspection starts - with profile %s", waf_profile.name))
     local hca_values = {}
 
@@ -196,40 +191,84 @@ function check(waf_profile, request)
                             { ["id"] = "libinjection", ["category"] = "xss", ["subcategory"] = "xss", ["msg"] = token })
                     end
                 end
-
+                -- we need to identify the source of the matching for next for loop
+                -- to avoid excluded sigs
+                -- table.insert(hca_values, string.format("%s:::%s:::%s", section, name, value))
                 table.insert(hca_values, value)
             end
         end
     end
 
+    return hca_values
+end
 
+function waf_section_match(hyperscan_matches, request, exclude_sigs)
+    request.handle:logErr("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
+    request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
+    request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
 
-    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
-
-    for k,v in pairs(matches) do
-        local matched_sigs = {}
-        if type(v) == "table" then
-            if v.id then
-                table.insert(matched_sigs, v.id)
-            end
+    local matched_ids = {}
+    for idx, entry in pairs(hyperscan_matches) do
+        local sig_id = entry.id
+        if sig_id then
+            table.insert(matched_ids, tostring(sig_id))
         end
+    end
 
-        if #matched_sigs > 0 then
-            local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
-            for _, msig in ipairs(matched_sigs) do
-                -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
-                if not section_exclude_ids[msig] then
-                    if globals.WAFSignatures then
-                        local waf_sig = globals.WAFSignatures[tostring(msig)]
-                        -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
-                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+    -- different order for speed
+    local sections = {"args", "headers", "cookies"}
+
+    for _, section_name in ipairs(sections) do
+
+        request.handle:logErr(string.format("WAF section match %s %s" , section_name, json_encode(request[section_name])))
+        for name, value in pairs(request[section_name]) do
+            for _, sigid in ipairs(matched_ids) do
+                local waf_sig = globals.WAFSignatures[tostring(sigid)]
+                local patt = waf_sig.operand
+                if re_match(value, patt) then
+                    -- exclude_sigs is empty or contains no entries for this section's entry
+                    if not exclude_sigs[section_name] or not exclude_sigs[section_name][name] then
+                        request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, sigid))
+                        return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
                     end
+                    -- -- find an ID which is not within the exclude_sigs
+                    -- for _, matched_id in ipairs(matched_ids) do
+                    --     if not exclude_sigs[section_name][name][matched_id] then
+                    --         waf_sig = globals.WAFSignatures[tostring(matched_id)]
+                    --         request.handle:logErr(string.format("WAF section match BLOCK2 %s %s %s %s", section_name, name, value, matched_id))
+                    --         return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
+                    --     end
+                    -- end
                 end
             end
         end
     end
 
     return WAFPass, "waf-passed"
+
+end
+
+function check(waf_profile, request)
+    local omit_entries = {}
+    local exclude_sigs = {}
+    local sections = {"headers", "cookies", "args"}
+
+    local hca_values = iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
+
+    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
+
+    if not matches then
+        return WAFPass, "waf-passed"
+    end
+
+    -- not nil
+    local idx, first_match = next(matches)
+
+    if first_match then
+        return waf_section_match(matches, request, exclude_sigs)
+    else
+        return WAFPass, "waf-passed"
+    end
 end
 
 function detect_sqli(input)

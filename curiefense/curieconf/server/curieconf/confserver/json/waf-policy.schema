@@ -11,7 +11,7 @@
                 "restrict": { "type": "boolean" },
                 "mask": { "type": "boolean" },
                 "exclusions": {
-                    "type": ["null", "object"],
+                    "type": ["object", "null"],
                     "additionalProperties": { "type": "integer" }
                 }
             }
