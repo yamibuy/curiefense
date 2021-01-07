@@ -556,6 +556,9 @@ export default {
     },
 
     addMissingDefaultsToDoc() {
+      if (!this.selectedDoc) {
+        return
+      }
       this.selectedDoc = {...this.newDoc,...this.selectedDoc}
       return this.selectedDoc
     },
