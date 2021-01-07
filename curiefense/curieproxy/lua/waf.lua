@@ -264,7 +264,7 @@ function check(waf_profile, request)
     local idx, first_match = next(matches)
 
     if first_match then
-        return waf_section_match(matches, sections, request, exclude_sigs)
+        return waf_section_match(matches, request, exclude_sigs)
     else
         return WAFPass, "waf-passed"
     end
