@@ -205,7 +205,7 @@ end
 function waf_section_match(first_match, sections, request, exclude_sigs)
 
     local sigid = first_match.id
-    local waf_sig = globals.WAFSignatures[sigid]
+    local waf_sig = globals.WAFSignatures[tostring(sigid)]
     if waf_sig then
         local patt = waf_sig.operand
 
@@ -234,16 +234,13 @@ function check(waf_profile, request)
 
     local hca_values = iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
 
-    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
-
-    
-    request.handle:logErr("WAF Hyperscan results " .. json_encode(matches))
+    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)    
+    -- request.handle:logErr("WAF Hyperscan results " .. json_encode(matches))
     
     -- not nil
-    local zoo, first_match = next(matches)
+    local idx, first_match = next(matches)
 
-    request.handle:logErr("WAF Hyperscan results zoo" .. json_encode(zoo))
-    request.handle:logErr("WAF Hyperscan results first_match" .. json_encode(first_match))
+    -- request.handle:logErr("WAF Hyperscan results first_match" .. json_encode(first_match))
 
     if first_match then
         return waf_section_match(first_match, sections, request, exclude_sigs)
