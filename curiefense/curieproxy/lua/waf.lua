@@ -162,7 +162,7 @@ end
 -- function wafsig_re_match(input, request)
 --     return WAFRustSignatures:is_match_ids(input)
 -- end
-function iter_sections(request, sections, omit_entries, exclude_sigs)
+function iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
     -- request.handle:logDebug(string.format("WAF inspection starts - with profile %s", waf_profile.name))
     local hca_values = {}
 
@@ -236,7 +236,7 @@ function check(waf_profile, request)
     local sections = {"headers", "cookies", "args"}
     -- local sections = {"args"}
 
-    local hca_values = iter_sections(request, sections, omit_entries, exclude_sigs)
+    local hca_values = iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
