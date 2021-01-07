@@ -1,3 +1,4 @@
+{{- if .Values.global.enable.prometheus }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -61,3 +62,4 @@ spec:
       resources:
         requests:
           storage: {{ .Values.global.storage.prometheus_storage_size }}
+{{ end }}

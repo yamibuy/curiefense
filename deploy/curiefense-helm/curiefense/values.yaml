@@ -24,5 +24,14 @@ global:
   settings:
     curieconf_manifest_url: 's3://curiefense-test01/prod/manifest.json'
     curiefense_db_hostname: 'logdb'
+    # supported types: 's3', 'gs'
+    curiefense_bucket_type: 's3'
     # will be overridden if deploy.sh is used
     docker_tag: 'latest'
+
+  enable:
+    # set to false to disable parts of this deployment, ex. if you prefer to use your own versions
+    grafana: true
+    prometheus: true
+    # postgres database to store logs. Can be replaced with AWS Aurora
+    logdb: true
