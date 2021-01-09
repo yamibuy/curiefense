@@ -137,7 +137,8 @@ services:
       - CURIELOGGER_DBHOST=logdb
       - CURIELOGGER_DBUSER=postgres
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
-      - CURIELOGGER_LOGSTASH=logstash
+      - CURIELOGGER_LOGSTASH_HOST=logstash
+      - CURIELOGGER_KIBANA_HOST=kibana
       # TODO add secrets for logstash
     networks:
       - curiemesh
