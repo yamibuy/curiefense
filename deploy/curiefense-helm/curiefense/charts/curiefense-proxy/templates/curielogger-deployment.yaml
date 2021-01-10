@@ -20,6 +20,8 @@ spec:
       - name: curielogger
 {{- if eq .Values.global.settings.curiefense_logdb_type "postgres" }}
         env:
+        - name: CURIELOGGER_USES_POSTGRES
+          value: "true"
         - name: CURIELOGGER_DBHOST
           value: {{ .Values.global.settings.curiefense_db_hostname }}
         - name: CURIELOGGER_DBUSER
@@ -35,11 +37,13 @@ spec:
 {{- end }}
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
         env:
+        - name: CURIELOGGER_USES_ELASTICSEARCH
+          value: "true"
         - name: CURIELOGGER_LOGSTASH_HOST
           value: logstash
         - name: CURIELOGGER_KIBANA_HOST
           value: kibana
-        - name: ELASTICSEARCH_URL
+        - name: CURIELOGGER_ELASTICSEARCH_URL
           value: http://elasticsearch:9200/
 {{- end }}
         {{ if regexMatch ".*/.*:" .Values.global.images.curielogger }}
