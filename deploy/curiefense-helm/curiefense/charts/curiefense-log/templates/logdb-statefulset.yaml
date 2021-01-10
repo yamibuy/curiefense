@@ -53,7 +53,7 @@ spec:
             cpu: "2"
           requests:
             memory: "200Mi"
-            cpu: "1"
+            cpu: {{ .Values.global.requests.cpu.logdb }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

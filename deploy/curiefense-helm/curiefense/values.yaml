@@ -29,6 +29,24 @@ global:
     # will be overridden if deploy.sh is used
     docker_tag: 'latest'
 
+  requests:
+    cpu:
+      curielogger: "100m"
+      redis: "10m"
+      logstash: "100m"
+      kibana: "100m"
+      logdb: "1"
+      uiserver: "100m"
+      confserver_init: "100m"
+      confserver_nginx: "10m"
+      confserver_uwsgi: "100m"
+      curietasker: "100m"
+      prometheus: "100m"
+      grafana: "20m"
+      curielogserver_nginx: "10m"
+      curielogserver_uwsgi: "10m"
+      elasticsearch: "1"
+
   enable:
     # set to false to disable parts of this deployment, ex. if you prefer to use your own versions
     grafana: true
