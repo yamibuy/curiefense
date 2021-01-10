@@ -139,6 +139,7 @@ services:
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
       - CURIELOGGER_LOGSTASH_HOST=logstash
       - CURIELOGGER_KIBANA_HOST=kibana
+      - ELASTICSEARCH_URL=http://elasticsearch:9200/
       # TODO add secrets for logstash
     networks:
       - curiemesh
