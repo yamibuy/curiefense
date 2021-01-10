@@ -32,6 +32,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	elasticsearch "github.com/elastic/go-elasticsearch/v7"
 )
 
 const (
@@ -103,6 +105,7 @@ type server struct {
 	db_url string
 	host string
 	db     *pgx.Conn
+	es     *elasticsearch.Client
 }
 
 /**** \\\ auto labeling /// ****/
@@ -208,6 +211,25 @@ func DurationToFloat(d *duration.Duration) float64 {
 	return 0
 }
 
+func (s server) GetES() *elasticsearch.Client {
+	for s.es == nil {
+		es_url, envexists := os.LookupEnv("ELASTICSEARCH_URL")
+		if !envexists {
+			log.Printf("[DEBUG] No ELASTICSEARCH_URL env variable\n", es_url)
+			break
+		}
+		conn, err := elasticsearch.NewDefaultClient()
+		if err == nil {
+			s.es = conn
+			log.Printf("[DEBUG] Connected to elasticsearch %v\n", es_url)
+			break
+		}
+		log.Printf("[ERROR] Could not connect to elasticsearch [%v]: %v\n", es_url, err)
+		time.Sleep(time.Second)
+	}
+	return s.es
+}
+
 func (s server) GetDB() *pgx.Conn {
 	for s.db == nil || s.db.IsClosed() {
 		conn, err := pgx.Connect(context.Background(), s.db_url)
@@ -283,15 +305,17 @@ func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) 
 			json_cf := []byte{}
 			json_cf = []byte("{}")
 			cf_reqinfo := make(map[string]interface{})
+			curiefense_meta_json := ``
+
 
 			if got_meta {
 				cfm := curiefense_meta.GetFields()
 				if rqinfo_s, ok := cfm["request.info"]; ok {
-					rqinfo_string := rqinfo_s.GetStringValue()
-					json_cf = []byte(rqinfo_string)
+					curiefense_meta_json = rqinfo_s.GetStringValue()
+					json_cf = []byte(curiefense_meta_json)
 					err := json.Unmarshal(json_cf, &cf_reqinfo)
 					if err != nil {
-						log.Printf("[ERROR] Error unmarshalling metadata json string [%v]", rqinfo_string)
+						log.Printf("[ERROR] Error unmarshalling metadata json string [%v]", curiefense_meta_json)
 						curiefense_meta = nil
 					}
 				}
@@ -337,6 +361,37 @@ func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) 
 
 			// **** INSERT ****
 			now := time.Now()
+
+			es := s.GetES()
+			if es != nil {
+				log.Printf("[DEBUG] ES insertion!")
+				j, err := json.Marshal(entry)
+				if err == nil {
+					es.Index(
+						"log",
+						strings.NewReader(string(j)),
+						es.Index.WithRefresh("true"),
+						es.Index.WithPretty(),
+						es.Index.WithFilterPath("result", "_id"),
+					)
+				} else {
+					log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
+				}
+				if (curiefense_meta_json != ``) {
+					es.Index(
+						"log_cf",
+						strings.NewReader(curiefense_meta_json),
+						es.Index.WithRefresh("true"),
+						es.Index.WithPretty(),
+						es.Index.WithFilterPath("result", "_id"),
+					)
+				}
+			} else {
+				log.Printf("[DEBUG] NO ES insertion!")
+			}
+
+
+
 			if _, err := s.GetDB().Exec(context.Background(), `insert into logs
 (
 SampleRate,
@@ -588,7 +643,7 @@ var (
 )
 
 func main() {
-	log.Print("Starting curielogger v0.2-dev6")
+	log.Print("Starting curielogger v0.3-dev1")
 	var debug_mode = flag.Bool("d", false, "Debug mode")
 	flag.Parse()
 	var min_level string
@@ -636,7 +691,7 @@ func main() {
 		re := regexp.MustCompile(`host=([^ ]+)`)
 		host = re.FindStringSubmatch(dburl)[1]
 	}
-	als.RegisterAccessLogServiceServer(s, &server{db: nil, db_url: dburl, host: host})
+	als.RegisterAccessLogServiceServer(s, &server{es: nil, db: nil, db_url: dburl, host: host})
 	if err := s.Serve(sock); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
