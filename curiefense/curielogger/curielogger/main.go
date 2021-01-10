@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"bytes"
 	"time"
 	"flag"
 	"bufio"
@@ -551,6 +552,49 @@ func es_insert_entry(es *elasticsearch.Client, e LogEntry) {
 
 
 
+//  _    ___   ___ ___ _____ _   ___ _  _
+// | |  / _ \ / __/ __|_   _/_\ / __| || |
+// | |_| (_) | (_ \__ \ | |/ _ \\__ \ __ |
+// |____\___/ \___|___/ |_/_/ \_\___/_||_|
+// LOGSTASH
+
+type LSserver struct {
+	ls_url string
+	logger Logger
+}
+
+func (s LSserver) start() {
+	log.Printf("[INFO]: LogStash logging routine started")
+	for {
+		entry := <-s.logger.channel
+		now := time.Now()
+		ls_insert_entry(s.ls_url, entry)
+		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
+	}
+}
+
+
+func ls_insert_entry(url string, e LogEntry) {
+	log.Printf("[DEBUG] LogStash insertion!")
+	j, err := json.Marshal(e.full_entry)
+	if err == nil {
+		_, err := http.Post(url+"/curiefense/log", "application/json",  bytes.NewReader(j))
+		if err != nil {
+			log.Printf("ERROR: could not POST log entry: %v", err)
+		}
+	} else {
+		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
+	}
+	if (e.curiefense_json_string != "") {
+		_, err := http.Post(url+"/curiefense/log_cf", "application/json", strings.NewReader(e.curiefense_json_string))
+		if err != nil {
+			log.Printf("ERROR: could not POST log entry: %v", err)
+		}
+	}
+}
+
+
+
 
 
 //   ___ ___ ___  ___     _   ___ ___ ___ ___ ___   _    ___   ___ ___
@@ -759,6 +803,16 @@ func main() {
 		es_url := getEnv("CURIELOGGER_ELASTICSEARCH_URL", "http://localhost:9200")
 		es := ESserver{es_url:es_url, logger:l}
 		go es.start()
+	}
+
+	// Logstash
+	if check_env_flag("CURIELOGGER_USES_LOGSTASH") {
+		ls_ch := make(chan LogEntry, *channel_capacity)
+		l := Logger{name:"logstash", channel: ls_ch}
+		loggers = append(loggers, l)
+		ls_url := getEnv("CURIELOGGER_LOGSTASH_URL", "http://localhost:5001")
+		ls := LSserver{ls_url:ls_url, logger:l}
+		go ls.start()
 	}
 
 	////////////////////////
