@@ -17,14 +17,12 @@ import (
 	"bufio"
 
 	als "github.com/envoyproxy/go-control-plane/envoy/service/accesslog/v2"
+	ald "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v2"
 	ptypes "github.com/golang/protobuf/ptypes"
 	duration "github.com/golang/protobuf/ptypes/duration"
 
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v4"
-//	"github.com/robteix/protoconv"
-
-//	"google.golang.org/protobuf/types/known/structpb"
 
 	"net/http"
 
@@ -36,6 +34,60 @@ import (
 	elasticsearch "github.com/elastic/go-elasticsearch/v7"
 )
 
+
+
+//   ___ ___  __  __ __  __  ___  _  _
+//  / __/ _ \|  \/  |  \/  |/ _ \| \| |
+// | (_| (_) | |\/| | |\/| | (_) | .` |
+//  \___\___/|_|  |_|_|  |_|\___/|_|\_|
+// COMMON
+
+
+
+type LogEntry struct {
+	full_entry *ald.HTTPAccessLogEntry;
+	common *ald.AccessLogCommon;
+	req *ald.HTTPRequestProperties;
+	resp *ald.HTTPResponseProperties;
+	method string;
+	response_code int;
+	curiefense_json_string string;
+	curiefense map[string]interface{};
+	upstream_remote_addr string;
+	upstream_remote_port uint32;
+	upstream_local_addr string;
+	upstream_local_port uint32;
+}
+
+
+type Logger struct {
+	name string
+	channel chan LogEntry
+}
+
+
+func (l Logger) log_entry(e LogEntry) {
+	if len(l.channel) >= cap(l.channel) {
+		metric_dropped_log_entry.With(prometheus.Labels{"logger":l.name}).Inc()
+		log.Printf("[WARNING] [%s] buffer full. Log entry dropped", l.name)
+	} else {
+		l.channel <- e
+	}
+}
+
+type server struct {
+	host string
+	loggers []Logger
+}
+
+
+
+//  ___ ___  ___  __  __ ___ _____ _  _ ___ _   _ ___
+// | _ \ _ \/ _ \|  \/  | __|_   _| || | __| | | / __|
+// |  _/   / (_) | |\/| | _|  | | | __ | _|| |_| \__ \
+// |_| |_|_\\___/|_|  |_|___| |_| |_||_|___|\___/|___/
+// PROMETHEUS
+
 const (
 	namespace = "curiemetric" // For Prometheus metrics.
 )
@@ -43,7 +95,7 @@ const (
 /** Prometheus metrics **/
 
 var (
-	m_requests = promauto.NewCounter(
+	metric_requests = promauto.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "http_request_total",
@@ -75,6 +127,12 @@ var (
 		"container",
 	})
 
+	metric_dropped_log_entry = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "dropped_log_entries",
+		Help:      "number of dropped log entries per logger",
+	}, []string{"logger"})
+
 	metric_request_bytes = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "request_bytes",
@@ -92,21 +150,14 @@ var (
 		Help:      "Number of requests per label",
 	}, []string{"tag"})
 
-	m_sql_query_latency = promauto.NewHistogram(prometheus.HistogramOpts{
+
+	metric_logger_latency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
-		Name:      "sql_query_duration_seconds",
-		Help:      "Duration of SQL queries in seconds",
-	})
+		Name:      "logger_latency",
+		Help:      "latency per logger",
+	}, []string{"logger"})
 )
 
-/***************/
-
-type server struct {
-	db_url string
-	host string
-	db     *pgx.Conn
-	es     *elasticsearch.Client
-}
 
 /**** \\\ auto labeling /// ****/
 
@@ -202,7 +253,71 @@ func makeLabels(status_code int, method, path, upstream, blocked string, tags ma
 	}
 }
 
-/**** /// auto labeling \\\ ****/
+
+type PromServer struct {
+	logger Logger
+}
+
+
+func (s PromServer) start() {
+	log.Printf("[INFO]: Prometheus metrics updating routine started")
+
+	for {
+		e := <- s.logger.channel
+
+		// **** Update prometheus metrics ****
+		metric_requests.Inc()
+		metric_request_bytes.Add(float64(e.req.GetRequestHeadersBytes() + e.req.GetRequestBodyBytes()))
+		metric_response_bytes.Add(float64(e.resp.GetResponseHeadersBytes() + e.resp.GetResponseBodyBytes()))
+
+
+		if attrs_i, ok := e.curiefense["attrs"] ; ok {
+			if attrs, ok := attrs_i.(map[string]interface{}); ok {
+				blocked := "0"
+				if _, ok := attrs["blocked"]; ok {
+					blocked = "1"
+				}
+				log.Printf("[DEBUG] ~~~ blocked=[%v]", blocked)
+				if tags_i, ok := attrs["tags"]; ok {
+					if tags, ok := tags_i.(map[string]interface{}); ok {
+						if path_i, ok := attrs["path"]; ok {
+							if path, ok := path_i.(string); ok {
+								log.Printf("[DEBUG] ~~~ path=[%v]", path)
+								log.Printf("[DEBUG] ~~~ tags=[%v]", tags)
+								labels := makeLabels(e.response_code, e.method, path, e.upstream_remote_addr, blocked, tags)
+								metric_session_details.With(labels).Inc()
+								for name := range tags {
+									if !isStaticTag(name) {
+										m_requests_tags.WithLabelValues(name).Inc()
+									}
+								}
+							} else { log.Printf("[DEBUG]  @ no path cast :(") }
+						} else { log.Printf("[DEBUG]  @ no path :(") }
+					} else { log.Printf("[DEBUG]  @ no tags cast :( [%v]", tags_i) }
+				} else { log.Printf("[DEBUG]  @ no tags :(") }
+			} else { log.Printf("[DEBUG]  @ no attr cast :(") }
+		} else { log.Printf("[DEBUG]  @ no attrs :(") }
+	}
+}
+
+
+
+
+
+
+//  ___  ___  ___ _____ ___ ___ ___ ___  ___  _
+// | _ \/ _ \/ __|_   _/ __| _ \ __/ __|/ _ \| |
+// |  _/ (_) \__ \ | || (_ |   / _|\__ \ (_) | |__
+// |_|  \___/|___/ |_| \___|_|_\___|___/\__\_\____|
+// POSTGRESQL
+
+
+type PGserver struct {
+	host string
+	db_url string
+	db     *pgx.Conn
+	logger Logger
+}
 
 func DurationToFloat(d *duration.Duration) float64 {
 	if d != nil {
@@ -211,26 +326,8 @@ func DurationToFloat(d *duration.Duration) float64 {
 	return 0
 }
 
-func (s server) GetES() *elasticsearch.Client {
-	for s.es == nil {
-		es_url, envexists := os.LookupEnv("ELASTICSEARCH_URL")
-		if !envexists {
-			log.Printf("[DEBUG] No ELASTICSEARCH_URL env variable\n", es_url)
-			break
-		}
-		conn, err := elasticsearch.NewDefaultClient()
-		if err == nil {
-			s.es = conn
-			log.Printf("[DEBUG] Connected to elasticsearch %v\n", es_url)
-			break
-		}
-		log.Printf("[ERROR] Could not connect to elasticsearch [%v]: %v\n", es_url, err)
-		time.Sleep(time.Second)
-	}
-	return s.es
-}
 
-func (s server) GetDB() *pgx.Conn {
+func (s PGserver) getDB() *pgx.Conn {
 	for s.db == nil || s.db.IsClosed() {
 		conn, err := pgx.Connect(context.Background(), s.db_url)
 		if err == nil {
@@ -243,6 +340,227 @@ func (s server) GetDB() *pgx.Conn {
 	}
 	return s.db
 }
+
+
+func (s PGserver) start() bool {
+	log.Printf("[INFO]: Postgres logging routine started")
+	db := s.getDB()
+	for {
+		entry := <-s.logger.channel
+		now := time.Now()
+		db = s.getDB() // needed to ensure db cnx is not closed and reopen it if needed
+		pg_insert_entry(db, entry)
+		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
+	}
+}
+
+
+func pg_insert_entry(db *pgx.Conn, e LogEntry) bool {
+
+	respflags := e.common.GetResponseFlags()
+
+	ts, _ := ptypes.Timestamp(e.common.GetStartTime())
+
+	tls := e.common.GetTlsProperties()
+
+	lan := []string{}
+	for _, san := range tls.GetLocalCertificateProperties().GetSubjectAltName() {
+		lan = append(lan, san.String())
+	}
+	jsonb_localaltnames := makejsonb(lan)
+
+	pan := []string{}
+	for _, san := range tls.GetPeerCertificateProperties().GetSubjectAltName() {
+		pan = append(pan, san.String())
+	}
+	jsonb_peeraltnames := makejsonb(pan)
+
+	jsonb_reqhdr := makejsonb(e.req.GetRequestHeaders())
+	jsonb_resphdr := makejsonb(e.resp.GetResponseHeaders())
+	jsonb_resptrail := makejsonb(e.resp.GetResponseTrailers())
+
+
+	jsonb_curiefense := &pgtype.JSON{Bytes: []byte(e.curiefense_json_string), Status: pgtype.Present}
+
+	_, err := db.Exec(context.Background(), `insert into logs (
+
+            SampleRate, DownstreamRemoteAddress, DownstreamRemoteAddressPort, DownstreamLocalAddress,
+            DownstreamLocalAddressPort, StartTime, TimeToLastRxByte, TimeToFirstUpstreamTxByte, TimeToLastUpstreamTxByte,
+            TimeToFirstUpstreamRxByte, TimeToLastUpstreamRxByte, TimeToFirstDownstreamTxByte, TimeToLastDownstreamTxByte,
+            UpstreamRemoteAddress, UpstreamRemoteAddressPort, UpstreamLocalAddress, UpstreamLocalAddressPort,
+            UpstreamCluster, FailedLocalHealthcheck, NoHealthyUpstream, UpstreamRequestTimeout, LocalReset,
+            UpstreamRemoteReset, UpstreamConnectionFailure, UpstreamConnectionTermination, UpstreamOverflow, NoRouteFound,
+            DelayInjected, FaultInjected, RateLimited, UnauthorizedDetails, RateLimitServiceError,
+            DownstreamConnectionTermination, UpstreamRetryLimitExceeded, StreamIdleTimeout, InvalidEnvoyRequestHeaders,
+            DownstreamProtocolError, Curiefense, UpstreamTransportFailureReason, RouteName, DownstreamDirectRemoteAddress,
+            DownstreamDirectRemoteAddressPort, TlsVersion, TlsCipherSuite, TlsSniHostname, LocalCertificateProperties,
+            LocalCertificatePropertiesAltNames, PeerCertificateProperties, PeerCertificatePropertiesAltNames,
+            TlsSessionId, RequestMethod, Scheme, Authority, Port, Path, UserAgent, Referer, ForwardedFor, RequestId,
+            OriginalPath, RequestHeadersBytes, RequestBodyBytes, RequestHeaders, ResponseCode, ResponseHeadersBytes,
+            ResponseBodyBytes, ResponseHeaders, ResponseTrailers, ResponseCodeDetails)
+
+            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+                    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
+                    $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56,
+                     $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69)`,
+		e.common.GetSampleRate(),							/* SampleRate,                          */
+		e.common.GetDownstreamRemoteAddress().GetSocketAddress().GetAddress(),		/* DownstreamRemoteAddress,             */
+		e.common.GetDownstreamRemoteAddress().GetSocketAddress().GetPortValue(),	/* DownstreamRemoteAddressPort,         */
+		e.common.GetDownstreamLocalAddress().GetSocketAddress().GetAddress(),		/* DownstreamLocalAddress,              */
+		e.common.GetDownstreamLocalAddress().GetSocketAddress().GetPortValue(),		/* DownstreamLocalAddressPort,          */
+		ts,										/* StartTime,                           */
+		DurationToFloat(e.common.GetTimeToLastRxByte()),				/* TimeToLastRxByte,                    */
+		DurationToFloat(e.common.GetTimeToFirstUpstreamTxByte()),			/* TimeToFirstUpstreamTxByte,           */
+		DurationToFloat(e.common.GetTimeToLastUpstreamTxByte()),			/* TimeToLastUpstreamTxByte,            */
+		DurationToFloat(e.common.GetTimeToFirstUpstreamRxByte()),			/* TimeToFirstUpstreamRxByte,           */
+		DurationToFloat(e.common.GetTimeToLastUpstreamRxByte()),			/* TimeToLastUpstreamRxByte,            */
+		DurationToFloat(e.common.GetTimeToFirstDownstreamTxByte()),			/* TimeToFirstDownstreamTxByte,         */
+		DurationToFloat(e.common.GetTimeToLastDownstreamTxByte()),			/* TimeToLastDownstreamTxByte,          */
+		e.upstream_remote_addr,								/* UpstreamRemoteAddress,               */
+		e.upstream_remote_port,								/* UpstreamRemoteAddressPort,           */
+		e.upstream_local_addr,								/* UpstreamLocalAddress,                */
+		e.upstream_local_port,								/* UpstreamLocalAddressPort,            */
+		e.common.GetUpstreamCluster(),							/* UpstreamCluster,                     */
+		respflags.GetFailedLocalHealthcheck(),						/* FailedLocalHealthcheck,              */
+		respflags.GetNoHealthyUpstream(),						/* NoHealthyUpstream,                   */
+		respflags.GetUpstreamRequestTimeout(),						/* UpstreamRequestTimeout,              */
+		respflags.GetLocalReset(),							/* LocalReset,                          */
+		respflags.GetUpstreamRemoteReset(),						/* UpstreamRemoteReset,                 */
+		respflags.GetUpstreamConnectionFailure(),					/* UpstreamConnectionFailure,           */
+		respflags.GetUpstreamConnectionTermination(),					/* UpstreamConnectionTermination,       */
+		respflags.GetUpstreamOverflow(),						/* UpstreamOverflow,                    */
+		respflags.GetNoRouteFound(),							/* NoRouteFound,                        */
+		respflags.GetDelayInjected(),							/* DelayInjected,                       */
+		respflags.GetFaultInjected(),							/* FaultInjected,                       */
+		respflags.GetRateLimited(),							/* RateLimited,                         */
+		respflags.GetUnauthorizedDetails().GetReason().String(),			/* UnauthorizedDetails,                 */
+		respflags.GetRateLimitServiceError(),						/* RateLimitServiceError,               */
+		respflags.GetDownstreamConnectionTermination(),					/* DownstreamConnectionTermination,     */
+		respflags.GetUpstreamRetryLimitExceeded(),					/* UpstreamRetryLimitExceeded,          */
+		respflags.GetStreamIdleTimeout(),						/* StreamIdleTimeout,                   */
+		respflags.GetInvalidEnvoyRequestHeaders(),					/* InvalidEnvoyRequestHeaders,          */
+		respflags.GetDownstreamProtocolError(),						/* DownstreamProtocolError,             */
+		jsonb_curiefense,								/* Curiefense,                          */
+		e.common.GetUpstreamTransportFailureReason(),					/* UpstreamTransportFailureReason,      */
+		e.common.GetRouteName(),							/* RouteName,                           */
+		e.common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetAddress(),	/* DownstreamDirectRemoteAddress,       */
+		e.common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetPortValue(),	/* DownstreamDirectRemoteAddressPort,   */
+		tls.GetTlsVersion().String(),							/* TlsVersion,                          */
+		tls.GetTlsCipherSuite().String(),						/* TlsCipherSuite,                      */
+		tls.GetTlsSniHostname(),							/* TlsSniHostname,                      */
+		tls.GetLocalCertificateProperties().GetSubject(),				/* LocalCertificateProperties,          */
+		jsonb_localaltnames,								/* LocalCertificatePropertiesAltNames,  */
+		tls.GetPeerCertificateProperties().GetSubject(),				/* PeerCertificateProperties,           */
+		jsonb_peeraltnames,								/* PeerCertificatePropertiesAltNames,   */
+		tls.GetTlsSessionId(),								/* TlsSessionId,                        */
+		e.method,										/* RequestMethod,                       */
+		e.req.GetScheme(),								/* Scheme,                              */
+		e.req.GetAuthority(),								/* Authority,                           */
+		e.req.GetPort().GetValue(),							/* Port,                                */
+		e.req.GetPath(),									/* Path,                                */
+		e.req.GetUserAgent(),								/* UserAgent,                           */
+		e.req.GetReferer(),								/* Referer,                             */
+		e.req.GetForwardedFor(),								/* ForwardedFor,                        */
+		e.req.GetRequestId(),								/* RequestId,                           */
+		e.req.GetOriginalPath(),								/* OriginalPath,                        */
+		e.req.GetRequestHeadersBytes(),							/* RequestHeadersBytes,                 */
+		e.req.GetRequestBodyBytes(),							/* RequestBodyBytes,                    */
+		jsonb_reqhdr,									/* RequestHeaders,                      */
+		e.response_code,									/* ResponseCode,                        */
+		e.resp.GetResponseHeadersBytes(),							/* ResponseHeadersBytes,                */
+		e.resp.GetResponseBodyBytes(),							/* ResponseBodyBytes                    */
+		jsonb_resphdr,									/* ResponseHeaders,                     */
+		jsonb_resptrail,								/* ResponseTrailers,                    */
+		e.resp.GetResponseCodeDetails(),							/* ResponseCodeDetails                  */
+	)
+	if err == nil {
+		log.Printf("[DEBUG] insert into pg ok")
+	} else {
+		log.Printf("[ERROR] insert into pg: Error: %v", err)
+	}
+	return err != nil
+}
+
+
+//  ___ _      _   ___ _____ ___ ___ ___ ___   _   ___  ___ _  _
+// | __| |    /_\ / __|_   _|_ _/ __/ __| __| /_\ | _ \/ __| || |
+// | _|| |__ / _ \\__ \ | |  | | (__\__ \ _| / _ \|   / (__| __ |
+// |___|____/_/ \_\___/ |_| |___\___|___/___/_/ \_\_|_\\___|_||_|
+// ELASTICSEARCH
+
+type ESserver struct {
+	es_url string
+	es     *elasticsearch.Client
+	logger Logger
+}
+
+func (s ESserver) getES() *elasticsearch.Client {
+	for s.es == nil {
+		cfg := elasticsearch.Config{
+			Addresses: []string{ s.es_url },
+		}
+		conn, err := elasticsearch.NewClient(cfg)
+		if err == nil {
+			s.es = conn
+			log.Printf("[DEBUG] Connected to elasticsearch %v\n", s.es_url)
+			break
+		}
+		log.Printf("[ERROR] Could not connect to elasticsearch [%v]: %v\n", s.es_url, err)
+		time.Sleep(time.Second)
+	}
+	return s.es
+}
+
+
+func (s ESserver) start() {
+	log.Printf("[INFO]: ElasticSearch logging routine started")
+	es := s.getES()
+	for {
+		entry := <-s.logger.channel
+		now := time.Now()
+		es = s.getES() // needed to ensure ES cnx is not closed and reopen it if needed
+		es_insert_entry(es, entry)
+		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
+	}
+}
+
+
+func es_insert_entry(es *elasticsearch.Client, e LogEntry) {
+	log.Printf("[DEBUG] ES insertion!")
+	j, err := json.Marshal(e.full_entry)
+	if err == nil {
+		es.Index(
+			"log",
+			strings.NewReader(string(j)),
+			es.Index.WithRefresh("true"),
+			es.Index.WithPretty(),
+			es.Index.WithFilterPath("result", "_id"),
+		)
+	} else {
+		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
+	}
+	if (e.curiefense_json_string != "") {
+		es.Index(
+			"log_cf",
+			strings.NewReader(e.curiefense_json_string),
+			es.Index.WithRefresh("true"),
+			es.Index.WithPretty(),
+			es.Index.WithFilterPath("result", "_id"),
+		)
+	}
+}
+
+
+
+
+
+//   ___ ___ ___  ___     _   ___ ___ ___ ___ ___   _    ___   ___ ___
+//  / __| _ \ _ \/ __|   /_\ / __/ __| __/ __/ __| | |  / _ \ / __/ __|
+// | (_ |   /  _/ (__   / _ \ (_| (__| _|\__ \__ \ | |_| (_) | (_ \__ \
+//  \___|_|_\_|  \___| /_/ \_\___\___|___|___/___/ |____\___/ \___|___/
+// GRPC ACCESS LOGS
+
+
 
 func makejsonb(v interface{}) *pgtype.JSON {
 	j, err := json.Marshal(v)
@@ -262,7 +580,10 @@ func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) 
 		http_entries := hl.GetLogEntry()
 		for _, entry := range http_entries {
 			common := entry.GetCommonProperties()
-			curiefense_meta, got_meta := common.GetMetadata().GetFilterMetadata()["com.reblaze.curiefense"]
+			req := entry.GetRequest()
+			resp := entry.GetResponse()
+			method := req.GetRequestMethod().String()
+			response_code := int(resp.GetResponseCode().GetValue())
 
 			upstream_remote_addr := common.GetUpstreamRemoteAddress().GetSocketAddress().GetAddress()
 			upstream_remote_port := common.GetUpstreamRemoteAddress().GetSocketAddress().GetPortValue()
@@ -270,351 +591,63 @@ func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) 
 			upstream_local_port := common.GetUpstreamLocalAddress().GetSocketAddress().GetPortValue()
 			log.Printf("[DEBUG] ---> [ %v:%v %v:%v ] <---", upstream_remote_addr, upstream_remote_port,
 				upstream_local_addr, upstream_local_port)
+
+			// Decode curiefense metadata
+
+			curiefense_meta, got_meta := common.GetMetadata().GetFilterMetadata()["com.reblaze.curiefense"]
 			if !got_meta { /* This log line was not generated by curiefense */
 				log.Printf("[DEBUG] No curiefense metadata => drop log entry")
 				continue
 			}
 
-			respflags := common.GetResponseFlags()
-			ts, _ := ptypes.Timestamp(common.GetStartTime())
+			curiefense := make(map[string]interface{})
+			curiefense_json_string := "{}"
 
-			tls := common.GetTlsProperties()
-
-			lan := []string{}
-			for _, san := range tls.GetLocalCertificateProperties().GetSubjectAltName() {
-				lan = append(lan, san.String())
-			}
-			jsonb_localaltnames := makejsonb(lan)
-
-			pan := []string{}
-			for _, san := range tls.GetPeerCertificateProperties().GetSubjectAltName() {
-				pan = append(pan, san.String())
-			}
-			jsonb_peeraltnames := makejsonb(pan)
-
-			req := entry.GetRequest()
-			jsonb_reqhdr := makejsonb(req.GetRequestHeaders())
-
-			resp := entry.GetResponse()
-			jsonb_resphdr := makejsonb(resp.GetResponseHeaders())
-			jsonb_resptrail := makejsonb(resp.GetResponseTrailers())
-
-			method := req.GetRequestMethod().String()
-			response_code := resp.GetResponseCode().GetValue()
-
-			json_cf := []byte{}
-			json_cf = []byte("{}")
-			cf_reqinfo := make(map[string]interface{})
-			curiefense_meta_json := ``
-
-
-			if got_meta {
-				cfm := curiefense_meta.GetFields()
-				if rqinfo_s, ok := cfm["request.info"]; ok {
-					curiefense_meta_json = rqinfo_s.GetStringValue()
-					json_cf = []byte(curiefense_meta_json)
-					err := json.Unmarshal(json_cf, &cf_reqinfo)
-					if err != nil {
-						log.Printf("[ERROR] Error unmarshalling metadata json string [%v]", curiefense_meta_json)
-						curiefense_meta = nil
-					}
+			cfm := curiefense_meta.GetFields()
+			if rqinfo_s, ok := cfm["request.info"]; ok {
+				curiefense_json_string = rqinfo_s.GetStringValue()
+				json_cf := []byte(curiefense_json_string)
+				err := json.Unmarshal(json_cf, &curiefense)
+				if err != nil {
+					log.Printf("[ERROR] Error unmarshalling metadata json string [%v]", curiefense_json_string)
 				}
-
 			}
 
-			jsonb_curiefense := &pgtype.JSON{Bytes: json_cf, Status: pgtype.Present}
-
-			// **** Update prometheus metrics ****
-			m_requests.Inc()
-			metric_request_bytes.Add(float64(req.GetRequestHeadersBytes() + req.GetRequestBodyBytes()))
-			metric_response_bytes.Add(float64(resp.GetResponseHeadersBytes() + resp.GetResponseBodyBytes()))
-
-
-			if got_meta {
-				if attrs_i, ok := cf_reqinfo["attrs"] ; ok {
-					if attrs, ok := attrs_i.(map[string]interface{}); ok {
-						blocked := "0"
-						if _, ok := attrs["blocked"]; ok {
-							blocked = "1"
-						}
-						log.Printf("[DEBUG] ~~~ blocked=[%v]", blocked)
-						if tags_i, ok := attrs["tags"]; ok {
-							if tags, ok := tags_i.(map[string]interface{}); ok {
-								if path_i, ok := attrs["path"]; ok {
-									if path, ok := path_i.(string); ok {
-										log.Printf("[DEBUG] ~~~ path=[%v]", path)
-										log.Printf("[DEBUG] ~~~ tags=[%v]", tags)
-										labels := makeLabels(int(response_code), method, path, upstream_remote_addr, blocked, tags)
-										metric_session_details.With(labels).Inc()
-										for name := range tags {
-											if !isStaticTag(name) {
-												m_requests_tags.WithLabelValues(name).Inc()
-											}
-										}
-									} else { log.Printf("[DEBUG]  @ no path cast :(") }
-								} else { log.Printf("[DEBUG]  @ no path :(") }
-							} else { log.Printf("[DEBUG]  @ no tags cast :( [%v]", tags_i) }
-						} else { log.Printf("[DEBUG]  @ no tags :(") }
-					} else { log.Printf("[DEBUG]  @ no attr cast :(") }
-				} else { log.Printf("[DEBUG]  @ no attrs :(") }
-			} else { log.Printf("[DEBUG]  @ no meta :(") }
+			log_entry := LogEntry{
+				full_entry:		 entry,
+				common:			 common,
+				req:			 req,
+				resp:			 resp,
+				method:			 method,
+				response_code:		 response_code,
+				curiefense_json_string:	 curiefense_json_string,
+				curiefense:		 curiefense,
+				upstream_remote_addr:	 upstream_remote_addr,
+				upstream_remote_port:	 upstream_remote_port,
+				upstream_local_addr:	 upstream_local_addr,
+				upstream_local_port:	 upstream_local_port,
+			}
 
 			// **** INSERT ****
-			now := time.Now()
 
-			es := s.GetES()
-			if es != nil {
-				log.Printf("[DEBUG] ES insertion!")
-				j, err := json.Marshal(entry)
-				if err == nil {
-					es.Index(
-						"log",
-						strings.NewReader(string(j)),
-						es.Index.WithRefresh("true"),
-						es.Index.WithPretty(),
-						es.Index.WithFilterPath("result", "_id"),
-					)
-				} else {
-					log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
-				}
-				if (curiefense_meta_json != ``) {
-					es.Index(
-						"log_cf",
-						strings.NewReader(curiefense_meta_json),
-						es.Index.WithRefresh("true"),
-						es.Index.WithPretty(),
-						es.Index.WithFilterPath("result", "_id"),
-					)
-				}
-			} else {
-				log.Printf("[DEBUG] NO ES insertion!")
+			for _,l := range s.loggers {
+				l.channel <- log_entry
 			}
-
-
-
-			if _, err := s.GetDB().Exec(context.Background(), `insert into logs
-(
-SampleRate,
-DownstreamRemoteAddress,
-DownstreamRemoteAddressPort,
-DownstreamLocalAddress,
-DownstreamLocalAddressPort,
-StartTime,
-TimeToLastRxByte,
-TimeToFirstUpstreamTxByte,
-TimeToLastUpstreamTxByte,
-TimeToFirstUpstreamRxByte,
-TimeToLastUpstreamRxByte,
-TimeToFirstDownstreamTxByte,
-TimeToLastDownstreamTxByte,
-UpstreamRemoteAddress,
-UpstreamRemoteAddressPort,
-UpstreamLocalAddress,
-UpstreamLocalAddressPort,
-UpstreamCluster,
-FailedLocalHealthcheck,
-NoHealthyUpstream,
-UpstreamRequestTimeout,
-LocalReset,
-UpstreamRemoteReset,
-UpstreamConnectionFailure,
-UpstreamConnectionTermination,
-UpstreamOverflow,
-NoRouteFound,
-DelayInjected,
-FaultInjected,
-RateLimited,
-UnauthorizedDetails,
-RateLimitServiceError,
-DownstreamConnectionTermination,
-UpstreamRetryLimitExceeded,
-StreamIdleTimeout,
-InvalidEnvoyRequestHeaders,
-DownstreamProtocolError,
-Curiefense,
-UpstreamTransportFailureReason,
-RouteName,
-DownstreamDirectRemoteAddress,
-DownstreamDirectRemoteAddressPort,
-TlsVersion,
-TlsCipherSuite,
-TlsSniHostname,
-LocalCertificateProperties,
-LocalCertificatePropertiesAltNames,
-PeerCertificateProperties,
-PeerCertificatePropertiesAltNames,
-TlsSessionId,
-RequestMethod,
-Scheme,
-Authority,
-Port,
-Path,
-UserAgent,
-Referer,
-ForwardedFor,
-RequestId,
-OriginalPath,
-RequestHeadersBytes,
-RequestBodyBytes,
-RequestHeaders,
-ResponseCode,
-ResponseHeadersBytes,
-ResponseBodyBytes,
-ResponseHeaders,
-ResponseTrailers,
-ResponseCodeDetails
-) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-          $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
-          $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56,
-          $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69)`,
-				/* SampleRate,                          */
-				common.GetSampleRate(),
-				/* DownstreamRemoteAddress,             */
-				common.GetDownstreamRemoteAddress().GetSocketAddress().GetAddress(),
-				/* DownstreamRemoteAddressPort,         */
-				common.GetDownstreamRemoteAddress().GetSocketAddress().GetPortValue(),
-				/* DownstreamLocalAddress,              */
-				common.GetDownstreamLocalAddress().GetSocketAddress().GetAddress(),
-				/* DownstreamLocalAddressPort,          */
-				common.GetDownstreamLocalAddress().GetSocketAddress().GetPortValue(),
-				/* StartTime,                           */
-				ts,
-				/* TimeToLastRxByte,                    */
-				DurationToFloat(common.GetTimeToLastRxByte()),
-				/* TimeToFirstUpstreamTxByte,           */
-				DurationToFloat(common.GetTimeToFirstUpstreamTxByte()),
-				/* TimeToLastUpstreamTxByte,            */
-				DurationToFloat(common.GetTimeToLastUpstreamTxByte()),
-				/* TimeToFirstUpstreamRxByte,           */
-				DurationToFloat(common.GetTimeToFirstUpstreamRxByte()),
-				/* TimeToLastUpstreamRxByte,            */
-				DurationToFloat(common.GetTimeToLastUpstreamRxByte()),
-				/* TimeToFirstDownstreamTxByte,         */
-				DurationToFloat(common.GetTimeToFirstDownstreamTxByte()),
-				/* TimeToLastDownstreamTxByte,          */
-				DurationToFloat(common.GetTimeToLastDownstreamTxByte()),
-				/* UpstreamRemoteAddress,               */
-				upstream_remote_addr,
-				/* UpstreamRemoteAddressPort,           */
-				upstream_remote_port,
-				/* UpstreamLocalAddress,                */
-				upstream_local_addr,
-				/* UpstreamLocalAddressPort,            */
-				upstream_local_port,
-				/* UpstreamCluster,                     */
-				common.GetUpstreamCluster(),
-				/* FailedLocalHealthcheck,              */
-				respflags.GetFailedLocalHealthcheck(),
-				/* NoHealthyUpstream,                   */
-				respflags.GetNoHealthyUpstream(),
-				/* UpstreamRequestTimeout,              */
-				respflags.GetUpstreamRequestTimeout(),
-				/* LocalReset,                          */
-				respflags.GetLocalReset(),
-				/* UpstreamRemoteReset,                 */
-				respflags.GetUpstreamRemoteReset(),
-				/* UpstreamConnectionFailure,           */
-				respflags.GetUpstreamConnectionFailure(),
-				/* UpstreamConnectionTermination,       */
-				respflags.GetUpstreamConnectionTermination(),
-				/* UpstreamOverflow,                    */
-				respflags.GetUpstreamOverflow(),
-				/* NoRouteFound,                        */
-				respflags.GetNoRouteFound(),
-				/* DelayInjected,                       */
-				respflags.GetDelayInjected(),
-				/* FaultInjected,                       */
-				respflags.GetFaultInjected(),
-				/* RateLimited,                         */
-				respflags.GetRateLimited(),
-				/* UnauthorizedDetails,                 */
-				respflags.GetUnauthorizedDetails().GetReason().String(),
-				/* RateLimitServiceError,               */
-				respflags.GetRateLimitServiceError(),
-				/* DownstreamConnectionTermination,     */
-				respflags.GetDownstreamConnectionTermination(),
-				/* UpstreamRetryLimitExceeded,          */
-				respflags.GetUpstreamRetryLimitExceeded(),
-				/* StreamIdleTimeout,                   */
-				respflags.GetStreamIdleTimeout(),
-				/* InvalidEnvoyRequestHeaders,          */
-				respflags.GetInvalidEnvoyRequestHeaders(),
-				/* DownstreamProtocolError,             */
-				respflags.GetDownstreamProtocolError(),
-				/* Curiefense,                          */
-				jsonb_curiefense,
-				/* UpstreamTransportFailureReason,      */
-				common.GetUpstreamTransportFailureReason(),
-				/* RouteName,                           */
-				common.GetRouteName(),
-				/* DownstreamDirectRemoteAddress,       */
-				common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetAddress(),
-				/* DownstreamDirectRemoteAddressPort,   */
-				common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetPortValue(),
-				/* TlsVersion,                          */
-				tls.GetTlsVersion().String(),
-				/* TlsCipherSuite,                      */
-				tls.GetTlsCipherSuite().String(),
-				/* TlsSniHostname,                      */
-				tls.GetTlsSniHostname(),
-				/* LocalCertificateProperties,          */
-				tls.GetLocalCertificateProperties().GetSubject(),
-				/* LocalCertificatePropertiesAltNames,  */
-				jsonb_localaltnames,
-				/* PeerCertificateProperties,           */
-				tls.GetPeerCertificateProperties().GetSubject(),
-				/* PeerCertificatePropertiesAltNames,   */
-				jsonb_peeraltnames,
-				/* TlsSessionId,                        */
-				tls.GetTlsSessionId(),
-				/* RequestMethod,                       */
-				method,
-				/* Scheme,                              */
-				req.GetScheme(),
-				/* Authority,                           */
-				req.GetAuthority(),
-				/* Port,                                */
-				req.GetPort().GetValue(),
-				/* Path,                                */
-				req.GetPath(),
-				/* UserAgent,                           */
-				req.GetUserAgent(),
-				/* Referer,                             */
-				req.GetReferer(),
-				/* ForwardedFor,                        */
-				req.GetForwardedFor(),
-				/* RequestId,                           */
-				req.GetRequestId(),
-				/* OriginalPath,                        */
-				req.GetOriginalPath(),
-				/* RequestHeadersBytes,                 */
-				req.GetRequestHeadersBytes(),
-				/* RequestBodyBytes,                    */
-				req.GetRequestBodyBytes(),
-				/* RequestHeaders,                      */
-				jsonb_reqhdr,
-				/* ResponseCode,                        */
-				response_code,
-				/* ResponseHeadersBytes,                */
-				resp.GetResponseHeadersBytes(),
-				/* ResponseBodyBytes                    */
-				resp.GetResponseBodyBytes(),
-				/* ResponseHeaders,                     */
-				jsonb_resphdr,
-				/* ResponseTrailers,                    */
-				jsonb_resptrail,
-				/* ResponseCodeDetails                  */
-				resp.GetResponseCodeDetails(),
-			); err == nil {
-				log.Printf("[DEBUG] insert into pg ok")
-			} else {
-				log.Printf("[ERROR] insert into pg: Error: %v", err)
-			}
-			m_sql_query_latency.Observe(time.Since(now).Seconds())
 		}
 	}
-	return err
+	return nil
 }
+
+
+
+
+//  __  __   _   ___ _  _
+// |  \/  | /_\ |_ _| \| |
+// | |\/| |/ _ \ | || .` |
+// |_|  |_/_/ \_\___|_|\_|
+// MAIN
+
+
 
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
@@ -622,6 +655,12 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
+
+func check_env_flag(env_var string) bool {
+	value, ok := os.LookupEnv(env_var)
+	return ok && value != "" && value != "0" && strings.ToLower(value) != "false"
+}
+
 
 func readPassword(filename string) string {
 	file, err := os.Open(filename)
@@ -644,8 +683,13 @@ var (
 
 func main() {
 	log.Print("Starting curielogger v0.3-dev1")
+
 	var debug_mode = flag.Bool("d", false, "Debug mode")
+	var channel_capacity = flag.Int("b", 65536, "log channel capacity")
+
 	flag.Parse()
+
+	// configure log level
 	var min_level string
 	if *debug_mode {
 		min_level = "DEBUG"
@@ -659,9 +703,68 @@ func main() {
 	}
 	log.SetOutput(filter)
 
+	// set up prometheus server
 	http.Handle("/metrics", promhttp.Handler())
 	log.Printf("Prometheus exporter listening on %v", prom_addr)
 	go http.ListenAndServe(prom_addr, nil)
+
+
+	////////////////////
+	// set up loggers //
+	////////////////////
+
+	var loggers []Logger
+
+	// Prometheus
+	prom_ch := make(chan LogEntry, *channel_capacity)
+	l := Logger{name:"prometheus", channel: prom_ch}
+	loggers = append(loggers, l)
+	prom := PromServer{logger:l}
+	go prom.start()
+
+	// PostgreSQL
+	if check_env_flag("CURIELOGGER_USES_POSTGRES") {
+		db_url, ok := os.LookupEnv("DATABASE_URL")
+		var host string
+		var password string
+		if !ok {
+			pwfilename, ok := os.LookupEnv("CURIELOGGER_DBPASSWORD_FILE")
+			if ok {
+				password = readPassword(pwfilename)
+			} else {
+				password = os.Getenv("CURIELOGGER_DBPASSWORD")
+			}
+			host = os.Getenv("CURIELOGGER_DBHOST")
+			db_url = fmt.Sprintf(
+				"host=%s dbname=curiefense user=%s password=%s",
+				host,
+				os.Getenv("CURIELOGGER_DBUSER"),
+				password,
+			)
+		} else {
+			re := regexp.MustCompile(`host=([^ ]+)`)
+			host = re.FindStringSubmatch(db_url)[1]
+		}
+		pg_ch := make(chan LogEntry, *channel_capacity)
+		l := Logger{name:"postgres", channel: pg_ch}
+		loggers = append(loggers, l)
+		pg := PGserver{host: host, db_url:db_url, logger:l}
+		go pg.start()
+	}
+
+	// ElasticSearch
+	if check_env_flag("CURIELOGGER_USES_ELASTICSEARCH") {
+		es_ch := make(chan LogEntry, *channel_capacity)
+		l := Logger{name:"elasticsearch", channel: es_ch}
+		loggers = append(loggers, l)
+		es_url := getEnv("CURIELOGGER_ELASTICSEARCH_URL", "http://localhost:92000")
+		es := ESserver{es_url:es_url, logger:l}
+		go es.start()
+	}
+
+	////////////////////////
+	// set up GRPC server //
+	////////////////////////
 
 	sock, err := net.Listen("tcp", grpc_addr)
 	if err != nil {
@@ -670,28 +773,7 @@ func main() {
 	log.Printf("GRPC server listening on %v", grpc_addr)
 	s := grpc.NewServer()
 
-	dburl, ok := os.LookupEnv("DATABASE_URL")
-	var host string
-	var password string
-	if !ok {
-		pwfilename, ok := os.LookupEnv("CURIELOGGER_DBPASSWORD_FILE")
-		if ok {
-			password = readPassword(pwfilename)
-		} else {
-			password = os.Getenv("CURIELOGGER_DBPASSWORD")
-		}
-		host = os.Getenv("CURIELOGGER_DBHOST")
-		dburl = fmt.Sprintf(
-			"host=%s dbname=curiefense user=%s password=%s",
-			host,
-			os.Getenv("CURIELOGGER_DBUSER"),
-			password,
-		)
-	} else {
-		re := regexp.MustCompile(`host=([^ ]+)`)
-		host = re.FindStringSubmatch(dburl)[1]
-	}
-	als.RegisterAccessLogServiceServer(s, &server{es: nil, db: nil, db_url: dburl, host: host})
+	als.RegisterAccessLogServiceServer(s, &server{loggers:loggers})
 	if err := s.Serve(sock); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
