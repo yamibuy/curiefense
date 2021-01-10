@@ -144,12 +144,11 @@ var (
 		Help:      "The total number of response bytes",
 	})
 
-	m_requests_tags = promauto.NewCounterVec(prometheus.CounterOpts{
+	metric_requests_tags = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "session_tags_total",
 		Help:      "Number of requests per label",
 	}, []string{"tag"})
-
 
 	metric_logger_latency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
@@ -288,7 +287,7 @@ func (s PromServer) start() {
 								metric_session_details.With(labels).Inc()
 								for name := range tags {
 									if !isStaticTag(name) {
-										m_requests_tags.WithLabelValues(name).Inc()
+										metric_requests_tags.WithLabelValues(name).Inc()
 									}
 								}
 							} else { log.Printf("[DEBUG]  @ no path cast :(") }
@@ -757,7 +756,7 @@ func main() {
 		es_ch := make(chan LogEntry, *channel_capacity)
 		l := Logger{name:"elasticsearch", channel: es_ch}
 		loggers = append(loggers, l)
-		es_url := getEnv("CURIELOGGER_ELASTICSEARCH_URL", "http://localhost:92000")
+		es_url := getEnv("CURIELOGGER_ELASTICSEARCH_URL", "http://localhost:9200")
 		es := ESserver{es_url:es_url, logger:l}
 		go es.start()
 	}
