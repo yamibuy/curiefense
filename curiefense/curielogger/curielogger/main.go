@@ -26,6 +26,7 @@ import (
 	"github.com/jackc/pgx/v4"
 
 	"net/http"
+	neturl "net/url"
 
 	"github.com/hashicorp/logutils"
 	"github.com/prometheus/client_golang/prometheus"
@@ -595,6 +596,49 @@ func ls_insert_entry(url string, e LogEntry) {
 
 
 
+//  ___ _   _   _ ___ _  _ _____ ___
+// | __| | | | | | __| \| |_   _|   \
+// | _|| |_| |_| | _|| .` | | | | |) |
+// |_| |____\___/|___|_|\_| |_| |___/
+// FLUENTD
+
+type FluentdServer struct {
+	url string
+	logger Logger
+}
+
+func (s FluentdServer) start() {
+	log.Printf("[INFO]: Fluentd logging routine started")
+	for {
+		entry := <-s.logger.channel
+		now := time.Now()
+		fluentd_insert_entry(s.url, entry)
+		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
+	}
+}
+
+
+func fluentd_insert_entry(url string, e LogEntry) {
+	log.Printf("[DEBUG] Fluentd insertion!")
+	j, err := json.Marshal(e.full_entry)
+	if err == nil {
+		_, err := http.PostForm(url+"/curiefense/log", neturl.Values{"json": {string(j)}})
+		if err != nil {
+			log.Printf("ERROR: could not POST log entry: %v", err)
+		}
+	} else {
+		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
+	}
+	if (e.curiefense_json_string != "") {
+		_, err := http.PostForm(url+"/curiefense/log_cf", neturl.Values{"json": {e.curiefense_json_string}})
+		if err != nil {
+			log.Printf("ERROR: could not POST log entry: %v", err)
+		}
+	}
+}
+
+
+
 
 
 //   ___ ___ ___  ___     _   ___ ___ ___ ___ ___   _    ___   ___ ___
@@ -812,6 +856,16 @@ func main() {
 		loggers = append(loggers, l)
 		ls_url := getEnv("CURIELOGGER_LOGSTASH_URL", "http://localhost:5001")
 		ls := LSserver{ls_url:ls_url, logger:l}
+		go ls.start()
+	}
+
+	// Fluentd
+	if check_env_flag("CURIELOGGER_USES_FLUENTD") {
+		fd_ch := make(chan LogEntry, *channel_capacity)
+		l := Logger{name:"logstash", channel: fd_ch}
+		loggers = append(loggers, l)
+		fd_url := getEnv("CURIELOGGER_FLUENTD_URL", "http://localhost:9880")
+		ls := FluentdServer{url:fd_url, logger:l}
 		go ls.start()
 	}
 
