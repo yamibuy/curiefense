@@ -134,12 +134,14 @@ services:
     image: "curiefense/curielogger:${DOCKER_TAG}"
     restart: always
     environment:
+      - CURIELOGGER_USES_POSTGRES=1
       - CURIELOGGER_DBHOST=logdb
       - CURIELOGGER_DBUSER=postgres
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
+      - CURIELOGGER_USES_ELASTICSEARCH=1
+      - CURIELOGGER_ELASTICSEARCH_URL=http://elasticsearch:9200/
       - CURIELOGGER_LOGSTASH_HOST=logstash
       - CURIELOGGER_KIBANA_HOST=kibana
-      - ELASTICSEARCH_URL=http://elasticsearch:9200/
       # TODO add secrets for logstash
     networks:
       - curiemesh
