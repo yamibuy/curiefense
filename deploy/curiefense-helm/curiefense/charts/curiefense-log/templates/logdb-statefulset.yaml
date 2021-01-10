@@ -1,4 +1,4 @@
-{{- if .Values.global.enable.logdb }}
+{{- if and (eq .Values.global.settings.curiefense_logdb_type "postgres") (.Values.global.enable.logdb) }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -21,7 +21,8 @@ spec:
         app.kubernetes.io/name: logdb
     spec:
       containers:
-      - env:
+      - name: logdb
+        env:
         - name: POSTGRES_PASSWORD_FILE
           value: /run/secrets/db-credentials/password
         - name: POSTGRES_READONLY_PASSWORD_FILE
@@ -32,7 +33,6 @@ spec:
         {{ else }}
         image: {{ .Values.global.images.logdb }}:{{ .Values.global.settings.docker_tag }}
         {{ end }}
-        name: logdb
         ports:
         - containerPort: 5432
           name: logdb-postgres

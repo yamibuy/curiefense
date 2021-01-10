@@ -18,11 +18,15 @@ global:
     confserver_storage_size: '1Gi'
     grafana_storage_size: '1Gi'
     logdb_storage_size: '10Gi'
+    elasticsearch_storage_size: '10Gi'
     prometheus_storage_size: '1Gi'
     redis_storage_size: '1Gi'
 
   settings:
     curieconf_manifest_url: 's3://curiefense-test01/prod/manifest.json'
+    # supported types: 'postgres', 'elasticsearch'
+    curiefense_logdb_type: 'postgres'
+    # change curiefense_db_hostname if you supply your own postgres server
     curiefense_db_hostname: 'logdb'
     # supported types: 's3', 'gs'
     curiefense_bucket_type: 's3'

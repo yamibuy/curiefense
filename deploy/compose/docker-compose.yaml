@@ -213,10 +213,10 @@ services:
     image: docker.elastic.co/kibana/kibana:7.10.1
     restart: always
     environment:
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-      TELEMETRY_ENABLED: "false"
-      TELEMETRY_OPTIN: "false"
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - TELEMETRY_ENABLED=false
+      - TELEMETRY_OPTIN=false
     networks:
       - curiemesh
     ports:
@@ -228,12 +228,12 @@ services:
     restart: always
     volumes:
       - type: bind
-        source: ./logstash-pipeline.yaml
-        target: /usr/share/logstash/pipeline/logstash.yml
+        source: ./logstash-pipeline.conf
+        target: /usr/share/logstash/pipeline/logstash.conf
         read_only: true
     environment:
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     networks:
       - curiemesh
     ports:
