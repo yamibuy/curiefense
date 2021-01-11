@@ -253,7 +253,7 @@ function check(waf_profile, request_map)
     local idx, first_match = next(matches)
 
     if first_match then
-        return waf_section_match(matches, request_map, hca_keys, exclude_sigs)
+        return waf_section_match(matches, request_map, hca_keys or {}, exclude_sigs or {})
     else
         return WAFPass, "waf-passed"
     end
