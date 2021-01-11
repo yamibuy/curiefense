@@ -34,10 +34,10 @@ end
 
 function check(profile, request)
     local msg = nil
-    -- request.handle:logDebug(string.format(
-    --     "ACL Check -- Request details \n%s\n", json_safe.encode(request.attrs)))
-    -- request.handle:logDebug(string.format(
-    --     "ACL Check -- Profile \n%s\n", json_safe.encode(profile)))
+    request.handle:logDebug(string.format(
+        "ACL Check -- Request details \n%s\n", json_safe.encode(request.attrs)))
+    request.handle:logDebug(string.format(
+        "ACL Check -- Profile \n%s\n", json_safe.encode(profile)))
     msg = check_policy(profile.force_deny, request)
     if msg then return acl_result(ACLForceDeny, msg) end
 

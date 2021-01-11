@@ -255,6 +255,6 @@ function inspect(handle)
     addentry(timeline, "11 log_request")
     log_request(request_map)
     addentry(timeline, "12 done")
-    handle:logErr(string.format("timeline %s",cjson.encode(timeline)))
+    handle:logDebug(string.format("timeline %s",cjson.encode(timeline)))
 
 end
