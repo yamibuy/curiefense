@@ -224,7 +224,7 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
             if re_match(value, patt) then
                 local section = address[1]
                 local name = address[2]
-                if not exclude_sigs[section] and not exclude_sigs[section][name] then
+                if exclude_sigs[section] and not exclude_sigs[section][name] then
                     return WAFBlock, gen_block_info(section, name, value, waf_sig)
                 end
             end
