@@ -9,10 +9,11 @@ local os        = require "os"
 
 local limit_ban_hash = 'limit-ban-hash'
 
-local md5           = utils.md5
-local re_match      = utils.re_match
-local tag_request   = utils.tag_request
-local deny_request  = utils.deny_request
+local md5             = utils.md5
+local re_match        = utils.re_match
+local tag_request     = utils.tag_request
+local deny_request    = utils.deny_request
+local create_custom_response = utils.create_custom_response
 
 --- all functions that access redis, starts with redis_
 
@@ -339,38 +340,47 @@ function limit_react(request_map, rulename, action, key, ttl)
     end
 
     -- handle:logDebug(string.format("limit react --- action %s", action.type))
+    if action.type == "monitor" then
+        return
 
-    if action.type == "default" then
-        deny_request(request_map, reason, true, "503")
+    -- elseif action.type == "default" then
+    --     deny_request(request_map, reason, true, "503")
+
+    elseif action.type == "ban" then
+        ttl = tonumber(action.params.ttl)
+        redis_ban_key(gen_ban_key(key), ttl)
+        -- recursive call
+        limit_react(request_map, rulename, action.params.action)
+
+    else
+        create_custom_response(
+            request_map,
+            { ["status"] = "503" },
+            reason
+        )
+
     end
 
-    if action.type == "response" then
-        if action.params.headers then
-            for name, value in ipairs(action.params.headers) do
-                ngx.header[name] = value
-            end
-        end
-        deny_request(request_map, reason, true, action.params.status, action.params.headers, action.params.content)
-    end
+    -- if action.type == "response" then
+    --     if action.params.headers then
+    --         for name, value in ipairs(action.params.headers) do
+    --             ngx.header[name] = value
+    --         end
+    --     end
+    --     deny_request(request_map, reason, true, action.params.status, action.params.headers, action.params.content)
+    -- end
 
     -- if action.type == "challenge" then
     --     -- request_map.handle:logDebug("action.type == 'challenge'")
     -- end
 
-    if action.type == "redirect" then
-        deny_request(request_map, reason, true, action.params.status, { location = action.params.location }, '')
-    end
+    -- if action.type == "redirect" then
+    --     deny_request(request_map, reason, true, action.params.status, { location = action.params.location }, '')
+    -- end
 
-    if action.type == "ban" then
-        ttl = tonumber(action.params.ttl)
-        redis_ban_key(gen_ban_key(key), ttl)
-        -- recursive call
-        limit_react(request_map, rulename, action.params.action)
-    end
-
-    if action.type == "request_header" then
-        deny_request(request_map, reason, false, nil, action.params.headers, nil)
-    end
+    -- if action.type == "request_header" then
+    --     deny_request(request_map, reason, false, nil, action.params.headers, nil)
+    -- end
 
     --[[
         for action.type == "monitor" do nothing

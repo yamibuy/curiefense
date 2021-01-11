@@ -178,33 +178,6 @@ function map_request(handle)
     return map
 end
 
-function deny_request(request_map, reason, block_mode, status, headers, content)
-
-    local handle = request_map.handle
-    status = status or "403"
-    if not headers then
-        headers = {}
-    end
-    headers[":status"] = status
-
-    if headers and type(headers) == "table" then
-        for name, value in pairs(headers) do
-            handle:headers():add(name, value)
-        end
-    end
-    -- set respose content
-    content = content or "curiefense - request denied"
-
-    request_map.attrs.blocked = true
-    request_map.attrs.block_reason = reason
-
-    log_request(request_map)
-
-
-    if block_mode then
-        handle:respond( headers, content)
-    end
-end
 
 function flatten(src_tbl, dst_tbl, prefix)
     if type(src_tbl) ~= "table" then
@@ -498,5 +471,105 @@ function md5(input)
     local digest = _md5:final()
 
     return digest:tohex()
+end
+
+
+function deny_request(request_map, reason, block_mode, status, headers, content)
+
+    local params = {
+        ["status"] = status or "403",
+        ["headers"] = headers = {},
+        ["reason"] = reason,
+        ["content"] = content,
+    }
+
+    custom_response(request_map, params, block_mode)
+
+    -- status = status or "403"
+
+    -- request_map.attrs.blocked = true
+    -- request_map.attrs.block_reason = reason
+
+    -- log_request(request_map)
+
+
+    -- if block_mode then
+    --     local handle = request_map.handle
+
+    --     -- set respose content
+    --     content = content or "curiefense - request denied"
+
+    --     if not headers then
+    --         headers = {}
+    --     end
+
+    --     headers[":status"] = status
+
+    --     if headers and type(headers) == "table" then
+    --         for name, value in pairs(headers) do
+    --             handle:headers():add(name, value)
+    --         end
+    --     end
+
+    --     handle:respond( headers, content)
+    -- end
+end
+
+
+function create_custom_response( request_map, action, reason )
+
+    local block_mode = (action.type ~= "request_header")
+    action.params.reason = reason
+
+    custom_response(request_map, action.params, block_mode)
+
+    -- if action.type == "response" then
+    --     deny_request(request_map, reason, true, action.params.status, action.params.headers, action.params.content)
+    -- end
+
+    -- -- if action.type == "challenge" then
+    -- --     -- request_map.handle:logDebug("action.type == 'challenge'")
+    -- -- end
+
+    -- if action.type == "redirect" then
+    --     deny_request(request_map, reason, true, action.params.status, { location = action.params.location }, '')
+    -- end
+
+    -- if action.type == "request_header" then
+    --     deny_request(request_map, reason, false, nil, action.params.headers, nil)
+    -- end
+
+end
+
+function custom_response(request_map, params, block_mode)
+
+    if not block_mode then
+        block_mode = true
+    end
+
+    local response = {
+        [ "status" ] = "403",
+        [ "headers"] = { ["x-curiefense"] = "response" },
+        [ "reason" ] = { initiator = "undefined", reason = "undefined"},
+        [ "content"] = "curiefense - request denied"
+    }
+
+    -- override defaults
+    if params["status" ] then response["status" ] = params["status" ]
+    if params["headers"] then response["headers"] = params["headers"]
+    if params["reason" ] then response["reason" ] = params["reason" ]
+    if params["content"] then response["content"] = params["content"]
+
+    response["headers"][":status"] = response["status"]
+
+    request_map.attrs.blocked = true
+    request_map.attrs.block_reason = response["reason"]
+
+    -- log_request(request_map)
+
+    if block_mode then
+        request_map.handle:respond( response["headers"], response["content"])
+    end
+
 end
 

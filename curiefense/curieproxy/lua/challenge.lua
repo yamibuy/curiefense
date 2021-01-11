@@ -51,7 +51,16 @@ function phase01(handle, request_map, reload_page)
         ["P3P"] = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"',
     }
     tag_request(request_map, "challenge-phase01")
-    deny_request(request_map, {["reason"] = "challenge-phase01"}, true, "247", headers, content)
+
+    create_custom_response(request_map, {
+        ["status"] = "247",
+        ["type"] = "challenge",
+        ["headers"] = headers,
+        ["content"] = content,
+        ["reason"] =  {["reason"] = "challenge-phase01"}
+    })
+
+    -- deny_request(request_map, {["reason"] = "challenge-phase01"}, true, "247", headers, content)
 end
 
 function extract_zebra(headers)
@@ -76,11 +85,20 @@ function phase02(handle, request_map)
                 local cookie = "rbzid=" .. rbzid:replace("=", "-") .. "; Path=/; HttpOnly"
                 local headers = { ["Set-Cookie"] = cookie }
                 tag_request(request_map, "challenge-phase02")
-                deny_request(request_map, {["reason"] = "challenge-phase02"}, true, "248", headers, "{}")
-            else
+
+                create_custom_response(request_map, {
+                    ["status"] = "248",
+                    ["type"] = "challenge",
+                    ["headers"] = headers,
+                    ["content"] = "{}",
+                    ["reason"] =  {["reason"] = "challenge-phase02"}
+                })
+
+            --     -- deny_request(request_map, {["reason"] = "challenge-phase02"}, true, "248", headers, "{}")
+            -- else
                 -- handle:logDebug("010 phase02 NO rbzid!")
             end
-        else
+        -- else
             -- handle:logDebug("011 phase02 NO workproof!")
         end
     end
