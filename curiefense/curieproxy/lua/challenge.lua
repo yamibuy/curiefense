@@ -54,11 +54,13 @@ function phase01(handle, request_map, reload_page)
     tag_request(request_map, "challenge-phase01")
 
     create_custom_response(request_map, {
-        ["status"] = "247",
         ["type"] = "challenge",
-        ["headers"] = headers,
-        ["content"] = content,
-        ["reason"] =  {["reason"] = "challenge-phase01"}
+        [ "params" ] = {
+            ["status"] = "247",
+            ["headers"] = headers,
+            ["content"] = content,
+            ["reason"] =  {["reason"] = "challenge-phase01"}
+        }
     })
 
     -- deny_request(request_map, {["reason"] = "challenge-phase01"}, true, "247", headers, content)
@@ -88,11 +90,13 @@ function phase02(handle, request_map)
                 tag_request(request_map, "challenge-phase02")
 
                 create_custom_response(request_map, {
-                    ["status"] = "248",
                     ["type"] = "challenge",
-                    ["headers"] = headers,
-                    ["content"] = "{}",
-                    ["reason"] =  {["reason"] = "challenge-phase02"}
+                    [ "params" ] = {
+                        ["status"] = "248",
+                        ["headers"] = headers,
+                        ["content"] = "{}",
+                        ["reason"] =  {["reason"] = "challenge-phase02"}
+                    }
                 })
 
             --     -- deny_request(request_map, {["reason"] = "challenge-phase02"}, true, "248", headers, "{}")
