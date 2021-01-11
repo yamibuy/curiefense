@@ -555,10 +555,10 @@ function custom_response(request_map, params, block_mode)
     }
 
     -- override defaults
-    if params["status" ] then response["status" ] = params["status" ]
-    if params["headers"] then response["headers"] = params["headers"]
-    if params["reason" ] then response["reason" ] = params["reason" ]
-    if params["content"] then response["content"] = params["content"]
+    if params["status" ] then response["status" ] = params["status" ] end
+    if params["headers"] then response["headers"] = params["headers"] end
+    if params["reason" ] then response["reason" ] = params["reason" ] end
+    if params["content"] then response["content"] = params["content"] end
 
     response["headers"][":status"] = response["status"]
 
