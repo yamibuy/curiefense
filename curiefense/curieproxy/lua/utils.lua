@@ -478,7 +478,7 @@ function deny_request(request_map, reason, block_mode, status, headers, content)
 
     local params = {
         ["status"] = status or "403",
-        ["headers"] = headers = {},
+        ["headers"] = headers or {},
         ["reason"] = reason,
         ["content"] = content,
     }
