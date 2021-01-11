@@ -207,7 +207,7 @@ end
 function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
     request.handle:logErr("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
     request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
-    request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
+    request.handle:logErr("WAF Hyperscan sections " .. json_encode(hca_keys))
 
     local matched_ids = {}
     for idx, entry in pairs(hyperscan_matches) do
@@ -222,7 +222,11 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
             local waf_sig = globals.WAFSignatures[tostring(sigid)]
             local patt = waf_sig.operand
             if re_match(value, patt) then
-                return WAFBlock, gen_block_info(address[1], address[2], value, waf_sig)
+                local section = address[1]
+                local name = address[2]
+                if not exclude_sigs[section][name] then
+                    return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                end
             end
         end
     end
