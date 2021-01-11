@@ -26,6 +26,7 @@ local iptonum = iptools.iptonum
 local ipinfo    = maxmind.ipinfo
 
 local json_decode   = json_safe.decode
+local json_encode   = json_safe.encode
 local log_request   = accesslog.log_request
 
 local iptools       = require "iptools"
@@ -542,6 +543,13 @@ function create_custom_response( request_map, action, reason )
 end
 
 function custom_response(request_map, params, block_mode)
+    local handle = request_map.handle
+
+    handle:logDebug(string.format(
+        "custom_response - params %s, block_mode %s",
+        json_encode(params),
+        block_mode)
+    )
 
     if not block_mode then
         block_mode = true

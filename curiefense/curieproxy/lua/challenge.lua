@@ -5,6 +5,7 @@ local utils   = require "lua.utils"
 
 local deny_request = utils.deny_request
 local tag_request  = utils.tag_request
+local create_custom_response  = utils.create_custom_response
 
 local parse_rbzid       = grasshopper.parse_rbzid
 local gen_new_seed      = grasshopper.gen_new_seed
