@@ -248,12 +248,14 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
 
 end
 
-function check(waf_profile, request)
+function check(waf_profile, request_map)
     local omit_entries = {}
     local exclude_sigs = {}
     local sections = {"headers", "cookies", "args"}
 
-    local hca_values = iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
+    local hca_values = iter_sections(waf_profile, request_map, sections, omit_entries, exclude_sigs)
+
+    request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
@@ -265,7 +267,7 @@ function check(waf_profile, request)
     local idx, first_match = next(matches)
 
     if first_match then
-        return waf_section_match(matches, request, exclude_sigs)
+        return waf_section_match(matches, request_map, exclude_sigs)
     else
         return WAFPass, "waf-passed"
     end
