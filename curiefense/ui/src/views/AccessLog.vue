@@ -131,9 +131,7 @@
                                   </span>
                                 </label>
                                 <br/>
-                                <pre class="is-size-7 is-family-code has-background-danger-light overflow-anywhere is-fullwidth">
-                                  {{ break_reason(row.curiefense.attrs.block_reason) }}
-                                </pre>
+                                <pre class="is-size-7 is-family-code has-background-danger-light overflow-anywhere is-fullwidth">{{ break_reason(row.curiefense.attrs.block_reason) }}</pre>
                               </div>
                             </article>
                           </div>
