@@ -165,6 +165,7 @@ end
 function iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
     -- request.handle:logDebug(string.format("WAF inspection starts - with profile %s", waf_profile.name))
     local hca_values = {}
+    local hca_keys = {}
 
     for _, section in ipairs(sections) do
         -- -- request.handle:logDebug("WAF inspecting section: " .. section)
@@ -195,14 +196,15 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
                 -- to avoid excluded sigs
                 -- table.insert(hca_values, string.format("%s:::%s:::%s", section, name, value))
                 table.insert(hca_values, value)
+                hca_keys[value] = {section, name}
             end
         end
     end
 
-    return hca_values
+    return hca_values, hca_keys
 end
 
-function waf_section_match(hyperscan_matches, request, exclude_sigs)
+function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
     request.handle:logErr("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
     request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
     request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
@@ -215,35 +217,15 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
         end
     end
 
-    -- different order for speed
-    local sections = {"args", "headers", "cookies"}
-
-    for _, section_name in ipairs(sections) do
-
-        request.handle:logErr(string.format("WAF section match %s %s" , section_name, json_encode(request[section_name])))
-        for name, value in pairs(request[section_name]) do
-            for _, sigid in ipairs(matched_ids) do
-                local waf_sig = globals.WAFSignatures[tostring(sigid)]
-                local patt = waf_sig.operand
-                if re_match(value, patt) then
-                    -- exclude_sigs is empty or contains no entries for this section's entry
-                    if not exclude_sigs[section_name] or not exclude_sigs[section_name][name] then
-                        request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, sigid))
-                        return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
-                    end
-                    -- -- find an ID which is not within the exclude_sigs
-                    -- for _, matched_id in ipairs(matched_ids) do
-                    --     if not exclude_sigs[section_name][name][matched_id] then
-                    --         waf_sig = globals.WAFSignatures[tostring(matched_id)]
-                    --         request.handle:logErr(string.format("WAF section match BLOCK2 %s %s %s %s", section_name, name, value, matched_id))
-                    --         return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
-                    --     end
-                    -- end
-                end
+    for value, address in pairs(hca_keys) do
+        for _, sigid in ipairs(matched_ids) do
+            local waf_sig = globals.WAFSignatures[tostring(sigid)]
+            local patt = waf_sig.operand
+            if re_match(value, patt) then
+                return WAFBlock, gen_block_info(address[1], address[2], value, waf_sig)
             end
         end
     end
-
     return WAFPass, "waf-passed"
 
 end
@@ -253,7 +235,7 @@ function check(waf_profile, request_map)
     local exclude_sigs = {}
     local sections = {"headers", "cookies", "args"}
 
-    local hca_values = iter_sections(waf_profile, request_map, sections, omit_entries, exclude_sigs)
+    local hca_values, hca_keys = iter_sections(waf_profile, request_map, sections, omit_entries, exclude_sigs)
 
     request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
 
@@ -267,7 +249,7 @@ function check(waf_profile, request_map)
     local idx, first_match = next(matches)
 
     if first_match then
-        return waf_section_match(matches, request_map, exclude_sigs)
+        return waf_section_match(matches, request_map, hca_keys, exclude_sigs)
     else
         return WAFPass, "waf-passed"
     end
