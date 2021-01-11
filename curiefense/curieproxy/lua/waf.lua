@@ -119,7 +119,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
 
-    -- request.handle:logErr("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
+    -- request.handle:logDebug("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
 
     if num_entries > max_count then
         local msg = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
@@ -205,9 +205,9 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
 end
 
 function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
-    request.handle:logErr("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
-    request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
-    request.handle:logErr("WAF Hyperscan sections " .. json_encode(hca_keys))
+    request.handle:logDebug("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
+    request.handle:logDebug("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
+    request.handle:logDebug("WAF Hyperscan sections " .. json_encode(hca_keys))
 
     local matched_ids = {}
     for idx, entry in pairs(hyperscan_matches) do
@@ -224,7 +224,7 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
             if re_match(value, patt) then
                 local section = address[1]
                 local name = address[2]
-                if not exclude_sigs[section][name] then
+                if not exclude_sigs[section] and not exclude_sigs[section][name] then
                     return WAFBlock, gen_block_info(section, name, value, waf_sig)
                 end
             end
