@@ -377,11 +377,10 @@ export default {
     break_reason(reason) {
       const width = 16
       const spacer = ' '.repeat(width)
-
+      console.log(reason)
       return this.ld.map(reason, (value, key) => {
         return `${key}${spacer}:`.substring(0, width) + value
-      }).join('\n').trim()
-
+      }).join('\n')
     },
 
     statuscode_class(code) {
