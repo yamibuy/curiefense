@@ -376,11 +376,11 @@ export default {
 
     break_reason(reason) {
       const width = 16
-      const spacer = ' '.repeat(16)
+      const spacer = ' '.repeat(width)
 
       return this.ld.map(reason, (value, key) => {
         return `${key}${spacer}:`.substring(0, width) + value
-      }).join('\n')
+      }).join('\n').trim()
 
     },
 
