@@ -576,7 +576,7 @@ function custom_response(request_map, params, block_mode)
     request_map.attrs.blocked = true
     request_map.attrs.block_reason = response["reason"]
 
-    -- log_request(request_map)
+    log_request(request_map)
 
     if block_mode then
         request_map.handle:respond( response["headers"], response["content"])
