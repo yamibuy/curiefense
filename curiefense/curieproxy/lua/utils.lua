@@ -543,17 +543,17 @@ function create_custom_response( request_map, action, reason )
 end
 
 function custom_response(request_map, params, block_mode)
-    local handle = request_map.handle
+    if not params then params = {} end
+    if not block_mode then block_mode = true end
 
+    local handle = request_map.handle
     handle:logDebug(string.format(
         "custom_response - params %s, block_mode %s",
         json_encode(params),
         block_mode)
     )
 
-    if not block_mode then
-        block_mode = true
-    end
+
 
     local response = {
         [ "status" ] = "403",
