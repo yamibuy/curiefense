@@ -33,6 +33,7 @@ local re_match      = utils.re_match
 local map_request   = utils.map_request
 local tag_request   = utils.tag_request
 local deny_request  = utils.deny_request
+local custom_response  = utils.custom_response
 
 local tag_lists     = tagprofiler.tag_lists
 
@@ -101,26 +102,6 @@ function print_request_map(request_map)
         end
     end
 end
-
--- function deny_request(profile, handle, info, block_mode)
--- moved to utils --
---          deny_request(profile, handle, info, block_mode)
--- function deny_request(request_map, info, block_mode)
---     local handle = request_map.handle
---     local status = "403"
-
---     tag_request(request_map,"reason-" .. info)
-
---     request_map.attrs.blocked = true
---     request_map.attrs.block_reason = info
-
--- --     handle:logDebug(sfmt("Request denied. reason: %s", info))
---     if block_mode then
---         handle:respond( {[":status"] = status}, "curiefense - request denied")
---     else
---         handle:headers():add("x-curiefense-deny", info)
---     end
--- end
 
 function map_tags(request_map, urlmap_name, urlmapentry_name, acl_id, acl_name, waf_id, waf_name)
 
@@ -202,7 +183,7 @@ function inspect(handle)
     -- if not internal_url(url) then
     -- acl
     addentry(timeline, "8 acl_check")
-    local acl_code, acl_result = acl_check(acl_profile, request_map)
+    local acl_code, acl_result = acl_check(acl_profile, request_map, acl_active)
 
     if acl_result then
         -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
@@ -212,7 +193,7 @@ function inspect(handle)
 
     if acl_code == ACLDeny or acl_code == ACLForceDeny then
         addentry(timeline, "8c acl_check/deny_request")
-        deny_request(request_map, acl_result, acl_active)
+        custom_response(request_map, acl_result, acl_active)
     end
 
     addentry(timeline, "9 challenge_verified")
@@ -245,7 +226,11 @@ function inspect(handle)
 
             if waf_code == WAFBlock then
                 addentry(timeline, "10c waf_check/deny_request")
-                deny_request(request_map, waf_result, waf_active)
+                local action_params = {
+                    ["reason"] = waf_result,
+                    ["block_mode"] = waf_active
+                }
+                custom_response(request_map, action_params)
             end
         end
     end

@@ -3,9 +3,9 @@ module(..., package.seeall)
 local grasshopper = require "grasshopper"
 local utils   = require "lua.utils"
 
-local deny_request = utils.deny_request
-local tag_request  = utils.tag_request
-local create_custom_response  = utils.create_custom_response
+local deny_request    = utils.deny_request
+local tag_request     = utils.tag_request
+local custom_response = utils.custom_response
 
 local parse_rbzid       = grasshopper.parse_rbzid
 local gen_new_seed      = grasshopper.gen_new_seed
@@ -53,16 +53,14 @@ function phase01(handle, request_map, reload_page)
     }
     tag_request(request_map, "challenge-phase01")
 
-    create_custom_response(request_map, {
-        ["type"] = "challenge",
-        [ "params" ] = {
-            ["status"] = "247",
-            ["headers"] = headers,
-            ["content"] = content,
-            ["reason"] =  {
-                ["initiator"] = "phase01",
-                ["reason"] = "challenge"
-            }
+    custom_response(request_map, {
+        ["block_mode"] = true,
+        ["status"] = "247",
+        ["headers"] = headers,
+        ["content"] = content,
+        ["reason"] =  {
+            ["initiator"] = "phase01",
+            ["reason"] = "challenge"
         }
     })
 
@@ -92,16 +90,14 @@ function phase02(handle, request_map)
                 local headers = { ["Set-Cookie"] = cookie }
                 tag_request(request_map, "challenge-phase02")
 
-                create_custom_response(request_map, {
-                    ["type"] = "challenge",
-                    [ "params" ] = {
-                        ["status"] = "248",
-                        ["headers"] = headers,
-                        ["content"] = "{}",
-                        ["reason"] =  {
-                            ["initiator"] = "phase02",
-                            ["reason"] = "challenge"
-                        }
+                custom_response(request_map, {
+                    ["block_mode"] = true,
+                    ["status"] = "248",
+                    ["headers"] = headers,
+                    ["content"] = "{}",
+                    ["reason"] =  {
+                        ["initiator"] = "phase02",
+                        ["reason"] = "challenge"
                     }
                 })
 

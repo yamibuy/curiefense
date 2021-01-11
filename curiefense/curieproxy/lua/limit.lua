@@ -13,7 +13,7 @@ local md5             = utils.md5
 local re_match        = utils.re_match
 local tag_request     = utils.tag_request
 local deny_request    = utils.deny_request
-local create_custom_response = utils.create_custom_response
+local custom_response = utils.custom_response
 
 --- all functions that access redis, starts with redis_
 
@@ -333,12 +333,16 @@ function redis_check_set(request_map, redis_conn, key, threshold, set_value, ttl
 end
 
 function limit_react(request_map, rulename, action, key, ttl)
-    local reason = { initiator = "rate limit", reason = rulename}
+
     local handle = request_map.handle
     if not action then
-        action = { type = 'default' }
+        action {
+            ["type"] = "default",
+            ["params"] = { ["status"] = "503", ["block_mode"] = true }
+        }
     end
 
+    action.params.reason = { initiator = "rate limit", reason = rulename}
     -- handle:logDebug(string.format("limit react --- action %s", action.type))
     if action.type == "monitor" then
         return
@@ -353,10 +357,10 @@ function limit_react(request_map, rulename, action, key, ttl)
         limit_react(request_map, rulename, action.params.action)
 
     else
-        create_custom_response(
+        action.block_mode = (action.type ~= "request_header")
+        custom_response(
             request_map,
-            { ["status"] = "503" },
-            reason
+            action.params
         )
 
     end

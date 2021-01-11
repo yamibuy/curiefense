@@ -28,8 +28,10 @@ function check_policy (policy, request)
     return nil
 end
 
-function acl_result( action, reason)
-    return action, { ["initiator"] = "acl", ["action"] = action, ["reason"] = reason }
+function acl_result( action, reason, active)
+    local action_params  = { ["initiator"] = "acl", ["action"] = action, ["reason"] = reason }
+    action_params.block_mode = active
+    return action, action_params
 end
 
 function check(profile, request)
