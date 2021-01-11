@@ -59,7 +59,10 @@ function phase01(handle, request_map, reload_page)
             ["status"] = "247",
             ["headers"] = headers,
             ["content"] = content,
-            ["reason"] =  {["reason"] = "challenge-phase01"}
+            ["reason"] =  {
+                ["initiator"] = "phase01",
+                ["reason"] = "challenge"
+            }
         }
     })
 
@@ -95,7 +98,10 @@ function phase02(handle, request_map)
                         ["status"] = "248",
                         ["headers"] = headers,
                         ["content"] = "{}",
-                        ["reason"] =  {["reason"] = "challenge-phase02"}
+                        ["reason"] =  {
+                            ["initiator"] = "phase02",
+                            ["reason"] = "challenge"
+                        }
                     }
                 })
 

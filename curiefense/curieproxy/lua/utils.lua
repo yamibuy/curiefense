@@ -520,10 +520,11 @@ end
 function create_custom_response( request_map, action, reason )
 
     local block_mode = (action.type ~= "request_header")
+
     if not action then action = { ["params"] = {} } end
     if not action.params then action.params = {} end
 
-    action.params.reason = reason
+    if reason then action.params.reason = reason end
 
     custom_response(request_map, action.params, block_mode)
 
