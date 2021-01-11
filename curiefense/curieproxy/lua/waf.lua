@@ -213,19 +213,21 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
     for idx, entry in pairs(hyperscan_matches) do
         local sig_id = entry.id
         if sig_id then
-            table.insert(matched_ids, tostring(sig_id))
+            matched_ids[tostring(sig_id)] = 1
         end
     end
 
     for value, address in pairs(hca_keys) do
-        for _, sigid in ipairs(matched_ids) do
-            local waf_sig = globals.WAFSignatures[tostring(sigid)]
-            local patt = waf_sig.operand
-            if re_match(value, patt) then
-                local section = address[1]
-                local name = address[2]
-                if exclude_sigs[section] and not exclude_sigs[section][name] then
-                    return WAFBlock, gen_block_info(section, name, value, waf_sig)
+        for sigid, _ in pairs(matched_ids) do
+            local waf_sig = globals.WAFSignatures[sigid]
+            local patt = waf_sig and waf_sig.operand
+            if patt then
+                if re_match(value, patt) then
+                    local section = address[1]
+                    local name = address[2]
+                    if not exclude_sigs[section] or not exclude_sigs[section][name] then
+                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                    end
                 end
             end
         end
