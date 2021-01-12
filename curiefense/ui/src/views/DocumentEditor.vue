@@ -182,6 +182,7 @@
 <script>
 
 import DatasetsUtils from '@/assets/DatasetsUtils.js'
+import Utils from '@/assets/Utils.js'
 import ACLEditor from '@/doc-editors/ACLEditor.vue'
 import WAFEditor from '@/doc-editors/WAFEditor.vue'
 import WAFSigsEditor from '@/doc-editors/WAFSigsEditor.vue'
@@ -449,13 +450,7 @@ export default {
     },
 
     downloadDoc() {
-      let element = event.target
-      while (element.nodeName !== 'A')
-        element = element.parentNode
-
-      let dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.docs))
-      element.setAttribute('href', dataStr)
-      element.setAttribute('download', this.selectedDocType + '.json')
+      Utils.downloadFile(this.selectedDocType, 'json', this.docs)
     },
 
     async forkDoc() {
@@ -494,7 +489,7 @@ export default {
         url_trail += `${this.selectedDocID}/`
       const doc = this.selectedDoc
 
-      await RequestsUtils.sendRequest(methodName, url_trail, doc, 'Changes saved!', 'Failed while saving changes!')
+      await RequestsUtils.sendRequest(methodName, url_trail, doc, null, 'Changes saved!', 'Failed while saving changes!')
           .then(() => {
             this.updateDocIdNames()
             this.loadGitLog(true)
@@ -510,7 +505,7 @@ export default {
       this.setLoadingDocStatus(true)
       this.isDeleteLoading = true
       this.docs.splice(this.selectedDocIndex, 1)
-      await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, 'Document deleted!', 'Failed while deleting document!')
+      await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, null, 'Document deleted!', 'Failed while deleting document!')
           .then(() => {
             this.updateDocIdNames()
             this.loadGitLog(true)
@@ -548,7 +543,7 @@ export default {
       const version_id = gitVersion.version
       const url_trail = `configs/${branch}/d/${doctype}/v/${version_id}/`
 
-      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, `Document [${docTitle}] restored to version [${version_id}]!`, `Failed restoring document [${docTitle}] to version [${version_id}]!`)
+      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, null, `Document [${docTitle}] restored to version [${version_id}]!`, `Failed restoring document [${docTitle}] to version [${version_id}]!`)
       const response = await RequestsUtils.sendRequest('GET', url_trail)
       this.docs = response.data
       this.updateDocIdNames()

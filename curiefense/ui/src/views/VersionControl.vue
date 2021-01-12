@@ -281,7 +281,7 @@ export default {
       const version_id = gitVersion.version
       const url_trail = `configs/${branch}/v/${version_id}/`
 
-      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, `Branch [${branch}] restored to version [${version_id}]!`, `Failed restoring branch [${branch}] to version [${version_id}]!`)
+      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, null, `Branch [${branch}] restored to version [${version_id}]!`, `Failed restoring branch [${branch}] to version [${version_id}]!`)
       this.loadGitLog()
     },
 
@@ -289,8 +289,8 @@ export default {
       if (!this.isSelectedBranchDeleteNameValid) {
         return
       }
-      RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/`,
-          null, `Branch [${this.selectedBranch}] deleted successfully!`,
+      RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/`, null, null,
+          `Branch [${this.selectedBranch}] deleted successfully!`,
           `Failed deleting branch [${this.selectedBranch}]!`)
           .then(() => {
             this.loadConfigs()
@@ -307,7 +307,7 @@ export default {
           {
             'id': 'string',
             'description': 'string'
-          },
+          }, null,
           `Branch [${this.selectedBranch}] forked to [${this.forkBranchName}] successfully!`,
           `Failed forking branch [${this.selectedBranch}] to [${this.forkBranchName}]!`)
           .then(() => {
@@ -316,16 +316,11 @@ export default {
           })
     },
 
-    downloadBranch(event) {
+    downloadBranch() {
       if (this.isDownloadLoading) {
         return
       }
-      let element = event.target
-      while (element.nodeName !== 'A')
-        element = element.parentNode
-      let dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.selectedBranchData))
-      element.setAttribute('href', dataStr)
-      element.setAttribute('download', this.selectedBranch + '.json')
+      Utils.downloadFile(this.selectedBranch, 'json', this.selectedBranchData)
     },
 
   },

@@ -298,6 +298,7 @@
 
 import DatasetsUtils from '@/assets/DatasetsUtils.js'
 import RequestsUtils from '@/assets/RequestsUtils'
+import Utils from '@/assets/Utils'
 
 export default {
 
@@ -422,6 +423,7 @@ export default {
     },
 
     downloadDoc() {
+      Utils.downloadFile('AccessLog', 'json', this.rows)
     },
 
   },
