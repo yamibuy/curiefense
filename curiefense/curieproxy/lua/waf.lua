@@ -249,6 +249,12 @@ function check(waf_profile, request_map)
 
     local hca_values, hca_keys = iter_sections(waf_profile, request_map, sections, omit_entries, exclude_sigs)
 
+    if type(hca_values) == "number" then
+        if hca_values == WAFBlock then
+            return hca_values, hca_keys
+        end
+    end
+
     request_map.handle:logDebug(string.format("HCA Keys %s", json_encode(hca_keys)))
     request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
 
