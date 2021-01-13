@@ -232,6 +232,7 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
             request.handle:logDebug(string.format("waf_section_match SIG %s", json_encode(waf_sig)))
             if patt then
                 if re_match(value, patt) then
+                    request.handle:logDebug(string.format("waf_section_match MATCHED value %s patt %s", value, patt))
                     local section = address[1]
                     local name = address[2]
                     if not exclude_sigs[section] or not exclude_sigs[section][name] then
