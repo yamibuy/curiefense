@@ -232,6 +232,7 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
             end
         end
     end
+
     return WAFPass, "waf-passed"
 
 end
