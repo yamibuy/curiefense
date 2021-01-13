@@ -157,7 +157,18 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     return WAFPass, {}
 end
 
+function no_nested_value( t, depth_path)
+    if type(t) ~= "table" then return false end
 
+    local a,b,c,d,e = table.unpack(depth_path)
+
+    if a and t[a] == nil then return true end
+    if b and t[a][b] == nil then return true end
+    if c and t[a][b][c] == nil then return true end
+    if d and t[a][b][c][d] == nil then return true end
+    if e and t[a][b][c][d][e] == nil then return true end
+
+end
 
 -- function wafsig_re_match(input, request)
 --     return WAFRustSignatures:is_match_ids(input)
@@ -183,9 +194,10 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
         for name, value in pairs(r_section) do
             request.handle:logDebug(string.format("WAF inspection r_sections iteration: [%s] : [%s]", name, value))
 
-            if omit_entries[section] == nil or (not omit_entries[section][name]) then
-
-                if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
+            if no_nested_value(omit_entries, {section, name}) then
+            -- if omit_entries[section] == nil or (not omit_entries[section][name]) then
+                if no_nested_value(exclude_sigs, {section, name, "libinjection"}) then
+                -- if exclude_sigs[section] == nil or (exclude_sigs[section][name] and exclude_sigs[section][name]["libinjection"] == nil) then
                     local detect, token = detect_sqli(value)
                     if detect then
                         return WAFBlock, gen_block_info(section, name, value,
@@ -235,11 +247,12 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
                     request.handle:logDebug(string.format("waf_section_match MATCHED value %s patt %s", value, patt))
                     local section = address[1]
                     local name = address[2]
-                    if (not exclude_sigs[section]
-                        or not exclude_sigs[section][name]
-                        or not exclude_sigs[section][name][sigid]
-                        )
-                    then
+                    if no_nested_value(exclude_sigs, {section, name, sigid}) then
+                    -- if (not exclude_sigs[section]
+                    --     or not exclude_sigs[section][name]
+                    --     or not exclude_sigs[section][name][sigid]
+                    --     )
+                    -- then
                         return WAFBlock, gen_block_info(section, name, value, waf_sig)
                     end
                 end
@@ -271,7 +284,7 @@ function check(waf_profile, request_map)
         return WAFPass, "waf-passed"
     end
 
-    -- not nil
+    -- deep dive for exclusions
     if type(matches) == "table" and #matches > 0 then
         return waf_section_match(matches, request_map, hca_keys, exclude_sigs)
     else
