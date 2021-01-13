@@ -134,7 +134,7 @@ function inspect(handle)
     addentry(timeline, "0 init")
     init(handle)
 
-    handle:logDebug("inspection initiated")
+    -- handle:logDebug("inspection initiated")
     addentry(timeline, "1 map_request")
     local request_map = map_request(handle)
 
@@ -203,14 +203,12 @@ function inspect(handle)
     tag_request(request_map, is_human and "human" or "bot")
 
     if acl_code == ACLDenyBot then
-        handle:logDebug("002 ACL DENY BOT MATCHED!")
+        -- handle:logDebug("002 ACL DENY BOT MATCHED!")
 
         if not is_human then
             addentry(timeline, "9c challenge_verified/challenge_phase01")
-            handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
+            -- handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
             challenge_phase01(handle, request_map, "1")
-        else
-            handle:logDebug("004 ACL DENY BOT MATCHED! << challenge VERIFIED >>")
         end
     end
 

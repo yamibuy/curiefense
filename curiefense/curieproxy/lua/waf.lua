@@ -78,14 +78,14 @@ function name_check(request_map, section, name, name_rule, value, omit_entries, 
 
     local matched = re_match(value, name_rule.reg)
 
-    request_map.handle:logDebug(string.format("WAF name_check name %s value %s regex %s ", name, value, name_rule.reg))
+    -- request_map.handle:logDebug(string.format("WAF name_check name %s value %s regex %s ", name, value, name_rule.reg))
 
     if matched then
-        request_map.handle:logDebug(string.format("WAF name_check value %s MATCHED with regex %s ", value, name_rule.reg))
+        -- request_map.handle:logDebug(string.format("WAF name_check value %s MATCHED with regex %s ", value, name_rule.reg))
         store_section(omit_entries, section, name, true)
     else
         if name_rule.restrict then
-            return  WAFBlock, string.format("(%s)/%s mismatch with %s", section, name_rule.reg, value)
+            return  WAFBlock, string.format("%s '%s' mismatch with '%s'", section, name_rule.reg, value)
         elseif table_length(name_rule.exclusions)  > 0 then
             store_section(exclude_sigs, section, name, name_rule.exclusions)
         end
@@ -102,7 +102,7 @@ function regex_check(request_map, section, name, regex_rules, value, omit_entrie
                 store_section(omit_entries, section, name, true)
             else
                 if patt_rule.restrict then
-                    return WAFBlock, string.format("(%s)/name-patt:%s value-patt:%s mismatch with name: %s value:%s", section, name_patt, patt_rule.reg, name, value)
+                    return WAFBlock, string.format("%s '%s' MATCHED with '%s' WHILE '%s' MISMATCHED with '%s'", section, name_patt, name, patt_rule.reg, value)
                 elseif table_length(patt_rule.exclusions) > 0 then
                     store_section(exclude_sigs, section, name, patt_rule.exclusions)
                 end
@@ -142,7 +142,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 store_section(omit_entries, section, name, true)
             else
                 name_rule = name_rules[name]
-                request.handle:logDebug(string.format(" NAME RULE %s", json_encode(name_rule)))
+                -- request.handle:logDebug(string.format(" NAME RULE %s", json_encode(name_rule)))
                 if name_rule then
                     local response, msg = name_check(request, section, name, name_rule, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
@@ -194,10 +194,10 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
         -- negative security
         local r_section = request[section]
 
-        request.handle:logDebug(string.format("WAF inspection Section: %s r_sections: %s", section, json_encode(r_section)))
+        -- request.handle:logDebug(string.format("WAF inspection Section: %s r_sections: %s", section, json_encode(r_section)))
 
         for name, value in pairs(r_section) do
-            request.handle:logDebug(string.format("WAF inspection r_sections iteration: [%s] : [%s]", name, value))
+            -- request.handle:logDebug(string.format("WAF inspection r_sections iteration: [%s] : [%s]", name, value))
 
             if no_nested_value(omit_entries, {section, name}) then
             -- if omit_entries[section] == nil or (not omit_entries[section][name]) then
@@ -227,9 +227,9 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
 end
 
 function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
-    request.handle:logDebug("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
-    request.handle:logDebug("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
-    request.handle:logDebug("WAF Hyperscan sections " .. json_encode(hca_keys))
+    -- request.handle:logDebug("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
+    -- request.handle:logDebug("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
+    -- request.handle:logDebug("WAF Hyperscan sections " .. json_encode(hca_keys))
 
     local matched_ids = {}
     for idx, entry in pairs(hyperscan_matches) do
@@ -239,17 +239,17 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
         end
     end
 
-    request.handle:logDebug("waf_section_match matched_ids: " .. json_encode(matched_ids))
+    -- request.handle:logDebug("waf_section_match matched_ids: " .. json_encode(matched_ids))
 
     for value, address in pairs(hca_keys) do
         for _, sigid in ipairs(matched_ids) do
             local waf_sig = globals.WAFSignatures[sigid]
             local patt = waf_sig and waf_sig.operand
-            request.handle:logDebug(string.format("waf_section_match value %s, address %s", value, json_encode(address)))
-            request.handle:logDebug(string.format("waf_section_match SIG %s", json_encode(waf_sig)))
+            -- request.handle:logDebug(string.format("waf_section_match value %s, address %s", value, json_encode(address)))
+            -- request.handle:logDebug(string.format("waf_section_match SIG %s", json_encode(waf_sig)))
             if patt then
                 if re_match(value, patt) then
-                    request.handle:logDebug(string.format("waf_section_match MATCHED value %s patt %s", value, patt))
+                    -- request.handle:logDebug(string.format("waf_section_match MATCHED value %s patt %s", value, patt))
                     local section = address[1]
                     local name = address[2]
                     if no_nested_value(exclude_sigs, {section, name, sigid}) then
@@ -280,8 +280,8 @@ function check(waf_profile, request_map)
         return WAFBlock, hca_keys
     end
 
-    request_map.handle:logDebug(string.format("HCA Keys %s", json_encode(hca_keys)))
-    request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
+    -- request_map.handle:logDebug(string.format("HCA Keys %s", json_encode(hca_keys)))
+    -- request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
