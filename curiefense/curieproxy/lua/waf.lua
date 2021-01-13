@@ -177,7 +177,12 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
         -- -- request.handle:logInfo(string.format("WAF inspection\nomit_entries: %s\nexclude_sigs: %s", json_encode(omit_entries), json_encode(exclude_sigs)))
         -- negative security
         local r_section = request[section]
+
+        request.handle:logDebug(string.format("WAF inspection Section: %s r_sections: %s", section, json_encode(r_section)))
+
         for name, value in pairs(r_section) do
+            request.handle:logDebug(string.format("WAF inspection r_sections iteration: [%s] : [%s]", name, value))
+
             if omit_entries[section] == nil or (not omit_entries[section][name]) then
 
                 if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
@@ -244,6 +249,7 @@ function check(waf_profile, request_map)
 
     local hca_values, hca_keys = iter_sections(waf_profile, request_map, sections, omit_entries, exclude_sigs)
 
+    request_map.handle:logDebug(string.format("HCA Keys %s", json_encode(hca_keys)))
     request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
