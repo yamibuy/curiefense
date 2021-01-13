@@ -35,7 +35,7 @@ function failureToast(message) {
     toast(message, 'is-danger')
 }
 
-function processRequest(methodName, apiUrl, data, successMessage, failureMessage) {
+function processRequest(methodName, apiUrl, data, config, successMessage, failureMessage) {
 
     // Get correct axios method
     if (!methodName) {
@@ -53,7 +53,11 @@ function processRequest(methodName, apiUrl, data, successMessage, failureMessage
     console.log(`Sending ${methodName} request to url ${apiUrl}`)
     let request
     if (data) {
-        request = axiosMethod(apiUrl, data)
+        if (config) {
+            request = axiosMethod(apiUrl, data, config)
+        } else {
+            request = axiosMethod(apiUrl, data)
+        }
     } else {
         request = axiosMethod(apiUrl)
     }
@@ -75,14 +79,14 @@ function processRequest(methodName, apiUrl, data, successMessage, failureMessage
     return request
 }
 
-function sendRequest(methodName, urlTail, data, successMessage, failureMessage) {
+function sendRequest(methodName, urlTail, data, config, successMessage, failureMessage) {
     const apiUrl = `${apiRoot}/${apiVersion}/${urlTail}`
-    return processRequest(methodName, apiUrl, data, successMessage, failureMessage)
+    return processRequest(methodName, apiUrl, data, config, successMessage, failureMessage)
 }
 
-function sendLogsRequest(methodName, urlTail, data, successMessage, failureMessage) {
+function sendLogsRequest(methodName, urlTail, data, config, successMessage, failureMessage) {
     const apiUrl = `${logsApiRoot}/${logsApiVersion}/${urlTail}`
-    return processRequest(methodName, apiUrl, data, successMessage, failureMessage)
+    return processRequest(methodName, apiUrl, data, config, successMessage, failureMessage)
 }
 
 export default {

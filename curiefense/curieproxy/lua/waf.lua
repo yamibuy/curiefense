@@ -74,14 +74,18 @@ function gen_block_info(section, name, value, sig)
     }
 end
 
-function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
+function name_check(request_map, section, name, name_rule, value, omit_entries, exclude_sigs)
+
     local matched = re_match(value, name_rule.reg)
 
+    -- request_map.handle:logDebug(string.format("WAF name_check name %s value %s regex %s ", name, value, name_rule.reg))
+
     if matched then
+        -- request_map.handle:logDebug(string.format("WAF name_check value %s MATCHED with regex %s ", value, name_rule.reg))
         store_section(omit_entries, section, name, true)
     else
         if name_rule.restrict then
-            return  WAFBlock, string.format("(%s)/%s mismatch with %s", section, name_rule.reg, value)
+            return  WAFBlock, string.format("%s '%s' mismatch with '%s'", section, name_rule.reg, value)
         elseif table_length(name_rule.exclusions)  > 0 then
             store_section(exclude_sigs, section, name, name_rule.exclusions)
         end
@@ -89,7 +93,7 @@ function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
     return nil, nil
 end
 
-function regex_check(section, name, regex_rules, value, omit_entries, exclude_sigs)
+function regex_check(request_map, section, name, regex_rules, value, omit_entries, exclude_sigs)
 
     for name_patt, patt_rule in pairs(regex_rules) do
         if re_match(name, name_patt) then
@@ -98,7 +102,7 @@ function regex_check(section, name, regex_rules, value, omit_entries, exclude_si
                 store_section(omit_entries, section, name, true)
             else
                 if patt_rule.restrict then
-                    return WAFBlock, string.format("(%s)/name-patt:%s value-patt:%s mismatch with name: %s value:%s", section, name_patt, patt_rule.reg, name, value)
+                    return WAFBlock, string.format("%s '%s' MATCHED with '%s' WHILE '%s' MISMATCHED with '%s'", section, name_patt, name, patt_rule.reg, value)
                 elseif table_length(patt_rule.exclusions) > 0 then
                     store_section(exclude_sigs, section, name, patt_rule.exclusions)
                 end
@@ -119,7 +123,7 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     local ignore_alphanum = profile.ignore_alphanum
     local num_entries = table_length(entries)
 
-    -- request.handle:logErr("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
+    -- request.handle:logDebug("WAF regulation - ignore_alphanum: " .. tostring(ignore_alphanum))
 
     if num_entries > max_count then
         local msg = string.format("# of entries (%s) in section %s exceeded max value %s", num_entries, section, max_count)
@@ -138,14 +142,15 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 store_section(omit_entries, section, name, true)
             else
                 name_rule = name_rules[name]
+                -- request.handle:logDebug(string.format(" NAME RULE %s", json_encode(name_rule)))
                 if name_rule then
-                    local response, msg = name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
+                    local response, msg = name_check(request, section, name, name_rule, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
                 end
                 if check_regex then
-                    local response, msg = regex_check(section, name, regex_rules, value, omit_entries, exclude_sigs)
+                    local response, msg = regex_check(request, section, name, regex_rules, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
@@ -157,7 +162,18 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
     return WAFPass, {}
 end
 
+function no_nested_value( t, depth_path)
+    if type(t) ~= "table" then return false end
 
+    local a,b,c,d,e = table.unpack(depth_path)
+
+    if a and t[a] == nil then return true end
+    if b and t[a][b] == nil then return true end
+    if c and t[a][b][c] == nil then return true end
+    if d and t[a][b][c][d] == nil then return true end
+    if e and t[a][b][c][d][e] == nil then return true end
+
+end
 
 -- function wafsig_re_match(input, request)
 --     return WAFRustSignatures:is_match_ids(input)
@@ -165,6 +181,7 @@ end
 function iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
     -- request.handle:logDebug(string.format("WAF inspection starts - with profile %s", waf_profile.name))
     local hca_values = {}
+    local hca_keys = {}
 
     for _, section in ipairs(sections) do
         -- -- request.handle:logDebug("WAF inspecting section: " .. section)
@@ -176,10 +193,16 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
         -- -- request.handle:logInfo(string.format("WAF inspection\nomit_entries: %s\nexclude_sigs: %s", json_encode(omit_entries), json_encode(exclude_sigs)))
         -- negative security
         local r_section = request[section]
-        for name, value in pairs(r_section) do
-            if omit_entries[section] == nil or (not omit_entries[section][name]) then
 
-                if exclude_sigs[sections] == nil or (exclude_sigs[sections][name] and exclude_sigs[sections][name]["libinjection"] == nil) then
+        -- request.handle:logDebug(string.format("WAF inspection Section: %s r_sections: %s", section, json_encode(r_section)))
+
+        for name, value in pairs(r_section) do
+            -- request.handle:logDebug(string.format("WAF inspection r_sections iteration: [%s] : [%s]", name, value))
+
+            if no_nested_value(omit_entries, {section, name}) then
+            -- if omit_entries[section] == nil or (not omit_entries[section][name]) then
+                if no_nested_value(exclude_sigs, {section, name, "libinjection"}) then
+                -- if exclude_sigs[section] == nil or (exclude_sigs[section][name] and exclude_sigs[section][name]["libinjection"] == nil) then
                     local detect, token = detect_sqli(value)
                     if detect then
                         return WAFBlock, gen_block_info(section, name, value,
@@ -195,17 +218,18 @@ function iter_sections(waf_profile, request, sections, omit_entries, exclude_sig
                 -- to avoid excluded sigs
                 -- table.insert(hca_values, string.format("%s:::%s:::%s", section, name, value))
                 table.insert(hca_values, value)
+                hca_keys[value] = {section, name}
             end
         end
     end
 
-    return hca_values
+    return hca_values, hca_keys
 end
 
-function waf_section_match(hyperscan_matches, request, exclude_sigs)
-    request.handle:logErr("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
-    request.handle:logErr("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
-    request.handle:logErr("WAF Hyperscan sections " .. json_encode(sections))
+function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
+    -- request.handle:logDebug("WAF Hyperscan first_match " .. json_encode(hyperscan_matches))
+    -- request.handle:logDebug("WAF Hyperscan exclude_sigs " .. json_encode(exclude_sigs))
+    -- request.handle:logDebug("WAF Hyperscan sections " .. json_encode(hca_keys))
 
     local matched_ids = {}
     for idx, entry in pairs(hyperscan_matches) do
@@ -215,30 +239,27 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
         end
     end
 
-    -- different order for speed
-    local sections = {"args", "headers", "cookies"}
+    -- request.handle:logDebug("waf_section_match matched_ids: " .. json_encode(matched_ids))
 
-    for _, section_name in ipairs(sections) do
-
-        request.handle:logErr(string.format("WAF section match %s %s" , section_name, json_encode(request[section_name])))
-        for name, value in pairs(request[section_name]) do
-            for _, sigid in ipairs(matched_ids) do
-                local waf_sig = globals.WAFSignatures[tostring(sigid)]
-                local patt = waf_sig.operand
+    for value, address in pairs(hca_keys) do
+        for _, sigid in ipairs(matched_ids) do
+            local waf_sig = globals.WAFSignatures[sigid]
+            local patt = waf_sig and waf_sig.operand
+            -- request.handle:logDebug(string.format("waf_section_match value %s, address %s", value, json_encode(address)))
+            -- request.handle:logDebug(string.format("waf_section_match SIG %s", json_encode(waf_sig)))
+            if patt then
                 if re_match(value, patt) then
-                    -- exclude_sigs is empty or contains no entries for this section's entry
-                    if not exclude_sigs[section_name] or not exclude_sigs[section_name][name] then
-                        request.handle:logErr(string.format("WAF section match BLOCK %s %s %s %s", section_name, name, value, sigid))
-                        return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
+                    -- request.handle:logDebug(string.format("waf_section_match MATCHED value %s patt %s", value, patt))
+                    local section = address[1]
+                    local name = address[2]
+                    if no_nested_value(exclude_sigs, {section, name, sigid}) then
+                    -- if (not exclude_sigs[section]
+                    --     or not exclude_sigs[section][name]
+                    --     or not exclude_sigs[section][name][sigid]
+                    --     )
+                    -- then
+                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
                     end
-                    -- -- find an ID which is not within the exclude_sigs
-                    -- for _, matched_id in ipairs(matched_ids) do
-                    --     if not exclude_sigs[section_name][name][matched_id] then
-                    --         waf_sig = globals.WAFSignatures[tostring(matched_id)]
-                    --         request.handle:logErr(string.format("WAF section match BLOCK2 %s %s %s %s", section_name, name, value, matched_id))
-                    --         return WAFBlock, gen_block_info(section_name, name, value, waf_sig)
-                    --     end
-                    -- end
                 end
             end
         end
@@ -248,12 +269,19 @@ function waf_section_match(hyperscan_matches, request, exclude_sigs)
 
 end
 
-function check(waf_profile, request)
+function check(waf_profile, request_map)
     local omit_entries = {}
     local exclude_sigs = {}
     local sections = {"headers", "cookies", "args"}
 
-    local hca_values = iter_sections(waf_profile, request, sections, omit_entries, exclude_sigs)
+    local hca_values, hca_keys = iter_sections(waf_profile, request_map, sections, omit_entries, exclude_sigs)
+
+    if hca_values == WAFBlock then
+        return WAFBlock, hca_keys
+    end
+
+    -- request_map.handle:logDebug(string.format("HCA Keys %s", json_encode(hca_keys)))
+    -- request_map.handle:logDebug(string.format("HCA Values %s", json_encode(hca_values)))
 
     local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
@@ -261,11 +289,9 @@ function check(waf_profile, request)
         return WAFPass, "waf-passed"
     end
 
-    -- not nil
-    local idx, first_match = next(matches)
-
-    if first_match then
-        return waf_section_match(matches, request, exclude_sigs)
+    -- deep dive for exclusions
+    if type(matches) == "table" and #matches > 0 then
+        return waf_section_match(matches, request_map, hca_keys, exclude_sigs)
     else
         return WAFPass, "waf-passed"
     end

@@ -143,3 +143,11 @@ $color-light: hsl(0, 0%, 96%);
     border-right: 0;
   }
 }
+
+.dropdown-menu {
+  .dropdown-content {
+    @extend .scrollbox-shadowed;
+    @extend .vertical-scroll;
+    max-height: 12rem;
+  }
+}
