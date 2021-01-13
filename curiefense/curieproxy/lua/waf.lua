@@ -218,14 +218,18 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
     for idx, entry in pairs(hyperscan_matches) do
         local sig_id = entry.id
         if sig_id then
-            matched_ids[tostring(sig_id)] = 1
+            table.insert(matched_ids, tostring(sig_id))
         end
     end
 
+    request.handle:logDebug("waf_section_match matched_ids: " .. json_encode(matched_ids))
+
     for value, address in pairs(hca_keys) do
-        for sigid, _ in pairs(matched_ids) do
+        for _, sigid in ipairs(matched_ids) do
             local waf_sig = globals.WAFSignatures[sigid]
             local patt = waf_sig and waf_sig.operand
+            request.handle:logDebug(string.format("waf_section_match value %s, address %s", value, json_encode(address)))
+            request.handle:logDebug(string.format("waf_section_match SIG %s", json_encode(waf_sig)))
             if patt then
                 if re_match(value, patt) then
                     local section = address[1]
@@ -263,10 +267,8 @@ function check(waf_profile, request_map)
     end
 
     -- not nil
-    local idx, first_match = next(matches)
-
-    if first_match then
-        return waf_section_match(matches, request_map, hca_keys or {}, exclude_sigs or {})
+    if type(matches) == "table" and #matches > 0 then
+        return waf_section_match(matches, request_map, hca_keys, exclude_sigs)
     else
         return WAFPass, "waf-passed"
     end
