@@ -54,6 +54,12 @@ describe('RequestsUtils.js', () => {
                     expect(deleteSpy).toHaveBeenCalledWith(apiUrl)
                 })
 
+                test('should send POST request correctly with header config', async () => {
+                    const config = {headers: {'x-fields': 'name'}}
+                    await requestFunc('POST', urlTrail, dataObject, config)
+                    expect(postSpy).toHaveBeenCalledWith(apiUrl, dataObject, config)
+                })
+
                 test('should send GET request correctly when method name is not capitalized', async () => {
                     await requestFunc('get', urlTrail)
                     expect(getSpy).toHaveBeenCalledWith(apiUrl)
@@ -126,32 +132,32 @@ describe('RequestsUtils.js', () => {
                 })
 
                 test('should send success toast when GET request returns successfully', async () => {
-                    await requestFunc('GET', urlTrail, null, successMessage, failureMessage)
+                    await requestFunc('GET', urlTrail, null, null, successMessage, failureMessage)
                     expect(toastOutput[0].message).toContain(successMessage)
                     expect(toastOutput[0].type).toContain(successMessageClass)
                 })
 
                 test('should send success toast when PUT request returns successfully', async () => {
-                    await requestFunc('PUT', urlTrail, dataObject, successMessage, failureMessage)
+                    await requestFunc('PUT', urlTrail, dataObject, null, successMessage, failureMessage)
                     expect(toastOutput[0].message).toContain(successMessage)
                     expect(toastOutput[0].type).toContain(successMessageClass)
                 })
 
                 test('should send success toast when POST request returns successfully', async () => {
-                    await requestFunc('POST', urlTrail, dataObject, successMessage, failureMessage)
+                    await requestFunc('POST', urlTrail, dataObject, null, successMessage, failureMessage)
                     expect(toastOutput[0].message).toContain(successMessage)
                     expect(toastOutput[0].type).toContain(successMessageClass)
                 })
 
                 test('should send success toast when DELETE request returns successfully', async () => {
-                    await requestFunc('DELETE', urlTrail, null, successMessage, failureMessage)
+                    await requestFunc('DELETE', urlTrail, null, null, successMessage, failureMessage)
                     expect(toastOutput[0].message).toContain(successMessage)
                     expect(toastOutput[0].type).toContain(successMessageClass)
                 })
 
                 test('should send failure toast when GET request is rejected', (done) => {
                     axios.get.mockImplementationOnce(() => Promise.reject())
-                    requestFunc('GET', urlTrail, null, successMessage, failureMessage)
+                    requestFunc('GET', urlTrail, null, null, successMessage, failureMessage)
                         .catch(() => {
                             expect(toastOutput[0].message).toContain(failureMessage)
                             expect(toastOutput[0].type).toContain(failureMessageClass)
@@ -161,7 +167,7 @@ describe('RequestsUtils.js', () => {
 
                 test('should send failure toast when PUT request is rejected', (done) => {
                     axios.put.mockImplementationOnce(() => Promise.reject())
-                    requestFunc('PUT', urlTrail, dataObject, successMessage, failureMessage)
+                    requestFunc('PUT', urlTrail, dataObject, null, successMessage, failureMessage)
                         .catch(() => {
                             expect(toastOutput[0].message).toContain(failureMessage)
                             expect(toastOutput[0].type).toContain(failureMessageClass)
@@ -171,7 +177,7 @@ describe('RequestsUtils.js', () => {
 
                 test('should send failure toast when POST request is rejected', (done) => {
                     axios.post.mockImplementationOnce(() => Promise.reject())
-                    requestFunc('POST', urlTrail, dataObject, successMessage, failureMessage)
+                    requestFunc('POST', urlTrail, dataObject, null, successMessage, failureMessage)
                         .catch(() => {
                             expect(toastOutput[0].message).toContain(failureMessage)
                             expect(toastOutput[0].type).toContain(failureMessageClass)
@@ -181,7 +187,7 @@ describe('RequestsUtils.js', () => {
 
                 test('should send failure toast when DELETE request is rejected', (done) => {
                     axios.delete.mockImplementationOnce(() => Promise.reject())
-                    requestFunc('DELETE', urlTrail, null, successMessage, failureMessage)
+                    requestFunc('DELETE', urlTrail, null, null, successMessage, failureMessage)
                         .catch(() => {
                             expect(toastOutput[0].message).toContain(failureMessage)
                             expect(toastOutput[0].type).toContain(failureMessageClass)

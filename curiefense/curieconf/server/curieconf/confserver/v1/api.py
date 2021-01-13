@@ -166,6 +166,23 @@ models = {
 
 ### Other models
 
+m_document_mask = api.model('Mask for document', {
+    "id": fields.String(required=True),
+    "name": fields.String(required=True),
+    "description": fields.String(required=True),
+    "notes": fields.String(required=True),
+    "map": fields.List(fields.Nested(m_secprofilemap)),
+    "include": fields.Wildcard(fields.Raw()),
+    "exclude": fields.Wildcard(fields.Raw()),
+    "tags": fields.List(fields.String()),
+    "allow": fields.List(fields.String()),
+    "allow_bot": fields.List(fields.String()),
+    "deny_bot": fields.List(fields.String()),
+    "bypass": fields.List(fields.String()),
+    "deny": fields.List(fields.String()),
+    "force_deny": fields.List(fields.String()),
+    '*': fields.Wildcard(fields.Raw()),
+})
 
 m_version_log = api.model("Version log", {
     "version": fields.String(),
@@ -418,6 +435,7 @@ class DocumentsResource(Resource):
 
 @ns_configs.route('/<string:config>/d/<string:document>/')
 class DocumentResource(Resource):
+    @ns_configs.marshal_with(m_document_mask, mask='*', skip_none=True)
     def get(self, config, document):
         "Get a complete document"
         if document not in models:

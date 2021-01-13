@@ -32,8 +32,38 @@ const generateUniqueEntityName = (originalName, entitiesList, isCopy, divider = 
     return new_name
 }
 
+// Download data as file
+
+const downloadFile = (fileName, fileType, data) => {
+    // Check if file type can be downloaded
+    const recognizedDownloadFileTypes = ['json']
+    if (!recognizedDownloadFileTypes.includes(fileType)) {
+        this.error('Unable to download file, unknown file type')
+        return
+    }
+    // Create downloadable content based on file type
+    let content = null
+    if (fileType === 'json') {
+        content = JSON.stringify(data)
+    }
+    if (content === null) {
+        this.error('Unable to download file, corrupted data received')
+        return
+    }
+    // Create anchor element with download data
+    const blob = new Blob([content], {
+        type: `application/${fileType}`
+    })
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.download = `${fileName}.${fileType}`
+    // Click initiates the download
+    link.click()
+}
+
 export default {
     name: 'Utils',
     validateInput,
-    generateUniqueEntityName
+    generateUniqueEntityName,
+    downloadFile,
 }

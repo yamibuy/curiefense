@@ -23,7 +23,7 @@
             </div>
           </div>
         </div>
-        <div class="tile is-ancestor">
+        <div class="tile is-ancestor px-3 py-3 mx-0 my-0">
           <div class="tile is-9">
             <table class="table is-fullwidth">
               <thead>
@@ -69,7 +69,7 @@
             </div>
           </div>
         </div>
-        <div class="tile is-ancestor">
+        <div class="tile is-ancestor px-3 py-3 mx-0 my-0">
           <div class="tile is-parent">
             <div class="tile is-12">
               <table class="table is-fullwidth">

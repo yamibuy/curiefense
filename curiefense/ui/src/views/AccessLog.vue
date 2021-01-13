@@ -131,9 +131,7 @@
                                   </span>
                                 </label>
                                 <br/>
-                                <pre class="is-size-7 is-family-code has-background-danger-light overflow-anywhere is-fullwidth">
-                                  {{ break_reason(row.curiefense.attrs.block_reason) }}
-                                </pre>
+                                <pre class="is-size-7 is-family-code has-background-danger-light overflow-anywhere is-fullwidth">{{ break_reason(row.curiefense.attrs.block_reason) }}</pre>
                               </div>
                             </article>
                           </div>
@@ -298,6 +296,7 @@
 
 import DatasetsUtils from '@/assets/DatasetsUtils.js'
 import RequestsUtils from '@/assets/RequestsUtils'
+import Utils from '@/assets/Utils'
 
 export default {
 
@@ -376,12 +375,11 @@ export default {
 
     break_reason(reason) {
       const width = 16
-      const spacer = ' '.repeat(16)
-
+      const spacer = ' '.repeat(width)
+      console.log(reason)
       return this.ld.map(reason, (value, key) => {
         return `${key}${spacer}:`.substring(0, width) + value
       }).join('\n')
-
     },
 
     statuscode_class(code) {
@@ -422,6 +420,7 @@ export default {
     },
 
     downloadDoc() {
+      Utils.downloadFile('AccessLog', 'json', this.rows)
     },
 
   },

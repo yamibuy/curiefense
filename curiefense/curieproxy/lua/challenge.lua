@@ -3,8 +3,9 @@ module(..., package.seeall)
 local grasshopper = require "grasshopper"
 local utils   = require "lua.utils"
 
-local deny_request = utils.deny_request
-local tag_request  = utils.tag_request
+local deny_request    = utils.deny_request
+local tag_request     = utils.tag_request
+local custom_response = utils.custom_response
 
 local parse_rbzid       = grasshopper.parse_rbzid
 local gen_new_seed      = grasshopper.gen_new_seed
@@ -51,7 +52,19 @@ function phase01(handle, request_map, reload_page)
         ["P3P"] = 'CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"',
     }
     tag_request(request_map, "challenge-phase01")
-    deny_request(request_map, {["reason"] = "challenge-phase01"}, true, "247", headers, content)
+
+    custom_response(request_map, {
+        ["block_mode"] = true,
+        ["status"] = "247",
+        ["headers"] = headers,
+        ["content"] = content,
+        ["reason"] =  {
+            ["initiator"] = "phase01",
+            ["reason"] = "challenge"
+        }
+    })
+
+    -- deny_request(request_map, {["reason"] = "challenge-phase01"}, true, "247", headers, content)
 end
 
 function extract_zebra(headers)
@@ -76,11 +89,23 @@ function phase02(handle, request_map)
                 local cookie = "rbzid=" .. rbzid:replace("=", "-") .. "; Path=/; HttpOnly"
                 local headers = { ["Set-Cookie"] = cookie }
                 tag_request(request_map, "challenge-phase02")
-                deny_request(request_map, {["reason"] = "challenge-phase02"}, true, "248", headers, "{}")
-            else
+
+                custom_response(request_map, {
+                    ["block_mode"] = true,
+                    ["status"] = "248",
+                    ["headers"] = headers,
+                    ["content"] = "{}",
+                    ["reason"] =  {
+                        ["initiator"] = "phase02",
+                        ["reason"] = "challenge"
+                    }
+                })
+
+            --     -- deny_request(request_map, {["reason"] = "challenge-phase02"}, true, "248", headers, "{}")
+            -- else
                 -- handle:logDebug("010 phase02 NO rbzid!")
             end
-        else
+        -- else
             -- handle:logDebug("011 phase02 NO workproof!")
         end
     end
