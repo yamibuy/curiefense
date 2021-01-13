@@ -19,8 +19,9 @@ import (
 
 	als "github.com/envoyproxy/go-control-plane/envoy/service/accesslog/v2"
 	ald "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v2"
-	ptypes "github.com/golang/protobuf/ptypes"
+//	ptypes "github.com/golang/protobuf/ptypes"
 	duration "github.com/golang/protobuf/ptypes/duration"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v4"
@@ -48,18 +49,19 @@ import (
 
 
 type LogEntry struct {
-	full_entry *ald.HTTPAccessLogEntry;
-	common *ald.AccessLogCommon;
-	req *ald.HTTPRequestProperties;
-	resp *ald.HTTPResponseProperties;
-	method string;
-	response_code int;
-	curiefense_json_string string;
+	fullEntry *ald.HTTPAccessLogEntry
+	cfLog *CuriefenseLog
+//	common *ald.AccessLogCommon;
+//	req *ald.HTTPRequestProperties;
+//	resp *ald.HTTPResponseProperties;
+//	method string;
+//	response_code int;
+//	curiefense_json_string string;
 	curiefense map[string]interface{};
-	upstream_remote_addr string;
-	upstream_remote_port uint32;
-	upstream_local_addr string;
-	upstream_local_port uint32;
+//	upstream_remote_addr string;
+//	upstream_remote_port uint32;
+//	upstream_local_addr string;
+//	upstream_local_port uint32;
 }
 
 type Logger interface {
@@ -311,11 +313,11 @@ func (l promLogger) Start() {
 
 	for {
 		e := l.GetLogEntry()
-
+		log.Printf("[DEBUG] new log entry cflog=%v", *e.cfLog)
 		// **** Update prometheus metrics ****
 		metric_requests.Inc()
-		metric_request_bytes.Add(float64(e.req.GetRequestHeadersBytes() + e.req.GetRequestBodyBytes()))
-		metric_response_bytes.Add(float64(e.resp.GetResponseHeadersBytes() + e.resp.GetResponseBodyBytes()))
+		metric_request_bytes.Add(float64(e.cfLog.Request.HeadersBytes+e.cfLog.Request.BodyBytes))
+		metric_response_bytes.Add(float64(e.cfLog.Response.HeadersBytes+e.cfLog.Response.BodyBytes))
 
 
 		if attrs_i, ok := e.curiefense["attrs"] ; ok {
@@ -331,7 +333,7 @@ func (l promLogger) Start() {
 							if path, ok := path_i.(string); ok {
 								log.Printf("[DEBUG] ~~~ path=[%v]", path)
 								log.Printf("[DEBUG] ~~~ tags=[%v]", tags)
-								labels := makeLabels(e.response_code, e.method, path, e.upstream_remote_addr, blocked, tags)
+								labels := makeLabels(e.cfLog.Response.Code, e.cfLog.Method, path, e.cfLog.Upstream.RemoteAddress, blocked, tags)
 								metric_session_details.With(labels).Inc()
 								for name := range tags {
 									if !isStaticTag(name) {
@@ -365,11 +367,13 @@ type pgLogger struct {
 	db     *pgx.Conn
 }
 
-func DurationToFloat(d *duration.Duration) float64 {
-	if d != nil {
-		return float64(d.GetSeconds()) + float64(d.GetNanos())*1e-9
+
+func makejsonb(v interface{}) *pgtype.JSON {
+	j, err := json.Marshal(v)
+	if err != nil {
+		j = []byte("{}")
 	}
-	return 0
+	return &pgtype.JSON{Bytes: j, Status: pgtype.Present}
 }
 
 
@@ -389,130 +393,131 @@ func (l pgLogger) getDB() *pgx.Conn {
 
 
 func (l *pgLogger) InsertEntry(e LogEntry) bool {
-	db := l.getDB() // needed to ensure db cnx is not closed and reopen it if needed
+//X	db := l.getDB() // needed to ensure db cnx is not closed and reopen it if needed
 
-	respflags := e.common.GetResponseFlags()
-
-	ts, _ := ptypes.Timestamp(e.common.GetStartTime())
-
-	tls := e.common.GetTlsProperties()
-
-	lan := []string{}
-	for _, san := range tls.GetLocalCertificateProperties().GetSubjectAltName() {
-		lan = append(lan, san.String())
-	}
-	jsonb_localaltnames := makejsonb(lan)
-
-	pan := []string{}
-	for _, san := range tls.GetPeerCertificateProperties().GetSubjectAltName() {
-		pan = append(pan, san.String())
-	}
-	jsonb_peeraltnames := makejsonb(pan)
-
-	jsonb_reqhdr := makejsonb(e.req.GetRequestHeaders())
-	jsonb_resphdr := makejsonb(e.resp.GetResponseHeaders())
-	jsonb_resptrail := makejsonb(e.resp.GetResponseTrailers())
-
-
-	jsonb_curiefense := &pgtype.JSON{Bytes: []byte(e.curiefense_json_string), Status: pgtype.Present}
-
-	_, err := db.Exec(context.Background(), `insert into logs (
-
-            SampleRate, DownstreamRemoteAddress, DownstreamRemoteAddressPort, DownstreamLocalAddress,
-            DownstreamLocalAddressPort, StartTime, TimeToLastRxByte, TimeToFirstUpstreamTxByte, TimeToLastUpstreamTxByte,
-            TimeToFirstUpstreamRxByte, TimeToLastUpstreamRxByte, TimeToFirstDownstreamTxByte, TimeToLastDownstreamTxByte,
-            UpstreamRemoteAddress, UpstreamRemoteAddressPort, UpstreamLocalAddress, UpstreamLocalAddressPort,
-            UpstreamCluster, FailedLocalHealthcheck, NoHealthyUpstream, UpstreamRequestTimeout, LocalReset,
-            UpstreamRemoteReset, UpstreamConnectionFailure, UpstreamConnectionTermination, UpstreamOverflow, NoRouteFound,
-            DelayInjected, FaultInjected, RateLimited, UnauthorizedDetails, RateLimitServiceError,
-            DownstreamConnectionTermination, UpstreamRetryLimitExceeded, StreamIdleTimeout, InvalidEnvoyRequestHeaders,
-            DownstreamProtocolError, Curiefense, UpstreamTransportFailureReason, RouteName, DownstreamDirectRemoteAddress,
-            DownstreamDirectRemoteAddressPort, TlsVersion, TlsCipherSuite, TlsSniHostname, LocalCertificateProperties,
-            LocalCertificatePropertiesAltNames, PeerCertificateProperties, PeerCertificatePropertiesAltNames,
-            TlsSessionId, RequestMethod, Scheme, Authority, Port, Path, UserAgent, Referer, ForwardedFor, RequestId,
-            OriginalPath, RequestHeadersBytes, RequestBodyBytes, RequestHeaders, ResponseCode, ResponseHeadersBytes,
-            ResponseBodyBytes, ResponseHeaders, ResponseTrailers, ResponseCodeDetails)
-
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
-                    $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56,
-                     $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69)`,
-		e.common.GetSampleRate(),							/* SampleRate,                          */
-		e.common.GetDownstreamRemoteAddress().GetSocketAddress().GetAddress(),		/* DownstreamRemoteAddress,             */
-		e.common.GetDownstreamRemoteAddress().GetSocketAddress().GetPortValue(),	/* DownstreamRemoteAddressPort,         */
-		e.common.GetDownstreamLocalAddress().GetSocketAddress().GetAddress(),		/* DownstreamLocalAddress,              */
-		e.common.GetDownstreamLocalAddress().GetSocketAddress().GetPortValue(),		/* DownstreamLocalAddressPort,          */
-		ts,										/* StartTime,                           */
-		DurationToFloat(e.common.GetTimeToLastRxByte()),				/* TimeToLastRxByte,                    */
-		DurationToFloat(e.common.GetTimeToFirstUpstreamTxByte()),			/* TimeToFirstUpstreamTxByte,           */
-		DurationToFloat(e.common.GetTimeToLastUpstreamTxByte()),			/* TimeToLastUpstreamTxByte,            */
-		DurationToFloat(e.common.GetTimeToFirstUpstreamRxByte()),			/* TimeToFirstUpstreamRxByte,           */
-		DurationToFloat(e.common.GetTimeToLastUpstreamRxByte()),			/* TimeToLastUpstreamRxByte,            */
-		DurationToFloat(e.common.GetTimeToFirstDownstreamTxByte()),			/* TimeToFirstDownstreamTxByte,         */
-		DurationToFloat(e.common.GetTimeToLastDownstreamTxByte()),			/* TimeToLastDownstreamTxByte,          */
-		e.upstream_remote_addr,								/* UpstreamRemoteAddress,               */
-		e.upstream_remote_port,								/* UpstreamRemoteAddressPort,           */
-		e.upstream_local_addr,								/* UpstreamLocalAddress,                */
-		e.upstream_local_port,								/* UpstreamLocalAddressPort,            */
-		e.common.GetUpstreamCluster(),							/* UpstreamCluster,                     */
-		respflags.GetFailedLocalHealthcheck(),						/* FailedLocalHealthcheck,              */
-		respflags.GetNoHealthyUpstream(),						/* NoHealthyUpstream,                   */
-		respflags.GetUpstreamRequestTimeout(),						/* UpstreamRequestTimeout,              */
-		respflags.GetLocalReset(),							/* LocalReset,                          */
-		respflags.GetUpstreamRemoteReset(),						/* UpstreamRemoteReset,                 */
-		respflags.GetUpstreamConnectionFailure(),					/* UpstreamConnectionFailure,           */
-		respflags.GetUpstreamConnectionTermination(),					/* UpstreamConnectionTermination,       */
-		respflags.GetUpstreamOverflow(),						/* UpstreamOverflow,                    */
-		respflags.GetNoRouteFound(),							/* NoRouteFound,                        */
-		respflags.GetDelayInjected(),							/* DelayInjected,                       */
-		respflags.GetFaultInjected(),							/* FaultInjected,                       */
-		respflags.GetRateLimited(),							/* RateLimited,                         */
-		respflags.GetUnauthorizedDetails().GetReason().String(),			/* UnauthorizedDetails,                 */
-		respflags.GetRateLimitServiceError(),						/* RateLimitServiceError,               */
-		respflags.GetDownstreamConnectionTermination(),					/* DownstreamConnectionTermination,     */
-		respflags.GetUpstreamRetryLimitExceeded(),					/* UpstreamRetryLimitExceeded,          */
-		respflags.GetStreamIdleTimeout(),						/* StreamIdleTimeout,                   */
-		respflags.GetInvalidEnvoyRequestHeaders(),					/* InvalidEnvoyRequestHeaders,          */
-		respflags.GetDownstreamProtocolError(),						/* DownstreamProtocolError,             */
-		jsonb_curiefense,								/* Curiefense,                          */
-		e.common.GetUpstreamTransportFailureReason(),					/* UpstreamTransportFailureReason,      */
-		e.common.GetRouteName(),							/* RouteName,                           */
-		e.common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetAddress(),	/* DownstreamDirectRemoteAddress,       */
-		e.common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetPortValue(),	/* DownstreamDirectRemoteAddressPort,   */
-		tls.GetTlsVersion().String(),							/* TlsVersion,                          */
-		tls.GetTlsCipherSuite().String(),						/* TlsCipherSuite,                      */
-		tls.GetTlsSniHostname(),							/* TlsSniHostname,                      */
-		tls.GetLocalCertificateProperties().GetSubject(),				/* LocalCertificateProperties,          */
-		jsonb_localaltnames,								/* LocalCertificatePropertiesAltNames,  */
-		tls.GetPeerCertificateProperties().GetSubject(),				/* PeerCertificateProperties,           */
-		jsonb_peeraltnames,								/* PeerCertificatePropertiesAltNames,   */
-		tls.GetTlsSessionId(),								/* TlsSessionId,                        */
-		e.method,									/* RequestMethod,                       */
-		e.req.GetScheme(),								/* Scheme,                              */
-		e.req.GetAuthority(),								/* Authority,                           */
-		e.req.GetPort().GetValue(),							/* Port,                                */
-		e.req.GetPath(),								/* Path,                                */
-		e.req.GetUserAgent(),								/* UserAgent,                           */
-		e.req.GetReferer(),								/* Referer,                             */
-		e.req.GetForwardedFor(),							/* ForwardedFor,                        */
-		e.req.GetRequestId(),								/* RequestId,                           */
-		e.req.GetOriginalPath(),							/* OriginalPath,                        */
-		e.req.GetRequestHeadersBytes(),							/* RequestHeadersBytes,                 */
-		e.req.GetRequestBodyBytes(),							/* RequestBodyBytes,                    */
-		jsonb_reqhdr,									/* RequestHeaders,                      */
-		e.response_code,								/* ResponseCode,                        */
-		e.resp.GetResponseHeadersBytes(),						/* ResponseHeadersBytes,                */
-		e.resp.GetResponseBodyBytes(),							/* ResponseBodyBytes                    */
-		jsonb_resphdr,									/* ResponseHeaders,                     */
-		jsonb_resptrail,								/* ResponseTrailers,                    */
-		e.resp.GetResponseCodeDetails(),						/* ResponseCodeDetails                  */
-	)
-	if err == nil {
-		log.Printf("[DEBUG] insert into pg ok")
-	} else {
-		log.Printf("[ERROR] insert into pg: Error: %v", err)
-	}
-	return err != nil
+//X	respflags := e.common.GetResponseFlags()
+//X
+//X	ts, _ := ptypes.Timestamp(e.common.GetStartTime())
+//X
+//X	tls := e.common.GetTlsProperties()
+//X
+//X	lan := []string{}
+//X	for _, san := range tls.GetLocalCertificateProperties().GetSubjectAltName() {
+//X		lan = append(lan, san.String())
+//X	}
+//X	jsonb_localaltnames := makejsonb(lan)
+//X
+//X	pan := []string{}
+//X	for _, san := range tls.GetPeerCertificateProperties().GetSubjectAltName() {
+//X		pan = append(pan, san.String())
+//X	}
+//X	jsonb_peeraltnames := makejsonb(pan)
+//X
+//X	jsonb_reqhdr := makejsonb(e.req.GetRequestHeaders())
+//X	jsonb_resphdr := makejsonb(e.resp.GetResponseHeaders())
+//X	jsonb_resptrail := makejsonb(e.resp.GetResponseTrailers())
+//X
+//X
+//X	jsonb_curiefense := &pgtype.JSON{Bytes: []byte(e.curiefense_json_string), Status: pgtype.Present}
+//X
+//X	_, err := db.Exec(context.Background(), `insert into logs (
+//X
+//X            SampleRate, DownstreamRemoteAddress, DownstreamRemoteAddressPort, DownstreamLocalAddress,
+//X            DownstreamLocalAddressPort, StartTime, TimeToLastRxByte, TimeToFirstUpstreamTxByte, TimeToLastUpstreamTxByte,
+//X            TimeToFirstUpstreamRxByte, TimeToLastUpstreamRxByte, TimeToFirstDownstreamTxByte, TimeToLastDownstreamTxByte,
+//X            UpstreamRemoteAddress, UpstreamRemoteAddressPort, UpstreamLocalAddress, UpstreamLocalAddressPort,
+//X            UpstreamCluster, FailedLocalHealthcheck, NoHealthyUpstream, UpstreamRequestTimeout, LocalReset,
+//X            UpstreamRemoteReset, UpstreamConnectionFailure, UpstreamConnectionTermination, UpstreamOverflow, NoRouteFound,
+//X            DelayInjected, FaultInjected, RateLimited, UnauthorizedDetails, RateLimitServiceError,
+//X            DownstreamConnectionTermination, UpstreamRetryLimitExceeded, StreamIdleTimeout, InvalidEnvoyRequestHeaders,
+//X            DownstreamProtocolError, Curiefense, UpstreamTransportFailureReason, RouteName, DownstreamDirectRemoteAddress,
+//X            DownstreamDirectRemoteAddressPort, TlsVersion, TlsCipherSuite, TlsSniHostname, LocalCertificateProperties,
+//X            LocalCertificatePropertiesAltNames, PeerCertificateProperties, PeerCertificatePropertiesAltNames,
+//X            TlsSessionId, RequestMethod, Scheme, Authority, Port, Path, UserAgent, Referer, ForwardedFor, RequestId,
+//X            OriginalPath, RequestHeadersBytes, RequestBodyBytes, RequestHeaders, ResponseCode, ResponseHeadersBytes,
+//X            ResponseBodyBytes, ResponseHeaders, ResponseTrailers, ResponseCodeDetails)
+//X
+//X            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+//X                    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
+//X                    $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56,
+//X                     $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69)`,
+//X		e.common.GetSampleRate(),							/* SampleRate,                          */
+//X		e.common.GetDownstreamRemoteAddress().GetSocketAddress().GetAddress(),		/* DownstreamRemoteAddress,             */
+//X		e.common.GetDownstreamRemoteAddress().GetSocketAddress().GetPortValue(),	/* DownstreamRemoteAddressPort,         */
+//X		e.common.GetDownstreamLocalAddress().GetSocketAddress().GetAddress(),		/* DownstreamLocalAddress,              */
+//X		e.common.GetDownstreamLocalAddress().GetSocketAddress().GetPortValue(),		/* DownstreamLocalAddressPort,          */
+//X		ts,										/* StartTime,                           */
+//X		DurationToFloat(e.common.GetTimeToLastRxByte()),				/* TimeToLastRxByte,                    */
+//X		DurationToFloat(e.common.GetTimeToFirstUpstreamTxByte()),			/* TimeToFirstUpstreamTxByte,           */
+//X		DurationToFloat(e.common.GetTimeToLastUpstreamTxByte()),			/* TimeToLastUpstreamTxByte,            */
+//X		DurationToFloat(e.common.GetTimeToFirstUpstreamRxByte()),			/* TimeToFirstUpstreamRxByte,           */
+//X		DurationToFloat(e.common.GetTimeToLastUpstreamRxByte()),			/* TimeToLastUpstreamRxByte,            */
+//X		DurationToFloat(e.common.GetTimeToFirstDownstreamTxByte()),			/* TimeToFirstDownstreamTxByte,         */
+//X		DurationToFloat(e.common.GetTimeToLastDownstreamTxByte()),			/* TimeToLastDownstreamTxByte,          */
+//X		e.upstream_remote_addr,								/* UpstreamRemoteAddress,               */
+//X		e.upstream_remote_port,								/* UpstreamRemoteAddressPort,           */
+//X		e.upstream_local_addr,								/* UpstreamLocalAddress,                */
+//X		e.upstream_local_port,								/* UpstreamLocalAddressPort,            */
+//X		e.common.GetUpstreamCluster(),							/* UpstreamCluster,                     */
+//X		respflags.GetFailedLocalHealthcheck(),						/* FailedLocalHealthcheck,              */
+//X		respflags.GetNoHealthyUpstream(),						/* NoHealthyUpstream,                   */
+//X		respflags.GetUpstreamRequestTimeout(),						/* UpstreamRequestTimeout,              */
+//X		respflags.GetLocalReset(),							/* LocalReset,                          */
+//X		respflags.GetUpstreamRemoteReset(),						/* UpstreamRemoteReset,                 */
+//X		respflags.GetUpstreamConnectionFailure(),					/* UpstreamConnectionFailure,           */
+//X		respflags.GetUpstreamConnectionTermination(),					/* UpstreamConnectionTermination,       */
+//X		respflags.GetUpstreamOverflow(),						/* UpstreamOverflow,                    */
+//X		respflags.GetNoRouteFound(),							/* NoRouteFound,                        */
+//X		respflags.GetDelayInjected(),							/* DelayInjected,                       */
+//X		respflags.GetFaultInjected(),							/* FaultInjected,                       */
+//X		respflags.GetRateLimited(),							/* RateLimited,                         */
+//X		respflags.GetUnauthorizedDetails().GetReason().String(),			/* UnauthorizedDetails,                 */
+//X		respflags.GetRateLimitServiceError(),						/* RateLimitServiceError,               */
+//X		respflags.GetDownstreamConnectionTermination(),					/* DownstreamConnectionTermination,     */
+//X		respflags.GetUpstreamRetryLimitExceeded(),					/* UpstreamRetryLimitExceeded,          */
+//X		respflags.GetStreamIdleTimeout(),						/* StreamIdleTimeout,                   */
+//X		respflags.GetInvalidEnvoyRequestHeaders(),					/* InvalidEnvoyRequestHeaders,          */
+//X		respflags.GetDownstreamProtocolError(),						/* DownstreamProtocolError,             */
+//X		jsonb_curiefense,								/* Curiefense,                          */
+//X		e.common.GetUpstreamTransportFailureReason(),					/* UpstreamTransportFailureReason,      */
+//X		e.common.GetRouteName(),							/* RouteName,                           */
+//X		e.common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetAddress(),	/* DownstreamDirectRemoteAddress,       */
+//X		e.common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetPortValue(),	/* DownstreamDirectRemoteAddressPort,   */
+//X		tls.GetTlsVersion().String(),							/* TlsVersion,                          */
+//X		tls.GetTlsCipherSuite().String(),						/* TlsCipherSuite,                      */
+//X		tls.GetTlsSniHostname(),							/* TlsSniHostname,                      */
+//X		tls.GetLocalCertificateProperties().GetSubject(),				/* LocalCertificateProperties,          */
+//X		jsonb_localaltnames,								/* LocalCertificatePropertiesAltNames,  */
+//X		tls.GetPeerCertificateProperties().GetSubject(),				/* PeerCertificateProperties,           */
+//X		jsonb_peeraltnames,								/* PeerCertificatePropertiesAltNames,   */
+//X		tls.GetTlsSessionId(),								/* TlsSessionId,                        */
+//X		e.method,									/* RequestMethod,                       */
+//X		e.req.GetScheme(),								/* Scheme,                              */
+//X		e.req.GetAuthority(),								/* Authority,                           */
+//X		e.req.GetPort().GetValue(),							/* Port,                                */
+//X		e.req.GetPath(),								/* Path,                                */
+//X		e.req.GetUserAgent(),								/* UserAgent,                           */
+//X		e.req.GetReferer(),								/* Referer,                             */
+//X		e.req.GetForwardedFor(),							/* ForwardedFor,                        */
+//X		e.req.GetRequestId(),								/* RequestId,                           */
+//X		e.req.GetOriginalPath(),							/* OriginalPath,                        */
+//X		e.req.GetRequestHeadersBytes(),							/* RequestHeadersBytes,                 */
+//X		e.req.GetRequestBodyBytes(),							/* RequestBodyBytes,                    */
+//X		jsonb_reqhdr,									/* RequestHeaders,                      */
+//X		e.response_code,								/* ResponseCode,                        */
+//X		e.resp.GetResponseHeadersBytes(),						/* ResponseHeadersBytes,                */
+//X		e.resp.GetResponseBodyBytes(),							/* ResponseBodyBytes                    */
+//X		jsonb_resphdr,									/* ResponseHeaders,                     */
+//X		jsonb_resptrail,								/* ResponseTrailers,                    */
+//X		e.resp.GetResponseCodeDetails(),						/* ResponseCodeDetails                  */
+//X	)
+//X	if err == nil {
+//X		log.Printf("[DEBUG] insert into pg ok")
+//X	} else {
+//X		log.Printf("[ERROR] insert into pg: Error: %v", err)
+//X	}
+//X	return err != nil
+	return true
 }
 
 
@@ -549,7 +554,7 @@ func (l esLogger) getESClient() *elasticsearch.Client {
 func (l *esLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] ES insertion!")
 	client := l.getESClient() // needed to ensure ES cnx is not closed and reopen it if needed
-	j, err := json.Marshal(e.full_entry)
+	j, err := json.Marshal(e.cfLog)
 	if err == nil {
 		client.Index(
 			"log",
@@ -561,15 +566,6 @@ func (l *esLogger) InsertEntry(e LogEntry) bool {
 	} else {
 		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
 		return false
-	}
-	if (e.curiefense_json_string != "") {
-		client.Index(
-			"log_cf",
-			strings.NewReader(e.curiefense_json_string),
-			client.Index.WithRefresh("true"),
-			client.Index.WithPretty(),
-			client.Index.WithFilterPath("result", "_id"),
-		)
 	}
 	return true
 }
@@ -589,7 +585,7 @@ type logstashLogger struct {
 
 func (l *logstashLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] LogStash insertion!")
-	j, err := json.Marshal(e.full_entry)
+	j, err := json.Marshal(e.cfLog)
 	if err == nil {
 		_, err := http.Post(l.url+"/curiefense/log", "application/json",  bytes.NewReader(j))
 		if err != nil {
@@ -599,13 +595,6 @@ func (l *logstashLogger) InsertEntry(e LogEntry) bool {
 	} else {
 		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
 		return false
-	}
-	if (e.curiefense_json_string != "") {
-		_, err := http.Post(l.url+"/curiefense/log_cf", "application/json", strings.NewReader(e.curiefense_json_string))
-		if err != nil {
-			log.Printf("ERROR: could not POST log entry: %v", err)
-			return false
-		}
 	}
 	return true
 }
@@ -625,7 +614,7 @@ type fluentdLogger struct {
 
 func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] Fluentd insertion!")
-	j, err := json.Marshal(e.full_entry)
+	j, err := json.Marshal(e.cfLog)
 	if err == nil {
 		_, err := http.PostForm(l.url+"/curiefense/log", neturl.Values{"json": {string(j)}})
 		if err != nil {
@@ -633,12 +622,6 @@ func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 		}
 	} else {
 		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
-	}
-	if (e.curiefense_json_string != "") {
-		_, err := http.PostForm(l.url+"/curiefense/log_cf", neturl.Values{"json": {e.curiefense_json_string}})
-		if err != nil {
-			log.Printf("ERROR: could not POST log entry: %v", err)
-		}
 	}
 	return true
 }
@@ -653,15 +636,136 @@ func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 //  \___|_|_\_|  \___| /_/ \_\___\___|___|___/___/ |____\___/ \___|___/
 // GRPC ACCESS LOGS
 
-
-
-func makejsonb(v interface{}) *pgtype.JSON {
-	j, err := json.Marshal(v)
-	if err != nil {
-		j = []byte("{}")
-	}
-	return &pgtype.JSON{Bytes: j, Status: pgtype.Present}
+type RXTimer struct {
+	FirstUpstreamByte float64	`json:"firstupstreambyte"`
+	LastUpstreamByte  float64	`json:"lastupstreambyte"`
+	LastByte          float64	`json:"lastbyte"`
 }
+
+type TXTimer struct {
+	FirstUpstreamByte   float64	`json:"firstupstreambyte"`
+	LastUpstreamByte    float64	`json:"lastupstreambyte"`
+	FirstDownstreamByte float64	`json:"firstdownstreambyte"`
+	LastDownstreamByte  float64	`json:"lastdownstreambyte"`
+}
+
+type RXTXTimers struct {
+	RX RXTimer	`json:"rx"`
+	TX TXTimer	`json:"tx"`
+}
+
+type DownstreamData struct {
+	ConnectionTermination	 bool	`json:"connectiontermination"`
+	DirectRemoteAddress	 string	`json:"directremoteaddress"`
+	DirectRemoteAddressPort	 uint32	`json:"directremoteaddressport"`
+	LocalAddress		 string	`json:"localaddress"`
+	LocalAddressPort	 uint32	`json:"localaddressport"`
+	ProtocolError		 bool	`json:"protocolerror"`
+	RemoteAddress		 string	`json:"remoteaddress"`
+	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
+}
+
+type UpstreamData struct {
+	Cluster			 string	`json:"cluster"`
+	ConnectionFailure	 bool	`json:"connectionfailure"`
+	ConnectionTermination	 bool	`json:"connectiontermination"`
+	LocalAddress		 string	`json:"localaddress"`
+	LocalAddressPort	 uint32	`json:"localaddressport"`
+	Overflow		 bool	`json:"overflow"`
+	RemoteAddress		 string	`json:"remoteaddress"`
+	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
+	RemoteReset		 bool	`json:"remotereset"`
+	RequestTimeout		 bool	`json:"requesttimeout"`
+	RetryLimitExceeded	 bool	`json:"retrylimitexceeded"`
+	TransportFailureReason	 string	`json:"transportfailurereason"`
+}
+
+type CertificateData struct {
+	Properties		 string		`json:"properties"`
+	PropertiesAltNames	 []string	`json:"propertiesaltnames"`
+}
+
+type TLSData struct {
+	LocalCertificate	 CertificateData	`json:"localcertificate"`
+	PeerCertificate		 CertificateData	`json:"peercertificate"`
+	CipherSuite		 string			`json:"ciphersuite"`
+	SessionId		 string			`json:"sessionid"`
+	SNIHostname		 string			`json:"snihostname"`
+	Version			 string			`json:"version"`
+}
+
+type RequestData struct {
+	BodyBytes	 uint64			`json:"bodybytes"`
+	HeadersBytes	 uint64			`json:"headersbytes"`
+	OriginalPath	 string			`json:"originalpath"`
+	Headers		 map[string]string	`json:"headers"`
+	Cookies		 map[string]string	`json:"cookies"`
+	Arguments	 map[string]string	`json:"arguments"`
+	Attributes	 map[string]string	`json:"attributes"`
+}
+
+type ResponseData struct {
+	BodyBytes	 uint64			`json:"bodybytes"`
+	Code		 int			`json:"code"`
+	CodeDetails	 string			`json:"codedetails"`
+	Headers		 map[string]string	`json:"headers"`
+	HeadersBytes	 uint64			`json:"headersbytes"`
+	Trailers	 map[string]string	`json:"trailers"`
+}
+
+type MetadataData struct {
+	DelayInjected			bool	`json:"delayinjected"`
+	FailedLocalHealthCheck		bool	`json:"failedlocalhealthcheck"`
+	FaultInjected			bool	`json:"faultinjected"`
+	InvalidEnvoyRequestHeaders	bool	`json:"invalidenvoyrequestheaders"`
+	LocalReset			bool	`json:"localreset"`
+	NoHealthyUpstream		bool	`json:"nohealthyupstream"`
+	NoRouteFound			bool	`json:"noroutefound"`
+	RateLimited			bool	`json:"ratelimited"`
+	RateLimitServiceError		bool	`json:"ratelimitserviceerror"`
+	RouteName			string	`json:"routename"`
+	SampleRate			float64	`json:"samplerate"`
+	StreamIdleTimeout		bool	`json:"streamidletimeout"`
+	UnauthorizedDetails		string	`json:"unauthorizeddetails"`
+}
+
+type CuriefenseLog struct {
+	RequestId	 string		`json:"requestid"`
+	Timestamp	 float64	`json:"timestamp"`
+	Scheme		 string		`json:"scheme"`
+	Authority	 string		`json:"authority"`
+	Port		 uint32		`json:"port"`
+
+	Method		 string		`json:"method"`
+	Path		 string		`json:"path"`
+	Timers		 RXTXTimers	`json:"timers"`
+
+	Upstream	 UpstreamData	`json:"upstream"`
+	Downstream	 DownstreamData	`json:"downstream"`
+
+	TLS		 TLSData	`json:"tls"`
+	Request		 RequestData    `json:"request"`
+	Response	 ResponseData	`json:"response"`
+	Metadata	 MetadataData	`json:"metadata"`
+}
+
+
+
+
+func DurationToFloat(d *duration.Duration) float64 {
+	if d != nil {
+		return float64(d.GetSeconds()) + float64(d.GetNanos())*1e-9
+	}
+	return 0
+}
+
+func TimestampToFloat(d *timestamp.Timestamp) float64 {
+	if d != nil {
+		return float64(d.GetSeconds()) + float64(d.GetNanos())*1e-9
+	}
+	return 0
+}
+
 
 func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) error {
 	msg, err := x.Recv()
@@ -672,18 +776,8 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 		hl := msg.GetHttpLogs()
 		http_entries := hl.GetLogEntry()
 		for _, entry := range http_entries {
-			common := entry.GetCommonProperties()
-			req := entry.GetRequest()
-			resp := entry.GetResponse()
-			method := req.GetRequestMethod().String()
-			response_code := int(resp.GetResponseCode().GetValue())
 
-			upstream_remote_addr := common.GetUpstreamRemoteAddress().GetSocketAddress().GetAddress()
-			upstream_remote_port := common.GetUpstreamRemoteAddress().GetSocketAddress().GetPortValue()
-			upstream_local_addr := common.GetUpstreamLocalAddress().GetSocketAddress().GetAddress()
-			upstream_local_port := common.GetUpstreamLocalAddress().GetSocketAddress().GetPortValue()
-			log.Printf("[DEBUG] ---> [ %v:%v %v:%v ] <---", upstream_remote_addr, upstream_remote_port,
-				upstream_local_addr, upstream_local_port)
+			common := entry.GetCommonProperties()
 
 			// Decode curiefense metadata
 
@@ -694,34 +788,142 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 			}
 
 			curiefense := make(map[string]interface{})
-			curiefense_json_string := "{}"
 
 			cfm := curiefense_meta.GetFields()
 			if rqinfo_s, ok := cfm["request.info"]; ok {
-				curiefense_json_string = rqinfo_s.GetStringValue()
-				json_cf := []byte(curiefense_json_string)
-				err := json.Unmarshal(json_cf, &curiefense)
+				curiefense_json_string := rqinfo_s.GetStringValue()
+				err := json.Unmarshal([]byte(curiefense_json_string), &curiefense)
 				if err != nil {
 					log.Printf("[ERROR] Error unmarshalling metadata json string [%v]", curiefense_json_string)
+					continue
 				}
+			} else {
+				log.Printf("[ERROR] did not find request.info in curiefense medatada")
+				continue
 			}
+
+			log.Printf("[DEBUG] XXXXXXXXx curiefense=%v", curiefense)
+
+			// Shortcuts
+
+			req := entry.GetRequest()
+			resp := entry.GetResponse()
+			respflags := common.GetResponseFlags()
+			tls := common.GetTlsProperties()
+			lan := []string{}
+			for _, san := range tls.GetLocalCertificateProperties().GetSubjectAltName() {
+				lan = append(lan, san.String())
+			}
+			pan := []string{}
+			for _, san := range tls.GetPeerCertificateProperties().GetSubjectAltName() {
+				pan = append(pan, san.String())
+			}
+
+			// Create canonical curiefense log structure
+
+			cflog := CuriefenseLog{
+				RequestId: "XXX",
+				Timestamp: TimestampToFloat(common.GetStartTime()),
+				Scheme: req.GetScheme(),
+				Authority: req.GetAuthority(),
+				Port: req.GetPort().GetValue(),
+				Method: req.GetRequestMethod().String(),
+				Path: req.GetPath(),
+				Timers: RXTXTimers{
+					RX: RXTimer{
+						FirstUpstreamByte: DurationToFloat(common.GetTimeToFirstUpstreamRxByte()),
+						LastUpstreamByte: DurationToFloat(common.GetTimeToLastUpstreamRxByte()),
+						LastByte: DurationToFloat(common.GetTimeToLastRxByte()),
+					},
+					TX: TXTimer{
+						FirstUpstreamByte: DurationToFloat(common.GetTimeToFirstUpstreamTxByte()),
+						LastUpstreamByte: DurationToFloat(common.GetTimeToLastUpstreamTxByte()),
+						FirstDownstreamByte: DurationToFloat(common.GetTimeToFirstDownstreamTxByte()),
+						LastDownstreamByte: DurationToFloat(common.GetTimeToLastDownstreamTxByte()),
+					},
+				},
+				Downstream: DownstreamData{
+					ConnectionTermination: respflags.GetDownstreamConnectionTermination(),
+					DirectRemoteAddress: common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetAddress(),
+					DirectRemoteAddressPort: common.GetDownstreamDirectRemoteAddress().GetSocketAddress().GetPortValue(),
+					LocalAddress: common.GetDownstreamLocalAddress().GetSocketAddress().GetAddress(),
+					LocalAddressPort: common.GetDownstreamLocalAddress().GetSocketAddress().GetPortValue(),
+					ProtocolError: respflags.GetDownstreamProtocolError(),
+					RemoteAddress: common.GetDownstreamRemoteAddress().GetSocketAddress().GetAddress(),
+					RemoteAddressPort: common.GetDownstreamRemoteAddress().GetSocketAddress().GetPortValue(),
+				},
+				Upstream: UpstreamData{
+					Cluster: common.GetUpstreamCluster(),
+					ConnectionFailure: respflags.GetUpstreamConnectionFailure(),
+					ConnectionTermination: respflags.GetUpstreamConnectionTermination(),
+					LocalAddress: common.GetUpstreamLocalAddress().GetSocketAddress().GetAddress(),
+					LocalAddressPort: common.GetUpstreamLocalAddress().GetSocketAddress().GetPortValue(),
+					Overflow: respflags.GetUpstreamOverflow(),
+					RemoteAddress: common.GetUpstreamRemoteAddress().GetSocketAddress().GetAddress(),
+					RemoteAddressPort: common.GetUpstreamRemoteAddress().GetSocketAddress().GetPortValue(),
+					RemoteReset: respflags.GetUpstreamRemoteReset(),
+					RequestTimeout: respflags.GetUpstreamRequestTimeout(),
+					RetryLimitExceeded: respflags.GetUpstreamRetryLimitExceeded(),
+					TransportFailureReason: common.GetUpstreamTransportFailureReason(),
+				},
+				TLS: TLSData{
+					LocalCertificate: CertificateData{
+						Properties: tls.GetLocalCertificateProperties().GetSubject(),
+						PropertiesAltNames: lan,
+					},
+					PeerCertificate: CertificateData{
+						Properties: tls.GetPeerCertificateProperties().GetSubject(),
+						PropertiesAltNames: pan,
+					},
+					CipherSuite: tls.GetTlsCipherSuite().String(),
+					SessionId: tls.GetTlsSessionId(),
+					SNIHostname: tls.GetTlsSniHostname(),
+					Version: tls.GetTlsVersion().String(),
+				},
+				Request: RequestData{
+					BodyBytes: req.GetRequestBodyBytes(),
+					HeadersBytes: req.GetRequestHeadersBytes(),
+					OriginalPath: req.GetOriginalPath(),
+					Headers: req.GetRequestHeaders(),
+//					Cookies: XXX
+//					Arguments: XXXX
+//					Attributes: XXXX
+				},
+				Response: ResponseData{
+					BodyBytes: resp.GetResponseBodyBytes(),
+					Code: int(resp.GetResponseCode().GetValue()),
+					CodeDetails: resp.GetResponseCodeDetails(),
+					Headers: resp.GetResponseHeaders(),
+					HeadersBytes: resp.GetResponseHeadersBytes(),
+					Trailers: resp.GetResponseTrailers(),
+				},
+				Metadata: MetadataData{
+					DelayInjected: respflags.GetDelayInjected(),
+					FailedLocalHealthCheck: respflags.GetFailedLocalHealthcheck(),
+					FaultInjected: respflags.GetFaultInjected(),
+					InvalidEnvoyRequestHeaders: respflags.GetInvalidEnvoyRequestHeaders(),
+					LocalReset: respflags.GetLocalReset(),
+					NoHealthyUpstream: respflags.GetNoHealthyUpstream(),
+					NoRouteFound: respflags.GetNoRouteFound(),
+					RateLimited: respflags.GetRateLimited(),
+					RateLimitServiceError: respflags.GetRateLimitServiceError(),
+					RouteName: common.GetRouteName(),
+					SampleRate: common.GetSampleRate(),
+					StreamIdleTimeout: respflags.GetStreamIdleTimeout(),
+					UnauthorizedDetails: respflags.GetUnauthorizedDetails().GetReason().String(),
+				},
+			}
+
+			log.Printf("[DEBUG] ---> [ %v:%v %v:%v ] <---", cflog.Downstream.RemoteAddress, cflog.Downstream.RemoteAddressPort,
+				cflog.Downstream.LocalAddress, cflog.Downstream.LocalAddressPort)
+
+			log.Printf("[DEBUG] cflog=%v", cflog)
 
 			log_entry := LogEntry{
-				full_entry:		 entry,
-				common:			 common,
-				req:			 req,
-				resp:			 resp,
-				method:			 method,
-				response_code:		 response_code,
-				curiefense_json_string:	 curiefense_json_string,
+				fullEntry:	entry,
+				cfLog:		&cflog,
 				curiefense:		 curiefense,
-				upstream_remote_addr:	 upstream_remote_addr,
-				upstream_remote_port:	 upstream_remote_port,
-				upstream_local_addr:	 upstream_local_addr,
-				upstream_local_port:	 upstream_local_port,
 			}
-
-			// **** INSERT ****
 
 			for _,l := range s.loggers {
 				l.SendEntry(log_entry)
