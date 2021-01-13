@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	elasticsearch "github.com/elastic/go-elasticsearch/v7"
+	"errors"
 )
 
 
@@ -61,24 +62,69 @@ type LogEntry struct {
 	upstream_local_port uint32;
 }
 
+type Logger interface {
+	ConfigureFromEnv(name string, envVar string, channel_capacity int) error
+	Start()
+	GetLogEntry() LogEntry
+	SendEntry(e LogEntry)
+	InsertEntry(e LogEntry) bool
+}
 
-type Logger struct {
+type logger struct {
 	name string
 	channel chan LogEntry
+	url string
+	do_insert func(LogEntry) bool
 }
 
 
-func (l Logger) log_entry(e LogEntry) {
+func (l logger) SendEntry(e LogEntry) {
 	if len(l.channel) >= cap(l.channel) {
 		metric_dropped_log_entry.With(prometheus.Labels{"logger":l.name}).Inc()
-		log.Printf("[WARNING] [%s] buffer full. Log entry dropped", l.name)
+		log.Printf("[WARNING] [%s] buffer full (%v/%v). Log entry dropped", l.name, len(l.channel), cap(l.channel))
 	} else {
 		l.channel <- e
 	}
 }
 
-type server struct {
-	host string
+
+func (l *logger) ConfigureFromEnv(name string, envVar string, channel_capacity int) error {
+	url, ok := os.LookupEnv(envVar)
+	if !ok {
+		return errors.New(fmt.Sprintf("Did not find %s in environment", envVar))
+	}
+	ch := make(chan LogEntry, channel_capacity)
+	l.name = name
+	l.url = url
+	l.channel = ch
+	if l.do_insert == nil {
+		l.do_insert = l.InsertEntry
+	}
+	return nil
+}
+
+func (l logger) Start() {
+	log.Printf("[INFO]: %s logging routine started", l.name)
+	for {
+		entry := l.GetLogEntry()
+		now := time.Now()
+		l.do_insert(entry)
+		metric_logger_latency.With(prometheus.Labels{"logger":l.name}).Observe(time.Since(now).Seconds())
+	}
+}
+
+
+func (l logger) GetLogEntry() LogEntry {
+	return <-l.channel
+}
+
+func (l logger) InsertEntry(e LogEntry) bool {
+	log.Printf("[ERROR] entry insertion not implemented")
+	return false
+}
+
+
+type grpcServerParams struct {
 	loggers []Logger
 }
 
@@ -255,16 +301,16 @@ func makeLabels(status_code int, method, path, upstream, blocked string, tags ma
 }
 
 
-type PromServer struct {
-	logger Logger
+type promLogger struct {
+	logger
 }
 
 
-func (s PromServer) start() {
-	log.Printf("[INFO]: Prometheus metrics updating routine started")
+func (l promLogger) Start() {
+	log.Printf("[INFO]: Prometheus (%s) metrics updating routine started", l.name)
 
 	for {
-		e := <- s.logger.channel
+		e := l.GetLogEntry()
 
 		// **** Update prometheus metrics ****
 		metric_requests.Inc()
@@ -313,11 +359,10 @@ func (s PromServer) start() {
 // POSTGRESQL
 
 
-type PGserver struct {
+type pgLogger struct {
+	logger
 	host string
-	db_url string
 	db     *pgx.Conn
-	logger Logger
 }
 
 func DurationToFloat(d *duration.Duration) float64 {
@@ -328,35 +373,23 @@ func DurationToFloat(d *duration.Duration) float64 {
 }
 
 
-func (s PGserver) getDB() *pgx.Conn {
-	for s.db == nil || s.db.IsClosed() {
-		conn, err := pgx.Connect(context.Background(), s.db_url)
+func (l pgLogger) getDB() *pgx.Conn {
+	for l.db == nil || l.db.IsClosed() {
+		conn, err := pgx.Connect(context.Background(), l.url)
 		if err == nil {
-			s.db = conn
-			log.Printf("[DEBUG] Connected to database %v\n", s.host)
+			l.db = conn
+			log.Printf("[DEBUG] Connected to database %v\n", l.host)
 			break
 		}
-		log.Printf("[ERROR] Could not connect to database %v: %v\n", s.host, err)
+		log.Printf("[ERROR] Could not connect to database %v: %v\n", l.host, err)
 		time.Sleep(time.Second)
 	}
-	return s.db
+	return l.db
 }
 
 
-func (s PGserver) start() bool {
-	log.Printf("[INFO]: Postgres logging routine started")
-	db := s.getDB()
-	for {
-		entry := <-s.logger.channel
-		now := time.Now()
-		db = s.getDB() // needed to ensure db cnx is not closed and reopen it if needed
-		pg_insert_entry(db, entry)
-		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
-	}
-}
-
-
-func pg_insert_entry(db *pgx.Conn, e LogEntry) bool {
+func (l *pgLogger) InsertEntry(e LogEntry) bool {
+	db := l.getDB() // needed to ensure db cnx is not closed and reopen it if needed
 
 	respflags := e.common.GetResponseFlags()
 
@@ -454,25 +487,25 @@ func pg_insert_entry(db *pgx.Conn, e LogEntry) bool {
 		tls.GetPeerCertificateProperties().GetSubject(),				/* PeerCertificateProperties,           */
 		jsonb_peeraltnames,								/* PeerCertificatePropertiesAltNames,   */
 		tls.GetTlsSessionId(),								/* TlsSessionId,                        */
-		e.method,										/* RequestMethod,                       */
+		e.method,									/* RequestMethod,                       */
 		e.req.GetScheme(),								/* Scheme,                              */
 		e.req.GetAuthority(),								/* Authority,                           */
 		e.req.GetPort().GetValue(),							/* Port,                                */
-		e.req.GetPath(),									/* Path,                                */
+		e.req.GetPath(),								/* Path,                                */
 		e.req.GetUserAgent(),								/* UserAgent,                           */
 		e.req.GetReferer(),								/* Referer,                             */
-		e.req.GetForwardedFor(),								/* ForwardedFor,                        */
+		e.req.GetForwardedFor(),							/* ForwardedFor,                        */
 		e.req.GetRequestId(),								/* RequestId,                           */
-		e.req.GetOriginalPath(),								/* OriginalPath,                        */
+		e.req.GetOriginalPath(),							/* OriginalPath,                        */
 		e.req.GetRequestHeadersBytes(),							/* RequestHeadersBytes,                 */
 		e.req.GetRequestBodyBytes(),							/* RequestBodyBytes,                    */
 		jsonb_reqhdr,									/* RequestHeaders,                      */
-		e.response_code,									/* ResponseCode,                        */
-		e.resp.GetResponseHeadersBytes(),							/* ResponseHeadersBytes,                */
+		e.response_code,								/* ResponseCode,                        */
+		e.resp.GetResponseHeadersBytes(),						/* ResponseHeadersBytes,                */
 		e.resp.GetResponseBodyBytes(),							/* ResponseBodyBytes                    */
 		jsonb_resphdr,									/* ResponseHeaders,                     */
 		jsonb_resptrail,								/* ResponseTrailers,                    */
-		e.resp.GetResponseCodeDetails(),							/* ResponseCodeDetails                  */
+		e.resp.GetResponseCodeDetails(),						/* ResponseCodeDetails                  */
 	)
 	if err == nil {
 		log.Printf("[DEBUG] insert into pg ok")
@@ -489,66 +522,56 @@ func pg_insert_entry(db *pgx.Conn, e LogEntry) bool {
 // |___|____/_/ \_\___/ |_| |___\___|___/___/_/ \_\_|_\\___|_||_|
 // ELASTICSEARCH
 
-type ESserver struct {
-	es_url string
-	es     *elasticsearch.Client
-	logger Logger
+type esLogger struct {
+	logger
+	client     *elasticsearch.Client
 }
 
-func (s ESserver) getES() *elasticsearch.Client {
-	for s.es == nil {
+func (l esLogger) getESClient() *elasticsearch.Client {
+	for l.client == nil {
 		cfg := elasticsearch.Config{
-			Addresses: []string{ s.es_url },
+			Addresses: []string{ l.url },
 		}
 		conn, err := elasticsearch.NewClient(cfg)
 		if err == nil {
-			s.es = conn
-			log.Printf("[DEBUG] Connected to elasticsearch %v\n", s.es_url)
+			l.client = conn
+			log.Printf("[DEBUG] Connected to elasticsearch %v\n", l.url)
 			break
 		}
-		log.Printf("[ERROR] Could not connect to elasticsearch [%v]: %v\n", s.es_url, err)
+		log.Printf("[ERROR] Could not connect to elasticsearch [%v]: %v\n", l.url, err)
 		time.Sleep(time.Second)
 	}
-	return s.es
+	return l.client
 }
 
 
-func (s ESserver) start() {
-	log.Printf("[INFO]: ElasticSearch logging routine started")
-	es := s.getES()
-	for {
-		entry := <-s.logger.channel
-		now := time.Now()
-		es = s.getES() // needed to ensure ES cnx is not closed and reopen it if needed
-		es_insert_entry(es, entry)
-		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
-	}
-}
 
-
-func es_insert_entry(es *elasticsearch.Client, e LogEntry) {
+func (l *esLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] ES insertion!")
+	client := l.getESClient() // needed to ensure ES cnx is not closed and reopen it if needed
 	j, err := json.Marshal(e.full_entry)
 	if err == nil {
-		es.Index(
+		client.Index(
 			"log",
 			strings.NewReader(string(j)),
-			es.Index.WithRefresh("true"),
-			es.Index.WithPretty(),
-			es.Index.WithFilterPath("result", "_id"),
+			client.Index.WithRefresh("true"),
+			client.Index.WithPretty(),
+			client.Index.WithFilterPath("result", "_id"),
 		)
 	} else {
 		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
+		return false
 	}
 	if (e.curiefense_json_string != "") {
-		es.Index(
+		client.Index(
 			"log_cf",
 			strings.NewReader(e.curiefense_json_string),
-			es.Index.WithRefresh("true"),
-			es.Index.WithPretty(),
-			es.Index.WithFilterPath("result", "_id"),
+			client.Index.WithRefresh("true"),
+			client.Index.WithPretty(),
+			client.Index.WithFilterPath("result", "_id"),
 		)
 	}
+	return true
 }
 
 
@@ -559,39 +582,32 @@ func es_insert_entry(es *elasticsearch.Client, e LogEntry) {
 // |____\___/ \___|___/ |_/_/ \_\___/_||_|
 // LOGSTASH
 
-type LSserver struct {
-	ls_url string
-	logger Logger
-}
-
-func (s LSserver) start() {
-	log.Printf("[INFO]: LogStash logging routine started")
-	for {
-		entry := <-s.logger.channel
-		now := time.Now()
-		ls_insert_entry(s.ls_url, entry)
-		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
-	}
+type logstashLogger struct {
+	logger
 }
 
 
-func ls_insert_entry(url string, e LogEntry) {
+func (l *logstashLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] LogStash insertion!")
 	j, err := json.Marshal(e.full_entry)
 	if err == nil {
-		_, err := http.Post(url+"/curiefense/log", "application/json",  bytes.NewReader(j))
+		_, err := http.Post(l.url+"/curiefense/log", "application/json",  bytes.NewReader(j))
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
+			return false
 		}
 	} else {
 		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
+		return false
 	}
 	if (e.curiefense_json_string != "") {
-		_, err := http.Post(url+"/curiefense/log_cf", "application/json", strings.NewReader(e.curiefense_json_string))
+		_, err := http.Post(l.url+"/curiefense/log_cf", "application/json", strings.NewReader(e.curiefense_json_string))
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
+			return false
 		}
 	}
+	return true
 }
 
 
@@ -602,27 +618,16 @@ func ls_insert_entry(url string, e LogEntry) {
 // |_| |____\___/|___|_|\_| |_| |___/
 // FLUENTD
 
-type FluentdServer struct {
-	url string
-	logger Logger
-}
-
-func (s FluentdServer) start() {
-	log.Printf("[INFO]: Fluentd logging routine started")
-	for {
-		entry := <-s.logger.channel
-		now := time.Now()
-		fluentd_insert_entry(s.url, entry)
-		metric_logger_latency.With(prometheus.Labels{"logger":s.logger.name}).Observe(time.Since(now).Seconds())
-	}
+type fluentdLogger struct {
+	logger
 }
 
 
-func fluentd_insert_entry(url string, e LogEntry) {
+func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] Fluentd insertion!")
 	j, err := json.Marshal(e.full_entry)
 	if err == nil {
-		_, err := http.PostForm(url+"/curiefense/log", neturl.Values{"json": {string(j)}})
+		_, err := http.PostForm(l.url+"/curiefense/log", neturl.Values{"json": {string(j)}})
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
 		}
@@ -630,11 +635,12 @@ func fluentd_insert_entry(url string, e LogEntry) {
 		log.Printf("[ERROR] Could not convert protobuf entry into json for ES insertion.")
 	}
 	if (e.curiefense_json_string != "") {
-		_, err := http.PostForm(url+"/curiefense/log_cf", neturl.Values{"json": {e.curiefense_json_string}})
+		_, err := http.PostForm(l.url+"/curiefense/log_cf", neturl.Values{"json": {e.curiefense_json_string}})
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
 		}
 	}
+	return true
 }
 
 
@@ -657,7 +663,7 @@ func makejsonb(v interface{}) *pgtype.JSON {
 	return &pgtype.JSON{Bytes: j, Status: pgtype.Present}
 }
 
-func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) error {
+func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) error {
 	msg, err := x.Recv()
 	if err != nil {
 		log.Printf("[ERROR] Error receiving grpc stream message: %v", err)
@@ -718,7 +724,7 @@ func (s server) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) 
 			// **** INSERT ****
 
 			for _,l := range s.loggers {
-				l.channel <- log_entry
+				l.SendEntry(log_entry)
 			}
 		}
 	}
@@ -790,6 +796,9 @@ func main() {
 	}
 	log.SetOutput(filter)
 
+	log.Printf("[INFO] Channel capacity set at %v", *channel_capacity)
+
+
 	// set up prometheus server
 	http.Handle("/metrics", promhttp.Handler())
 	log.Printf("Prometheus exporter listening on %v", prom_addr)
@@ -803,11 +812,9 @@ func main() {
 	var loggers []Logger
 
 	// Prometheus
-	prom_ch := make(chan LogEntry, *channel_capacity)
-	l := Logger{name:"prometheus", channel: prom_ch}
-	loggers = append(loggers, l)
-	prom := PromServer{logger:l}
-	go prom.start()
+	prom := promLogger{logger{name:"prometheus", channel: make(chan LogEntry, *channel_capacity)}}
+	prom.do_insert = prom.InsertEntry  // manual OOP :( thanks Go.
+	loggers = append(loggers, &prom)
 
 	// PostgreSQL
 	if check_env_flag("CURIELOGGER_USES_POSTGRES") {
@@ -832,41 +839,38 @@ func main() {
 			re := regexp.MustCompile(`host=([^ ]+)`)
 			host = re.FindStringSubmatch(db_url)[1]
 		}
-		pg_ch := make(chan LogEntry, *channel_capacity)
-		l := Logger{name:"postgres", channel: pg_ch}
-		loggers = append(loggers, l)
-		pg := PGserver{host: host, db_url:db_url, logger:l}
-		go pg.start()
+		pg := pgLogger{ logger:logger{name: "postgres", url:db_url, channel: make(chan LogEntry, *channel_capacity)} , host: host }
+		pg.do_insert = pg.InsertEntry  // manual OOP :( thanks Go.
+		loggers = append(loggers, &pg)
 	}
 
 	// ElasticSearch
 	if check_env_flag("CURIELOGGER_USES_ELASTICSEARCH") {
-		es_ch := make(chan LogEntry, *channel_capacity)
-		l := Logger{name:"elasticsearch", channel: es_ch}
-		loggers = append(loggers, l)
-		es_url := getEnv("CURIELOGGER_ELASTICSEARCH_URL", "http://localhost:9200")
-		es := ESserver{es_url:es_url, logger:l}
-		go es.start()
+		es := esLogger{}
+		es.do_insert = es.InsertEntry  // manual OOP :( thanks Go.
+		es.ConfigureFromEnv("ElasticSearch", "CURIELOGGER_ELASTICSEARCH_URL", *channel_capacity)
+		loggers = append(loggers, &es)
 	}
 
 	// Logstash
 	if check_env_flag("CURIELOGGER_USES_LOGSTASH") {
-		ls_ch := make(chan LogEntry, *channel_capacity)
-		l := Logger{name:"logstash", channel: ls_ch}
-		loggers = append(loggers, l)
-		ls_url := getEnv("CURIELOGGER_LOGSTASH_URL", "http://localhost:5001")
-		ls := LSserver{ls_url:ls_url, logger:l}
-		go ls.start()
+		ls := logstashLogger{}
+		ls.do_insert = ls.InsertEntry  // manual OOP :( thanks Go.
+		ls.ConfigureFromEnv("LogStash","CURIELOGGER_LOGSTASH_URL", *channel_capacity)
+		loggers = append(loggers, &ls)
 	}
 
 	// Fluentd
 	if check_env_flag("CURIELOGGER_USES_FLUENTD") {
-		fd_ch := make(chan LogEntry, *channel_capacity)
-		l := Logger{name:"logstash", channel: fd_ch}
-		loggers = append(loggers, l)
-		fd_url := getEnv("CURIELOGGER_FLUENTD_URL", "http://localhost:9880")
-		ls := FluentdServer{url:fd_url, logger:l}
-		go ls.start()
+		fd := fluentdLogger{}
+		fd.do_insert = fd.InsertEntry  // manual OOP :( thanks Go.
+		fd.ConfigureFromEnv("Fluentd", "CURIELOGGER_FLUENTD_URL", *channel_capacity)
+		loggers = append(loggers, &fd)
+	}
+
+
+	for _,l := range loggers {
+		go l.Start()
 	}
 
 	////////////////////////
@@ -880,7 +884,7 @@ func main() {
 	log.Printf("GRPC server listening on %v", grpc_addr)
 	s := grpc.NewServer()
 
-	als.RegisterAccessLogServiceServer(s, &server{loggers:loggers})
+	als.RegisterAccessLogServiceServer(s, &grpcServerParams{loggers:loggers})
 	if err := s.Serve(sock); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
