@@ -33,6 +33,7 @@ local re_match      = utils.re_match
 local map_request   = utils.map_request
 local tag_request   = utils.tag_request
 local deny_request  = utils.deny_request
+local custom_response  = utils.custom_response
 
 local tag_lists     = tagprofiler.tag_lists
 
@@ -102,26 +103,6 @@ function print_request_map(request_map)
     end
 end
 
--- function deny_request(profile, handle, info, block_mode)
--- moved to utils --
---          deny_request(profile, handle, info, block_mode)
--- function deny_request(request_map, info, block_mode)
---     local handle = request_map.handle
---     local status = "403"
-
---     tag_request(request_map,"reason-" .. info)
-
---     request_map.attrs.blocked = true
---     request_map.attrs.block_reason = info
-
--- --     handle:logDebug(sfmt("Request denied. reason: %s", info))
---     if block_mode then
---         handle:respond( {[":status"] = status}, "curiefense - request denied")
---     else
---         handle:headers():add("x-curiefense-deny", info)
---     end
--- end
-
 function map_tags(request_map, urlmap_name, urlmapentry_name, acl_id, acl_name, waf_id, waf_name)
 
     tag_request(request_map, {
@@ -150,23 +131,23 @@ function inspect(handle)
 
     local timeline = {}
 
-    -- addentry(timeline, "0 init")
+    addentry(timeline, "0 init")
     init(handle)
 
     -- handle:logDebug("inspection initiated")
-    -- addentry(timeline, "1 map_request")
+    addentry(timeline, "1 map_request")
     local request_map = map_request(handle)
 
-    -- addentry(timeline, "2 url/host assignment")
+    addentry(timeline, "2 url/host assignment")
     local url = request_map.attrs.path
     local host = request_map.headers.host or request_map.attrs.authority
 
 
     -- unified the following 3 into a single operaiton
-    -- addentry(timeline, "3 match_urlmap")
+    addentry(timeline, "3 match_urlmap")
     local urlmap_entry, url_map = match_urlmap(request_map)
 
-    -- addentry(timeline, "4 profiles assignment")
+    addentry(timeline, "4 profiles assignment")
     local acl_active        = urlmap_entry["acl_active"]
     local waf_active        = urlmap_entry["waf_active"]
     local acl_profile_id    = urlmap_entry["acl_profile"]
@@ -174,7 +155,7 @@ function inspect(handle)
     local acl_profile       = globals.ACLProfiles[acl_profile_id]
     local waf_profile       = globals.WAFProfiles[waf_profile_id]
 
-    -- addentry(timeline, "5 map_tags")
+    addentry(timeline, "5 map_tags")
     map_tags(request_map,
         sfmt('urlmap:%s', url_map.name),
         sfmt('urlmap-entry:%s', urlmap_entry.name),
@@ -184,7 +165,7 @@ function inspect(handle)
         sfmt("wafname:%s", waf_profile.name)
     )
 
-    -- addentry(timeline, "6 session_profiling")
+    addentry(timeline, "6 session_profiling")
     -- session profiling
     tag_lists(request_map)
 
@@ -195,66 +176,68 @@ function inspect(handle)
     end
 
 
-    -- addentry(timeline, "7 limit_check")
+    addentry(timeline, "7 limit_check")
     -- rate limit
     limit_check(request_map, urlmap_entry["limit_ids"], urlmap_entry["name"])
 
     -- if not internal_url(url) then
     -- acl
-    -- addentry(timeline, "8 acl_check")
-    local acl_code, acl_result = acl_check(acl_profile, request_map)
+    addentry(timeline, "8 acl_check")
+    local acl_code, acl_result = acl_check(acl_profile, request_map, acl_active)
 
     if acl_result then
         -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
-        -- addentry(timeline, "8b acl_check/tag_request")
+        addentry(timeline, "8b acl_check/tag_request")
         tag_request(request_map, sfmt("acltag:%s" , acl_result.reason))
     end
 
     if acl_code == ACLDeny or acl_code == ACLForceDeny then
-        -- addentry(timeline, "8c acl_check/deny_request")
-        deny_request(request_map, acl_result, acl_active)
+        addentry(timeline, "8c acl_check/deny_request")
+        custom_response(request_map, {[ "reason" ] = acl_result, ["block_mode"] = acl_active})
     end
 
-    -- addentry(timeline, "9 challenge_verified")
+    addentry(timeline, "9 challenge_verified")
     local is_human = challenge_verified(handle, request_map)
 
-    -- addentry(timeline, "9b challenge_verified/tag_request")
+    addentry(timeline, "9b challenge_verified/tag_request")
     tag_request(request_map, is_human and "human" or "bot")
 
     if acl_code == ACLDenyBot then
         -- handle:logDebug("002 ACL DENY BOT MATCHED!")
 
         if not is_human then
-            -- addentry(timeline, "9c challenge_verified/challenge_phase01")
+            addentry(timeline, "9c challenge_verified/challenge_phase01")
             -- handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
             challenge_phase01(handle, request_map, "1")
-        -- else
-            -- handle:logDebug("004 ACL DENY BOT MATCHED! << challenge VERIFIED >>")
         end
     end
 
     if acl_code ~= ACLBypass then
         -- ACLAllow / ACLAllowBot/ ACLNoMatch
         -- move to WAF
-        -- addentry(timeline, "10 waf_check")
+        addentry(timeline, "10 waf_check")
         local waf_code, waf_result = waf_check(waf_profile, request_map)
         -- blocked results returns as table
         if type(waf_result) == "table" then
-            -- addentry(timeline, "10b waf_check/tag_request")
+            addentry(timeline, "10b waf_check/tag_request")
             tag_request(request_map, sfmt("wafsig:%s", waf_result.sig_id))
 
             if waf_code == WAFBlock then
-                -- addentry(timeline, "10c waf_check/deny_request")
-                deny_request(request_map, waf_result, waf_active)
+                addentry(timeline, "10c waf_check/deny_request")
+                local action_params = {
+                    ["reason"] = waf_result,
+                    ["block_mode"] = waf_active
+                }
+                custom_response(request_map, action_params)
             end
         end
     end
     -- end
 
     -- logging
-    -- addentry(timeline, "11 log_request")
+    addentry(timeline, "11 log_request")
     log_request(request_map)
-    -- addentry(timeline, "12 done")
-    -- handle:logErr(string.format("timeline %s",cjson.encode(timeline)))
+    addentry(timeline, "12 done")
+    handle:logDebug(string.format("timeline %s",cjson.encode(timeline)))
 
 end
