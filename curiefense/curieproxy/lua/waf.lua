@@ -74,10 +74,14 @@ function gen_block_info(section, name, value, sig)
     }
 end
 
-function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
+function name_check(request_map, section, name, name_rule, value, omit_entries, exclude_sigs)
+
     local matched = re_match(value, name_rule.reg)
 
+    request_map.handle:logDebug(string.format("WAF name_check name %s value %s regex %s ", name, value, name_rule.reg))
+
     if matched then
+        request_map.handle:logDebug(string.format("WAF name_check value %s MATCHED with regex %s ", value, name_rule.reg))
         store_section(omit_entries, section, name, true)
     else
         if name_rule.restrict then
@@ -89,7 +93,7 @@ function name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
     return nil, nil
 end
 
-function regex_check(section, name, regex_rules, value, omit_entries, exclude_sigs)
+function regex_check(request_map, section, name, regex_rules, value, omit_entries, exclude_sigs)
 
     for name_patt, patt_rule in pairs(regex_rules) do
         if re_match(name, name_patt) then
@@ -138,14 +142,15 @@ function waf_regulate(section, profile, request, omit_entries, exclude_sigs)
                 store_section(omit_entries, section, name, true)
             else
                 name_rule = name_rules[name]
+                request.handle:logDebug(string.format(" NAME RULE %s", json_encode(name_rule)))
                 if name_rule then
-                    local response, msg = name_check(section, name, name_rule, value, omit_entries, exclude_sigs)
+                    local response, msg = name_check(request, section, name, name_rule, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
                 end
                 if check_regex then
-                    local response, msg = regex_check(section, name, regex_rules, value, omit_entries, exclude_sigs)
+                    local response, msg = regex_check(request, section, name, regex_rules, value, omit_entries, exclude_sigs)
                     if WAFBlock == response then
                         return response, gen_block_info(section, name, value, {["msg"] = msg})
                     end
