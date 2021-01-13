@@ -28,16 +28,18 @@ function check_policy (policy, request)
     return nil
 end
 
-function acl_result( action, reason)
-    return action, { ["initiator"] = "acl", ["action"] = action, ["reason"] = reason }
+function acl_result( action, reason, active)
+    local action_params  = { ["initiator"] = "acl", ["action"] = action, ["reason"] = reason }
+    action_params.block_mode = active
+    return action, action_params
 end
 
 function check(profile, request)
     local msg = nil
-    -- request.handle:logDebug(string.format(
-    --     "ACL Check -- Request details \n%s\n", json_safe.encode(request.attrs)))
-    -- request.handle:logDebug(string.format(
-    --     "ACL Check -- Profile \n%s\n", json_safe.encode(profile)))
+    request.handle:logDebug(string.format(
+        "ACL Check -- Request details \n%s\n", json_safe.encode(request.attrs)))
+    request.handle:logDebug(string.format(
+        "ACL Check -- Profile \n%s\n", json_safe.encode(profile)))
     msg = check_policy(profile.force_deny, request)
     if msg then return acl_result(ACLForceDeny, msg) end
 

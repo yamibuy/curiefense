@@ -24,7 +24,7 @@
           </div>
         </div>
 
-        <div class="content">
+        <div class="content px-3 py-3 mx-0 my-0">
           <div class="field">
             <p class="control has-icons-left">
               <input class="input is-small" type="text"

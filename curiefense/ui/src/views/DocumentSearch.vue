@@ -209,12 +209,36 @@ export default {
 
       // Order is important, we load [urlmaps] before [aclpolicies, wafpolicies, ratelimits] so we can pull all references correctly
       componentsMap: {
-        'urlmaps': {component: URLMapsEditor, title: 'URL Maps'},
-        'aclpolicies': {component: ACLEditor, title: 'ACL Policies'},
-        'flowcontrol': {component: FlowControlEditor, title: 'Flow Control'},
-        'tagrules': {component: ProfilingListEditor, title: 'Tag Rules'},
-        'ratelimits': {component: RateLimitsEditor, title: 'Rate Limits'},
-        'wafpolicies': {component: WAFEditor, title: 'WAF Policies'}
+        'urlmaps': {
+          component: URLMapsEditor,
+          title: 'URL Maps',
+          fields: 'id, name, map'
+        },
+        'aclpolicies': {
+          component: ACLEditor,
+          title: 'ACL Policies',
+          fields: 'id, name, allow, allow_bot, deny_bot, bypass, deny, enforce_deny'
+        },
+        'flowcontrol': {
+          component: FlowControlEditor,
+          title: 'Flow Control',
+          fields: 'id, name, notes, include, exclude'
+        },
+        'tagrules': {
+          component: ProfilingListEditor,
+          title: 'Tag Rules',
+          fields: 'id, name, notes, tags'
+        },
+        'ratelimits': {
+          component: RateLimitsEditor,
+          title: 'Rate Limits',
+          fields: 'id, name, description'
+        },
+        'wafpolicies': {
+          component: WAFEditor,
+          title: 'WAF Policies',
+          fields: 'id, name'
+        }
       },
 
       // Referenced IDs of [aclpolicies, wafpolicies, ratelimits] in [urlmaps]
@@ -266,7 +290,9 @@ export default {
         let doctype = docTypes[i]
         let branch = this.selectedBranch
         try {
-          const response = await RequestsUtils.sendRequest('GET', `configs/${branch}/d/${doctype}/`)
+          const response = await RequestsUtils.sendRequest('GET',
+              `configs/${branch}/d/${doctype}/`, null,
+              {headers: {'x-fields': this.componentsMap[doctype].fields}})
           for (let j = 0; j < response.data.length; j++) {
             const doc = response.data[j]
             doc.docType = doctype

@@ -34,7 +34,7 @@
                 <p class="control">
                   <a class="button is-small"
                      @click="downloadDB"
-                     title="Download Database x">
+                     title="Download Database">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
@@ -95,7 +95,7 @@
                 <p class="control">
                   <a class="button is-small"
                      @click="downloadKey"
-                     title="Download Key x">
+                     title="Download Key">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
@@ -360,7 +360,7 @@ export default {
         data = {key: {}}
       }
 
-      return RequestsUtils.sendRequest('PUT', `db/${db}/`, data, `Database [${db}] saved!`, `Failed saving database [${db}]!`)
+      return RequestsUtils.sendRequest('PUT', `db/${db}/`, data, null, `Database [${db}] saved!`, `Failed saving database [${db}]!`)
     },
 
     switchDB() {
@@ -379,7 +379,7 @@ export default {
         successMessage = `Database [${db}] deleted!`
         failureMessage = `Failed deleting database [${db}]!`
       }
-      await RequestsUtils.sendRequest('DELETE', `db/${db}/`, null, successMessage, failureMessage)
+      await RequestsUtils.sendRequest('DELETE', `db/${db}/`, null, null, successMessage, failureMessage)
       if (!this.databases.includes(this.selectedDB)) {
         this.loadFirstDB()
       }
@@ -405,14 +405,8 @@ export default {
       this.isForkDBLoading = false
     },
 
-    downloadDB(event) {
-      let element = event.target
-      while (element.nodeName !== 'A')
-        element = element.parentNode
-
-      let dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.selectedDBData))
-      element.setAttribute('href', dataStr)
-      element.setAttribute('download', this.selectedDB + '.json')
+    downloadDB() {
+      Utils.downloadFile(this.selectedDB, 'json', this.selectedDBData)
     },
 
     initDBKeys() {
@@ -431,7 +425,7 @@ export default {
     saveKey(db = this.selectedDB, key = this.selectedKey, doc = this.document) {
       const parsedDoc = JSON.parse(doc)
 
-      return RequestsUtils.sendRequest('PUT', `db/${db}/k/${key}/`, parsedDoc, `Key [${key}] in database [${db}] saved!`, `Failed saving key [${key}] in database [${db}]!`)
+      return RequestsUtils.sendRequest('PUT', `db/${db}/k/${key}/`, parsedDoc,  null,`Key [${key}] in database [${db}] saved!`, `Failed saving key [${key}] in database [${db}]!`)
     },
 
     switchKey() {
@@ -454,7 +448,7 @@ export default {
         successMessage = `Key [${key}] in database [${db}] deleted!`
         failureMessage = `Failed deleting key [${key}] in database [${db}]!`
       }
-      await RequestsUtils.sendRequest('DELETE', `db/${db}/k/${key}/`, null, successMessage, failureMessage)
+      await RequestsUtils.sendRequest('DELETE', `db/${db}/k/${key}/`, null, null, successMessage, failureMessage)
       if (!this.keys.includes(this.selectedKey)) {
         this.loadKey(this.keys[0])
       }
@@ -485,14 +479,8 @@ export default {
       this.isForkKeyLoading = false
     },
 
-    downloadKey(event) {
-      let element = event.target
-      while (element.nodeName !== 'A')
-        element = element.parentNode
-
-      let dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(this.document)
-      element.setAttribute('href', dataStr)
-      element.setAttribute('download', this.selectedKey + '.json')
+    downloadKey() {
+      Utils.downloadFile(this.selectedKey, 'json', this.document)
     },
 
     async saveChanges() {
@@ -530,7 +518,7 @@ export default {
       const version_id = gitVersion.version
       const url_trail = `${db}/v/${version_id}/`
 
-      await RequestsUtils.sendRequest('PUT', `db/${url_trail}revert/`, null, `Database [${db}] restored to version [${version_id}]!`, `Failed restoring database [${db}] to version [${version_id}]!`)
+      await RequestsUtils.sendRequest('PUT', `db/${url_trail}revert/`, null, null, `Database [${db}] restored to version [${version_id}]!`, `Failed restoring database [${db}] to version [${version_id}]!`)
       await this.loadDB(db)
       const oldSelectedKey = this.keys.find((key) => {
         return key === selectedKey
@@ -594,14 +582,34 @@ export default {
 
 </script>
 <style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
 #editor {
   width: 100%;
   height: 500px;
 }
 
 //Design for the json editor
-::v-deep .jsoneditor-menu > button, ::v-deep .jsoneditor-menu > .jsoneditor-modes > button {
-  float: none
+::v-deep .jsoneditor-menu {
+  @extend .has-background-grey-light;
+
+  & > button, & > .jsoneditor-modes > button {
+    float: none;
+  }
+
+  & .jsoneditor-contextmenu .jsoneditor-menu {
+    @extend .has-background-white;
+
+    & > li > button.jsoneditor-type-modes {
+
+    }
+
+    & > li > button.jsoneditor-selected {
+      @extend .has-background-grey;
+    }
+  }
 }
 ::v-deep .jsoneditor-contextmenu {
   z-index: 5;

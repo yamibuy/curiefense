@@ -310,7 +310,7 @@ export default {
         return this.ld.indexOf(this.selectedBucketNames, bucket.name) > -1
       }))
 
-      RequestsUtils.sendRequest('PUT', `/tools/publish/${this.selectedBranchName}/v/${this.selectedCommit}/`, this.buckets, `Published successfully!`, `Failed publishing!`)
+      RequestsUtils.sendRequest('PUT', `/tools/publish/${this.selectedBranchName}/v/${this.selectedCommit}/`, this.buckets, null, `Published successfully!`, `Failed publishing!`)
           .then((response) => {
             this.parsePublishResults(response.data, node)
           })

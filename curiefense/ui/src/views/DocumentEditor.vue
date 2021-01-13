@@ -69,14 +69,14 @@
                 </p>
 
                 <p class="control">
-                  <button class="button is-small"
+                  <a class="button is-small"
                      @click="downloadDoc"
-                     title="Download Document x">
+                     title="Download Document">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
 
-                  </button>
+                  </a>
                 </p>
 
                 <p class="control"
@@ -182,6 +182,7 @@
 <script>
 
 import DatasetsUtils from '@/assets/DatasetsUtils.js'
+import Utils from '@/assets/Utils.js'
 import ACLEditor from '@/doc-editors/ACLEditor.vue'
 import WAFEditor from '@/doc-editors/WAFEditor.vue'
 import WAFSigsEditor from '@/doc-editors/WAFSigsEditor.vue'
@@ -303,7 +304,12 @@ export default {
         return this.referencedIDsLimits.includes(this.selectedDocID)
       }
       return false
-    }
+    },
+
+    newDoc() {
+      let factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
+      return factory && factory()
+    },
 
   },
 
@@ -327,16 +333,12 @@ export default {
         await this.loadDocs(this.selectedDocType)
       }
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
+      this.addMissingDefaultsToDoc()
       this.goToRoute()
     },
 
     resetGitLog() {
       this.gitLog = []
-    },
-
-    newDoc() {
-      let factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
-      return factory && factory()
     },
 
     async loadConfigs(counter_only) {
@@ -388,6 +390,7 @@ export default {
       this.updateDocIdNames()
       if (this.docIdNames && this.docIdNames.length && this.docIdNames[0].length) {
         this.selectedDocID = this.docIdNames[0][0]
+        this.addMissingDefaultsToDoc()
       }
       this.loadGitLog()
     },
@@ -439,6 +442,7 @@ export default {
       this.setLoadingDocStatus(true)
       if (docID) {
         this.selectedDocID = docID
+        this.addMissingDefaultsToDoc()
       }
       this.loadGitLog()
       this.goToRoute()
@@ -446,13 +450,7 @@ export default {
     },
 
     downloadDoc() {
-      let element = event.target
-      while (element.nodeName !== 'A')
-        element = element.parentNode
-
-      let dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.docs))
-      element.setAttribute('href', dataStr)
-      element.setAttribute('download', this.selectedDocType + '.json')
+      Utils.downloadFile(this.selectedDocType, 'json', this.docs)
     },
 
     async forkDoc() {
@@ -470,7 +468,7 @@ export default {
       this.setLoadingDocStatus(true)
       this.isNewLoading = true
       if (!docToAdd) {
-        docToAdd = this.newDoc()
+        docToAdd = this.newDoc
       }
       this.resetGitLog()
       this.docs.unshift(docToAdd)
@@ -491,7 +489,7 @@ export default {
         url_trail += `${this.selectedDocID}/`
       const doc = this.selectedDoc
 
-      await RequestsUtils.sendRequest(methodName, url_trail, doc, 'Changes saved!', 'Failed while saving changes!')
+      await RequestsUtils.sendRequest(methodName, url_trail, doc, null, 'Changes saved!', 'Failed while saving changes!')
           .then(() => {
             this.updateDocIdNames()
             this.loadGitLog(true)
@@ -507,12 +505,13 @@ export default {
       this.setLoadingDocStatus(true)
       this.isDeleteLoading = true
       this.docs.splice(this.selectedDocIndex, 1)
-      await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, 'Document deleted!', 'Failed while deleting document!')
+      await RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`, null, null, 'Document deleted!', 'Failed while deleting document!')
           .then(() => {
             this.updateDocIdNames()
             this.loadGitLog(true)
           })
       this.selectedDocID = this.docs[0].id
+      this.addMissingDefaultsToDoc()
       this.resetGitLog()
       this.goToRoute()
       this.isDeleteLoading = false
@@ -544,11 +543,19 @@ export default {
       const version_id = gitVersion.version
       const url_trail = `configs/${branch}/d/${doctype}/v/${version_id}/`
 
-      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, `Document [${docTitle}] restored to version [${version_id}]!`, `Failed restoring document [${docTitle}] to version [${version_id}]!`)
+      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, null, `Document [${docTitle}] restored to version [${version_id}]!`, `Failed restoring document [${docTitle}] to version [${version_id}]!`)
       const response = await RequestsUtils.sendRequest('GET', url_trail)
       this.docs = response.data
       this.updateDocIdNames()
       this.loadGitLog()
+    },
+
+    addMissingDefaultsToDoc() {
+      if (!this.selectedDoc) {
+        return
+      }
+      this.selectedDoc = {...this.newDoc,...this.selectedDoc}
+      return this.selectedDoc
     },
 
     referToVersionControl() {
