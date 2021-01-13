@@ -235,7 +235,11 @@ function waf_section_match(hyperscan_matches, request, hca_keys, exclude_sigs)
                     request.handle:logDebug(string.format("waf_section_match MATCHED value %s patt %s", value, patt))
                     local section = address[1]
                     local name = address[2]
-                    if not exclude_sigs[section] or not exclude_sigs[section][name] then
+                    if (not exclude_sigs[section]
+                        or not exclude_sigs[section][name]
+                        or not exclude_sigs[section][name][sigid]
+                        )
+                    then
                         return WAFBlock, gen_block_info(section, name, value, waf_sig)
                     end
                 end
