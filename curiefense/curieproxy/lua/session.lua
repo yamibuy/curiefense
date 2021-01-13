@@ -193,7 +193,7 @@ function inspect(handle)
 
     if acl_code == ACLDeny or acl_code == ACLForceDeny then
         addentry(timeline, "8c acl_check/deny_request")
-        custom_response(request_map, acl_result, acl_active)
+        custom_response(request_map, {[ "reason" ] = acl_result, ["block_mode"] = acl_active)
     end
 
     addentry(timeline, "9 challenge_verified")
