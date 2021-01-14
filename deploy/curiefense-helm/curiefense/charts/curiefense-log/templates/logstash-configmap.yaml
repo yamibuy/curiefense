@@ -18,6 +18,7 @@ data:
     output {
         elasticsearch {
             hosts => "elasticsearch:9200"
+            index => "curieaccesslog"
         }
     }
 {{- end }}
