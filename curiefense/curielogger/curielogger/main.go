@@ -48,20 +48,154 @@ import (
 
 
 
+
+type AttributesData struct {
+	IPNum		 int		`json:"ipnum"`
+	IP		 string		`json:"ip"`
+	XFFTrustedHops	 int		`json:"xff_trusted_hops"`
+	URI		 string		`json:"uri"`
+	Authority	 string		`json:"authority"`
+	RemoteAddress	 string		`json:"remote_addr"`
+	Query		 string		`json:"query"`
+	Path		 string		`json:"path"`
+	Method		 string		`json:"method"`
+	Tags		 map[string]int	`json:"tags"`
+}
+
+type CurieProxyLog struct {
+	Headers		 map[string]string	`json:"headers"`
+	Cookies		 map[string]string	`json:"cookies"`
+	Arguments	 map[string]string	`json:"args"`
+	Attributes	 AttributesData		`json:"attrs"`
+}
+
+
+type RXTimer struct {
+	FirstUpstreamByte float64	`json:"firstupstreambyte"`
+	LastUpstreamByte  float64	`json:"lastupstreambyte"`
+	LastByte          float64	`json:"lastbyte"`
+}
+
+type TXTimer struct {
+	FirstUpstreamByte   float64	`json:"firstupstreambyte"`
+	LastUpstreamByte    float64	`json:"lastupstreambyte"`
+	FirstDownstreamByte float64	`json:"firstdownstreambyte"`
+	LastDownstreamByte  float64	`json:"lastdownstreambyte"`
+}
+
+type RXTXTimers struct {
+	RX RXTimer	`json:"rx"`
+	TX TXTimer	`json:"tx"`
+}
+
+type DownstreamData struct {
+	ConnectionTermination	 bool	`json:"connectiontermination"`
+	DirectRemoteAddress	 string	`json:"directremoteaddress"`
+	DirectRemoteAddressPort	 uint32	`json:"directremoteaddressport"`
+	LocalAddress		 string	`json:"localaddress"`
+	LocalAddressPort	 uint32	`json:"localaddressport"`
+	ProtocolError		 bool	`json:"protocolerror"`
+	RemoteAddress		 string	`json:"remoteaddress"`
+	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
+}
+
+type UpstreamData struct {
+	Cluster			 string	`json:"cluster"`
+	ConnectionFailure	 bool	`json:"connectionfailure"`
+	ConnectionTermination	 bool	`json:"connectiontermination"`
+	LocalAddress		 string	`json:"localaddress"`
+	LocalAddressPort	 uint32	`json:"localaddressport"`
+	Overflow		 bool	`json:"overflow"`
+	RemoteAddress		 string	`json:"remoteaddress"`
+	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
+	RemoteReset		 bool	`json:"remotereset"`
+	RequestTimeout		 bool	`json:"requesttimeout"`
+	RetryLimitExceeded	 bool	`json:"retrylimitexceeded"`
+	TransportFailureReason	 string	`json:"transportfailurereason"`
+}
+
+type CertificateData struct {
+	Properties		 string		`json:"properties"`
+	PropertiesAltNames	 []string	`json:"propertiesaltnames"`
+}
+
+type TLSData struct {
+	LocalCertificate	 CertificateData	`json:"localcertificate"`
+	PeerCertificate		 CertificateData	`json:"peercertificate"`
+	CipherSuite		 string			`json:"ciphersuite"`
+	SessionId		 string			`json:"sessionid"`
+	SNIHostname		 string			`json:"snihostname"`
+	Version			 string			`json:"version"`
+}
+
+type NameValue struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type RequestData struct {
+	BodyBytes	 uint64		`json:"bodybytes"`
+	HeadersBytes	 uint64		`json:"headersbytes"`
+	OriginalPath	 string		`json:"originalpath"`
+	Headers		 []NameValue	`json:"headers"`
+	Cookies		 []NameValue	`json:"cookies"`
+	Arguments	 []NameValue	`json:"arguments"`
+	Attributes	 AttributesData	`json:"attributes"`
+}
+
+type ResponseData struct {
+	BodyBytes	 uint64			`json:"bodybytes"`
+	Code		 int			`json:"code"`
+	CodeDetails	 string			`json:"codedetails"`
+	Headers		 map[string]string	`json:"headers"`
+	HeadersBytes	 uint64			`json:"headersbytes"`
+	Trailers	 map[string]string	`json:"trailers"`
+}
+
+type MetadataData struct {
+	DelayInjected			bool	`json:"delayinjected"`
+	FailedLocalHealthCheck		bool	`json:"failedlocalhealthcheck"`
+	FaultInjected			bool	`json:"faultinjected"`
+	InvalidEnvoyRequestHeaders	bool	`json:"invalidenvoyrequestheaders"`
+	LocalReset			bool	`json:"localreset"`
+	NoHealthyUpstream		bool	`json:"nohealthyupstream"`
+	NoRouteFound			bool	`json:"noroutefound"`
+	RateLimited			bool	`json:"ratelimited"`
+	RateLimitServiceError		bool	`json:"ratelimitserviceerror"`
+	RouteName			string	`json:"routename"`
+	SampleRate			float64	`json:"samplerate"`
+	StreamIdleTimeout		bool	`json:"streamidletimeout"`
+	UnauthorizedDetails		string	`json:"unauthorizeddetails"`
+}
+
+type CuriefenseLog struct {
+	RequestId	 string		`json:"requestid"`
+	Timestamp	 float64	`json:"timestamp"`
+	Scheme		 string		`json:"scheme"`
+	Authority	 string		`json:"authority"`
+	Port		 uint32		`json:"port"`
+
+	Method		 string		`json:"method"`
+	Path		 string		`json:"path"`
+	Timers		 RXTXTimers	`json:"timers"`
+
+	Upstream	 UpstreamData	`json:"upstream"`
+	Downstream	 DownstreamData	`json:"downstream"`
+
+	TLS		 TLSData	`json:"tls"`
+	Request		 RequestData    `json:"request"`
+	Response	 ResponseData	`json:"response"`
+	Metadata	 MetadataData	`json:"metadata"`
+}
+
+
+
+
+
 type LogEntry struct {
 	fullEntry *ald.HTTPAccessLogEntry
 	cfLog *CuriefenseLog
-//	common *ald.AccessLogCommon;
-//	req *ald.HTTPRequestProperties;
-//	resp *ald.HTTPResponseProperties;
-//	method string;
-//	response_code int;
-//	curiefense_json_string string;
-	curiefense map[string]interface{};
-//	upstream_remote_addr string;
-//	upstream_remote_port uint32;
-//	upstream_local_addr string;
-//	upstream_local_port uint32;
+	curieProxyLog *CurieProxyLog
 }
 
 type Logger interface {
@@ -320,33 +454,34 @@ func (l promLogger) Start() {
 		metric_response_bytes.Add(float64(e.cfLog.Response.HeadersBytes+e.cfLog.Response.BodyBytes))
 
 
-		if attrs_i, ok := e.curiefense["attrs"] ; ok {
-			if attrs, ok := attrs_i.(map[string]interface{}); ok {
-				blocked := "0"
-				if _, ok := attrs["blocked"]; ok {
-					blocked = "1"
-				}
-				log.Printf("[DEBUG] ~~~ blocked=[%v]", blocked)
-				if tags_i, ok := attrs["tags"]; ok {
-					if tags, ok := tags_i.(map[string]interface{}); ok {
-						if path_i, ok := attrs["path"]; ok {
-							if path, ok := path_i.(string); ok {
-								log.Printf("[DEBUG] ~~~ path=[%v]", path)
-								log.Printf("[DEBUG] ~~~ tags=[%v]", tags)
-								labels := makeLabels(e.cfLog.Response.Code, e.cfLog.Method, path, e.cfLog.Upstream.RemoteAddress, blocked, tags)
-								metric_session_details.With(labels).Inc()
-								for name := range tags {
-									if !isStaticTag(name) {
-										metric_requests_tags.WithLabelValues(name).Inc()
-									}
-								}
-							} else { log.Printf("[DEBUG]  @ no path cast :(") }
-						} else { log.Printf("[DEBUG]  @ no path :(") }
-					} else { log.Printf("[DEBUG]  @ no tags cast :( [%v]", tags_i) }
-				} else { log.Printf("[DEBUG]  @ no tags :(") }
-			} else { log.Printf("[DEBUG]  @ no attr cast :(") }
-		} else { log.Printf("[DEBUG]  @ no attrs :(") }
+//		if attrs_i, ok := e.curiefense["attrs"] ; ok {
+//			if attrs, ok := attrs_i.(map[string]interface{}); ok {
+//				blocked := "0"
+//				if _, ok := attrs["blocked"]; ok {
+//					blocked = "1"
+//				}
+//				log.Printf("[DEBUG] ~~~ blocked=[%v]", blocked)
+//				if tags_i, ok := attrs["tags"]; ok {
+//					if tags, ok := tags_i.(map[string]interface{}); ok {
+//						if path_i, ok := attrs["path"]; ok {
+//							if path, ok := path_i.(string); ok {
+//								log.Printf("[DEBUG] ~~~ path=[%v]", path)
+//								log.Printf("[DEBUG] ~~~ tags=[%v]", tags)
+//								labels := makeLabels(e.cfLog.Response.Code, e.cfLog.Method, path, e.cfLog.Upstream.RemoteAddress, blocked, tags)
+//								metric_session_details.With(labels).Inc()
+//								for name := range tags {
+//									if !isStaticTag(name) {
+//										metric_requests_tags.WithLabelValues(name).Inc()
+//									}
+//								}
+//							} else { log.Printf("[DEBUG]  @ no path cast :(") }
+//						} else { log.Printf("[DEBUG]  @ no path :(") }
+//					} else { log.Printf("[DEBUG]  @ no tags cast :( [%v]", tags_i) }
+//				} else { log.Printf("[DEBUG]  @ no tags :(") }
+//			} else { log.Printf("[DEBUG]  @ no attr cast :(") }
+//		} else { log.Printf("[DEBUG]  @ no attrs :(") }
 	}
+
 }
 
 
@@ -636,119 +771,6 @@ func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 //  \___|_|_\_|  \___| /_/ \_\___\___|___|___/___/ |____\___/ \___|___/
 // GRPC ACCESS LOGS
 
-type RXTimer struct {
-	FirstUpstreamByte float64	`json:"firstupstreambyte"`
-	LastUpstreamByte  float64	`json:"lastupstreambyte"`
-	LastByte          float64	`json:"lastbyte"`
-}
-
-type TXTimer struct {
-	FirstUpstreamByte   float64	`json:"firstupstreambyte"`
-	LastUpstreamByte    float64	`json:"lastupstreambyte"`
-	FirstDownstreamByte float64	`json:"firstdownstreambyte"`
-	LastDownstreamByte  float64	`json:"lastdownstreambyte"`
-}
-
-type RXTXTimers struct {
-	RX RXTimer	`json:"rx"`
-	TX TXTimer	`json:"tx"`
-}
-
-type DownstreamData struct {
-	ConnectionTermination	 bool	`json:"connectiontermination"`
-	DirectRemoteAddress	 string	`json:"directremoteaddress"`
-	DirectRemoteAddressPort	 uint32	`json:"directremoteaddressport"`
-	LocalAddress		 string	`json:"localaddress"`
-	LocalAddressPort	 uint32	`json:"localaddressport"`
-	ProtocolError		 bool	`json:"protocolerror"`
-	RemoteAddress		 string	`json:"remoteaddress"`
-	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
-}
-
-type UpstreamData struct {
-	Cluster			 string	`json:"cluster"`
-	ConnectionFailure	 bool	`json:"connectionfailure"`
-	ConnectionTermination	 bool	`json:"connectiontermination"`
-	LocalAddress		 string	`json:"localaddress"`
-	LocalAddressPort	 uint32	`json:"localaddressport"`
-	Overflow		 bool	`json:"overflow"`
-	RemoteAddress		 string	`json:"remoteaddress"`
-	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
-	RemoteReset		 bool	`json:"remotereset"`
-	RequestTimeout		 bool	`json:"requesttimeout"`
-	RetryLimitExceeded	 bool	`json:"retrylimitexceeded"`
-	TransportFailureReason	 string	`json:"transportfailurereason"`
-}
-
-type CertificateData struct {
-	Properties		 string		`json:"properties"`
-	PropertiesAltNames	 []string	`json:"propertiesaltnames"`
-}
-
-type TLSData struct {
-	LocalCertificate	 CertificateData	`json:"localcertificate"`
-	PeerCertificate		 CertificateData	`json:"peercertificate"`
-	CipherSuite		 string			`json:"ciphersuite"`
-	SessionId		 string			`json:"sessionid"`
-	SNIHostname		 string			`json:"snihostname"`
-	Version			 string			`json:"version"`
-}
-
-type RequestData struct {
-	BodyBytes	 uint64			`json:"bodybytes"`
-	HeadersBytes	 uint64			`json:"headersbytes"`
-	OriginalPath	 string			`json:"originalpath"`
-	Headers		 map[string]string	`json:"headers"`
-	Cookies		 map[string]string	`json:"cookies"`
-	Arguments	 map[string]string	`json:"arguments"`
-	Attributes	 map[string]string	`json:"attributes"`
-}
-
-type ResponseData struct {
-	BodyBytes	 uint64			`json:"bodybytes"`
-	Code		 int			`json:"code"`
-	CodeDetails	 string			`json:"codedetails"`
-	Headers		 map[string]string	`json:"headers"`
-	HeadersBytes	 uint64			`json:"headersbytes"`
-	Trailers	 map[string]string	`json:"trailers"`
-}
-
-type MetadataData struct {
-	DelayInjected			bool	`json:"delayinjected"`
-	FailedLocalHealthCheck		bool	`json:"failedlocalhealthcheck"`
-	FaultInjected			bool	`json:"faultinjected"`
-	InvalidEnvoyRequestHeaders	bool	`json:"invalidenvoyrequestheaders"`
-	LocalReset			bool	`json:"localreset"`
-	NoHealthyUpstream		bool	`json:"nohealthyupstream"`
-	NoRouteFound			bool	`json:"noroutefound"`
-	RateLimited			bool	`json:"ratelimited"`
-	RateLimitServiceError		bool	`json:"ratelimitserviceerror"`
-	RouteName			string	`json:"routename"`
-	SampleRate			float64	`json:"samplerate"`
-	StreamIdleTimeout		bool	`json:"streamidletimeout"`
-	UnauthorizedDetails		string	`json:"unauthorizeddetails"`
-}
-
-type CuriefenseLog struct {
-	RequestId	 string		`json:"requestid"`
-	Timestamp	 float64	`json:"timestamp"`
-	Scheme		 string		`json:"scheme"`
-	Authority	 string		`json:"authority"`
-	Port		 uint32		`json:"port"`
-
-	Method		 string		`json:"method"`
-	Path		 string		`json:"path"`
-	Timers		 RXTXTimers	`json:"timers"`
-
-	Upstream	 UpstreamData	`json:"upstream"`
-	Downstream	 DownstreamData	`json:"downstream"`
-
-	TLS		 TLSData	`json:"tls"`
-	Request		 RequestData    `json:"request"`
-	Response	 ResponseData	`json:"response"`
-	Metadata	 MetadataData	`json:"metadata"`
-}
-
 
 
 
@@ -766,6 +788,13 @@ func TimestampToFloat(d *timestamp.Timestamp) float64 {
 	return 0
 }
 
+func MapToNameValue(m map[string]string) []NameValue {
+	var res []NameValue
+	for k,v := range m {
+		res = append(res, NameValue{k,v})
+	}
+	return res
+}
 
 func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServer) error {
 	msg, err := x.Recv()
@@ -787,14 +816,14 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 				continue
 			}
 
-			curiefense := make(map[string]interface{})
+			var curieProxyLog CurieProxyLog
 
 			cfm := curiefense_meta.GetFields()
 			if rqinfo_s, ok := cfm["request.info"]; ok {
 				curiefense_json_string := rqinfo_s.GetStringValue()
-				err := json.Unmarshal([]byte(curiefense_json_string), &curiefense)
+				err := json.Unmarshal([]byte(curiefense_json_string), &curieProxyLog)
 				if err != nil {
-					log.Printf("[ERROR] Error unmarshalling metadata json string [%v]", curiefense_json_string)
+					log.Printf("[ERROR] Error unmarshalling metadata json string [%v]: %v", curiefense_json_string, err)
 					continue
 				}
 			} else {
@@ -802,7 +831,7 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 				continue
 			}
 
-			log.Printf("[DEBUG] XXXXXXXXx curiefense=%v", curiefense)
+			log.Printf("[DEBUG] XXXXXXXX curieproxylog=%v", curieProxyLog)
 
 			// Shortcuts
 
@@ -822,7 +851,7 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 			// Create canonical curiefense log structure
 
 			cflog := CuriefenseLog{
-				RequestId: "XXX",
+				RequestId: req.GetRequestId(),
 				Timestamp: TimestampToFloat(common.GetStartTime()),
 				Scheme: req.GetScheme(),
 				Authority: req.GetAuthority(),
@@ -884,10 +913,10 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 					BodyBytes: req.GetRequestBodyBytes(),
 					HeadersBytes: req.GetRequestHeadersBytes(),
 					OriginalPath: req.GetOriginalPath(),
-					Headers: req.GetRequestHeaders(),
-//					Cookies: XXX
-//					Arguments: XXXX
-//					Attributes: XXXX
+					Headers: MapToNameValue(curieProxyLog.Headers),
+					Cookies:  MapToNameValue(curieProxyLog.Cookies),
+					Arguments:  MapToNameValue(curieProxyLog.Arguments),
+					Attributes: curieProxyLog.Attributes,
 				},
 				Response: ResponseData{
 					BodyBytes: resp.GetResponseBodyBytes(),
@@ -922,7 +951,7 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 			log_entry := LogEntry{
 				fullEntry:	entry,
 				cfLog:		&cflog,
-				curiefense:		 curiefense,
+				curieProxyLog:  &curieProxyLog,
 			}
 
 			for _,l := range s.loggers {
