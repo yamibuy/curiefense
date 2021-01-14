@@ -79,7 +79,7 @@ class CliHelper():
             if b["name"] == "prod":
                 url = b["url"]
         self.call(f"sync export master {url}")
-        time.sleep(12)
+        time.sleep(20)
 
 
 @pytest.fixture(scope="session")
