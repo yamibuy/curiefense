@@ -1,6 +1,6 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
 {{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
-{{- if eq .Values.global.enable.logstash }}
+{{- if .Values.global.enable.logstash }}
 ---
 apiVersion: v1
 kind: Service

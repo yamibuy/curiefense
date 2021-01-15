@@ -4,3 +4,4 @@
 global:
   settings:
     curiefense_logdb_type: 'elasticsearch'
+    curiefense_es_forwarder: 'logstash'

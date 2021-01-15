@@ -11,6 +11,7 @@ global:
     curiesync: curiefense/curiesync
     grafana: curiefense/grafana
     prometheus: curiefense/prometheus
+    fluentd: curiefense/fluentd
 
   storage:
     # use the default storage class if null

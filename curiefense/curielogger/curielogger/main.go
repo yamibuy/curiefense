@@ -724,7 +724,7 @@ func (l *logstashLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] LogStash insertion!")
 	j, err := json.Marshal(e.cfLog)
 	if err == nil {
-		_, err := http.Post(l.url+"/curiefense/log", "application/json",  bytes.NewReader(j))
+		_, err := http.Post(l.url+"curiefense/log", "application/json",  bytes.NewReader(j))
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
 			return false
@@ -753,7 +753,7 @@ func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] Fluentd insertion!")
 	j, err := json.Marshal(e.cfLog)
 	if err == nil {
-		_, err := http.PostForm(l.url+"/curiefense/log", neturl.Values{"json": {string(j)}})
+		_, err := http.PostForm(l.url+"curiefense.log", neturl.Values{"json": {string(j)}})
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
 		}

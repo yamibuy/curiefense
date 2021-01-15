@@ -1,5 +1,5 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
-{{- if eq .Values.global.enable.elasticsearch }}
+{{- if .Values.global.enable.elasticsearch }}
 ---
 # a headless service is required for StatefulSets
 apiVersion: v1

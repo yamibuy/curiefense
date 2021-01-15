@@ -1,6 +1,6 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
 {{- if eq .Values.global.settings.curiefense_es_forwarder "fluentd" }}
-{{- if eq .Values.global.enable.fluentd }}
+{{- if .Values.global.enable.fluentd }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -15,26 +15,17 @@ data:
       bind 0.0.0.0
       body_size_limit 32m
       keepalive_timeout 10s
+      @label @CFLOGS
     </source>
-    <match **>
-      @id elasticsearch
-      @type elasticsearch
-      hosts "#{ENV['ELASTICSEARCH_HOSTS']}"
-      index_name curieaccesslog
-      <buffer>
-        @type file
-        path /var/log/fluentd-buffers/kubernetes.system.buffer
-        flush_mode interval
-        retry_type exponential_backoff
-        flush_thread_count 2
-        flush_interval 5s
-        retry_forever
-        retry_max_interval 30
-        chunk_limit_size 2M
-        total_limit_size 500M
-        overflow_action block
-      </buffer>
-    </match>
+    <label @CFLOGS>
+      <match curiefense.log>
+        @id elasticsearch
+        @type elasticsearch
+        hosts "#{ENV['ELASTICSEARCH_HOSTS']}"
+        index_name curieaccesslog
+        include_timestamp true
+      </match>
+    </label>
 {{- end }}
 {{- end }}
 {{- end }}

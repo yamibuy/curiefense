@@ -1,6 +1,6 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
 {{- if eq .Values.global.settings.curiefense_es_forwarder "fluentd" }}
-{{- if eq .Values.global.enable.fluentd }}
+{{- if .Values.global.enable.fluentd }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -25,7 +25,12 @@ spec:
         env:
         - name: ELASTICSEARCH_HOSTS
           value: {{ .Values.global.settings.curiefense_es_hosts }}
-        image: fluent/fluentd:v1.12.0-1.0
+      {{ if regexMatch ".*/.*:" .Values.global.images.fluentd }}
+      {{/* The image name contains a version tag (e.g. for tests), do not append docker_tag */}}
+        image: {{ .Values.global.images.fluentd }}
+      {{- else }}
+        image: {{ .Values.global.images.fluentd }}:{{ .Values.global.settings.docker_tag }}
+      {{- end }}
         ports:
         - containerPort: 5001
           name: fluentd-http

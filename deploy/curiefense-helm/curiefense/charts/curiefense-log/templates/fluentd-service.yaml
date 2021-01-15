@@ -1,6 +1,6 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
 {{- if eq .Values.global.settings.curiefense_es_forwarder "fluentd" }}
-{{- if eq .Values.global.enable.fluentd }}
+{{- if .Values.global.enable.fluentd }}
 ---
 apiVersion: v1
 kind: Service
