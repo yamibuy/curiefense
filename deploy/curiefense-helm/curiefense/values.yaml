@@ -26,6 +26,16 @@ global:
     curieconf_manifest_url: 's3://curiefense-test01/prod/manifest.json'
     # supported types: 'postgres', 'elasticsearch'
     curiefense_logdb_type: 'postgres'
+    # supported types: 'fluentd', 'logstash'
+    curiefense_es_forwarder: 'logstash'
+    # change curiefense_es_hosts if you supply your own elasticsearch server. Using several servers is not (yet?) fully supported by this chart
+    curiefense_es_hosts: 'http://elasticsearch:9200'
+    # change curiefense_logstash_url if you supply your own logstash server.
+    curiefense_logstash_url: 'http://logstash:5001/'
+    # change curiefense_fluentd_url if you supply your own fluentd server.
+    curiefense_fluentd_url: 'http://fluentd:5001/'
+    # change curiefense_kibana_url if you supply your own kibana server.
+    curiefense_kibana_url: 'http://kibana:5601/'
     # change curiefense_db_hostname if you supply your own postgres server
     curiefense_db_hostname: 'logdb'
     # supported types: 's3', 'gs'
@@ -59,3 +69,5 @@ global:
     logdb: true
     kibana: true
     elasticsearch: true
+    fluentd: true
+    logstash: true

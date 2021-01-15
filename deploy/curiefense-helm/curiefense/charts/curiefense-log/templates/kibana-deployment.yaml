@@ -23,9 +23,9 @@ spec:
       - name: kibana
         env:
         - name: ELASTICSEARCH_URL
-          value: "http://elasticsearch:9200"
+          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
         - name: ELASTICSEARCH_HOSTS
-          value: "http://elasticsearch:9200"
+          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
         - name: TELEMETRY_ENABLED
           value: "false"
         - name: TELEMETRY_OPTIN

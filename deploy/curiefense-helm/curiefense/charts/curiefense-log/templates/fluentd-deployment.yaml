@@ -1,45 +1,41 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
-{{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
-{{- if eq .Values.global.enable.logstash }}
+{{- if eq .Values.global.settings.curiefense_es_forwarder "fluentd" }}
+{{- if eq .Values.global.enable.fluentd }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/name: logstash
-  name: logstash
+    app.kubernetes.io/name: fluentd
+  name: fluentd
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: logstash
+      app.kubernetes.io/name: fluentd
   strategy: {}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: logstash
+        app.kubernetes.io/name: fluentd
     spec:
       containers:
-      - name: logstash
+      - name: fluentd
         env:
-        - name: ELASTICSEARCH_URL
-          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
         - name: ELASTICSEARCH_HOSTS
-          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
-        image: docker.elastic.co/logstash/logstash:7.10.1
+          value: {{ .Values.global.settings.curiefense_es_hosts }}
+        image: fluent/fluentd:v1.12.0-1.0
         ports:
-        - containerPort: 5000
-          name: logstash-tcp
         - containerPort: 5001
-          name: logstash-http
+          name: fluentd-http
         livenessProbe:
           tcpSocket:
-            port: logstash-tcp
+            port: fluentd-tcp
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         volumeMounts:
-        - name: logstash-config
-          mountPath: "/usr/share/logstash/pipeline"
+        - name: fluentd-config
+          mountPath: "/fluentd/etc"
           readOnly: true
         resources:
           limits:
@@ -49,12 +45,12 @@ spec:
             memory: "20Mi"
             cpu: "100m"
       volumes:
-      - name: logstash-config
+      - name: fluentd-config
         configMap:
-          name: logstash-configmap
+          name: fluentd-configmap
           items:
-            - key: logstash.conf
-              path: logstash.conf
+            - key: fluent.conf
+              path: fluent.conf
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}

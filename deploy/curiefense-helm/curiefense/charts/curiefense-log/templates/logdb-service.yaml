@@ -1,4 +1,5 @@
-{{- if and (eq .Values.global.settings.curiefense_logdb_type "postgres") (.Values.global.enable.logdb) }}
+{{- if eq .Values.global.settings.curiefense_logdb_type "postgres" }}
+{{- if .Values.global.enable.logdb }}
 ---
 apiVersion: v1
 kind: Service
@@ -14,4 +15,5 @@ spec:
     targetPort: 5432
   selector:
     app.kubernetes.io/name: logdb
+{{ end }}
 {{ end }}
