@@ -1,4 +1,5 @@
-{{- if .Values.global.enable.logdb }}
+{{- if and (eq .Values.global.settings.curiefense_logdb_type "postgres") (.Values.global.enable.logdb) }}
+---
 apiVersion: v1
 kind: Service
 metadata:

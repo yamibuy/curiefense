@@ -88,3 +88,22 @@ spec:
     app.kubernetes.io/name: confserver
   type: NodePort
   externalTrafficPolicy: "Local"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kibana-nodeport
+  name: kibana-nodeport
+  namespace: curiefense
+spec:
+  ports:
+  - name: 30601-5601
+    nodePort: 30601
+    port: 5601
+    protocol: TCP
+    targetPort: 5601
+  selector:
+    app.kubernetes.io/name: kibana
+  type: NodePort
+  externalTrafficPolicy: "Local"
