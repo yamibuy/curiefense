@@ -18,7 +18,7 @@ create_index () {
 	fi
 
 	# Create the index pattern
-	curl --silent -X POST "http://$CURIELOGGER_KIBANA_HOST:5601/$PATTERN_PATH" -H 'Content-Type: application/json' -H 'kbn-xsrf: true' -d '{"attributes": {"title": "logstash-*","timeFieldName": "@timestamp"}}'
+	curl --silent -X POST "http://$CURIELOGGER_KIBANA_HOST:5601/$PATTERN_PATH" -H 'Content-Type: application/json' -H 'kbn-xsrf: true' -d '{"attributes": {"title": "curieaccess*","timeFieldName": "timestamp"}}'
 }
 
 if [ -n "$CURIELOGGER_KIBANA_HOST" ]; then
