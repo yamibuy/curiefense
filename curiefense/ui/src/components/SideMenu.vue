@@ -36,9 +36,8 @@ export default {
   name: 'SideMenu',
 
   data() {
-    return {
-      selectedMenuItem: null,
-      menuItems: {
+    const kibana_href = menu.Analytics[location.origin.replace(":30080", ":5601/app/discover")]
+    let _menuItems = {
         Settings: {
           '/config': {
             'title': 'Policies & Rules',
@@ -49,13 +48,17 @@ export default {
           '/db': {'title': 'System DB'},
           '/publish': {'title': 'Publish Changes'},
         },
-        Analytics: {
-          '/accesslog': {'title': 'Access Log'}
-        },
+        Analytics: {},
         Git: {
           '/versioncontrol': {'title': 'Version Control'}
         },
       }
+
+    _menuItems.Analytics[kibana_href] = {'title': 'Access Log'}
+
+    return {
+      selectedMenuItem: null,
+      menuItems: _menuItems
     }
   },
 
