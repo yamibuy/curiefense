@@ -36,7 +36,7 @@ export default {
   name: 'SideMenu',
 
   data() {
-    const kibana_href = menu.Analytics[location.origin.replace(":30080", ":5601/app/discover")]
+    const kibana_href = location.origin.replace(":30080", ":5601/app/discover")
     let _menuItems = {
         Settings: {
           '/config': {
