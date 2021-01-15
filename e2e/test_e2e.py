@@ -995,7 +995,6 @@ class TestTagRules:
     def test_ipv4(self, target, tagrules_config, active):
         assert target.is_reachable("/tag-ipv4-1", srcip=IP4_US) is not active
         assert target.is_reachable("/tag-ipv4-2", srcip=IP4_ORANGE) is True
-        assert target.is_reachable(f"/tag-ipv4-{active}", srcip=IP4_US) is not active
 
     def test_ipv6(self, target, tagrules_config, active):
         assert target.is_reachable(
