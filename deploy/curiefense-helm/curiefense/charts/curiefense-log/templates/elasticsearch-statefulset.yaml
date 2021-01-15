@@ -1,4 +1,5 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
+{{- if eq .Values.global.enable.elasticsearch }}
 ---
 # Single-node ES cluster.
 apiVersion: apps/v1
@@ -68,4 +69,5 @@ spec:
       resources:
         requests:
           storage: {{ .Values.global.storage.elasticsearch_storage_size }}
+{{ end }}
 {{ end }}

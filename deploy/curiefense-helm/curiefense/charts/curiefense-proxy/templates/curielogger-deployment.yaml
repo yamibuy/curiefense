@@ -39,12 +39,16 @@ spec:
         env:
         - name: CURIELOGGER_USES_ELASTICSEARCH
           value: "true"
-        - name: CURIELOGGER_LOGSTASH_HOST
-          value: logstash
-        - name: CURIELOGGER_KIBANA_HOST
-          value: kibana
+        - name: CURIELOGGER_LOGSTASH_URL
+          value: "http://logstash:5001/"
+        - name: CURIELOGGER_KIBANA_URL
+          value: "http://kibana:5601/"
         - name: CURIELOGGER_ELASTICSEARCH_URL
-          value: http://elasticsearch:9200/
+          value: "http://elasticsearch:9200/"
+{{- if .Values.global.enable.kibana }}
+        - name: CURIELOGGER_INITIALIZE_KIBANA_INDEX
+          value: "true"
+{{- end }}
 {{- end }}
         {{ if regexMatch ".*/.*:" .Values.global.images.curielogger }}
         {{/* The image name contains a version tag (e.g. for tests), do not append docker_tag */}}
