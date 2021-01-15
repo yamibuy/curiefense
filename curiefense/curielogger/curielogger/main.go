@@ -134,13 +134,13 @@ type NameValue struct {
 }
 
 type RequestData struct {
-	BodyBytes	 uint64		`json:"bodybytes"`
-	HeadersBytes	 uint64		`json:"headersbytes"`
-	OriginalPath	 string		`json:"originalpath"`
-	Headers		 []NameValue	`json:"headers"`
-	Cookies		 []NameValue	`json:"cookies"`
-	Arguments	 []NameValue	`json:"arguments"`
-	Attributes	 AttributesData	`json:"attributes"`
+	BodyBytes	 uint64			`json:"bodybytes"`
+	HeadersBytes	 uint64			`json:"headersbytes"`
+	OriginalPath	 string			`json:"originalpath"`
+	Headers		 map[string]string	`json:"headers"`
+	Cookies		 map[string]string	`json:"cookies"`
+	Arguments	 map[string]string	`json:"arguments"`
+	Attributes	 AttributesData		`json:"attributes"`
 }
 
 type ResponseData struct {
@@ -913,9 +913,9 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 					BodyBytes: req.GetRequestBodyBytes(),
 					HeadersBytes: req.GetRequestHeadersBytes(),
 					OriginalPath: req.GetOriginalPath(),
-					Headers: MapToNameValue(curieProxyLog.Headers),
-					Cookies:  MapToNameValue(curieProxyLog.Cookies),
-					Arguments:  MapToNameValue(curieProxyLog.Arguments),
+					Headers: curieProxyLog.Headers,
+					Cookies: curieProxyLog.Cookies,
+					Arguments:  curieProxyLog.Arguments,
 					Attributes: curieProxyLog.Attributes,
 				},
 				Response: ResponseData{
