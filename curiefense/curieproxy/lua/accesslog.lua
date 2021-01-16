@@ -28,7 +28,7 @@ function log_request(request_map)
     log_table[logname] = request_map[luaname]
   end
 
-  local tags = entries.attributes.tags
+  local tags = log_table.attributes.tags
 
   if tags then
   	log_table.attributes.tags = table_keys(tags)
