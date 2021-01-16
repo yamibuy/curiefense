@@ -5,8 +5,6 @@ local cjson = require "cjson"
 local json_encode   = cjson.encode
 local json_decode   = cjson.decode
 
-local table_keys    = utils.table_keys
-
 -- dynamic metadata filter name
 DMFN = "com.reblaze.curiefense"
 LOG_KEY = "request.info"
