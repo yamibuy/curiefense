@@ -26,6 +26,7 @@ local iptonum = iptools.iptonum
 local ipinfo    = maxmind.ipinfo
 
 local json_decode   = json_safe.decode
+local json_encode   = json_safe.encode
 local log_request   = accesslog.log_request
 
 local iptools       = require "iptools"
@@ -178,33 +179,6 @@ function map_request(handle)
     return map
 end
 
-function deny_request(request_map, reason, block_mode, status, headers, content)
-
-    local handle = request_map.handle
-    status = status or "403"
-    if not headers then
-        headers = {}
-    end
-    headers[":status"] = status
-
-    if headers and type(headers) == "table" then
-        for name, value in pairs(headers) do
-            handle:headers():add(name, value)
-        end
-    end
-    -- set respose content
-    content = content or "curiefense - request denied"
-
-    request_map.attrs.blocked = true
-    request_map.attrs.block_reason = reason
-
-    log_request(request_map)
-
-
-    if block_mode then
-        handle:respond( headers, content)
-    end
-end
 
 function flatten(src_tbl, dst_tbl, prefix)
     if type(src_tbl) ~= "table" then
@@ -500,3 +474,40 @@ function md5(input)
     return digest:tohex()
 end
 
+function custom_response(request_map, action_params)
+    if not action_params then action_params = {} end
+    local block_mode = action_params.block_mode
+    -- if not block_mode then block_mode = true end
+
+    local handle = request_map.handle
+    handle:logDebug(string.format(
+        "custom_response - action_params %s, block_mode %s",
+        json_encode(action_params),
+        block_mode
+    ))
+
+    local response = {
+        [ "status" ] = "403",
+        [ "headers"] = { ["x-curiefense"] = "response" },
+        [ "reason" ] = { initiator = "undefined", reason = "undefined"},
+        [ "content"] = "curiefense - request denied"
+    }
+
+    -- override defaults
+    if action_params["status" ] then response["status" ] = action_params["status" ] end
+    if action_params["headers"] then response["headers"] = action_params["headers"] end
+    if action_params["reason" ] then response["reason" ] = action_params["reason" ] end
+    if action_params["content"] then response["content"] = action_params["content"] end
+
+    response["headers"][":status"] = response["status"]
+
+    request_map.attrs.blocked = true
+    request_map.attrs.block_reason = response["reason"]
+
+    log_request(request_map)
+
+    if block_mode then
+        request_map.handle:respond( response["headers"], response["content"])
+    end
+
+end

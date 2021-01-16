@@ -1,18 +1,20 @@
 -- commonlua/limit.lua
 module(..., package.seeall)
 
+local os        = require "os"
 local redis     = require "lua.redis"
 local utils     = require "lua.utils"
 local globals   = require "lua.globals"
-local os        = require "os"
+local cjson     = require "cjson"
 
-
+local json_encode   = cjson.encode
 local limit_ban_hash = 'limit-ban-hash'
 
-local md5           = utils.md5
-local re_match      = utils.re_match
-local tag_request   = utils.tag_request
-local deny_request  = utils.deny_request
+local md5             = utils.md5
+local re_match        = utils.re_match
+local tag_request     = utils.tag_request
+local deny_request    = utils.deny_request
+local custom_response = utils.custom_response
 
 --- all functions that access redis, starts with redis_
 
@@ -105,8 +107,10 @@ end
 
 function check( request_map, limit_ids, url_map_name)
     local limit_rules = globals.LimitRules
+    request_map.handle:logDebug(string.format("redis-limit unsorted %s", json_encode(limit_rules)))
     local sorted_rules = sorted_limit_rules(limit_rules, limit_ids)
 
+    request_map.handle:logDebug(string.format("redis-limit sorted %s", json_encode(sorted_rules)))
     for _, rule in ipairs(sorted_rules) do
         check_request(request_map, rule, url_map_name)
     end
@@ -158,35 +162,35 @@ end
 
 function check_request(request_map, limit_set, url_map_name)
     if limit_set then
-        -- -- request_map.handle:logDebug("check_request starting.")
+        request_map.handle:logDebug("redis-limit check_request starting.")
 
-        -- -- request_map.handle:logDebug("check_request should exclude?")
+        request_map.handle:logDebug("redis-limit check_request should exclude?")
         if      should_exclude(request_map, limit_set) then return false end
-        -- -- request_map.handle:logDebug("check_request should include?")
+        request_map.handle:logDebug("redis-limit check_request should include?")
         if not  should_include(request_map, limit_set) then return false end
 
-        -- -- request_map.handle:logDebug("check_request got here, meanning, shoud include. hence, tagging matching rule")
+        request_map.handle:logDebug("check_request got here, meanning, shoud include. hence, tagging matching rule")
         -- every matching ratelimit rule is tagged by name
         tag_request(request_map, limit_set['name'])
 
         local key = build_key(request_map, limit_set, url_map_name)
-        -- request_map.handle:logDebug(string.format("check_request key built -- %s", key))
+        request_map.handle:logDebug(string.format("check_request key built -- %s", key))
         if not key then return false end
 
         local pairing_value = false
         local pair_name, pair_value = next(limit_set['pairwith'])
         if pair_name then
             pairing_value = request_map[pair_name][pair_value]
-            -- request_map.handle:logDebug(string.format(
-                -- "redis-limit pair builder %s %s %s", pair_name, pair_value, pairing_value
-            -- ))
+            request_map.handle:logDebug(string.format(
+                "redis-limit pair builder %s %s %s", pair_name, pair_value, pairing_value
+            ))
         end
 
         local limit = tonumber(limit_set.limit)
         local ttl = tonumber(limit_set.ttl)
 
         if limit == 0 then
-            -- request_map.handle:logDebug(string.format("limit zero - reacting"))
+            request_map.handle:logDebug(string.format("limit zero - reacting"))
             limit_react(request_map, limit_set.name, limit_set.action, key)
         end
 
@@ -248,12 +252,12 @@ function redis_check_simple(request_map, redis_conn, key, threshold, ttl)
         end
     )
 
-    -- handle:logDebug(string.format("limit redis_check_simple -- type(%s), [%s]", type(result), result))
+    handle:logDebug(string.format("limit redis_check_simple -- type(%s), [%s]", type(result), result))
     if type(result) == "table" then
         current = result[1]
         expire = result[2]
 
-        -- handle:logDebug(string.format("limit redis_check_simple -- current (%s), expire[%s]", current, expire))
+        handle:logDebug(string.format("limit redis_check_simple -- current (%s), expire[%s]", current, expire))
 
         if "userdata: NULL" == tostring(current) then
             current = 0
@@ -274,11 +278,11 @@ function redis_check_simple(request_map, redis_conn, key, threshold, ttl)
         if current ~= nil and current > threshold then
             return 503
         else
-            -- handle:logDebug(string.format("limit --- %s < %s", current, threshold))
+            handle:logDebug(string.format("limit --- %s < %s", current, threshold))
             return 200
         end
     else
-        -- handle:logDebug(string.format("limit --- not a table, 200 is the answer"))
+        handle:logDebug(string.format("limit --- not a table, 200 is the answer"))
         return 200
     end
 end
@@ -332,45 +336,63 @@ function redis_check_set(request_map, redis_conn, key, threshold, set_value, ttl
 end
 
 function limit_react(request_map, rulename, action, key, ttl)
-    local reason = { initiator = "rate limit", reason = rulename}
+
     local handle = request_map.handle
-    if not action then
-        action = { type = 'default' }
+    if not action or action.type == "default" then
+        action = {
+            ["type"] = "default",
+            ["params"] = {
+                ["status"] = "503",
+                ["block_mode"] = true
+            }
+        }
     end
 
+    if not action.params then action.params = {} end
+
+    action.params.reason = { initiator = "rate limit", reason = rulename}
     -- handle:logDebug(string.format("limit react --- action %s", action.type))
+    if action.type == "monitor" then
+        return
 
-    if action.type == "default" then
-        deny_request(request_map, reason, true, "503")
+    -- elseif action.type == "default" then
+    --     deny_request(request_map, reason, true, "503")
+
+    elseif action.type == "ban" then
+        ttl = tonumber(action.params.ttl)
+        redis_ban_key(gen_ban_key(key), ttl)
+        -- recursive call
+        limit_react(request_map, rulename, action.params.action)
+
+    else
+        action.block_mode = (action.type ~= "request_header")
+        custom_response(
+            request_map,
+            action.params
+        )
+
     end
 
-    if action.type == "response" then
-        if action.params.headers then
-            for name, value in ipairs(action.params.headers) do
-                ngx.header[name] = value
-            end
-        end
-        deny_request(request_map, reason, true, action.params.status, action.params.headers, action.params.content)
-    end
+    -- if action.type == "response" then
+    --     if action.params.headers then
+    --         for name, value in ipairs(action.params.headers) do
+    --             ngx.header[name] = value
+    --         end
+    --     end
+    --     deny_request(request_map, reason, true, action.params.status, action.params.headers, action.params.content)
+    -- end
 
     -- if action.type == "challenge" then
     --     -- request_map.handle:logDebug("action.type == 'challenge'")
     -- end
 
-    if action.type == "redirect" then
-        deny_request(request_map, reason, true, action.params.status, { location = action.params.location }, '')
-    end
+    -- if action.type == "redirect" then
+    --     deny_request(request_map, reason, true, action.params.status, { location = action.params.location }, '')
+    -- end
 
-    if action.type == "ban" then
-        ttl = tonumber(action.params.ttl)
-        redis_ban_key(gen_ban_key(key), ttl)
-        -- recursive call
-        limit_react(request_map, rulename, action.params.action)
-    end
-
-    if action.type == "request_header" then
-        deny_request(request_map, reason, false, nil, action.params.headers, nil)
-    end
+    -- if action.type == "request_header" then
+    --     deny_request(request_map, reason, false, nil, action.params.headers, nil)
+    -- end
 
     --[[
         for action.type == "monitor" do nothing

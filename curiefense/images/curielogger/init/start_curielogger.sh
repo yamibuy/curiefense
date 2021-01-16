@@ -18,7 +18,7 @@ create_index () {
 	fi
 
 	# Create the index pattern
-	curl --silent -X POST "${CURIELOGGER_KIBANA_URL}$PATTERN_PATH" -H 'Content-Type: application/json' -H 'kbn-xsrf: true' -d '{"attributes": {"title": "curieaccesslog*","timeFieldName": "@timestamp"}}'
+	curl --silent -X POST "${CURIELOGGER_KIBANA_URL}$PATTERN_PATH" -H 'Content-Type: application/json' -H 'kbn-xsrf: true' -d '{"attributes": {"title": "curieaccesslog","timeFieldName": "@timestamp"}}'
 }
 
 if [ -n "$CURIELOGGER_INITIALIZE_KIBANA_INDEX" ]; then
