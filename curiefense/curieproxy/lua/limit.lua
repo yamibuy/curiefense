@@ -338,12 +338,17 @@ end
 function limit_react(request_map, rulename, action, key, ttl)
 
     local handle = request_map.handle
-    if not action then
-        action {
+    if not action or action.type == "default" then
+        action = {
             ["type"] = "default",
-            ["params"] = { ["status"] = "503", ["block_mode"] = true }
+            ["params"] = {
+                ["status"] = "503",
+                ["block_mode"] = true
+            }
         }
     end
+
+    if not action.params then action.params = {} end
 
     action.params.reason = { initiator = "rate limit", reason = rulename}
     -- handle:logDebug(string.format("limit react --- action %s", action.type))
