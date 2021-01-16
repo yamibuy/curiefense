@@ -41,6 +41,8 @@ export default {
   name: 'SideMenu',
   data() {
     const kibana_href = location.origin.replace(":30080", ":5601/app/discover")
+    const grafana_href = location.origin.replace(":30080", ":30300/")
+    const swagger_href = location.origin.replace(":30080", ":30000/api/v1/")
     let _menuItems = {
         Settings: {
           '/config': {
@@ -56,9 +58,14 @@ export default {
         Git: {
           '/versioncontrol': {'title': 'Version Control'}
         },
+        Docs: {
+          'https://docs.curiefense.io/': {'title': 'Curiebook'}
+        }
       }
 
-    _menuItems.Analytics[kibana_href] = {'title': 'Access Log', "external": true}
+    _menuItems.Settings[swagger_href] = {'title': 'API', "external": true}
+    _menuItems.Analytics[kibana_href] = {'title': 'Access Log (ELK)', "external": true}
+    _menuItems.Analytics[grafana_href] = {'title': 'Grafana', "external": true}
 
     return {
       selectedMenuItem: null,
