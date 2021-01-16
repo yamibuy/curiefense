@@ -42,6 +42,8 @@ spec:
           value: "true"
         - name: CURIELOGGER_LOGSTASH_URL
           value: "{{ .Values.global.settings.curiefense_logstash_url }}"
+        - name: ELASTICSEARCH_URL
+          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
 {{- else }}
         - name: CURIELOGGER_USES_FLUENTD
           value: "true"

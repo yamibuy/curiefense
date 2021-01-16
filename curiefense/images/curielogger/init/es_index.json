@@ -1,0 +1,11 @@
+{
+  "settings": {
+    "index.lifecycle.name": "curie_policy",
+    "index.lifecycle.rollover_alias": "INDEX_NAME"
+  },
+  "aliases": {
+    "INDEX_NAME": {
+      "is_write_index": true
+    }
+  }
+}
