@@ -134,7 +134,7 @@ services:
     image: "curiefense/curielogger:${DOCKER_TAG}"
     restart: always
     environment:
-      - CURIELOGGER_USES_POSTGRES=1
+      - CURIELOGGER_USES_POSTGRES=0
       - CURIELOGGER_DBHOST=logdb
       - CURIELOGGER_DBUSER=postgres
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
