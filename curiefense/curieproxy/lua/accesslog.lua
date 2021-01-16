@@ -31,7 +31,7 @@ function log_request(request_map)
   local tags = entries.attributes.tags
 
   if tags then
-  	entries.attributes.tags = table_keys(tags)
+  	log_table.attributes.tags = table_keys(tags)
   end
 
   local str_map = json_encode(log_table)
