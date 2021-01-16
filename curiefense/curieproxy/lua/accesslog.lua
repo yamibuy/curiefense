@@ -1,9 +1,12 @@
 module(..., package.seeall)
 
 local cjson = require "cjson"
+local utils = require "utils"
 
 local json_encode   = cjson.encode
 local json_decode   = cjson.decode
+
+local table_keys    = utils.table_keys
 
 -- dynamic metadata filter name
 DMFN = "com.reblaze.curiefense"
@@ -12,16 +15,29 @@ LOG_KEY = "request.info"
 function log_request(request_map)
   -- handle is userData which is not serilizable
   local request_handle = request_map.handle
-  local entries = { "headers", "cookies", "args", "attrs"}
+  local entries = {
+  	["headers"] = "headers",
+  	["cookies"] = "cookies",
+  	["args"] 	= "arguments",
+  	["attrs"] 	= "attributes"
+  }
+
   local log_table = {}
 
-  for _, name in ipairs(entries) do
-    log_table[name] = request_map[name]
+  for luaname, logname in pairs(entries) do
+    log_table[logname] = request_map[luaname]
   end
 
-  -- local str_map = json_encode(log_table)
+  local tags = entries.attributes.tags
 
-  request_handle:streamInfo():dynamicMetadata():set(DMFN, LOG_KEY, json_encode(log_table))
+  if tags then
+  	entries.attributes.tags = table_keys(tags)
+  end
+
+  local str_map = json_encode(log_table)
+  request_handle:logDebug(str_map)
+
+  request_handle:streamInfo():dynamicMetadata():set(DMFN, LOG_KEY, str_map)
 
 end
 
