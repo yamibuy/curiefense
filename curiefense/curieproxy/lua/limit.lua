@@ -1,12 +1,13 @@
 -- commonlua/limit.lua
 module(..., package.seeall)
 
+local os        = require "os"
 local redis     = require "lua.redis"
 local utils     = require "lua.utils"
 local globals   = require "lua.globals"
-local os        = require "os"
+local cjson     = require "cjson"
 
-
+local json_encode   = cjson.encode
 local limit_ban_hash = 'limit-ban-hash'
 
 local md5             = utils.md5
@@ -106,8 +107,10 @@ end
 
 function check( request_map, limit_ids, url_map_name)
     local limit_rules = globals.LimitRules
+    request_map.handle:logDebug(string.format("unsorted %s", json_encode(limit_rules)))
     local sorted_rules = sorted_limit_rules(limit_rules, limit_ids)
 
+    request_map.handle:logDebug(string.format("unsorted %s", json_encode(sorted_rules)))
     for _, rule in ipairs(sorted_rules) do
         check_request(request_map, rule, url_map_name)
     end
@@ -159,35 +162,35 @@ end
 
 function check_request(request_map, limit_set, url_map_name)
     if limit_set then
-        -- -- request_map.handle:logDebug("check_request starting.")
+        request_map.handle:logDebug("check_request starting.")
 
-        -- -- request_map.handle:logDebug("check_request should exclude?")
+        request_map.handle:logDebug("check_request should exclude?")
         if      should_exclude(request_map, limit_set) then return false end
-        -- -- request_map.handle:logDebug("check_request should include?")
+        request_map.handle:logDebug("check_request should include?")
         if not  should_include(request_map, limit_set) then return false end
 
-        -- -- request_map.handle:logDebug("check_request got here, meanning, shoud include. hence, tagging matching rule")
+        request_map.handle:logDebug("check_request got here, meanning, shoud include. hence, tagging matching rule")
         -- every matching ratelimit rule is tagged by name
         tag_request(request_map, limit_set['name'])
 
         local key = build_key(request_map, limit_set, url_map_name)
-        -- request_map.handle:logDebug(string.format("check_request key built -- %s", key))
+        request_map.handle:logDebug(string.format("check_request key built -- %s", key))
         if not key then return false end
 
         local pairing_value = false
         local pair_name, pair_value = next(limit_set['pairwith'])
         if pair_name then
             pairing_value = request_map[pair_name][pair_value]
-            -- request_map.handle:logDebug(string.format(
-                -- "redis-limit pair builder %s %s %s", pair_name, pair_value, pairing_value
-            -- ))
+            request_map.handle:logDebug(string.format(
+                "redis-limit pair builder %s %s %s", pair_name, pair_value, pairing_value
+            ))
         end
 
         local limit = tonumber(limit_set.limit)
         local ttl = tonumber(limit_set.ttl)
 
         if limit == 0 then
-            -- request_map.handle:logDebug(string.format("limit zero - reacting"))
+            request_map.handle:logDebug(string.format("limit zero - reacting"))
             limit_react(request_map, limit_set.name, limit_set.action, key)
         end
 
