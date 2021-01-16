@@ -1,7 +1,6 @@
 module(..., package.seeall)
 
 local cjson = require "cjson"
-local utils = require "lua.utils"
 
 local json_encode   = cjson.encode
 local json_decode   = cjson.decode
@@ -31,7 +30,15 @@ function log_request(request_map)
   local tags = log_table.attributes.tags
 
   if tags then
-  	log_table.attributes.tags = table_keys(tags)
+    local tagnames = {}
+    local n = 0
+
+    for name,v in pairs(tags) do
+      n = n + 1
+      tagnames[n] = name
+    end
+
+  	log_table.attributes.tags = tagnames
   end
 
   local str_map = json_encode(log_table)
