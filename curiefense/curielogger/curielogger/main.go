@@ -50,18 +50,21 @@ import (
 
 
 type AttributesData struct {
-	IPNum		 int		`json:"ipnum"`
-	IP		 string		`json:"ip"`
-	XFFTrustedHops	 int		`json:"xff_trusted_hops"`
-	URI		 string		`json:"uri"`
-	Authority	 string		`json:"authority"`
-	RemoteAddress	 string		`json:"remote_addr"`
-	Query		 string		`json:"query"`
-	Path		 string		`json:"path"`
-	Method		 string		`json:"method"`
-	Blocked		 int		`json:"blocked"`
-	BlockReason	 string		`json:"block_reason"`
-	Tags		 map[string]int	`json:"tags"`
+	IPNum		 int			`json:"ipnum"`
+	IP		 string			`json:"ip"`
+	XFFTrustedHops	 int			`json:"xff_trusted_hops"`
+	URI		 string			`json:"uri"`
+	Authority	 string			`json:"authority"`
+	RemoteAddress	 string			`json:"remote_addr"`
+	Query		 string			`json:"query"`
+	Path		 string			`json:"path"`
+	Method		 string			`json:"method"`
+	Blocked		 bool			`json:"blocked"`
+	BlockReason	 map[string]string	`json:"block_reason"`
+	Company		 string			`json:"company"`
+	Country		 string			`json:"country"`
+	ASN		 int			`json:"asn,string"`
+	Tags		 map[string]int		`json:"tags"`
 }
 
 type CurieProxyLog struct {
