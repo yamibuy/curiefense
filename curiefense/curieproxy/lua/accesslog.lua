@@ -1,7 +1,7 @@
 module(..., package.seeall)
 
 local cjson = require "cjson"
-local utils = require "utils"
+local utils = require "lua.utils"
 
 local json_encode   = cjson.encode
 local json_decode   = cjson.decode
