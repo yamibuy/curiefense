@@ -239,6 +239,7 @@ services:
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - CURIEFENSE_INDEX_NAME=curieaccesslog
     networks:
       - curiemesh
     ports:
@@ -256,6 +257,7 @@ services:
         read_only: true
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - CURIEFENSE_INDEX_NAME=curieaccesslog
     networks:
       - curiemesh
     ports:

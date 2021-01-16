@@ -41,7 +41,8 @@ global:
     curiefense_db_hostname: 'logdb'
     # supported types: 's3', 'gs'
     curiefense_bucket_type: 's3'
-    # will be overridden if deploy.sh is used
+    curiefense_es_index_name: 'curieaccesslog'
+    # docker_tag will be overridden by deploy.sh
     docker_tag: 'latest'
 
   requests:

@@ -1,6 +1,6 @@
 #### Setting up elasticsearch
 
-1. index name should be a variable with default value of 'curieaccesslog' (which will be the alias for the rollver index)
+1. index name should be a variable with default value of 'curieaccesslog' (which will be the alias for the rollver index) --> DONE
 1. run mapping at start `PUT /curieaccesslog/_mapping` (see more at https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html)
 1. set up rollover and retention based on the example below
 

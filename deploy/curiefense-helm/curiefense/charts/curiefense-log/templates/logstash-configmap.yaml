@@ -17,7 +17,7 @@ data:
     output {
         elasticsearch {
             hosts => "{{ .Values.global.settings.curiefense_es_hosts }}"
-            index => "curieaccesslog"
+            index => "${CURIEFENSE_ES_INDEX_NAME:curieaccesslog}"
         }
     }
 {{- end }}

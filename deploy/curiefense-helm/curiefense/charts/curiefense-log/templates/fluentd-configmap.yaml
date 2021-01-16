@@ -22,7 +22,7 @@ data:
         @id elasticsearch
         @type elasticsearch
         hosts "#{ENV['ELASTICSEARCH_HOSTS']}"
-        index_name curieaccesslog
+        index_name "#{ENV['CURIEFENSE_ES_INDEX_NAME']}"
         include_timestamp true
       </match>
     </label>

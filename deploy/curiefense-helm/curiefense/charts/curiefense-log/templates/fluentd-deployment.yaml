@@ -25,6 +25,8 @@ spec:
         env:
         - name: ELASTICSEARCH_HOSTS
           value: {{ .Values.global.settings.curiefense_es_hosts }}
+        - name: CURIEFENSE_ES_INDEX_NAME
+          value: {{ .Values.global.settings.curiefense_es_index_name }}
       {{ if regexMatch ".*/.*:" .Values.global.images.fluentd }}
       {{/* The image name contains a version tag (e.g. for tests), do not append docker_tag */}}
         image: {{ .Values.global.images.fluentd }}

@@ -22,6 +22,9 @@ spec:
     spec:
       containers:
       - name: logstash
+        env:
+        - name: CURIEFENSE_ES_INDEX_NAME
+          value: {{ .Values.global.settings.curiefense_es_index_name }}
         image: docker.elastic.co/logstash/logstash:7.10.1
         ports:
         - containerPort: 5000
