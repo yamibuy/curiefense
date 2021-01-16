@@ -1,4 +1,5 @@
-{{- if and (eq .Values.global.settings.curiefense_logdb_type "postgres") (.Values.global.enable.logdb) }}
+{{- if eq .Values.global.settings.curiefense_logdb_type "postgres" }}
+{{- if .Values.global.enable.logdb }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -87,4 +88,5 @@ spec:
       resources:
         requests:
           storage: {{ .Values.global.storage.logdb_storage_size }}
+{{ end }}
 {{ end }}

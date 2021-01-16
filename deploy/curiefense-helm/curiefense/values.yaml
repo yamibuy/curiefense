@@ -57,3 +57,5 @@ global:
     prometheus: true
     # postgres database to store logs. Can be replaced with AWS Aurora
     logdb: true
+    kibana: true
+    elasticsearch: true

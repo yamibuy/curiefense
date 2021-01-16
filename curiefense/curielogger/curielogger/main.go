@@ -59,6 +59,8 @@ type AttributesData struct {
 	Query		 string		`json:"query"`
 	Path		 string		`json:"path"`
 	Method		 string		`json:"method"`
+	Blocked		 int		`json:"blocked"`
+	BlockReason	 string		`json:"block_reason"`
 	Tags		 map[string]int	`json:"tags"`
 }
 
