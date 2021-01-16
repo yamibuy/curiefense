@@ -50,5 +50,5 @@ PUT _ilm/policy/curie_policy
 
 
 ```
-curl -s -H "Content-Type: application/x-ndjson" -XPUT localhost:9200/flatcurieaccesslog --data-binary @type-mapping.json
+curl -s -H "Content-Type: application/x-ndjson" -XPUT localhost:9200/curieaccesslog --data-binary @type-mapping.json
 ```
