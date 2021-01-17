@@ -10,7 +10,6 @@ function redis_connection()
     return redis.connect(redishost, redisport)
 end
 
-
 function list_length(key)
     local redis_conn = redis_connection()
     return redis_conn:llen(key)
@@ -141,4 +140,35 @@ function check_set(request_map, redis_conn, key, threshold, set_value, ttl)
     else
         return 200
     end
+end
+
+
+
+function build_key(request_map, key_data, entry_id, entry_name)
+    local handle = request_map.handle
+    local key = ''
+    for _, entry in ipairs(key_data) do
+        -- handle:logDebug(string.format("limit build_key -- iterate key entries %s", _))
+        local section, name = next(entry)
+        -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
+        if section and name then
+            local entry = request_map[section][name]
+            -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
+            if entry then
+                key = key .. entry
+            else
+                -- handle:logDebug(string.format("limit build_key -- falsifying at section %s, name %s", section, name))
+                return false
+            end
+        else
+            -- handle:logDebug(string.format("limit build_key -- falsifying at %s", _))
+            return false
+        end
+    end
+
+    key = string.format("%s%s%s", entry_id, entry_name, key)
+    request_map.handle:logDebug(string.format("build_key  KEY %s", key))
+    local hashed_key = hashkey(key)
+    request_map.handle:logDebug(string.format("build_key  KEY hashed (%s)", hashed_key))
+    return hashed_key
 end
