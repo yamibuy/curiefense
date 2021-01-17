@@ -24,7 +24,7 @@ function validate_flow(session_sequence_key, sequence, redis_key, request_map)
     handle:logDebug(string.format('validate_flow session_sequence_key %s', session_sequence_key))
 
     if session_sequence_key == last_entry.key then
-        if listlen = seq_len or (listlen + 1 = seq_len) then
+        if listlen == seq_len or (listlen + 1 == seq_len) then
             return true
         else
             return false
