@@ -144,8 +144,6 @@ function inspect(handle)
     -- session profiling
     tag_lists(request_map)
 
-    flow_control_check(request_map)
-
     addentry(timeline, "3 url/host assignment")
     local url = request_map.attrs.path
     local host = request_map.headers.host or request_map.attrs.authority
@@ -177,7 +175,10 @@ function inspect(handle)
         challenge_phase02(handle, request_map)
     end
 
-    addentry(timeline, "7 limit_check")
+    addentry(timeline, "7a flow control")
+    flow_control_check(request_map)
+
+    addentry(timeline, "7b limit_check")
     -- rate limit
     limit_check(request_map, urlmap_entry["limit_ids"], urlmap_entry["name"])
 
