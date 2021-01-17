@@ -2,8 +2,8 @@
 
 ES_PATTERN_PATH="api/saved_objects/index-pattern/curiefense"
 ES_INDEX_NAME=${CURIEFENSE_ES_INDEX_NAME:-curieaccesslog}
-CURLJS="curl --silent -H 'Content-Type: application/json'"
-CURLCODE="curl --silent --write-out '%{http_code}\n' --output /dev/null"
+CURLJS="curl --silent -H Content-Type:application/json --output /dev/null"
+CURLCODE="curl --silent --write-out %{http_code}\n --output /dev/null"
 
 wait_for_es () {
 	curl --silent --output /dev/null -X GET "${ELASTICSEARCH_URL}_cluster/health?wait_for_status=yellow&timeout=60s"

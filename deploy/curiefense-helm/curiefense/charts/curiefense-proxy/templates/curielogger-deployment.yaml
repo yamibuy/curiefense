@@ -37,13 +37,13 @@ spec:
 {{- end }}
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
         env:
+        - name: ELASTICSEARCH_URL
+          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
 {{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
         - name: CURIELOGGER_USES_LOGSTASH
           value: "true"
         - name: CURIELOGGER_LOGSTASH_URL
           value: "{{ .Values.global.settings.curiefense_logstash_url }}"
-        - name: ELASTICSEARCH_URL
-          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
 {{- else }}
         - name: CURIELOGGER_USES_FLUENTD
           value: "true"
