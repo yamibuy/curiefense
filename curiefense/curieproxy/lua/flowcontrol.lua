@@ -3,7 +3,9 @@ module(..., package.seeall)
 local globals       = require ("lua.globals")
 local redisutils    = require ("lua.redisutils")
 local sessionutils  = require ("lua.sessionutils")
+local cjson         = require "cjson"
 
+local json_encode   = cjson.encode
 local buildkey      = sessionutils.buildkey
 local match_tags    = sessionutils.match_tags
 
@@ -46,9 +48,12 @@ end
 function check(request_map)
     local handle = request_map.handle
 
-    local session_sequence_key = request_map.attrs.session_sequence_key
-    handle:logDebug(string.format('flowcontrol check -- KEY %s', session_sequence_key))
     local flow_control_db = globals.FlowControl
+    local session_sequence_key = request_map.attrs.session_sequence_key
+
+    handle:logDebug(string.format('flowcontrol check -- KEY %s', session_sequence_key))
+    handle:logDebug(string.format('flowcontrol FlowControl DB %s', json_encode(flow_control_db)))
+
     if flow_control_db then
         for _, flow in ipairs(flow_control_db) do
             -- this request within a given element of the sequence
