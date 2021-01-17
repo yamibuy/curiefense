@@ -46,16 +46,17 @@ end
 function check(request_map)
     local session_sequence_key = request_map.attrs.session_sequence_key
     local flow_control_db = globals.FlowControl
-
-    for _, flow in ipairs(flow_control_db) do
-        -- this request within a given element of the sequence
-        if flow.sequence_keys[session_sequence_key] then
-            local should_exclude = match_tags(flow.exclude, request_map)
-            if not should_exclude then
-                local should_include = match_tags(flow.include, request_map)
-                if should_include then
-                    local redis_key = build_key(request_map, flow.key, flow.id, flow.name)
-                    validate_flow(session_sequence_key, flow.sequence, redis_key, request_map)
+    if flow_control_db then
+        for _, flow in ipairs(flow_control_db) do
+            -- this request within a given element of the sequence
+            if flow.sequence_keys[session_sequence_key] then
+                local should_exclude = match_tags(flow.exclude, request_map)
+                if not should_exclude then
+                    local should_include = match_tags(flow.include, request_map)
+                    if should_include then
+                        local redis_key = build_key(request_map, flow.key, flow.id, flow.name)
+                        validate_flow(session_sequence_key, flow.sequence, redis_key, request_map)
+                    end
                 end
             end
         end
