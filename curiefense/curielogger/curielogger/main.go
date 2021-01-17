@@ -155,7 +155,7 @@ type MetadataData struct {
 
 type CuriefenseLog struct {
 	RequestId	 string		`json:"requestid"`
-	Timestamp	 float64	`json:"timestamp"`
+	Timestamp	 string		`json:"timestamp"`
 	Scheme		 string		`json:"scheme"`
 	Authority	 string		`json:"authority"`
 	Port		 uint32		`json:"port"`
@@ -678,11 +678,14 @@ func DurationToFloat(d *duration.Duration) float64 {
 	return 0
 }
 
-func TimestampToFloat(d *timestamp.Timestamp) float64 {
+func TimestampToRFC3339(d *timestamp.Timestamp) string {
+	var v time.Time
 	if d != nil {
-		return float64(d.GetSeconds()) + float64(d.GetNanos())*1e-9
+		v = time.Unix(int64(d.GetSeconds()), int64(d.GetNanos()))
+	} else {
+		v = time.Now()
 	}
-	return 0
+	return v.Format(time.RFC3339Nano)
 }
 
 func MapToNameValue(m map[string]string) []NameValue {
@@ -749,7 +752,7 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 
 			cflog := CuriefenseLog{
 				RequestId: req.GetRequestId(),
-				Timestamp: TimestampToFloat(common.GetStartTime()),
+				Timestamp: TimestampToRFC3339(common.GetStartTime()),
 				Scheme: req.GetScheme(),
 				Authority: req.GetAuthority(),
 				Port: req.GetPort().GetValue(),
