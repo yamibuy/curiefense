@@ -8,6 +8,9 @@ local iptools     = require "iptools"
 local luahs       = require "luahs"
 local preplists   = require "lua.preplists"
 
+
+local format = string.format
+
 local gen_list_entries  = preplists.gen_list_entries
 local json_decode       = json_safe.decode
 
