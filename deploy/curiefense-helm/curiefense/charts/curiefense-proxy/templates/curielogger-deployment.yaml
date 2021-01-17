@@ -37,14 +37,19 @@ spec:
 {{- end }}
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
         env:
-        - name: CURIELOGGER_USES_ELASTICSEARCH
+{{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
+        - name: CURIELOGGER_USES_LOGSTASH
           value: "true"
         - name: CURIELOGGER_LOGSTASH_URL
-          value: "http://logstash:5001/"
+          value: "{{ .Values.global.settings.curiefense_logstash_url }}"
+{{- else }}
+        - name: CURIELOGGER_USES_FLUENTD
+          value: "true"
+        - name: CURIELOGGER_FLUENTD_URL
+          value: "{{ .Values.global.settings.curiefense_fluentd_url }}"
+{{- end }}
         - name: CURIELOGGER_KIBANA_URL
-          value: "http://kibana:5601/"
-        - name: CURIELOGGER_ELASTICSEARCH_URL
-          value: "http://elasticsearch:9200/"
+          value: "{{ .Values.global.settings.curiefense_kibana_url }}"
 {{- if .Values.global.enable.kibana }}
         - name: CURIELOGGER_INITIALIZE_KIBANA_INDEX
           value: "true"

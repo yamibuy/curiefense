@@ -1,4 +1,6 @@
 {{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
+{{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
+{{- if .Values.global.enable.logstash }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -8,17 +10,16 @@ metadata:
 data:
   logstash.conf: |-
     input {
-        tcp {
-            port => 5000
-        }
         http {
             port => 5001
         }
     }
     output {
         elasticsearch {
-            hosts => "elasticsearch:9200"
-            index => "curieaccesslog"
+            hosts => "{{ .Values.global.settings.curiefense_es_hosts }}"
+            index => "${CURIEFENSE_ES_INDEX_NAME:curieaccesslog}"
         }
     }
+{{- end }}
+{{- end }}
 {{- end }}

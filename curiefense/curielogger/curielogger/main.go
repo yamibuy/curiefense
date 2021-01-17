@@ -50,18 +50,21 @@ import (
 
 
 type AttributesData struct {
-	IPNum		 int		`json:"ipnum"`
-	IP		 string		`json:"ip"`
-	XFFTrustedHops	 int		`json:"xff_trusted_hops"`
-	URI		 string		`json:"uri"`
-	Authority	 string		`json:"authority"`
-	RemoteAddress	 string		`json:"remote_addr"`
-	Query		 string		`json:"query"`
-	Path		 string		`json:"path"`
-	Method		 string		`json:"method"`
-	Blocked		 int		`json:"blocked"`
-	BlockReason	 string		`json:"block_reason"`
-	Tags		 map[string]int	`json:"tags"`
+	IPNum		 int			`json:"ipnum"`
+	IP		 string			`json:"ip"`
+	XFFTrustedHops	 int			`json:"xff_trusted_hops"`
+	URI		 string			`json:"uri"`
+	Authority	 string			`json:"authority"`
+	RemoteAddress	 string			`json:"remote_addr"`
+	Query		 string			`json:"query"`
+	Path		 string			`json:"path"`
+	Method		 string			`json:"method"`
+	Blocked		 bool			`json:"blocked"`
+	BlockReason	 map[string]string	`json:"block_reason"`
+	Company		 string			`json:"company"`
+	Country		 string			`json:"country"`
+	ASN		 int			`json:"asn,string"`
+	Tags		 map[string]int		`json:"tags"`
 }
 
 type CurieProxyLog struct {
@@ -386,7 +389,19 @@ func extractTagByPrefix(prefix string, tags map[string]interface{}) string {
 	return "N/A"
 }
 
-func makeLabels(status_code int, method, path, upstream, blocked string, tags map[string]interface{}) prometheus.Labels {
+func makeTagMap(tags map[string] int) map[string]string {
+	res := make(map[string]string)
+	for k := range tags {
+		tspl := strings.Split(k, ":")
+		if len(tspl) == 2 {
+			res[tspl[0]] = tspl[1]
+		}
+	}
+	return res
+}
+
+
+func makeLabels(status_code int, method, path, upstream, blocked string, tags map[string]int) prometheus.Labels {
 
 	// classes and specific response code
 	// icode := int(status_code)
@@ -417,6 +432,9 @@ func makeLabels(status_code int, method, path, upstream, blocked string, tags ma
 		origin_status_class = fmt.Sprintf("origin_%s", class_label)
 	}
 
+
+	tm := makeTagMap(tags)
+
 	return prometheus.Labels{
 		"status_code":         status_code_str,
 		"status_class":        class_label,
@@ -426,15 +444,15 @@ func makeLabels(status_code int, method, path, upstream, blocked string, tags ma
 		"method":              method,
 		"path":                path,
 		"blocked":             blocked,
-		"asn":                 extractTagByPrefix("asn", tags),
-		"geo":                 extractTagByPrefix("geo", tags),
-		"aclid":               extractTagByPrefix("aclid", tags),
-		"aclname":             extractTagByPrefix("aclname", tags),
-		"wafid":               extractTagByPrefix("wafid", tags),
-		"wafname":             extractTagByPrefix("wafname", tags),
-		"urlmap":              extractTagByPrefix("urlmap", tags),
-		"urlmap_entry":        extractTagByPrefix("urlmap-entry", tags),
-		"container":           extractTagByPrefix("container", tags),
+		"asn":                 tm["asn"],
+		"geo":                 tm["geo"],
+		"aclid":               tm["aclid"],
+		"aclname":             tm["aclname"],
+		"wafid":               tm["wafid"],
+		"wafname":             tm["wafname"],
+		"urlmap":              tm["urlmap"],
+		"urlmap_entry":        tm["urlmap-entry"],
+		"container":           tm["container"],
 	}
 }
 
@@ -455,35 +473,20 @@ func (l promLogger) Start() {
 		metric_request_bytes.Add(float64(e.cfLog.Request.HeadersBytes+e.cfLog.Request.BodyBytes))
 		metric_response_bytes.Add(float64(e.cfLog.Response.HeadersBytes+e.cfLog.Response.BodyBytes))
 
+		attrs := e.cfLog.Request.Attributes
+		tags := attrs.Tags
+		blocked := strconv.FormatBool(attrs.Blocked)
 
-//		if attrs_i, ok := e.curiefense["attrs"] ; ok {
-//			if attrs, ok := attrs_i.(map[string]interface{}); ok {
-//				blocked := "0"
-//				if _, ok := attrs["blocked"]; ok {
-//					blocked = "1"
-//				}
-//				log.Printf("[DEBUG] ~~~ blocked=[%v]", blocked)
-//				if tags_i, ok := attrs["tags"]; ok {
-//					if tags, ok := tags_i.(map[string]interface{}); ok {
-//						if path_i, ok := attrs["path"]; ok {
-//							if path, ok := path_i.(string); ok {
-//								log.Printf("[DEBUG] ~~~ path=[%v]", path)
-//								log.Printf("[DEBUG] ~~~ tags=[%v]", tags)
-//								labels := makeLabels(e.cfLog.Response.Code, e.cfLog.Method, path, e.cfLog.Upstream.RemoteAddress, blocked, tags)
-//								metric_session_details.With(labels).Inc()
-//								for name := range tags {
-//									if !isStaticTag(name) {
-//										metric_requests_tags.WithLabelValues(name).Inc()
-//									}
-//								}
-//							} else { log.Printf("[DEBUG]  @ no path cast :(") }
-//						} else { log.Printf("[DEBUG]  @ no path :(") }
-//					} else { log.Printf("[DEBUG]  @ no tags cast :( [%v]", tags_i) }
-//				} else { log.Printf("[DEBUG]  @ no tags :(") }
-//			} else { log.Printf("[DEBUG]  @ no attr cast :(") }
-//		} else { log.Printf("[DEBUG]  @ no attrs :(") }
+		labels := makeLabels(e.cfLog.Response.Code, e.cfLog.Method, e.cfLog.Path, 
+			e.cfLog.Upstream.RemoteAddress, blocked, tags)
+		metric_session_details.With(labels).Inc()
+
+		for name := range tags {
+			if !isStaticTag(name) {
+				metric_requests_tags.WithLabelValues(name).Inc()
+			}
+		}
 	}
-
 }
 
 
@@ -724,7 +727,7 @@ func (l *logstashLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] LogStash insertion!")
 	j, err := json.Marshal(e.cfLog)
 	if err == nil {
-		_, err := http.Post(l.url+"/curiefense/log", "application/json",  bytes.NewReader(j))
+		_, err := http.Post(l.url, "application/json",  bytes.NewReader(j))
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
 			return false
@@ -753,7 +756,7 @@ func (l *fluentdLogger) InsertEntry(e LogEntry) bool {
 	log.Printf("[DEBUG] Fluentd insertion!")
 	j, err := json.Marshal(e.cfLog)
 	if err == nil {
-		_, err := http.PostForm(l.url+"/curiefense/log", neturl.Values{"json": {string(j)}})
+		_, err := http.PostForm(l.url+"curiefense.log", neturl.Values{"json": {string(j)}})
 		if err != nil {
 			log.Printf("ERROR: could not POST log entry: %v", err)
 		}

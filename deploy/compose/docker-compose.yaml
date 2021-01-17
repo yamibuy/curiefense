@@ -239,13 +239,28 @@ services:
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - CURIEFENSE_INDEX_NAME=curieaccesslog
     networks:
       - curiemesh
     ports:
-      # beats input
-      - 5044:5044
-      # tcp input
-      - 5000:5000
+      # http input
+      - 5001:5001
+
+  fluentd:
+    container_name: fluentd
+    image: fluent/fluentd:v1.12.0-1.0
+    restart: always
+    volumes:
+      - type: bind
+        source: ./fluent.conf
+        target: /fluentd/etc/fluent.conf
+        read_only: true
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - CURIEFENSE_INDEX_NAME=curieaccesslog
+    networks:
+      - curiemesh
+    ports:
       # http input
       - 5001:5001
 
