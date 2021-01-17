@@ -1,5 +1,4 @@
-
-
+module(..., package.seeall)
 
 local globals       = require ("lua.globals")
 local redisutils    = require ("lua.redisutils")
