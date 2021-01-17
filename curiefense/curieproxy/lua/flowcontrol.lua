@@ -61,7 +61,7 @@ function check(request_map)
                 local should_exclude = match_tags(flow.exclude, request_map)
                 handle:logDebug(string.format("should_exclude? %s", should_exclude))
                 if not should_exclude then
-                    local should_include = match_tags(flow.include, request_map)
+                    local should_include = (#flow.include == 0) or match_tags(flow.include, request_map)
                     handle:logDebug(string.format("should_include? %s", should_include))
                     if should_include then
                         local redis_key = build_key(request_map, flow.key, flow.id, flow.name)

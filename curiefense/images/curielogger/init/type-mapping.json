@@ -161,6 +161,12 @@
           },
           "attributes": {
             "type": "flattened"
+          },
+          "block_reason": {
+            "type": "flattened"
+          },
+          "tags": {
+            "type": "flattened"
           }
         }
       },
