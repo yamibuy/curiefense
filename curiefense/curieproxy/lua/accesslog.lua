@@ -36,7 +36,14 @@ function log_request(request_map)
       tagnames[n] = name
     end
 
-  	log_table.attributes.tags = tagnames
+  	log_table.tags = tagnames
+    log_table.blocked = log_table.attributes.blocked
+    log_table.block_reason = log_table.attributes.block_reason
+
+    log_table.attributes.tags = nil
+    log_table.attributes.blocked = nil
+    log_table.attributes.block_reason = nil
+
   end
 
   local str_map = json_encode(log_table)
