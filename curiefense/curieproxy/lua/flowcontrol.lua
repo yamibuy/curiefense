@@ -24,7 +24,7 @@ function validate_flow(session_sequence_key, sequence, redis_key, request_map)
 
     handle:logDebug(string.format('flowcontrol validate_flow seqlen %s', seq_len))
     handle:logDebug(string.format('flowcontrol validate_flow redis list length %s', listlen))
-    handle:logDebug(string.format('flowcontrol validate_flow last_entry key %s, session_sequence_key %s', last_entry.key))
+    handle:logDebug(string.format('flowcontrol validate_flow last_entry key %s', last_entry.key))
     handle:logDebug(string.format('flowcontrol validate_flow session_sequence_key %s', session_sequence_key))
 
     if session_sequence_key == last_entry.key then
