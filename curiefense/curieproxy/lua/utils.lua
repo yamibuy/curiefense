@@ -113,8 +113,8 @@ function map_metadata(metadata, map)
     for key, value in pairs(metadata) do
         map.attrs[key] = value
     end
-    local url = request_map.attrs.path
-    local host = request_map.headers.host or request_map.attrs.authority
+    local url = map.attrs.path
+    local host = map.headers.host or map.attrs.authority
     local method = map.attrs.method
     map.attrs.session_sequence_key = format("%s%s%s", method, host, url)
 end
