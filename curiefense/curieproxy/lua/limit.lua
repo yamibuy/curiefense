@@ -1,11 +1,11 @@
 -- commonlua/limit.lua
 module(..., package.seeall)
 
-local os        = require "os"
-local redis     = require "lua.redis"
-local utils     = require "lua.utils"
-local globals   = require "lua.globals"
-local cjson     = require "cjson"
+local os         = require "os"
+local utils      = require "lua.utils"
+local globals    = require "lua.globals"
+local redisutils = require "lua.redisutils"
+local cjson      = require "cjson"
 
 local json_encode   = cjson.encode
 local limit_ban_hash = 'limit-ban-hash'
@@ -18,6 +18,8 @@ local custom_response = utils.custom_response
 
 --- all functions that access redis, starts with redis_
 
+local redis_check_limit = redisutils.check_limit
+
 function hashkey(key)
     local hashed = md5(key)
     return hashed or key
@@ -27,13 +29,13 @@ function gen_ban_key( key )
     return hashkey(limit_ban_hash .. key)
 end
 
-function redis_connection()
-    hostname = os.getenv("REDIS_HOST")
-    if hostname == nil then
-        hostname = "redis"
-    end
-    return redis.connect(hostname, 6379)
-end
+-- function redis_connection()
+--     hostname = os.getenv("REDIS_HOST")
+--     if hostname == nil then
+--         hostname = "redis"
+--     end
+--     return redis.connect(hostname, 6379)
+-- end
 
 function should_exclude(request_map, limit_set)
     local exclude = false
@@ -216,120 +218,6 @@ function check_request(request_map, limit_set, url_map_name)
         if xert == 503 then
             limit_react(request_map, limit_set.name, limit_set.action, key, ttl)
         end
-    end
-end
-
-function redis_check_limit(request_map, key, threshold, ttl, set_value)
-    local retval = 200
-    local redis_conn = redis_connection()
-
-    if not redis_conn then
-        return retval
-    end
-
-    if not set_value then
-        retval = redis_check_simple(request_map, redis_conn, key, threshold, ttl)
-    else
-        retval = redis_check_set(request_map, redis_conn, key, threshold, set_value, ttl)
-    end
-
-    -- local ok, err = redis_conn:set_keepalive(max_idle_timeout, redis_pool_size)
-    return retval
-end
-
-function redis_check_simple(request_map, redis_conn, key, threshold, ttl)
-    local handle = request_map.handle
-    local current = 0
-    local force_expire = false
-
-    local result = redis_conn:pipeline(
-        function(pipe)
-            -- pipe:multi()
-            pipe:incr(key)
-            pipe:ttl(key)
-        end
-    )
-
-    -- handle:logDebug(string.format("limit redis_check_simple -- type(%s), [%s]", type(result), result))
-    if type(result) == "table" then
-        current = result[1]
-        expire = result[2]
-
-        -- handle:logDebug(string.format("limit redis_check_simple -- current (%s), expire[%s]", current, expire))
-
-        if "userdata: NULL" == tostring(current) then
-            current = 0
-        else
-            current = tonumber(current)
-        end
-
-        if "userdata: NULL" == tostring(expire) then
-            expire = -1
-        else
-            expire = tonumber(expire)
-        end
-
-        if expire < 0 then
-            value, err = redis_conn:expire(key, ttl)
-        end
-
-        if current ~= nil and current > threshold then
-            return 503
-        else
-            -- handle:logDebug(string.format("limit --- %s < %s", current, threshold))
-            return 200
-        end
-    else
-        -- handle:logDebug(string.format("limit --- not a table, 200 is the answer"))
-        return 200
-    end
-end
-
-function redis_check_set(request_map, redis_conn, key, threshold, set_value, ttl)
-    local current = 0
-    set_value = md5(set_value)
-
-    local result = redis_conn:pipeline(
-        function(pipe)
-            -- pipe:multi()
-            pipe:sadd(key, set_value)
-            pipe:scard(key)
-            pipe:ttl(key)
-        end
-    )
-
-    if type(result) == "table" then
-        current = result[2]
-        expire = result[3]
-
-        if "userdata: NULL" == tostring(current) then
-            current = 0
-        else
-            current = tonumber(current)
-        end
-
-        if "userdata: NULL" == tostring(expire) then
-            expire = -1
-        else
-            expire = tonumber(expire)
-        end
-
-        if expire < 0 then
-            value, err = redis_conn:expire(key, ttl)
-        end
-
-        if current ~= nil and current > threshold then
-            return 503
-        else
-            local value, err = redis_conn:sadd(key, set_value)
-            if not value then
-                error("failed expanding set: " .. tostring(err))
-                return -1
-            end
-            return 200
-        end
-    else
-        return 200
     end
 end
 

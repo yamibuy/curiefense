@@ -10,8 +10,8 @@ local limit         = require "lua.limit"
 local accesslog     = require "lua.accesslog"
 local challenge     = require "lua.challenge"
 local utils         = require "lua.utils"
-
-local cjson       = require "cjson"
+local flowcontrol   = require "lua.flowcontrol"
+local cjson         = require "cjson"
 
 local init          = globals.init
 
@@ -41,8 +41,10 @@ local log_request   = accesslog.log_request
 local limit_check   = limit.check
 
 local challenge_verified = challenge.verified
-local challenge_phase01 = challenge.phase01
-local challenge_phase02 = challenge.phase02
+local challenge_phase01  = challenge.phase01
+local challenge_phase02  = challenge.phase02
+
+local flow_control_check = flowcontrol.check
 
 local sfmt = string.format
 
@@ -138,16 +140,21 @@ function inspect(handle)
     addentry(timeline, "1 map_request")
     local request_map = map_request(handle)
 
-    addentry(timeline, "2 url/host assignment")
+    addentry(timeline, "2 session_profiling")
+    -- session profiling
+    tag_lists(request_map)
+
+    flow_control_check(request_map)
+
+    addentry(timeline, "3 url/host assignment")
     local url = request_map.attrs.path
     local host = request_map.headers.host or request_map.attrs.authority
 
-
     -- unified the following 3 into a single operaiton
-    addentry(timeline, "3 match_urlmap")
+    addentry(timeline, "4 match_urlmap")
     local urlmap_entry, url_map = match_urlmap(request_map)
 
-    addentry(timeline, "4 profiles assignment")
+    addentry(timeline, "5 profiles assignment")
     local acl_active        = urlmap_entry["acl_active"]
     local waf_active        = urlmap_entry["waf_active"]
     local acl_profile_id    = urlmap_entry["acl_profile"]
@@ -155,7 +162,7 @@ function inspect(handle)
     local acl_profile       = globals.ACLProfiles[acl_profile_id]
     local waf_profile       = globals.WAFProfiles[waf_profile_id]
 
-    addentry(timeline, "5 map_tags")
+    addentry(timeline, "6 map_tags")
     map_tags(request_map,
         sfmt('urlmap:%s', url_map.name),
         sfmt('urlmap-entry:%s', urlmap_entry.name),
@@ -165,16 +172,10 @@ function inspect(handle)
         sfmt("wafname:%s", waf_profile.name)
     )
 
-    addentry(timeline, "6 session_profiling")
-    -- session profiling
-    tag_lists(request_map)
-
-
     if url:startswith("/7060ac19f50208cbb6b45328ef94140a612ee92387e015594234077b4d1e64f1/") then
         -- handle:logDebug("CHALLENGE PHASE02")
         challenge_phase02(handle, request_map)
     end
-
 
     addentry(timeline, "7 limit_check")
     -- rate limit

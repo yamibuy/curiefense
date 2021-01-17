@@ -25,7 +25,7 @@ WAFHScanDB      = nil
 WAFHScanScratch = nil
 ProfilingLists  = nil
 LimitRules      = nil
-
+FlowControl     = nil
 
 MaxMindCountry  = nil
 MaxMindASN      = nil
@@ -80,6 +80,35 @@ end
 function direct_load(handle, path)
     -- -- handle:logDebug(string.format("loading %s", path))
     return load_json_file(path)
+end
+
+function build_sequence_key(sequence)
+    if sequence.method and sequence.headers.host and sequence.uri then
+        return format("%s%s%s", sequence.method, sequence.headers.host, sequence.uri)
+    end
+end
+
+function load_flowcontrol(handle, path)
+    local json_data = direct_load(handle, path)
+    local store = {}
+    for _, flow in ipairs(json_data) do
+        if flow.active then
+            if #flow.sequence > 1 then
+                local keys = {}
+                for _, seq_entry in ipairs(flow.sequence) do
+                    local seq_key = build_sequence_key(seq_entry)
+                    if seq_key then
+                        seq_entry.key = seq_key
+                        seq_entry.headers.host = nil
+                        keys[seq_key] = 1
+                    end
+                end
+                flow.sequence_keys = keys
+                table.insert(store, flow)
+            end
+        end
+    end
+    return store
 end
 
 function load_and_reconstruct(handle, path)
@@ -192,6 +221,7 @@ local lr  = load_and_reconstruct
 local lra = load_and_reconstruct_acl
 local lrw = load_and_reconstruct_waf
 local lrt = load_and_reconstruct_taglist
+local lfc = load_flowcontrol
 
 function reload(handle)
     maybe_reload(handle)
@@ -222,26 +252,23 @@ function build_hs_db( signatures )
 end
 
 function maybe_reload(handle)
-    -- handle:logDebug("MAYBE_RELOAD CONFIG ENTERED")
     local fname
     local curtime = os.time()
 
     if lfs.attributes("/config/current").change > last_reload_time then
         last_reload_time = curtime
-        ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
+
+        URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
         LimitRules      = lr(handle,  "/config/current/config/json/limits.json")
+        WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
+        ProfilingLists  = lrt(handle, "/config/current/config/json/profiling-lists.json")
         ACLProfiles     = lra(handle, "/config/current/config/json/acl-profiles.json")
         WAFProfiles     = lrw(handle, "/config/current/config/json/waf-profiles.json")
-        URLMap          = dl(handle,  "/config/current/config/json/urlmap.json")
-
-        WAFSignatures   = lr(handle,  "/config/current/config/json/waf-signatures.json")
+        FlowControl     = lfc(handle, "/config/current/config/json/flow-control.json")
 
         build_hs_db(WAFSignatures)
 
-
     end
-
-    -- handle:logDebug("MAYBE_RELOAD CONFIG DONE")
 end
 
 function init(handle)

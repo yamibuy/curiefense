@@ -44,6 +44,14 @@ function should_include(request_map, include_set)
     return include
 end
 
+function match_tags(tag_list, request_map)
+    local request_tags = request_map.attrs.tags
+    for _, tag in ipairs(tag_list) do
+        if request_tags[tag] then
+            return true
+        end
+    end
+end
 
 --[[
 
