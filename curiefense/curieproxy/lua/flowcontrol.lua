@@ -1,5 +1,6 @@
 module(..., package.seeall)
 
+local limit         = require ("lua.limit")
 local globals       = require ("lua.globals")
 local redisutils    = require ("lua.redisutils")
 local sessionutils  = require ("lua.sessionutils")
@@ -12,6 +13,9 @@ local match_tags    = sessionutils.match_tags
 
 local list_length = redisutils.list_length
 local list_push   = redisutils.list_push
+
+
+local build_key   = limit.build_key
 
 function validate_flow(session_sequence_key, sequence, redis_key, request_map)
     local seq_len = #sequence
