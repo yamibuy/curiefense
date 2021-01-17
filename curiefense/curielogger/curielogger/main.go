@@ -52,8 +52,8 @@ import (
 type CurieProxyLog struct {
 	Headers		 map[string]string	`json:"headers"`
 	Cookies		 map[string]string	`json:"cookies"`
-	Arguments	 map[string]string	`json:"args"`
-	Attributes	 map[string]interface{}	`json:"attrs"`
+	Arguments	 map[string]string	`json:"arguments"`
+	Attributes	 map[string]interface{}	`json:"attributes"`
 	Blocked		 bool			`json:"blocked"`
 	BlockReason	 map[string]interface{}	`json:"block_reason"`
 	Tags		 []string		`json:"tags"`
@@ -125,7 +125,7 @@ type RequestData struct {
 	Headers		 map[string]string	`json:"headers"`
 	Cookies		 map[string]string	`json:"cookies"`
 	Arguments	 map[string]string	`json:"arguments"`
-	Attributes	 map[string]interface{}	`json:"attrs"`
+	Attributes	 map[string]interface{}	`json:"attributes"`
 }
 
 type ResponseData struct {
