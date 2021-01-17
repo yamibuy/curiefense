@@ -59,8 +59,10 @@ function check(request_map)
             -- this request within a given element of the sequence
             if flow.sequence_keys[session_sequence_key] then
                 local should_exclude = match_tags(flow.exclude, request_map)
+                handle:logDebug(string.format("should_exclude? %s", should_exclude))
                 if not should_exclude then
                     local should_include = match_tags(flow.include, request_map)
+                    handle:logDebug(string.format("should_include? %s", should_include))
                     if should_include then
                         local redis_key = build_key(request_map, flow.key, flow.id, flow.name)
                         validate_flow(session_sequence_key, flow.sequence, redis_key, request_map)
@@ -71,7 +73,12 @@ function check(request_map)
     end
 end
 
-
+--[[
+TO DO
+key exists?
+key expiration
+other peripheral matching
+]]
 --[===[
 [
     {
