@@ -44,6 +44,8 @@ function validate_flow(session_sequence_key, sequence, redis_key, request_map)
 end
 
 function check(request_map)
+    local handle = request_map.handle
+
     local session_sequence_key = request_map.attrs.session_sequence_key
     handle:logDebug(string.format('flowcontrol check -- KEY %s', session_sequence_key))
     local flow_control_db = globals.FlowControl
