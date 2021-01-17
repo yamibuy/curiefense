@@ -10,7 +10,6 @@ local cjson      = require "cjson"
 local json_encode   = cjson.encode
 local limit_ban_hash = 'limit-ban-hash'
 
-local md5             = utils.md5
 local re_match        = utils.re_match
 local tag_request     = utils.tag_request
 local deny_request    = utils.deny_request
@@ -18,13 +17,10 @@ local custom_response = utils.custom_response
 
 
 --- all functions that access redis, starts with redis_
+local md5               = redisutils.md5
 local redis_connection  = redisutils.redis_connection
 local redis_check_limit = redisutils.check_limit
 
-function hashkey(key)
-    local hashed = md5(key)
-    return hashed or key
-end
 
 function gen_ban_key( key )
     return hashkey(limit_ban_hash .. key)

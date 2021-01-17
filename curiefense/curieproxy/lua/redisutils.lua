@@ -2,9 +2,16 @@ module(..., package.seeall)
 
 local os        = require "os"
 local redis     = require "lua.redis"
+local utils     = require "lua.utils"
+local md5       = utils.md5
 
 local redishost = os.getenv("REDIS_HOST") or "redis"
 local redisport = os.getenv("REDIS_PORT") or 6379
+
+function hashkey(key)
+    local hashed = md5(key)
+    return hashed or key
+end
 
 function redis_connection()
     return redis.connect(redishost, redisport)
