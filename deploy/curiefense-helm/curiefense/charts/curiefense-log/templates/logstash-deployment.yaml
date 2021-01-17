@@ -27,13 +27,11 @@ spec:
           value: {{ .Values.global.settings.curiefense_es_index_name }}
         image: docker.elastic.co/logstash/logstash:7.10.1
         ports:
-        - containerPort: 5000
-          name: logstash-tcp
         - containerPort: 5001
           name: logstash-http
         livenessProbe:
           tcpSocket:
-            port: logstash-tcp
+            port: logstash-http
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         volumeMounts:
         - name: logstash-config
