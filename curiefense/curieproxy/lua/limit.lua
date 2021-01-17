@@ -16,8 +16,9 @@ local tag_request     = utils.tag_request
 local deny_request    = utils.deny_request
 local custom_response = utils.custom_response
 
---- all functions that access redis, starts with redis_
 
+--- all functions that access redis, starts with redis_
+local redis_connection  = redisutils.redis_connection
 local redis_check_limit = redisutils.check_limit
 
 function hashkey(key)
@@ -28,14 +29,6 @@ end
 function gen_ban_key( key )
     return hashkey(limit_ban_hash .. key)
 end
-
--- function redis_connection()
---     hostname = os.getenv("REDIS_HOST")
---     if hostname == nil then
---         hostname = "redis"
---     end
---     return redis.connect(hostname, 6379)
--- end
 
 function should_exclude(request_map, limit_set)
     local exclude = false

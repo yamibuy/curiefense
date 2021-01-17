@@ -6,31 +6,32 @@ local redis     = require "lua.redis"
 local redishost = os.getenv("REDIS_HOST") or "redis"
 local redisport = os.getenv("REDIS_PORT") or 6379
 
-function _connection()
+function redis_connection()
     return redis.connect(redishost, redisport)
 end
 
+
 function list_length(key)
-    local redis_conn = _connection()
+    local redis_conn = redis_connection()
     return redis_conn:llen(key)
 end
 
 function list_push(key, value)
-    return _connection():lpush(key, value)
+    return redis_connection():lpush(key, value)
 end
 
 function set_length(key)
-    local redis_conn = _connection()
+    local redis_conn = redis_connection()
     return redis_conn:scard(key)
 end
 
 function set_add(key, value)
-    return _connection():sadd(key, value)
+    return redis_connection():sadd(key, value)
 end
 
 function check_limit(request_map, key, threshold, ttl, set_value)
     local retval = 200
-    local redis_conn = _connection()
+    local redis_conn = redis_connection()
 
     if not redis_conn then
         return retval
