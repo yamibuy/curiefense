@@ -17,10 +17,10 @@ function validate_flow(session_sequence_key, sequence, redis_key, request_map)
     local last_entry = sequence[seq_len]
     local listlen = list_length(redis_key)
 
-    handle:logDebug(string.format('validate_flow seqlen %s', seq_len))
-    handle:logDebug(string.format('validate_flow redis list length %s', listlen))
-    handle:logDebug(string.format('validate_flow last_entry key %s, session_sequence_key %s', last_entry.key))
-    handle:logDebug(string.format('validate_flow session_sequence_key %s', session_sequence_key))
+    handle:logDebug(string.format('flowcontrol validate_flow seqlen %s', seq_len))
+    handle:logDebug(string.format('flowcontrol validate_flow redis list length %s', listlen))
+    handle:logDebug(string.format('flowcontrol validate_flow last_entry key %s, session_sequence_key %s', last_entry.key))
+    handle:logDebug(string.format('flowcontrol validate_flow session_sequence_key %s', session_sequence_key))
 
     if session_sequence_key == last_entry.key then
         if listlen == seq_len or (listlen + 1 == seq_len) then
@@ -45,6 +45,7 @@ end
 
 function check(request_map)
     local session_sequence_key = request_map.attrs.session_sequence_key
+    handle:logDebug(string.format('flowcontrol check -- KEY %s', session_sequence_key))
     local flow_control_db = globals.FlowControl
     if flow_control_db then
         for _, flow in ipairs(flow_control_db) do
