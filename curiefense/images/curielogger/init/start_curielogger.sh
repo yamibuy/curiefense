@@ -25,7 +25,7 @@ create_index () {
 if [ -n "$CURIELOGGER_INITIALIZE_KIBANA_INDEX" ]; then
 	# in case logs are saved in elasticsearch and not postgres
 	>&2 echo "Creating an index pattern in Kibana if needed."
-	# create_index
+	create_index
 fi
 
 /bin/curielogger
