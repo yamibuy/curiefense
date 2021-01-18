@@ -169,16 +169,16 @@
             "type": "keyword"
           },
           "headers": {
-            "type": "keyword"
+            "type": "flattened"
           },
           "cookies": {
-            "type": "keyword"
+            "type": "flattened"
           },
           "arguments": {
-            "type": "keyword"
+            "type": "flattened"
           },
           "attributes": {
-            "type": "keyword"
+            "type": "flattened"
           }
         }
       },
