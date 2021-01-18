@@ -1,10 +1,22 @@
 {
+  "settings": {
+    "index.lifecycle.name": "curie_policy",
+    "index.lifecycle.rollover_alias": "INDEX_NAME"
+  },
+  "aliases": {
+    "INDEX_NAME": {
+      "is_write_index": true
+    }
+  },
   "mappings": {
     "properties": {
       "requestid": {
         "type": "keyword"
       },
       "starttime": {
+        "type": "date_nanos"
+      },
+      "timestamp": {
         "type": "date_nanos"
       },
       "scheme": {

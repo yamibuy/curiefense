@@ -12,6 +12,6 @@ RUN apt-get update && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /curielogger/build/curielogger /bin
-COPY init/start_curielogger.sh /bin/start_curielogger.sh
+COPY init /init/
 
-ENTRYPOINT ["/usr/bin/dumb-init", "/bin/bash", "/bin/start_curielogger.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init", "/bin/bash", "/init/start_curielogger.sh"]
