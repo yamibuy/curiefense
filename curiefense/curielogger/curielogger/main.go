@@ -88,11 +88,11 @@ type UpstreamData struct {
 	Cluster			 string	`json:"cluster"`
 	ConnectionFailure	 bool	`json:"connectionfailure"`
 	ConnectionTermination	 bool	`json:"connectiontermination"`
-	LocalAddress		 string	`json:"localaddress"`
-	LocalAddressPort	 uint32	`json:"localaddressport"`
+	LocalAddress		 string	`json:"localaddress,omitempty"`
+	LocalAddressPort	 uint32	`json:"localaddressport,omitempty"`
 	Overflow		 bool	`json:"overflow"`
-	RemoteAddress		 string	`json:"remoteaddress"`
-	RemoteAddressPort	 uint32	`json:"remoteaddressport"`
+	RemoteAddress		 string	`json:"remoteaddress,omitempty"`
+	RemoteAddressPort	 uint32	`json:"remoteaddressport,omitempty"`
 	RemoteReset		 bool	`json:"remotereset"`
 	RequestTimeout		 bool	`json:"requesttimeout"`
 	RetryLimitExceeded	 bool	`json:"retrylimitexceeded"`
