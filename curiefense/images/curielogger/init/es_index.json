@@ -39,10 +39,10 @@
       },
 
       "block_reason": {
-        "type": "flattened"
+        "type": "keyword"
       },
       "tags": {
-        "type": "flattened"
+        "type": "keyword"
       },
       "rxtimers": {
         "properties": {
@@ -169,16 +169,16 @@
             "type": "keyword"
           },
           "headers": {
-            "type": "flattened"
+            "type": "keyword"
           },
           "cookies": {
-            "type": "flattened"
+            "type": "keyword"
           },
           "arguments": {
-            "type": "flattened"
+            "type": "keyword"
           },
           "attributes": {
-            "type": "flattened"
+            "type": "keyword"
           }
         }
       },
@@ -194,13 +194,13 @@
             "type": "keyword"
           },
           "headers": {
-            "type": "flattened"
+            "type": "keyword"
           },
           "headersbytes": {
             "type": "integer"
           },
           "trailers": {
-            "type": "flattened"
+            "type": "keyword"
           }
         }
       },
