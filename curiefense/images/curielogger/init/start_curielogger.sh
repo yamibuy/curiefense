@@ -1,5 +1,7 @@
 #!/bin/bash
 
+/bin/curielogger
+
 ES_PATTERN_PATH="api/saved_objects/index-pattern/curiefense"
 ES_INDEX_NAME=${CURIEFENSE_ES_INDEX_NAME:-curieaccesslog}
 CURL="curl --silent --write-out %{http_code}\n -H Content-Type:application/json --output /dev/null"
@@ -76,4 +78,3 @@ if [ -n "$CURIELOGGER_INITIALIZE_KIBANA_INDEX" ]; then
 	create_kibana_index_pattern
 fi
 
-/bin/curielogger
