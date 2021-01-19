@@ -138,7 +138,7 @@ services:
       - CURIELOGGER_DBHOST=logdb
       - CURIELOGGER_DBUSER=postgres
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
-      - CURIELOGGER_USES_ELASTICSEARCH=1
+      - CURIELOGGER_USES_ELASTICSEARCH=0
       - CURIELOGGER_ELASTICSEARCH_URL=http://elasticsearch:9200/
       - CURIELOGGER_USES_LOGSTASH=1
       - CURIELOGGER_LOGSTASH_URL=http://logstash:5001/
