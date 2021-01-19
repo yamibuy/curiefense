@@ -146,6 +146,8 @@ services:
       - CURIELOGGER_FLUENTD_URL=http://fluentd:9880/
       - CURIELOGGER_KIBANA_HOST=kibana
       - CURIELOGGER_INITIALIZE_KIBANA_INDEX=true
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+
     networks:
       - curiemesh
     ports:
