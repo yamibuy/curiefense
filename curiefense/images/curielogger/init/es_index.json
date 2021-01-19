@@ -37,9 +37,8 @@
       "blocked": {
         "type": "boolean"
       },
-
       "block_reason": {
-        "type": "keyword"
+        "type": "object"
       },
       "tags": {
         "type": "keyword"
