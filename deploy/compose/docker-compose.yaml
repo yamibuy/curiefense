@@ -140,9 +140,9 @@ services:
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
       - CURIELOGGER_USES_ELASTICSEARCH=0
       - CURIELOGGER_ELASTICSEARCH_URL=http://elasticsearch:9200/
-      - CURIELOGGER_USES_LOGSTASH=0
+      - CURIELOGGER_USES_LOGSTASH=1
       - CURIELOGGER_LOGSTASH_URL=http://logstash:5001/
-      - CURIELOGGER_USES_FLUENTD=1
+      - CURIELOGGER_USES_FLUENTD=0
       - CURIELOGGER_FLUENTD_URL=http://fluentd:5001/
       - CURIELOGGER_KIBANA_HOST=kibana
       - CURIELOGGER_KIBANA_URL=http://kibana:5601/
@@ -230,36 +230,17 @@ services:
     ports:
       - 5601:5601
 
-  # logstash:
-  #   container_name: logstash
-  #   image: docker.elastic.co/logstash/logstash:7.10.1
-  #   restart: always
-  #   volumes:
-  #     - type: bind
-  #       source: ./logstash-pipeline.conf
-  #       target: /usr/share/logstash/pipeline/logstash.conf
-  #       read_only: true
-  #   environment:
-  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #     - CURIEFENSE_INDEX_NAME=curieaccesslog
-  #   networks:
-  #     - curiemesh
-  #   ports:
-  #     # http input
-  #     - 5001:5001
-
-  # uncomment this to replace logstash with fluentd
-  fluentd:
-    container_name: fluentd
-    image: "curiefense/fluentd:${DOCKER_TAG}"
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:7.10.1
     restart: always
     volumes:
       - type: bind
-        source: ./fluent.conf
-        target: /fluentd/etc/fluent.conf
+        source: ./logstash-pipeline.conf
+        target: /usr/share/logstash/pipeline/logstash.conf
         read_only: true
     environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - CURIEFENSE_INDEX_NAME=curieaccesslog
     networks:
@@ -267,6 +248,25 @@ services:
     ports:
       # http input
       - 5001:5001
+
+  # uncomment this to replace logstash with fluentd
+  # fluentd:
+  #   container_name: fluentd
+  #   image: "curiefense/fluentd:${DOCKER_TAG}"
+  #   restart: always
+  #   volumes:
+  #     - type: bind
+  #       source: ./fluent.conf
+  #       target: /fluentd/etc/fluent.conf
+  #       read_only: true
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #     - CURIEFENSE_INDEX_NAME=curieaccesslog
+  #   networks:
+  #     - curiemesh
+  #   ports:
+  #     # http input
+  #     - 5001:5001
 
 
 networks:
