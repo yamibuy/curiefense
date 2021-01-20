@@ -69,7 +69,7 @@
                 </p>
 
                 <p class="control">
-                  <a class="button is-small"
+                  <a class="button is-small download-doc-button"
                      @click="downloadDoc"
                      title="Download Document">
                     <span class="icon is-small">
@@ -306,11 +306,6 @@ export default {
       return false
     },
 
-    newDoc() {
-      let factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
-      return factory && factory()
-    },
-
   },
 
   methods: {
@@ -339,6 +334,11 @@ export default {
 
     resetGitLog() {
       this.gitLog = []
+    },
+
+    newDoc() {
+      let factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
+      return factory && factory()
     },
 
     async loadConfigs(counter_only) {
@@ -468,7 +468,7 @@ export default {
       this.setLoadingDocStatus(true)
       this.isNewLoading = true
       if (!docToAdd) {
-        docToAdd = this.newDoc
+        docToAdd = this.newDoc()
       }
       this.resetGitLog()
       this.docs.unshift(docToAdd)
@@ -554,7 +554,7 @@ export default {
       if (!this.selectedDoc) {
         return
       }
-      this.selectedDoc = {...this.newDoc,...this.selectedDoc}
+      this.selectedDoc = {...this.newDoc(),...this.selectedDoc}
       return this.selectedDoc
     },
 
