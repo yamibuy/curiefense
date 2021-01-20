@@ -9,7 +9,6 @@ create table logs (
     Timestamp   TIMESTAMPTZ NOT NULL,
     Scheme      TEXT        NOT NULL,
     Authority   TEXT        NOT NULL,
-    Port        INTEGER     NOT NULL,
     Method      TEXT        NOT NULL,
     Path        TEXT        NOT NULL,
     RXTimers    JSONB       NOT NULL,

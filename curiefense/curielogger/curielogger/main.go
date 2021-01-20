@@ -158,7 +158,6 @@ type CuriefenseLog struct {
 	Timestamp	 string		`json:"timestamp"`
 	Scheme		 string		`json:"scheme"`
 	Authority	 string		`json:"authority"`
-	Port		 uint32		`json:"port"`
 	Method		 string		`json:"method"`
 	Path		 string		`json:"path"`
 
@@ -522,16 +521,15 @@ func (l *pgLogger) InsertEntry(e LogEntry) bool {
 	cfl := e.cfLog
 
 	_, err := db.Exec(context.Background(), `insert into logs (
-		RequestId, Timestamp, Scheme, Authority, Port, Method, Path,
+		RequestId, Timestamp, Scheme, Authority, Method, Path,
 		RXTimers, TXTimers, Upstream, Downstream, TLS, Request, Response, Metadata)
 
-	    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+	    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
 
 		cfl.RequestId,
 		cfl.Timestamp, // StartTime
 		cfl.Scheme,
 		cfl.Authority,
-		cfl.Port,
 		cfl.Method,
 		cfl.Path,
 		makeJsonb(cfl.RXTimers),
@@ -755,7 +753,6 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 				Timestamp: TimestampToRFC3339(common.GetStartTime()),
 				Scheme: req.GetScheme(),
 				Authority: req.GetAuthority(),
-				Port: req.GetPort().GetValue(),
 				Method: req.GetRequestMethod().String(),
 				Path: req.GetPath(),
 				Blocked: curieProxyLog.Blocked,
