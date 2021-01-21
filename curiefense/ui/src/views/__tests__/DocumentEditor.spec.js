@@ -5,6 +5,7 @@ import GitHistory from '@/components/GitHistory'
 import Vue from 'vue'
 import DatasetsUtils from '@/assets/DatasetsUtils'
 import axios from 'axios'
+import Utils from '@/assets/Utils'
 
 jest.mock('axios')
 
@@ -670,7 +671,13 @@ describe('DocumentEditor.vue', () => {
             const branch = wrapper.vm.selectedBranch
             const docID = wrapper.vm.selectedDocID
             if (path === `/conf/api/v1/configs/${branch}/d/aclpolicies/`) {
-                return Promise.resolve({data: aclDocs})
+                return Promise.resolve({data: wrapper.vm.ld.map(aclDocs, i => wrapper.vm.ld.pick(i, 'id', 'name'))})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/aclpolicies/e/__default__/`) {
+                return Promise.resolve({data: aclDocs[0]})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/aclpolicies/e/5828321c37e0/`) {
+                return Promise.resolve({data: aclDocs[1]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/aclpolicies/v/7f8a987c8e5e9db7c734ac8841c543d5bc5d9657/`) {
                 return Promise.resolve({data: aclGitOldVersion})
@@ -679,19 +686,31 @@ describe('DocumentEditor.vue', () => {
                 return Promise.resolve({data: aclDocsLogs[0]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/tagrules/`) {
-                return Promise.resolve({data: profilingListDocs})
+                return Promise.resolve({data: wrapper.vm.ld.map(profilingListDocs, i => wrapper.vm.ld.pick(i, 'id', 'name'))})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/tagrules/e/xlbp148c/`) {
+                return Promise.resolve({data: profilingListDocs[0]})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/tagrules/e/07656fbe/`) {
+                return Promise.resolve({data: profilingListDocs[1]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/tagrules/e/${docID}/v/`) {
                 return Promise.resolve({data: profilingListDocsLogs[0]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/`) {
-                return Promise.resolve({data: urlMapsDocs})
+                return Promise.resolve({data: wrapper.vm.ld.map(urlMapsDocs, i => wrapper.vm.ld.pick(i, 'id', 'name'))})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/e/__default__/`) {
+                return Promise.resolve({data: urlMapsDocs[0]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/e/${docID}/v/`) {
                 return Promise.resolve({data: urlMapsDocsLogs[0]})
             }
             if (path === `/conf/api/v1/configs/${branch}/d/flowcontrol/`) {
-                return Promise.resolve({data: flowControlDocs})
+                return Promise.resolve({data: wrapper.vm.ld.map(flowControlDocs, i => wrapper.vm.ld.pick(i, 'id', 'name'))})
+            }
+            if (path === `/conf/api/v1/configs/${branch}/d/flowcontrol/e/c03dabe4b9ca/`) {
+                return Promise.resolve({data: flowControlDocs[0]})
             }
             if (path === '/conf/api/v1/configs/master/v/') {
                 return Promise.resolve({data: gitData[0].logs})
@@ -847,6 +866,22 @@ describe('DocumentEditor.vue', () => {
         expect(postSpy).toHaveBeenCalledWith(`/conf/api/v1/configs/master/d/aclpolicies/e/`, newDoc)
     })
 
+    test('should be able to add multiple new documents in a row with different IDs', async () => {
+        const newDocIDs = []
+        axios.post.mockImplementation((url, data) => {
+            newDocIDs.push(data.id)
+            return Promise.resolve()
+        })
+        const postSpy = jest.spyOn(axios, 'post')
+        const newDocumentButton = wrapper.find('.new-document-button')
+        newDocumentButton.trigger('click')
+        await Vue.nextTick()
+        newDocumentButton.trigger('click')
+        await Vue.nextTick()
+        expect(postSpy).toHaveBeenCalledTimes(2)
+        expect(newDocIDs[0]).not.toEqual(newDocIDs[1])
+    })
+
     test('should be able to delete a document', async () => {
         axios.delete.mockImplementation(() => Promise.resolve())
         const deleteSpy = jest.spyOn(axios, 'delete')
@@ -900,6 +935,46 @@ describe('DocumentEditor.vue', () => {
         gitHistory.vm.$emit('restore-version', wantedVersion)
         await Vue.nextTick()
         expect(putSpy).toHaveBeenCalledWith(`/conf/api/v1/configs/master/d/aclpolicies/v/${wantedVersion.version}/revert/`)
+    })
+
+    test('should log message when receiving no configs from the server', (done) => {
+        const originalLog = console.log
+        let consoleOutput = []
+        const mockedLog = output => consoleOutput.push(output)
+        consoleOutput = []
+        console.log = mockedLog
+        axios.get.mockImplementation((path) => {
+            if (path === '/conf/api/v1/configs/') {
+                return Promise.reject()
+            }
+            return Promise.resolve({data: {}})
+        })
+        wrapper = shallowMount(DocumentEditor, {
+            mocks: {
+                $route: mockRoute,
+                $router: mockRouter
+            }
+        })
+        // allow all requests to finish
+        setImmediate(() => {
+            expect(consoleOutput).toContain(`Error while attempting to get configs`)
+            console.log = originalLog
+            done()
+        })
+    })
+
+    test('should attempt to download document when download button is clicked', async () => {
+        const wantedFileName = 'aclpolicies'
+        const wantedFileType = 'json'
+        const wantedFileData = aclDocs
+        const downloadFileSpy = jest.spyOn(Utils, 'downloadFile')
+        // force update because downloadFile is mocked after it is read to to be used as event handler
+        await wrapper.vm.$forceUpdate()
+        await Vue.nextTick()
+        const downloadDocButton = wrapper.find('.download-doc-button')
+        downloadDocButton.trigger('click')
+        await Vue.nextTick()
+        expect(downloadFileSpy).toHaveBeenCalledWith(wantedFileName, wantedFileType, wantedFileData)
     })
 
     describe('no data', () => {
