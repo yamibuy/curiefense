@@ -3,6 +3,7 @@ module curielog
 go 1.14
 
 require (
+	github.com/elastic/go-elasticsearch/v7 v7.5.1-0.20201228183019-1cbb255902f5
 	github.com/envoyproxy/go-control-plane v0.9.5
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/golang/protobuf v1.4.2
@@ -13,8 +14,8 @@ require (
 	github.com/lib/pq v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.7.1
-	github.com/robteix/protoconv v1.0.0
+	github.com/robteix/protoconv v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	google.golang.org/grpc v1.29.1
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.25.0 // indirect
 )

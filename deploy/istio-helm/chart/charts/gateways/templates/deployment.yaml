@@ -82,8 +82,14 @@ spec:
               memory: "100Mi"
               cpu: "100m"
           volumeMounts:
+{{- if eq $.Values.global.proxy.curiefense_bucket_type "s3" }}
           - mountPath: /run/secrets/s3cfg
             name: s3cfg
+{{- end }}
+{{- if eq $.Values.global.proxy.curiefense_bucket_type "gs" }}
+          - mountPath: /run/secrets/gs
+            name: gs
+{{- end }}
           - mountPath: /config
             name: curiefense-config
 {{- end }}
@@ -141,8 +147,14 @@ spec:
               memory: "60Mi"
               cpu: "100m"
           volumeMounts:
+{{- if eq $.Values.global.proxy.curiefense_bucket_type "s3" }}
           - mountPath: /run/secrets/s3cfg
             name: s3cfg
+{{- end }}
+{{- if eq $.Values.global.proxy.curiefense_bucket_type "gs" }}
+          - mountPath: /run/secrets/gs
+            name: gs
+{{- end }}
           - mountPath: /config
             name: curiefense-config
 {{- end }}
@@ -423,12 +435,22 @@ spec:
 {{- end }}
       volumes:
 {{- if $spec.waf.enabled }}
+{{- if eq $.Values.global.proxy.curiefense_bucket_type "s3" }}
       - name: s3cfg
         secret:
           items:
           - key: s3cfg
             path: s3cfg
           secretName: s3cfg
+{{- end }}
+{{- if eq $.Values.global.proxy.curiefense_bucket_type "gs" }}
+      - name: gs
+        secret:
+          items:
+          - key: gs.json
+            path: gs.json
+          secretName: gs
+{{- end }}
       - name: curiefense-config
         emptyDir: {}
 {{- end }}        

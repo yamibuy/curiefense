@@ -1,3 +1,4 @@
+{{- if .Values.global.enable.prometheus }}
 ---
 # a headless service is required for StatefulSets
 apiVersion: v1
@@ -15,3 +16,4 @@ spec:
   clusterIP: None
   selector:
     app.kubernetes.io/name: prometheus
+{{ end }}
