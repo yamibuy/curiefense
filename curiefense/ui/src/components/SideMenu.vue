@@ -7,7 +7,14 @@
       </p>
       <ul class="menu-list">
         <li v-for="(menuItemDetails, menuItemKey) in sectionItems" :key="menuItemKey" class="section-item">
-          <router-link :data-curie="menuItemKey"
+          <a v-if="menuItemDetails.external"
+             :data-curie="menuItemKey"
+             :href="menuItemKey"
+             target="_blank">
+            {{ menuItemDetails.title }}
+          </a>
+          <router-link v-else
+                       :data-curie="menuItemKey"
                        :to="menuItemKey"
                        :class="{ 'is-active': currentRoutePath.includes(menuItemKey) }">
             {{ menuItemDetails.title }}
@@ -30,43 +37,63 @@
 </template>
 
 <script>
-
 export default {
-
   name: 'SideMenu',
-
   data() {
+    const swaggerURL = `${location.protocol}//${location.hostname}:30000/api/v1/`
+    const kibanaURL = `${location.protocol}//${location.hostname}:5601/app/discover`
+    const grafanaURL = `${location.protocol}//${location.hostname}:30300/`
+
     return {
-      selectedMenuItem: null,
       menuItems: {
         Settings: {
           '/config': {
-            'title': 'Policies & Rules',
-            'items': {
+            title: 'Policies & Rules',
+            items: {
               '/search': {'title': 'Search'}
             }
           },
-          '/db': {'title': 'System DB'},
-          '/publish': {'title': 'Publish Changes'},
+          '/db': {
+            title: 'System DB'
+          },
+          '/publish': {
+            title: 'Publish Changes'
+          },
+          [swaggerURL]: {
+            title: 'API',
+            external: true
+          },
         },
         Analytics: {
-          '/accesslog': {'title': 'Access Log'}
+          [kibanaURL]: {
+            title: 'Access Log (ELK)',
+            external: true
+          },
+          [grafanaURL]: {
+            title: 'Grafana',
+            external: true
+          },
         },
         Git: {
-          '/versioncontrol': {'title': 'Version Control'}
+          '/versioncontrol': {
+            title: 'Version Control'
+          },
         },
+        Docs: {
+          'https://docs.curiefense.io/': {
+            title: 'Curiebook',
+            external: true
+          },
+        }
       }
     }
   },
-
   computed: {
     currentRoutePath() {
       return this.$route.path
     }
   },
-
   methods: {},
-
 }
 </script>
 <style scoped lang="scss">

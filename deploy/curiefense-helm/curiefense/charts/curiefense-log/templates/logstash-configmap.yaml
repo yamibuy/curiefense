@@ -1,0 +1,25 @@
+{{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
+{{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
+{{- if .Values.global.enable.logstash }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-configmap
+  namespace: {{ .Release.Namespace }}
+data:
+  logstash.conf: |-
+    input {
+        http {
+            port => 5001
+        }
+    }
+    output {
+        elasticsearch {
+            hosts => "{{ .Values.global.settings.curiefense_es_hosts }}"
+            index => "${CURIEFENSE_ES_INDEX_NAME:curieaccesslog}"
+        }
+    }
+{{- end }}
+{{- end }}
+{{- end }}

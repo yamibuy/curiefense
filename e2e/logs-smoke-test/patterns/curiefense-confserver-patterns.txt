@@ -28,7 +28,7 @@
 ^;end of configuration
 ^\s*$
 ^\*+ Starting uWSGI \S+ \(64bit\) on \[\S+ \S+\s+\S+ \S+ \S+\] \*+
-^compiled with version: 8.3.0 on 09 May 2020 21:28:19
+^compiled with version: 8.3.0 on \S+ \S+ \S+ \S+:\S+:\S+
 ^os: Linux-\s+ #S+ \S+ \S+ \S+ \S+ \S+ \S+
 ^nodename: confserver-0
 ^machine: x86_64
@@ -62,3 +62,24 @@
 ^Config directory /config/confdb is empty
 ^Cloning configuration from /bootstrap/confdb.bundle
 ^Cloning into bare repository '/config/confdb'...
+^Initialized empty Git repository in /config/confdb/
+^Cloning into 'bootstrap-repo'...
+^warning: You appear to have cloned an empty repository.
+^done.
+^Switched to a new branch '\S+'
+^\[_internal_db \(root-commit\) \S+\] Initial empty content
+^\[_internal_db \S+\] Added database \[system\]
+^ \S+ files? changed, \S+ insertions?\(\+\)
+^ \S+ files? changed, \S+ insertions?\(\+\), \S+ deletions\(-\)
+^ create mode 100644 system
+^HEAD is now at \S+ Initial empty content
+^\[_internal_base \S+\] Initial empty config
+^ create mode 100644 config/.*.json
+^ create mode 100644 config/.*.mmdb
+^Your branch is based on 'origin/master', but the upstream is gone.
+^  \(use "git branch --unset-upstream" to fixup\)
+^\[master \S+\] Create config \[master\]
+^ rewrite config/.*.json \(\S+%\)
+^To /config/confdb
+^ \* \[new branch\]      \S+ -> \S+
+^os: Linux-\S+ \S+ \S+ PREEMPT \S+ \S+ \S+ \S+ \S+ \S+

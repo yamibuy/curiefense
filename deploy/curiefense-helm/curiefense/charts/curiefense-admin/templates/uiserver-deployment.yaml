@@ -44,7 +44,7 @@ spec:
             cpu: "900m"
           requests:
             memory: "10Mi"
-            cpu: "100m"
+            cpu: {{ .Values.global.requests.cpu.uiserver }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

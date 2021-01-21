@@ -4,6 +4,14 @@ COPY curielogger /curielogger
 WORKDIR /curielogger
 RUN go build -o build/curielogger ./curielogger/ 
 
-FROM golang
+FROM debian:buster
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get -yq --no-install-recommends install dumb-init curl && \
+	apt-get autoremove --purge -y && \
+	rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /curielogger/build/curielogger /bin
-CMD /bin/curielogger
+COPY init /init/
+
+ENTRYPOINT ["/usr/bin/dumb-init", "/bin/bash", "/init/start_curielogger.sh"]

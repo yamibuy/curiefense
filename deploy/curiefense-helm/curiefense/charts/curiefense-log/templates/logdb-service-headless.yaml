@@ -1,3 +1,5 @@
+{{- if eq .Values.global.settings.curiefense_logdb_type "postgres" }}
+{{- if .Values.global.enable.logdb }}
 ---
 # a headless service is required for StatefulSets
 apiVersion: v1
@@ -9,9 +11,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
-  - name: "5432"
+  - name: "postgres"
     port: 5432
     targetPort: 5432
   clusterIP: None
   selector:
     app.kubernetes.io/name: logdb
+{{ end }}
+{{ end }}

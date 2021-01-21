@@ -17,7 +17,11 @@ spec:
         app.kubernetes.io/name: curielogger
     spec:
       containers:
-      - env:
+      - name: curielogger
+{{- if eq .Values.global.settings.curiefense_logdb_type "postgres" }}
+        env:
+        - name: CURIELOGGER_USES_POSTGRES
+          value: "true"
         - name: CURIELOGGER_DBHOST
           value: {{ .Values.global.settings.curiefense_db_hostname }}
         - name: CURIELOGGER_DBUSER
@@ -30,13 +34,35 @@ spec:
             secretKeyRef:
               name: curiefense-db-credentials
               key: password
+{{- end }}
+{{- if eq .Values.global.settings.curiefense_logdb_type "elasticsearch" }}
+        env:
+        - name: ELASTICSEARCH_URL
+          value: "{{ .Values.global.settings.curiefense_es_hosts }}"
+{{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
+        - name: CURIELOGGER_USES_LOGSTASH
+          value: "true"
+        - name: CURIELOGGER_LOGSTASH_URL
+          value: "{{ .Values.global.settings.curiefense_logstash_url }}"
+{{- else }}
+        - name: CURIELOGGER_USES_FLUENTD
+          value: "true"
+        - name: CURIELOGGER_FLUENTD_URL
+          value: "{{ .Values.global.settings.curiefense_fluentd_url }}"
+{{- end }}
+        - name: CURIELOGGER_KIBANA_URL
+          value: "{{ .Values.global.settings.curiefense_kibana_url }}"
+{{- if .Values.global.enable.kibana }}
+        - name: CURIELOGGER_INITIALIZE_KIBANA_INDEX
+          value: "true"
+{{- end }}
+{{- end }}
         {{ if regexMatch ".*/.*:" .Values.global.images.curielogger }}
         {{/* The image name contains a version tag (e.g. for tests), do not append docker_tag */}}
         image: {{ .Values.global.images.curielogger }}
         {{ else }}
         image: {{ .Values.global.images.curielogger }}:{{ .Values.global.settings.docker_tag }}
         {{ end }}
-        name: curielogger
         ports:
         - containerPort: 9001
           name: logger-grpc
@@ -52,7 +78,7 @@ spec:
             cpu: "900m"
           requests:
             memory: "20Mi"
-            cpu: "100m"
+            cpu: {{ .Values.global.requests.cpu.curielogger }}
       restartPolicy: Always
       serviceAccountName: ""
 {{- if .Values.global.tolerations }}
