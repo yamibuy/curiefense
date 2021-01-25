@@ -6,8 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "test:unit": "jest",
-    "test-coverage:unit": "jest --collect-coverage"
+    "test": "jest",
+    "coverage": "jest --collect-coverage"
   },
   "dependencies": {
     "@mdi/font": "^5.8.55",
