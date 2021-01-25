@@ -480,11 +480,7 @@ function custom_response(request_map, action_params)
     -- if not block_mode then block_mode = true end
 
     local handle = request_map.handle
-    handle:logDebug(string.format(
-        "custom_response - action_params %s, block_mode %s",
-        json_encode(action_params),
-        block_mode
-    ))
+    -- handle:logDebug(string.format("custom_response - action_params %s, block_mode %s", json_encode(action_params), block_mode))
 
     local response = {
         [ "status" ] = "403",

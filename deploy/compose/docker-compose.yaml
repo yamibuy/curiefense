@@ -134,18 +134,21 @@ services:
     image: "curiefense/curielogger:${DOCKER_TAG}"
     restart: always
     environment:
-      - CURIELOGGER_USES_POSTGRES=1
+      - CURIELOGGER_USES_POSTGRES=0
       - CURIELOGGER_DBHOST=logdb
       - CURIELOGGER_DBUSER=postgres
       - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
-      - CURIELOGGER_USES_ELASTICSEARCH=1
+      - CURIELOGGER_USES_ELASTICSEARCH=0
       - CURIELOGGER_ELASTICSEARCH_URL=http://elasticsearch:9200/
       - CURIELOGGER_USES_LOGSTASH=1
       - CURIELOGGER_LOGSTASH_URL=http://logstash:5001/
       - CURIELOGGER_USES_FLUENTD=0
-      - CURIELOGGER_FLUENTD_URL=http://fluentd:9880/
+      - CURIELOGGER_FLUENTD_URL=http://fluentd:5001/
       - CURIELOGGER_KIBANA_HOST=kibana
+      - CURIELOGGER_KIBANA_URL=http://kibana:5601/
       - CURIELOGGER_INITIALIZE_KIBANA_INDEX=true
+      - ELASTICSEARCH_URL=http://elasticsearch:9200/
+
     networks:
       - curiemesh
     ports:
@@ -174,7 +177,7 @@ services:
     image: "curiefense/prometheus:${DOCKER_TAG}"
     restart: always
     volumes:
-      -   persistent_prometheus:/var/run/prometheus
+      - persistent_prometheus:/var/run/prometheus
     ports:
       - 9090:9090
     networks:
@@ -239,15 +242,32 @@ services:
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - CURIEFENSE_INDEX_NAME=curieaccesslog
     networks:
       - curiemesh
     ports:
-      # beats input
-      - 5044:5044
-      # tcp input
-      - 5000:5000
       # http input
       - 5001:5001
+
+  # uncomment this to replace logstash with fluentd
+  # fluentd:
+  #   container_name: fluentd
+  #   image: "curiefense/fluentd:${DOCKER_TAG}"
+  #   restart: always
+  #   volumes:
+  #     - type: bind
+  #       source: ./fluent.conf
+  #       target: /fluentd/etc/fluent.conf
+  #       read_only: true
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #     - CURIEFENSE_INDEX_NAME=curieaccesslog
+  #   networks:
+  #     - curiemesh
+  #   ports:
+  #     # http input
+  #     - 5001:5001
+
 
 networks:
   curiemesh:

@@ -2,7 +2,7 @@ module(..., package.seeall)
 
 local globals       = require "lua.globals"
 local utils         = require "lua.utils"
-local rangesbtree   = require "lua.rangesbtree"
+-- local rangesbtree   = require "lua.rangesbtree"
 local cjson         = require "cjson"
 local json_safe     = require "cjson.safe"
 
