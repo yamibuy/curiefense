@@ -13,11 +13,8 @@
       "requestid": {
         "type": "keyword"
       },
-      "starttime": {
-        "type": "date_nanos"
-      },
       "timestamp": {
-        "type": "date_nanos"
+        "type": "date"
       },
       "scheme": {
         "type": "keyword"
@@ -41,7 +38,7 @@
         "type": "object"
       },
       "tags": {
-        "type": "flattened"
+        "type": "keyword"
       },
       "rxtimers": {
         "properties": {
