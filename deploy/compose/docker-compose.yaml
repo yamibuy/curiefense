@@ -236,8 +236,12 @@ services:
     restart: always
     volumes:
       - type: bind
-        source: ./logstash-pipeline.conf
-        target: /usr/share/logstash/pipeline/logstash.conf
+        source: ./logstash
+        target: /usr/share/logstash/pipeline/
+        read_only: true
+      - type: bind
+        source: ./logstash/pipelines.yml
+        target: /usr/share/logstash/config/pipelines.yml
         read_only: true
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
