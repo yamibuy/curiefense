@@ -9,15 +9,13 @@
 ###########################################################################
 
 wd="/home/tzury/bqmigrate"
-planets=( "$@" )
-
 
 ## pick last hour's 48's minute. e.g. 20210131T0548
 timespamp=$(date -d "1 hour ago" "+%Y%m%dT%H48")
 
 cd $wd
 
-for planet in $planets;
+for planet in "$@";
 do
     gsutil cp "gs://rbz-logs-$planet/bqinsert/queue-in/compose/$timespamp-bq_load00" "bq-json/$planet$timespamp-bq_load00";
 done
