@@ -9,7 +9,8 @@
 ###########################################################################
 
 wd="/home/tzury/bqmigrate"
-planets="careblaze hzreblazeprod"
+planets=( "$@" )
+
 
 ## pick last hour's 48's minute. e.g. 20210131T0548
 timespamp=$(date -d "1 hour ago" "+%Y%m%dT%H48")
