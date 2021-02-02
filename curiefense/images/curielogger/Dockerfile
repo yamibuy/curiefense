@@ -2,7 +2,7 @@ FROM golang as builder
 
 COPY curielogger /curielogger
 WORKDIR /curielogger
-RUN go build -o build/curielogger ./curielogger/ 
+RUN go build -o build/curielogger ./curielogger/
 
 FROM debian:buster
 ARG DEBIAN_FRONTEND=noninteractive
@@ -13,5 +13,6 @@ RUN apt-get update && \
 
 COPY --from=builder /curielogger/build/curielogger /bin
 COPY init /init/
+COPY init/curielogger.yml /etc/curielogger/
 
 ENTRYPOINT ["/usr/bin/dumb-init", "/bin/bash", "/init/start_curielogger.sh"]
