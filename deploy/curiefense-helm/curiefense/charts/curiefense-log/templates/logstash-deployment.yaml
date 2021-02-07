@@ -26,24 +26,36 @@ spec:
         - name: CURIEFENSE_ES_INDEX_NAME
           value: {{ .Values.global.settings.curiefense_es_index_name }}
         image: docker.elastic.co/logstash/logstash:7.10.1
+        # crashes if no tty is provided
+        tty: true
         ports:
         - containerPort: 5001
           name: logstash-http
         livenessProbe:
           tcpSocket:
             port: logstash-http
+          initialDelaySeconds: 30
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         volumeMounts:
         - name: logstash-config
-          mountPath: "/usr/share/logstash/pipeline"
+          mountPath: "/usr/share/logstash/pipeline/curiemetrics.conf"
           readOnly: true
+          subPath: curiemetrics.conf
+        - name: logstash-config
+          mountPath: "/usr/share/logstash/pipeline/curieaccesslog.conf"
+          readOnly: true
+          subPath: curieaccesslog.conf
+        - name: logstash-config
+          mountPath: "/usr/share/logstash/pipeline/input.conf"
+          readOnly: true
+          subPath: input.conf
         - name: logstash-config
           mountPath: "/usr/share/logstash/config/pipelines.yml"
           subPath: pipelines.yml
           readOnly: true
         resources:
           limits:
-            memory: "500Mi"
+            memory: "1Gi"
             cpu: "900m"
           requests:
             memory: "20Mi"
