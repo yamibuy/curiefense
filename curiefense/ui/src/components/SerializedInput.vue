@@ -9,45 +9,38 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 
-export default {
+export default Vue.extend({
   name: 'SerializedInput',
   props: {
     value: null,
     placeholder: String,
     getFunction: Function,
-    setFunction: Function
+    setFunction: Function,
   },
   data() {
     return {
-      formattedValue: ''
+      formattedValue: '',
     }
   },
   watch: {
-    value: function () {
+    value: function() {
       this.formatValue()
-    }
+    },
   },
-  mounted: function () {
+  mounted: function() {
     this.formatValue()
   },
   methods: {
-    updateValue: function (newValue) {
-      if (typeof this.setFunction === 'function') {
-        const result = this.setFunction(newValue)
-        this.$emit('blur', result)
-      } else {
-        console.log('SerializedInput setFunction prop provided is not a function!')
-      }
+    updateValue: function(newValue: string) {
+      const result = this.setFunction(newValue)
+      this.$emit('blur', result)
     },
-    formatValue: function () {
-      if (typeof this.getFunction === 'function') {
-        this.formattedValue = this.getFunction(this.value)
-      } else {
-        console.log('SerializedInput getFunction prop provided is not a function!')
-      }
-    }
-  }
-}
+    formatValue: function() {
+      this.formattedValue = this.getFunction(this.value)
+    },
+  },
+})
 </script>

@@ -17,16 +17,16 @@
   </div>
 </template>
 
-<script>
-
+<script lang="ts">
 import HeaderMain from '@/components/HeaderMain.vue'
 import SideMenu from '@/components/SideMenu.vue'
+import Vue from 'vue'
 
-export default {
+export default Vue.extend({
   name: 'MasterComponent',
   components: {HeaderMain, SideMenu},
-  methods: {}
-}
+  methods: {},
+})
 </script>
 <style type="text/css">
 html {
@@ -42,15 +42,6 @@ nav.navbar {
   width: 100%;
   height: 100%;
   margin-left: 0;
-}
-
-.card {
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.18);
-  margin-bottom: 2rem;
-}
-
-.card .content {
-  font-size: 14px;
 }
 
 </style>
