@@ -135,26 +135,34 @@ IP6_2 = "0000:0000:0000:0000:0000:0000:0000:0002"
 
 
 class UIHelper():
-    def __init__(self, base_url):
+    def __init__(self, base_url, es_url):
         self._base_url = base_url
+        self._es_url = es_url + '/_search'
 
     def check_log_pattern(self, pattern):
-        data = {
-            "statement": ("SELECT Path FROM logs "
-                          "ORDER BY StartTime DESC LIMIT 1024"),
-            "parameters": []
-        }
-        res = requests.post(self._base_url + "/logs/api/v1/exec/", json=data)
-        for log in res.json():
-            if pattern in log[0]:
-                return True
+        if self._es_url is False:
+            data = {
+                "statement": ("SELECT Path FROM logs "
+                              "ORDER BY StartTime DESC LIMIT 1024"),
+                "parameters": []
+            }
+            res = requests.post(self._base_url + "/logs/api/v1/exec/", json=data)
+            for log in res.json():
+                if pattern in log[0]:
+                    return True
+        else:
+            data = {"query": {"bool": {"must": {"match": {"path": pattern}}}}}
+            res = requests.get(self._es_url, json=data)
+            nbhits = res.json()["hits"]["total"]["value"]
+            return nbhits == 1
         return False
 
 
 @pytest.fixture(scope="session")
 def ui(request):
     url = request.config.getoption("--base-ui-url").rstrip("/")
-    return UIHelper(url)
+    es_url = request.config.getoption("--elasticsearch-url").rstrip("/")
+    return UIHelper(url, es_url)
 
 
 class ACLHelper:
@@ -199,7 +207,7 @@ class TestLogs:
         test_pattern = "/test" + "".join([
             random.choice(string.ascii_lowercase) for i in range(20)])
         assert(target.is_reachable(test_pattern))
-        time.sleep(1)
+        time.sleep(10)
         assert ui.check_log_pattern(test_pattern)
 
 
@@ -265,12 +273,14 @@ def gen_rl_rules(authority):
     RL_RULES = []
     MAP_PATH = {}
 
-    def add_rl_rule(path, action_ext=None, subaction_ext=None, **kwargs):
+    def add_rl_rule(path, action_ext=None, subaction_ext=None, param_ext=None, **kwargs):
         rule_id = f"e2e1{len(RL_RULES):0>9}"
         if subaction_ext is None:
             subaction_ext = {}
         if action_ext is None:
             action_ext = {}
+        if param_ext is None:
+            param_ext = {}
         MAP_PATH[path] = rule_id
         RL_RULES.append({
             "id": rule_id,
@@ -285,7 +295,8 @@ def gen_rl_rules(authority):
                         "type": kwargs.get("subaction", "default"),
                         "params": kwargs.get("subaction_params", {}),
                         **subaction_ext
-                    }
+                    },
+                    **param_ext
                 },
                 **action_ext,
             },
@@ -301,7 +312,7 @@ def gen_rl_rules(authority):
                 "args": kwargs.get("excl_args", {}),
                 "attrs": kwargs.get("excl_attrs", {}),
             },
-            "key": kwargs.get("key", {"attrs": "ip"}),
+            "key": kwargs.get("key", [{"attrs": "ip"}]),
             "pairwith": kwargs.get("pairwith", {"self": "self"}),
         })
 
@@ -381,7 +392,6 @@ def gen_rl_rules(authority):
     add_rl_rule("event-provider", pairwith={"attrs": "asn"})
     add_rl_rule("event-uri", pairwith={"attrs": "uri"})
     add_rl_rule("event-path", pairwith={"attrs": "path"})
-    add_rl_rule("event-tag", pairwith={"attrs": "tags"})
     add_rl_rule("event-query", pairwith={"attrs": "query"})
     add_rl_rule("event-method", pairwith={"attrs": "method"})
     add_rl_rule("event-company", pairwith={"attrs": "company"})
@@ -392,48 +402,52 @@ def gen_rl_rules(authority):
     add_rl_rule("action-monitor", action="monitor")
     add_rl_rule(
         "action-response", action="response",
-        action_ext={"status": 123, "content": "Response body"},
+        param_ext={"status": 123, "content": "Response body"},
     )
     add_rl_rule(
         "action-redirect", action="redirect",
-        action_ext={"status": "124", "location": "/redirect/"},
+        param_ext={"status": "124", "location": "/redirect/"},
     )
     add_rl_rule(
-        "action-ban-default",
-        action="ban", subaction="default", action_ext={"ttl": 10},
-        subaction_params={"action": {"type": "default", "params": {}}},
+        "action-ban-503",
+        action="ban", subaction="default", param_ext={"ttl": "10"},
+        excl_attrs={"tags": "allowlist"},
+        incl_attrs={"tags": "blocklist"},
     )
     add_rl_rule(
         "action-ban-challenge",
-        action="ban", subaction="challenge", action_ext={"ttl": 10},
+        action="ban", subaction="challenge", param_ext={"ttl": "10"},
         subaction_params={"action": {"type": "default", "params": {}}},
     )
     add_rl_rule(
-        "action-ban-monitor",
-        action="ban", subaction="monitor", action_ext={"ttl": 10},
+        "action-ban-tagonly",
+        action="ban", subaction="monitor", param_ext={"ttl": "10"},
         subaction_params={"action": {"type": "default", "params": {}}},
     )
     add_rl_rule(
         "action-ban-response",
-        action="ban", subaction="response", action_ext={"ttl": 10},
-        subaction_ext={"status": 123, "content": "Response body"},
-        subaction_params={"action": {"type": "default", "params": {}}},
+        action="ban", subaction="response",
+        param_ext={"status": 123, "ttl": "10", "content": "Content"},
+        subaction_params={"content": "Response body", "status": "123"},
     )
     add_rl_rule(
         "action-ban-redirect",
-        action="ban", subaction="redirect", action_ext={"ttl": 10},
-        subaction_ext={"status": "124", "location": "/redirect/"},
-        subaction_params={"action": {"type": "default", "params": {}}},
+        action="ban", subaction="redirect", param_ext={"ttl": "10"},
+        subaction_ext={"status": "124", "ttl": "10", "location": "/redirect/"},
+        subaction_params={"location": "/redirect", "status": "301",
+                          "action": {"type": "default", "params": {}}},
     )
     add_rl_rule(
         "action-ban-header",
-        action="ban", subaction="header", action_ext={"ttl": 10},
+        action="ban", subaction="request_header", param_ext={"ttl": "10"},
         subaction_ext={"headers": "Header-Name"},
-        subaction_params={"action": {"type": "default", "params": {}}},
+        subaction_params={"headers": "foo: bar",
+                          "action": {"type": "default", "params": {}}},
     )
     add_rl_rule(
-        "action-header", action="header",
+        "action-header", action="request_header",
         action_ext={"headers": "Header-Name"},
+        param_ext={"headers": "foo: bar"}
     )
 
     RL_URLMAP = [

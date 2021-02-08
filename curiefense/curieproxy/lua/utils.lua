@@ -49,6 +49,7 @@ function new_request_map()
     return {
         headers  = {},
         cookies  = {},
+        geo      = {},
         args     = {},
         attrs    = { tags = {} },
         self     = { self = false }
@@ -133,10 +134,31 @@ function map_ip(headers, metadata, map)
     map.attrs.remote_addr = client_addr
     map.attrs.ipnum = ip_to_num(client_addr)
 
-    local country, asn, company = unpack(ipinfo(client_addr, map.handle))
+    local city, country, asn, company = unpack(ipinfo(client_addr, map.handle))
+
+    map.attrs.city = {}
+    map.attrs.country = {}
+    map.attrs.continent = {}
+
+    if city then
+        map.attrs.city.name = city.city.names.en
+        map.attrs.location = city.location
+
+        -- Use lat and lon to match the key names
+        -- expected by Elasticsearch's geo_ip field type
+        map.geo.lat = city.location.latitude
+        map.geo.lon = city.location.longitude
+    end
 
     if country then
-        map.attrs.country = country
+        -- We do this in case the City database
+        -- didn't return any results for this ip
+        map.attrs.country.eu = country.country.is_in_european_union
+        map.attrs.country.name = country.country.names.en
+        map.attrs.country.iso = country.country.iso_code
+
+        map.attrs.continent.name = country.continent.names.en
+        map.attrs.continent.code = country.continent.code
     end
 
     if asn then

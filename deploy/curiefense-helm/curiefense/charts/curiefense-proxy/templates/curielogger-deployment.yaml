@@ -40,15 +40,17 @@ spec:
         - name: ELASTICSEARCH_URL
           value: "{{ .Values.global.settings.curiefense_es_hosts }}"
 {{- if eq .Values.global.settings.curiefense_es_forwarder "logstash" }}
-        - name: CURIELOGGER_USES_LOGSTASH
+        - name: CURIELOGGER_OUTPUTS_LOGSTASH_ENABLED
           value: "true"
-        - name: CURIELOGGER_LOGSTASH_URL
+        - name: CURIELOGGER_OUTPUTS_LOGSTASH_URL
           value: "{{ .Values.global.settings.curiefense_logstash_url }}"
 {{- else }}
         - name: CURIELOGGER_USES_FLUENTD
           value: "true"
         - name: CURIELOGGER_FLUENTD_URL
           value: "{{ .Values.global.settings.curiefense_fluentd_url }}"
+        - name: USE_DATA_STREAMS
+          value: "false"
 {{- end }}
         - name: CURIELOGGER_KIBANA_URL
           value: "{{ .Values.global.settings.curiefense_kibana_url }}"
