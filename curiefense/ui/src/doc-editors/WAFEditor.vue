@@ -377,17 +377,6 @@ export default Vue.extend({
   methods: {
     emitDocUpdate() {
       this.$emit('update:selectedDoc', this.localDoc)
-  },
-
-  computed: {
-    localDoc(): WAFPolicy {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
-    },
-  },
-
-  methods: {
-    emitDocUpdate() {
-      this.$emit('update:selectedDoc', this.localDoc)
     },
 
     addNewParameter() {
@@ -435,3 +424,5 @@ export default Vue.extend({
   },
 })
 </script>
+<style scoped lang="scss">
+</style>
