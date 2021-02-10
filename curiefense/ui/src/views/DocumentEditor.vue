@@ -213,7 +213,7 @@ import FlowControlEditor from '@/doc-editors/FlowControlEditor.vue'
 import GitHistory from '@/components/GitHistory.vue'
 import {mdiSourceBranch, mdiSourceCommit} from '@mdi/js'
 import Vue from 'vue'
-import {Document, DocumentType, Commit} from '@/types'
+import {Commit, Document, DocumentType} from '@/types'
 import {AxiosResponse} from 'axios'
 
 export default Vue.extend({
@@ -278,11 +278,13 @@ export default Vue.extend({
   computed: {
 
     documentAPIPath(): string {
-      return `${this.apiRoot}/${this.apiVersion}/configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`
+      const apiPrefix = `${this.apiRoot}/${this.apiVersion}`
+      return `${apiPrefix}/configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`
     },
 
     gitAPIPath(): string {
-      return `${this.apiRoot}/${this.apiVersion}/configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/v/`
+      const apiPrefix = `${this.apiRoot}/${this.apiVersion}`
+      return `${apiPrefix}/configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/v/`
     },
 
     branchNames(): string[] {
@@ -615,26 +617,30 @@ export default Vue.extend({
 
 })
 </script>
-<style scoped>
+<style scoped lang="scss">
+
 .no-data-wrapper {
-  /* Magic number! The page looks empty without content */
-  min-height: 50vh;
   /* Magic number! Delayed the display of loading indicator as to not display it in short loads */
   animation: delayedDisplay 300ms;
+  /* Magic number! The page looks empty without content */
+  min-height: 50vh;
 }
 
 @keyframes delayedDisplay {
   0% {
-    opacity: 0
+    opacity: 0;
   }
+
   50% {
-    opacity: 0
+    opacity: 0;
   }
+
   51% {
-    opacity: 1
+    opacity: 1;
   }
+
   100% {
-    opacity: 1
+    opacity: 1;
   }
 }
 
