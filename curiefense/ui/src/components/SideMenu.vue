@@ -9,7 +9,7 @@
         <li v-for="(menuItemDetails, menuItemKey) in sectionItems" :key="menuItemKey" class="section-item">
           <a v-if="menuItemDetails.external"
              :data-curie="menuItemKey"
-             :href="menuItemKey"
+             :href="menuItemDetails.url"
              target="_blank">
             {{ menuItemDetails.title }}
           </a>
@@ -36,8 +36,11 @@
 
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import RequestsUtils from '@/assets/RequestsUtils.ts'
+import Vue from 'vue'
+
+export default Vue.extend({
   name: 'SideMenu',
   data() {
     const swaggerURL = `${location.protocol}//${location.hostname}:30000/api/v1/`
@@ -45,63 +48,88 @@ export default {
     const grafanaURL = `${location.protocol}//${location.hostname}:30300/`
 
     return {
+      defaultKibanaURL: kibanaURL,
+      defaultGrafanaURL: grafanaURL,
       menuItems: {
-        Settings: {
+        settings: {
           '/config': {
             title: 'Policies & Rules',
             items: {
-              '/search': {'title': 'Search'}
-            }
+              '/search': {'title': 'Search'},
+            },
           },
           '/db': {
-            title: 'System DB'
+            title: 'System DB',
           },
           '/publish': {
-            title: 'Publish Changes'
+            title: 'Publish Changes',
           },
-          [swaggerURL]: {
+          'swagger': {
             title: 'API',
-            external: true
+            url: swaggerURL,
+            external: true,
           },
         },
-        Analytics: {
-          [kibanaURL]: {
+        analytics: {
+          'kibana': {
             title: 'Access Log (ELK)',
-            external: true
+            url: kibanaURL,
+            external: true,
           },
-          [grafanaURL]: {
+          'grafana': {
             title: 'Grafana',
-            external: true
+            url: grafanaURL,
+            external: true,
           },
         },
-        Git: {
+        git: {
           '/versioncontrol': {
-            title: 'Version Control'
+            title: 'Version Control',
           },
         },
-        Docs: {
-          'https://docs.curiefense.io/': {
+        docs: {
+          'curiebook': {
             title: 'Curiebook',
-            external: true
+            url: 'https://docs.curiefense.io/',
+            external: true,
           },
-        }
-      }
+        },
+      },
     }
   },
   computed: {
     currentRoutePath() {
       return this.$route.path
-    }
+    },
   },
-  methods: {},
-}
+  methods: {
+    async loadLinksFromDB() {
+      const systemDBData = (await RequestsUtils.sendRequest('GET', `db/system/`)).data
+      const kibanaURL = systemDBData?.links?.kibaba_url ? systemDBData.links.kibaba_url : this.defaultKibanaURL
+      const grafanaURL = systemDBData?.links?.grafana_url ? systemDBData.links.grafana_url : this.defaultGrafanaURL
+      this.menuItems.analytics.kibana = {
+        title: 'Access Log (ELK)',
+        url: kibanaURL,
+        external: true,
+      }
+      this.menuItems.analytics.grafana = {
+        title: 'Grafana',
+        url: grafanaURL,
+        external: true,
+      }
+    },
+  },
+  mounted() {
+    this.loadLinksFromDB()
+  },
+})
 </script>
 <style scoped lang="scss">
 .menu-item {
   margin-top: 1.5rem;
 
   &:first-child {
-    margin-top: 0
+    margin-top: 0;
   }
 }
 
@@ -111,20 +139,23 @@ export default {
   margin-bottom: 0;
 }
 
-.menu-list a {
-  color: #0f1d38;
-  font-size: 14px;
-  font-weight: 700;
+.menu-list {
+  a {
+    color: #0f1d38;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  a:hover {
+    background-color: transparent;
+    color: #276cda;
+  }
+
+  .is-active {
+    background-color: transparent;
+    color: #276cda;
+    font-weight: 700;
+  }
 }
 
-.menu-list a:hover {
-  background-color: transparent;
-  color: #276cda;
-}
-
-.menu-list a.is-active {
-  background-color: transparent;
-  color: #276cda;
-  font-weight: 700;
-}
 </style>

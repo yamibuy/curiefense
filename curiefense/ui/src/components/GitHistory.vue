@@ -39,7 +39,9 @@
               <td class="is-size-7 is-vcentered py-3">{{ commit.email }}</td>
               <td class="is-size-7 is-vcentered restore-cell">
                 <p class="control has-text-centered" v-if="commitOverIndex === index">
-                  <a class="button is-small restore-button" @click="restoreVersion(commit)" title="Restore Version">
+                  <a class="button is-small restore-button"
+                     @click="restoreVersion(commit)"
+                     title="Restore version">
                     <span class="icon is-small">
                       <i class="fas fa-history"></i>
                     </span>
@@ -66,14 +68,16 @@
   </section>
 </template>
 
-<script>
+<script lang="ts">
+import Vue, {PropType} from 'vue'
+import {Commit} from '@/types'
 
-export default {
+export default Vue.extend({
   name: 'GitHistory',
 
   props: {
-    gitLog: Array,
-    apiPath: String
+    gitLog: Array as PropType<Commit[]>,
+    apiPath: String,
   },
 
   components: {},
@@ -87,16 +91,17 @@ export default {
   },
 
   computed: {
-    commits() {
-      if (this.expanded)
+    commits(): Commit[] {
+      if (this.expanded) {
         return this.gitLog
+      }
 
       return this.gitLog.slice(0, this.init_max_rows)
-    }
+    },
   },
 
   methods: {
-    restoreVersion(commit) {
+    restoreVersion(commit: Commit) {
       this.$emit('restore-version', commit)
     },
 
@@ -104,7 +109,7 @@ export default {
       this.commitOverIndex = null
     },
 
-    mouseOver(index) {
+    mouseOver(index: number) {
       this.commitOverIndex = index
     },
   },
@@ -114,27 +119,17 @@ export default {
   },
 
   created() {
-  }
-}
+  },
+})
 </script>
-<style scoped>
-
-table.is-borderless td, table.is-borderless th {
-  border: 0;
-}
-
-table.inner-table td, table.inner-table th {
-  border: 0;
-  padding-left: 0;
-  padding-right: 0;
-}
+<style scoped lang="scss">
 
 .version-history-title {
   line-height: 30px;
 }
 
 .restore-cell {
-  width: 50px
+  width: 50px;
 }
 
 </style>

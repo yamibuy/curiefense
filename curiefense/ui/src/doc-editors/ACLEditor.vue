@@ -9,13 +9,15 @@
                 <label class="label is-small">
                   Name
                   <span class="has-text-grey is-pulled-right document-id" title="Document id">
-                    {{ selectedDoc.id }}
+                    {{ localDoc.id }}
                   </span>
                 </label>
                 <div class="control">
                   <input class="input is-small document-name"
+                         title="Document name"
                          placeholder="Document name"
-                         v-model="selectedDoc.name"/>
+                         @change="emitDocUpdate"
+                         v-model="localDoc.name"/>
                 </div>
               </div>
             </div>
@@ -31,7 +33,7 @@
             <hr class="bar" :class="`bar-${operationClassName(operation)}`"/>
             <table class="table is-narrow is-fullwidth">
               <tbody>
-              <tr v-for="(tag, idx) in selectedDoc[operation]" :key="idx">
+              <tr v-for="(tag, idx) in localDoc[operation]" :key="idx">
                 <td class="tag-cell"
                     :class=" { 'has-text-danger': duplicateTags[tag], 'tag-crossed': allPrior(operation) }"
                     :title=" allPrior(operation) ? '[all] is set in a higher priority section' : '' ">
@@ -74,72 +76,85 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import _ from 'lodash'
+import DatasetsUtils from '@/assets/DatasetsUtils.ts'
+import TagAutocompleteInput from '@/components/TagAutocompleteInput.vue'
+import Vue from 'vue'
+import {Dictionary} from 'vue-router/types/router'
+import {ACLPolicy, ACLPolicyFilter} from '@/types'
 
-import DatasetsUtils from '@/assets/DatasetsUtils.js'
-import TagAutocompleteInput from '@/components/TagAutocompleteInput'
-
-export default {
+export default Vue.extend({
   name: 'ACLEditor',
 
   components: {
-    TagAutocompleteInput
+    TagAutocompleteInput,
   },
 
   props: {
     selectedDoc: Object,
-    apiPath: String
+    apiPath: String,
   },
 
   data() {
     return {
-      operations: ['force_deny', 'bypass', 'allow_bot', 'deny_bot', 'allow', 'deny'],
+      operations: ['force_deny', 'bypass', 'allow_bot', 'deny_bot', 'allow', 'deny'] as ACLPolicyFilter[],
       titles: DatasetsUtils.Titles,
-      addNewColName: null
+      addNewColName: null,
     }
   },
   computed: {
+    localDoc(): ACLPolicy {
+      return JSON.parse(JSON.stringify(this.selectedDoc))
+    },
 
-    duplicateTags() {
-      let doc = this.selectedDoc
-      let allTags = this.ld.concat(doc['force_deny'], doc['bypass'], doc['allow_bot'], doc['deny_bot'], doc['allow'], doc['deny'])
-      let dupTags = this.ld.filter(allTags, (val, i, iteratee) => this.ld.includes(iteratee, val, i + 1))
-      return this.ld.fromPairs(this.ld.zip(dupTags, dupTags))
+    duplicateTags(): Dictionary<string> {
+      const doc = this.localDoc
+      const allTags = _.concat(doc['force_deny'], doc['bypass'],
+          doc['allow_bot'], doc['deny_bot'], doc['allow'], doc['deny'])
+      const dupTags = _.filter(allTags, (val, i, iteratee) => _.includes(iteratee, val, i + 1))
+      return _.fromPairs(_.zip(dupTags, dupTags))
     },
 
   },
   methods: {
+    emitDocUpdate() {
+      this.$emit('update:selectedDoc', this.localDoc)
+    },
+
     // returns true if tag "all" is set in a higher priority section
-    allPrior(self) {
+    allPrior(self: ACLPolicyFilter): boolean {
       // top priority, skip
       if (self === 'force_deny') {
         return false
       }
 
-      let selfIdx = this.ld.indexOf(this.operations, self),
-          doc = this.selectedDoc,
-          operations = this.operations
+      const selfIdx = _.indexOf(this.operations, self)
+      const doc = this.localDoc
+      const operations = this.operations
 
       for (let idx = 0; idx < selfIdx; idx++) {
-        if (this.ld.indexOf(doc[operations[idx]], 'all') > -1) {
-          if (idx === 3)
+        if (_.indexOf(doc[operations[idx]], 'all') > -1) {
+          if (idx === 3) {
             return false
-          if (idx === 2)
+          }
+          if (idx === 2) {
             return selfIdx === 3
+          }
           return true
         }
       }
     },
 
-    addNewEntry(section, entry) {
+    addNewEntry(section: ACLPolicyFilter, entry: string) {
       entry = entry.trim()
       if (entry && entry.length > 2) {
-        this.selectedDoc[section].push(entry)
-        this.$emit('update:selectedDoc', this.selectedDoc)
+        this.localDoc[section].push(entry)
+        this.emitDocUpdate()
       }
     },
 
-    openTagInput(section) {
+    openTagInput(section: ACLPolicyFilter) {
       this.addNewColName = section
     },
 
@@ -147,54 +162,54 @@ export default {
       this.addNewColName = null
     },
 
-    removeTag(section, idx) {
-      this.selectedDoc[section].splice(idx, 1)
+    removeTag(section: ACLPolicyFilter, index: number) {
+      this.localDoc[section].splice(index, 1)
       this.addNewColName = null
-      this.$emit('update:selectedDoc', this.selectedDoc)
+      this.emitDocUpdate()
     },
 
-    operationClassName(operation) {
+    operationClassName(operation: ACLPolicyFilter) {
       return operation && operation.replace('_', '-')
     },
 
   },
 
-}
-
-
+})
 </script>
 
 <style scoped lang="scss">
 
-@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/utilities/initial-variables.sass';
+@import 'node_modules/bulma/sass/utilities/functions.sass';
+@import 'node_modules/bulma/sass/utilities/derived-variables.sass';
 @import 'node_modules/bulma/sass/helpers/color.sass';
 
 .bar {
-  margin: 1rem 0 0.5rem 0;
+  margin: 1rem 0 0.5rem;
 }
 
 .bar-force-deny {
-  @extend .has-background-danger
+  @extend .has-background-danger;
 }
 
 .bar-deny-bot {
-  @extend .has-background-danger
+  @extend .has-background-danger;
 }
 
 .bar-deny {
-  @extend .has-background-danger
+  @extend .has-background-danger;
 }
 
 .bar-bypass {
-  @extend .has-background-success
+  @extend .has-background-success;
 }
 
 .bar-allow {
-  @extend .has-background-info
+  @extend .has-background-info;
 }
 
 .bar-allow-bot {
-  @extend .has-background-info
+  @extend .has-background-info;
 }
 
 .tag-crossed {
@@ -203,6 +218,6 @@ export default {
 }
 
 ::v-deep .tag-input {
-  font-size: 0.58rem
+  font-size: 0.58rem;
 }
 </style>

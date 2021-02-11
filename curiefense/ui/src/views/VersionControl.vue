@@ -8,8 +8,15 @@
               <div class="field is-grouped">
                 <div class="control">
                   <div class="select is-small">
-                    <select v-model="selectedBranch" @change="switchBranch()" class="branch-selection">
-                      <option v-for="name in branchNames" :key="name" :value="name">{{ name }}</option>
+                    <select v-model="selectedBranch"
+                            title="Switch Branch"
+                            @change="switchBranch()"
+                            class="branch-selection">
+                      <option v-for="name in branchNames"
+                              :key="name"
+                              :value="name">
+                        {{ name }}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -52,6 +59,7 @@
                     <span class="control is-expanded"
                           v-if="forkBranchInputOpen">
                       <input class="input is-small fork-branch-input"
+                             title="Forked branch name"
                              @input="validateInput($event, isSelectedBranchForkNameValid)"
                              placeholder="Forked Branch Name"
                              v-model="forkBranchName"
@@ -80,7 +88,7 @@
                   <button class="button is-small download-branch-button"
                           :class="{'is-loading': isDownloadLoading}"
                           @click="downloadBranch($event)"
-                          title="Download Branch">
+                          title="Download branch">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
                     </span>
@@ -100,6 +108,7 @@
                     <span class="control is-expanded"
                           v-if="deleteBranchInputOpen">
                       <input class="input is-small delete-branch-input"
+                             title="Confirm branch name"
                              placeholder="Confirm Branch Name"
                              v-model="deleteBranchName"
                              type="text">
@@ -130,28 +139,32 @@
       </div>
       <div class="content">
         <hr/>
-        <git-history :gitLog.sync="gitLog"
-                     :apiPath.sync="gitAPIPath"
+        <git-history :gitLog="gitLog"
+                     :apiPath="gitAPIPath"
                      @restore-version="restoreGitVersion">
         </git-history>
       </div>
     </div>
   </div>
 </template>
-<script>
 
-import DatasetsUtils from '@/assets/DatasetsUtils'
-import GitHistory from '@/components/GitHistory'
-import Utils from '@/assets/Utils'
-import RequestsUtils from '@/assets/RequestsUtils'
+<script lang="ts">
+import _ from 'lodash'
+import DatasetsUtils from '@/assets/DatasetsUtils.ts'
+import RequestsUtils from '@/assets/RequestsUtils.ts'
+import Utils from '@/assets/Utils.ts'
+import GitHistory from '@/components/GitHistory.vue'
 import {mdiSourceBranch, mdiSourceCommit} from '@mdi/js'
+import Vue from 'vue'
+import {AxiosResponse} from 'axios'
+import {Commit} from '@/types'
 
-export default {
+export default Vue.extend({
 
   name: 'VersionControl',
   props: {},
   components: {
-    GitHistory
+    GitHistory,
   },
 
   data() {
@@ -180,15 +193,15 @@ export default {
 
   computed: {
 
-    gitAPIPath() {
+    gitAPIPath(): string {
       return `${this.apiRoot}/${this.apiVersion}/configs/${this.selectedBranch}/v/`
     },
 
-    branchNames() {
-      return this.ld.sortBy(this.ld.map(this.configs, 'id'))
+    branchNames(): string[] {
+      return _.sortBy(_.map(this.configs, 'id'))
     },
 
-    isSelectedBranchForkNameValid() {
+    isSelectedBranchForkNameValid(): boolean {
       const newName = this.forkBranchName?.trim()
       const isBranchNameEmpty = newName === ''
       const isBranchNameContainsSpaces = newName.includes(' ')
@@ -196,7 +209,7 @@ export default {
       return !isBranchNameEmpty && !isBranchNameDuplicate && !isBranchNameContainsSpaces
     },
 
-    isSelectedBranchDeleteNameValid() {
+    isSelectedBranchDeleteNameValid(): boolean {
       const newName = this.deleteBranchName?.trim()
       return newName === this.selectedBranch
     },
@@ -205,11 +218,11 @@ export default {
 
   methods: {
 
-    resetGitLog() {
+    resetGitLog(): void {
       this.gitLog = []
     },
 
-    validateInput(event, validator) {
+    validateInput(event: Event, validator: Function | boolean) {
       Utils.validateInput(event, validator)
     },
 
@@ -227,24 +240,24 @@ export default {
       }
     },
 
-    async loadConfigs(active_branch) {
+    async loadConfigs(activeBranch?: string) {
       // store configs
       const response = await RequestsUtils.sendRequest('GET', 'configs/')
-      let configs = response.data
+      const configs = response.data
       this.configs = configs
-      if (!active_branch) {
+      if (!activeBranch) {
         // pick first branch name as selected if not given active branch
         this.selectedBranch = this.branchNames[0]
       } else {
         this.selectedBranch = this.branchNames.find((branch) => {
-          return branch === active_branch
+          return branch === activeBranch
         })
       }
       // counters
-      this.commits = this.ld.sum(this.ld.map(this.ld.map(configs, 'logs'), (logs) => {
-        return this.ld.size(logs)
+      this.commits = _.sum(_.map(_.map(configs, 'logs'), (logs) => {
+        return _.size(logs)
       }))
-      this.branches = this.ld.size(configs)
+      this.branches = _.size(configs)
       console.log('config counters', this.branches, this.commits)
     },
 
@@ -264,21 +277,23 @@ export default {
 
     async loadGitLog() {
       const config = this.selectedBranch
-      const url_trail = `configs/${config}/v/`
-      return RequestsUtils.sendRequest('GET', url_trail).then((response) => {
+      const urlTrail = `configs/${config}/v/`
+      return RequestsUtils.sendRequest('GET', urlTrail).then((response: AxiosResponse<Commit[]>) => {
         this.gitLog = response.data
         return response
       })
     },
 
-    async restoreGitVersion(gitVersion) {
+    async restoreGitVersion(gitVersion: Commit) {
       this.resetGitLog()
       const branch = this.selectedBranch
-      const version_id = gitVersion.version
-      const url_trail = `configs/${branch}/v/${version_id}/`
+      const versionId = gitVersion.version
+      const urlTrail = `configs/${branch}/v/${versionId}/`
 
-      await RequestsUtils.sendRequest('PUT', `${url_trail}revert/`, null, null, `Branch [${branch}] restored to version [${version_id}]!`, `Failed restoring branch [${branch}] to version [${version_id}]!`)
-      this.loadGitLog()
+      await RequestsUtils.sendRequest('PUT', `${urlTrail}revert/`, null, null,
+          `Branch [${branch}] restored to version [${versionId}]!`,
+          `Failed restoring branch [${branch}] to version [${versionId}]!`)
+      await this.loadGitLog()
     },
 
     deleteBranch() {
@@ -287,29 +302,27 @@ export default {
       }
       RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/`, null, null,
           `Branch [${this.selectedBranch}] deleted successfully!`,
-          `Failed deleting branch [${this.selectedBranch}]!`)
-          .then(() => {
-            this.loadConfigs()
-            this.toggleBranchDelete()
-          })
+          `Failed deleting branch [${this.selectedBranch}]!`).then(() => {
+        this.loadConfigs()
+        this.toggleBranchDelete()
+      })
     },
 
     forkBranch() {
       if (!this.isSelectedBranchForkNameValid) {
         return
       }
-      let newBranchName = this.forkBranchName
+      const newBranchName = this.forkBranchName
       RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/clone/${newBranchName}/`,
           {
             'id': 'string',
-            'description': 'string'
+            'description': 'string',
           }, null,
           `Branch [${this.selectedBranch}] forked to [${this.forkBranchName}] successfully!`,
-          `Failed forking branch [${this.selectedBranch}] to [${this.forkBranchName}]!`)
-          .then(() => {
-            this.loadConfigs(newBranchName)
-            this.toggleBranchFork()
-          })
+          `Failed forking branch [${this.selectedBranch}] to [${this.forkBranchName}]!`).then(() => {
+        this.loadConfigs(newBranchName)
+        this.toggleBranchFork()
+      })
     },
 
     downloadBranch() {
@@ -327,8 +340,9 @@ export default {
     await this.loadConfigs()
     await this.loadSelectedBranchData()
     this.loadGitLog()
-  }
+  },
 
-}
-
+})
 </script>
+<style scoped lang="scss">
+</style>
