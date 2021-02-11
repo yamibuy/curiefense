@@ -16,7 +16,8 @@ wd="/home/tzury/bqmigrate"
 ## pick last hour's 36's minute. e.g. 20210131T0536
 timespamp=$(date -d "1 hour ago" "+%Y%m%dT%H36")
 logger fetch-convert-split-push $wd $planets $timestamp
-# cd $wd
+
+cd $wd
 
 for planet in "$@";
 do
