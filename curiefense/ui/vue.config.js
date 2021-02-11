@@ -15,10 +15,13 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    new StyleLintPlugin({
-      files: 'src/**/*.{vue,scss}',
-    }),
-  ],
+  configureWebpack: {
+    plugins: [
+      new StyleLintPlugin({
+        files: 'src/**/*.{vue,scss}',
+      }),
+    ]
+  }
 }
+
 
