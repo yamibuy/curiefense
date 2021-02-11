@@ -39,10 +39,8 @@ do
         echo "=================== $IMG:$DOCKER_TAG ====================="
         if tar -C "$image" -czh . | docker build -t "$IMG:$DOCKER_TAG" ${BUILD_OPT} -; then
             STB="ok"
-            docker tag "$IMG:$DOCKER_TAG" "$IMG:latest-dev"
             if [ -n "$PUSH" ]; then
                 docker push "$IMG:$DOCKER_TAG" && STP="ok" || STP="KO"
-                docker push "$IMG:latest-dev"
             else
                 STP="SKIP"
             fi
