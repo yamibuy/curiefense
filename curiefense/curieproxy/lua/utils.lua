@@ -189,15 +189,16 @@ function tagify(input)
     end
 end
 
-function tag_request(map, tags)
+function tag_request(r_map, tags)
+    r_map.handle:logDebug('r_map.attrs %s', format(cjson.encode(r_map.attrs)))
     if type(tags) == "table" then
         for _, tag in ipairs(tags) do
             tag = tagify(tag)
-            map.attrs.tags[tag] = 1
+            r_map.attrs.tags[tag] = 1
         end
     else
         tags = tagify(tags)
-        map.attrs.tags[tags] = 1
+        r_map.attrs.tags[tags] = 1
     end
 end
 
