@@ -189,7 +189,7 @@ function inspect(handle)
     local acl_bot_code, acl_bot_result = acl_check_bot(acl_profile, request_map, acl_active)
 
     if acl_result then
-        -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
+        handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
         addentry(timeline, "8b acl_check/tag_request")
         tag_request(request_map, sfmt("acltag:%s" , acl_result.reason))
     end
@@ -206,11 +206,11 @@ function inspect(handle)
     tag_request(request_map, is_human and "human" or "bot")
 
     if (acl_bot_code == ACLDenyBot) and (acl_code ~= ACLBypass) then
-        -- handle:logDebug("002 ACL DENY BOT MATCHED!")
+        handle:logDebug("002 ACL DENY BOT MATCHED!")
 
         if not is_human then
             addentry(timeline, "9c challenge_verified/challenge_phase01")
-            -- handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
+            handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
             challenge_phase01(handle, request_map, "1")
         end
     end
