@@ -190,6 +190,7 @@ function inspect(handle)
 
     if acl_result then
         handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
+        handle:logDebug(sfmt("001b request_map.attrs: %s", cjson.encode(request_map.attrs) ))
         addentry(timeline, "8b acl_check/tag_request")
         tag_request(request_map, sfmt("acltag:%s" , acl_result.reason))
     end
