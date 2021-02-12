@@ -198,7 +198,7 @@ function tag_request(r_map, tags)
         end
     else
         tag = tagify(tags)
-        r_map.attrs.tags[tags] = 1
+        r_map.attrs.tags[tag] = 1
     end
 end
 
