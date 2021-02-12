@@ -16,6 +16,7 @@ local cjson       = require "cjson"
 local init          = globals.init
 
 local acl_check     = acl.check
+local acl_check_bot = acl.check_bot
 local waf_check     = waf.check
 
 local ACLNoMatch    = globals.ACLNoMatch
@@ -185,6 +186,7 @@ function inspect(handle)
     -- acl
     addentry(timeline, "8 acl_check")
     local acl_code, acl_result = acl_check(acl_profile, request_map, acl_active)
+    local acl_bot_code, acl_bot_result = acl_check_bot(acl_profile, request_map, acl_active)
 
     if acl_result then
         -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
@@ -203,7 +205,7 @@ function inspect(handle)
     addentry(timeline, "9b challenge_verified/tag_request")
     tag_request(request_map, is_human and "human" or "bot")
 
-    if acl_code == ACLDenyBot then
+    if (acl_bot_code == ACLDenyBot) and (acl_code ~= ACLBypass) then
         -- handle:logDebug("002 ACL DENY BOT MATCHED!")
 
         if not is_human then
