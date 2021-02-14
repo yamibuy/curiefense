@@ -37,3 +37,6 @@
 ^\s*\]+,?$
 ^\s+"\*"$
 ^\s+"inline_code": "local
+\[libprotobuf ERROR external/com_google_protobuf/src/google/protobuf/wire_format_lite.cc:578\] String field 'istio.mixer.v1.ReportRequest.default_words' contains invalid UTF-8 data when serializing a protocol buffer. Use the 'bytes' type if you intend to send raw bytes.
+\[libprotobuf ERROR external/com_google_protobuf/src/google/protobuf/wire_format_lite.cc:578\] String field 'google.protobuf.Value.string_value' contains invalid UTF-8 data when serializing a protocol buffer. Use the 'bytes' type if you intend to send raw bytes.
+\[libprotobuf ERROR external/com_google_protobuf/src/google/protobuf/wire_format_lite.cc:578\] String field 'envoy.data.accesslog.v3.HTTPRequestProperties.user_agent' contains invalid UTF-8 data when serializing a protocol buffer. Use the 'bytes' type if you intend to send raw bytes. 
