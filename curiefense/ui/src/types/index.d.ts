@@ -17,6 +17,7 @@ declare module CuriefenseClient {
     reg: string
     restrict: boolean
     mask: boolean
+    type: NamesRegexType
     exclusions: { [key: string]: number }
   }
 
@@ -67,13 +68,18 @@ declare module CuriefenseClient {
 
   type NamesRegexType = 'names' | 'regex'
 
-  type Document = ACLPolicy | FlowControl | TagRule | RateLimit | URLMap | WAFPolicy | WAFSignature
+  type Document = BasicDocument & (ACLPolicy | FlowControl | TagRule | RateLimit | URLMap | WAFPolicy | WAFSignature)
 
   type DocumentType = 'aclpolicies' | 'flowcontrol' | 'tagrules' | 'ratelimits' | 'urlmaps' | 'wafpolicies' | 'wafrules'
 
   // Document types helpers - END
 
   // Document types - START
+
+  type BasicDocument = {
+    id: string
+    name: string
+  }
 
   type ACLPolicy = {
     id: string

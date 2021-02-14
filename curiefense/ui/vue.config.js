@@ -1,3 +1,6 @@
+// Add in the top of the file
+const StyleLintPlugin = require('stylelint-webpack-plugin')
+
 module.exports = {
   devServer: {
     // proxy: 'http://localhost:5000'
@@ -11,6 +14,13 @@ module.exports = {
         target: 'http://localhost:5001',
       },
     },
+  },
+  configureWebpack: {
+    plugins: [
+      new StyleLintPlugin({
+        files: 'src/**/*.{vue,scss}',
+      }),
+    ],
   },
 }
 
