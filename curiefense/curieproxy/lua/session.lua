@@ -206,33 +206,31 @@ function inspect(handle)
     addentry(timeline, "9b challenge_verified/tag_request")
     tag_request(request_map, is_human and "human" or "bot")
 
-    if (acl_bot_code == ACLDenyBot) and (acl_code ~= ACLBypass) then
-        handle:logDebug("002 ACL DENY BOT MATCHED!")
-
-        if not is_human then
+    if acl_code ~= ACLBypass then
+        if acl_bot_code == ACLDenyBot and not is_human then
+            handle:logDebug("002 ACL DENY BOT MATCHED!")
             addentry(timeline, "9c challenge_verified/challenge_phase01")
             handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
             challenge_phase01(handle, request_map, "1")
-        end
-    end
 
-    if acl_code ~= ACLBypass then
-        -- ACLAllow / ACLAllowBot/ ACLNoMatch
-        -- move to WAF
-        addentry(timeline, "10 waf_check")
-        local waf_code, waf_result = waf_check(waf_profile, request_map)
-        -- blocked results returns as table
-        if type(waf_result) == "table" then
-            addentry(timeline, "10b waf_check/tag_request")
-            tag_request(request_map, sfmt("wafsig:%s", waf_result.sig_id))
+        else
+            -- ACLAllow / ACLAllowBot/ ACLNoMatch
+            -- move to WAF
+            addentry(timeline, "10 waf_check")
+            local waf_code, waf_result = waf_check(waf_profile, request_map)
+            -- blocked results returns as table
+            if type(waf_result) == "table" then
+                addentry(timeline, "10b waf_check/tag_request")
+                tag_request(request_map, sfmt("wafsig:%s", waf_result.sig_id))
 
-            if waf_code == WAFBlock then
-                addentry(timeline, "10c waf_check/deny_request")
-                local action_params = {
-                    ["reason"] = waf_result,
-                    ["block_mode"] = waf_active
-                }
-                custom_response(request_map, action_params)
+                if waf_code == WAFBlock then
+                    addentry(timeline, "10c waf_check/deny_request")
+                    local action_params = {
+                        ["reason"] = waf_result,
+                        ["block_mode"] = waf_active
+                    }
+                    custom_response(request_map, action_params)
+                end
             end
         end
     end
