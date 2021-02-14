@@ -2,7 +2,7 @@
   <div class="container">
     <div class="navbar-brand">
       <a class="navbar-item">
-        <img src="../assets/logo.png" class="logo">
+        <img src="../assets/logo.png" class="logo" alt="logo">
       </a>
     </div>
     <div class="version-box is-size-7 has-text-grey">
@@ -28,7 +28,7 @@ export default Vue.extend({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .container {
   display: flex;
   justify-content: space-between;
@@ -36,5 +36,10 @@ export default Vue.extend({
 
 .version-box {
   align-self: center;
+}
+
+.logo {
+  max-height: 42px;
+  min-height: 42px;
 }
 </style>

@@ -20,7 +20,7 @@
 import _ from 'lodash'
 import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import RequestsUtils from '@/assets/RequestsUtils.ts'
-import AutocompleteInput, {AutocompleteInputEvents} from '@/components/AutocompleteInput.vue'
+import AutocompleteInput, {AutocompleteInputEvents, AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
 import Vue from 'vue'
 import {AxiosResponse} from 'axios'
 import {TagsDatabaseDocument} from '@/types'
@@ -37,8 +37,14 @@ export default Vue.extend({
       type: String,
       default: '',
     },
-    clearInputAfterSelection: Boolean,
-    autoFocus: Boolean,
+    clearInputAfterSelection: {
+      type: Boolean,
+      default: false,
+    },
+    autoFocus: {
+      type: Boolean,
+      default: false,
+    },
     selectionType: {
       type: String,
       validator(val) {
@@ -60,7 +66,7 @@ export default Vue.extend({
     return {
       tag: this.initialTag,
       open: false,
-      tagsSuggestions: [],
+      tagsSuggestions: [] as AutocompleteSuggestion[],
       focusedSuggestionIndex: -1,
       db: 'system',
       key: 'tags',
@@ -128,8 +134,8 @@ export default Vue.extend({
           value: item,
         }
       })
-      this.tagsSuggestions = [].concat(legitimateTags, maliciousTags, neutralTags)
-      this.tagsSuggestions = _.sortBy(this.tagsSuggestions, 'value')
+      this.tagsSuggestions = [].concat(legitimateTags, maliciousTags, neutralTags) as AutocompleteSuggestion[]
+      this.tagsSuggestions = _.sortBy(this.tagsSuggestions, 'value') as AutocompleteSuggestion[]
     },
 
     bubbleEvent(eventName: AutocompleteInputEvents, event: Event) {
@@ -174,20 +180,21 @@ export default Vue.extend({
   },
 })
 </script>
-
 <style scoped lang="scss">
 
-@import 'node_modules/bulma/sass/utilities/_all.sass';
+@import 'node_modules/bulma/sass/utilities/initial-variables.sass';
+@import 'node_modules/bulma/sass/utilities/functions.sass';
+@import 'node_modules/bulma/sass/utilities/derived-variables.sass';
 @import 'node_modules/bulma/sass/helpers/color.sass';
 
 ::v-deep .dot {
   @extend .has-background-info;
-  height: 0.5rem;
-  width: 0.5rem;
-  margin-right: 0.25rem;
-  margin-left: -0.25rem;
   border-radius: 50%;
   display: inline-block;
+  height: 0.5rem;
+  margin-left: -0.25rem;
+  margin-right: 0.25rem;
+  width: 0.5rem;
 }
 
 ::v-deep .dot.legitimate {

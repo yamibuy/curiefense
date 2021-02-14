@@ -81,7 +81,6 @@
                                :ignore="['ban']"
                                @update:action="emitDocUpdate"
                                label-separated-line
-                               wide-columns
                                is-single-input-column/>
             </div>
             <div class="field">
@@ -290,7 +289,7 @@ export default Vue.extend({
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pointer {
   cursor: pointer;
 }

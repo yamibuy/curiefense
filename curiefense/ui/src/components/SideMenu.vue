@@ -40,6 +40,15 @@
 import RequestsUtils from '@/assets/RequestsUtils.ts'
 import Vue from 'vue'
 
+type menuItem = {
+  title: string
+  url?: string
+  external?: boolean
+  items?: {
+    [key: string]: menuItem
+  }
+}
+
 export default Vue.extend({
   name: 'SideMenu',
   data() {
@@ -55,7 +64,7 @@ export default Vue.extend({
           '/config': {
             title: 'Policies & Rules',
             items: {
-              '/search': {'title': 'Search'},
+              '/search': {title: 'Search'},
             },
           },
           '/db': {
@@ -94,6 +103,10 @@ export default Vue.extend({
             external: true,
           },
         },
+      } as {
+        [key: string]: {
+          [key: string]: menuItem
+        }
       },
     }
   },
@@ -129,7 +142,7 @@ export default Vue.extend({
   margin-top: 1.5rem;
 
   &:first-child {
-    margin-top: 0
+    margin-top: 0;
   }
 }
 
@@ -139,20 +152,23 @@ export default Vue.extend({
   margin-bottom: 0;
 }
 
-.menu-list a {
-  color: #0f1d38;
-  font-size: 14px;
-  font-weight: 700;
+.menu-list {
+  a {
+    color: #0f1d38;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  a:hover {
+    background-color: transparent;
+    color: #276cda;
+  }
+
+  .is-active {
+    background-color: transparent;
+    color: #276cda;
+    font-weight: 700;
+  }
 }
 
-.menu-list a:hover {
-  background-color: transparent;
-  color: #276cda;
-}
-
-.menu-list a.is-active {
-  background-color: transparent;
-  color: #276cda;
-  font-weight: 700;
-}
 </style>
