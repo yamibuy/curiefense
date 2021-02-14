@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Python requirements: pytest requests
+# Python requirements: pytest requests requests_toolbelt
 # install curieconfctl:
 # (cd ../curiefense/curieconf/utils ; pip3 install .)
 # (cd ../curiefense/curieconf/client ; pip3 install .)
@@ -22,6 +22,8 @@ import requests
 import string
 import subprocess
 import time
+import reqflip
+import asyncio
 from urllib.parse import urlparse
 
 log = logging.getLogger("e2e")
@@ -90,8 +92,9 @@ def cli(request):
 
 
 class TargetHelper():
-    def __init__(self, base_url):
+    def __init__(self, base_url, flip):
         self._base_url = base_url
+        self._flip = flip
 
     def query(self, path="/", suffix="", method="GET", headers=None, srcip=None, *args, **kwargs):
         # specifying a path helps spot tests easily in the access log
@@ -101,7 +104,9 @@ class TargetHelper():
             headers['X-Forwarded-For'] = srcip
         res = requests.request(method=method,
                                url=self._base_url + path + suffix,
-                               headers=headers, **kwargs)
+                               headers=headers, verify=False, **kwargs)
+        if self._flip:
+            asyncio.run(reqflip.bitflip_send(res))
         return res
 
     def is_reachable(self, *args, **kwargs):
@@ -115,7 +120,8 @@ class TargetHelper():
 @pytest.fixture(scope="session")
 def target(request):
     url = request.config.getoption("--base-protected-url").rstrip("/")
-    return TargetHelper(url)
+    flip = request.config.getoption("--flip-requests")
+    return TargetHelper(url, flip)
 
 
 # geo=US, company=SPRINTLINK, asn=1239
@@ -140,7 +146,7 @@ class UIHelper():
         self._es_url = es_url + '/_search'
 
     def check_log_pattern(self, pattern):
-        if self._es_url is False:
+        if self._es_url == '/_search':
             data = {
                 "statement": ("SELECT Path FROM logs "
                               "ORDER BY StartTime DESC LIMIT 1024"),

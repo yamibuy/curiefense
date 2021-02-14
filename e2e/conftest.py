@@ -15,4 +15,7 @@ def pytest_addoption(parser):
                      default="http://localhost:30080")
     parser.addoption("--elasticsearch-url",
                      help="Elasticsearch URL (ex. http://localhost:9200)",
-                     default=False)
+                     default="")
+    parser.addoption("--flip-requests",
+                     help="For each request to the protected urls, also send len(request)*8 requests with 1 flipped bit",
+                     action='store_true', default=False)
