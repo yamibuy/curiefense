@@ -116,6 +116,17 @@ function map_metadata(metadata, map)
     end
 end
 
+
+function detectip(xff, hops)
+    local len_xff = #xff
+    if hops < len_xff then
+        return xff[len_xff-(hops-1)]
+    else
+        return xff[1]
+    end
+end
+
+
 function map_ip(headers, metadata, map)
     local client_addr = "1.1.1.1"
     local xff = headers:get("x-forwarded-for")
@@ -123,13 +134,17 @@ function map_ip(headers, metadata, map)
 
     hops = tonumber(hops)
     local addrs = map_fn(xff:split(","), trim)
-    if #addrs == 1 then
-        client_addr = addrs[1]
-    elseif #addrs < hops then
-        client_addr = addrs[#addrs]
-    else
-        client_addr = addrs[#addrs-hops]
-    end
+
+    client_addr = detectip(addrs, hops) or client_addr
+
+    -- if #addrs == 1 then
+    --     client_addr = addrs[1]
+    -- elseif #addrs < hops then
+    --     client_addr = addrs[#addrs]
+    -- else
+    --     client_addr = addrs[#addrs-hops]
+    -- end
+
     map.attrs.ip = client_addr
     map.attrs.remote_addr = client_addr
     map.attrs.ipnum = ip_to_num(client_addr)
@@ -174,15 +189,16 @@ function tagify(input)
     end
 end
 
-function tag_request(map, tags)
+function tag_request(r_map, tags)
+    r_map.handle:logDebug(format('r_map.attrs %s', cjson.encode(r_map.attrs)))
     if type(tags) == "table" then
         for _, tag in ipairs(tags) do
             tag = tagify(tag)
-            map.attrs.tags[tag] = 1
+            r_map.attrs.tags[tag] = 1
         end
     else
-        tags = tagify(tags)
-        map.attrs.tags[tags] = 1
+        tag = tagify(tags)
+        r_map.attrs.tags[tag] = 1
     end
 end
 
@@ -522,9 +538,9 @@ function custom_response(request_map, action_params)
     request_map.attrs.blocked = true
     request_map.attrs.block_reason = response["reason"]
 
-    log_request(request_map)
 
     if block_mode then
+        log_request(request_map)
         request_map.handle:respond( response["headers"], response["content"])
     end
 

@@ -36,7 +36,7 @@ end
 
 function check(profile, request)
     local msg = nil
-    -- request.handle:logDebug(string.format("ACL Check -- Request details \n%s\n", json_safe.encode(request.attrs)))
+    request.handle:logDebug(string.format("ACL Check -- Request details \n%s\n", json_safe.encode(request.attrs)))
     -- request.handle:logDebug(string.format("ACL Check -- Profile \n%s\n", json_safe.encode(profile)))
     msg = check_policy(profile.force_deny, request)
     if msg then return acl_result(ACLForceDeny, msg) end
@@ -44,16 +44,23 @@ function check(profile, request)
     msg = check_policy(profile.bypass, request)
     if msg then return acl_result(ACLBypass, msg) end
 
-    msg = check_policy(profile.allow_bot, request)
-    if msg then return acl_result(ACLAllowBot, msg) end
-
-    msg = check_policy(profile.deny_bot, request)
-    if msg then return acl_result(ACLDenyBot, msg) end
-
     msg = check_policy(profile.allow, request)
     if msg then return acl_result(ACLAllow, msg) end
 
     msg = check_policy(profile.deny, request)
     if msg then return acl_result(ACLDeny, msg) end
+
+end
+
+function check_bot(profile, request)
+    request.handle:logDebug(string.format("ACL Check Bot -- Request details \n%s\n", json_safe.encode(request.attrs)))
+
+    local msg = nil
+
+    msg = check_policy(profile.allow_bot, request)
+    if msg then return acl_result(ACLAllowBot, msg) end
+
+    msg = check_policy(profile.deny_bot, request)
+    if msg then return acl_result(ACLDenyBot, msg) end
 
 end

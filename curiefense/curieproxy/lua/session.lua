@@ -16,6 +16,7 @@ local cjson       = require "cjson"
 local init          = globals.init
 
 local acl_check     = acl.check
+local acl_check_bot = acl.check_bot
 local waf_check     = waf.check
 
 local ACLNoMatch    = globals.ACLNoMatch
@@ -185,9 +186,11 @@ function inspect(handle)
     -- acl
     addentry(timeline, "8 acl_check")
     local acl_code, acl_result = acl_check(acl_profile, request_map, acl_active)
+    local acl_bot_code, acl_bot_result = acl_check_bot(acl_profile, request_map, acl_active)
 
     if acl_result then
-        -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
+        handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
+        handle:logDebug(sfmt("001b request_map.attrs: %s", cjson.encode(request_map.attrs) ))
         addentry(timeline, "8b acl_check/tag_request")
         tag_request(request_map, sfmt("acltag:%s" , acl_result.reason))
     end
@@ -203,33 +206,31 @@ function inspect(handle)
     addentry(timeline, "9b challenge_verified/tag_request")
     tag_request(request_map, is_human and "human" or "bot")
 
-    if acl_code == ACLDenyBot then
-        -- handle:logDebug("002 ACL DENY BOT MATCHED!")
-
-        if not is_human then
-            addentry(timeline, "9c challenge_verified/challenge_phase01")
-            -- handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
-            challenge_phase01(handle, request_map, "1")
-        end
-    end
-
     if acl_code ~= ACLBypass then
-        -- ACLAllow / ACLAllowBot/ ACLNoMatch
-        -- move to WAF
-        addentry(timeline, "10 waf_check")
-        local waf_code, waf_result = waf_check(waf_profile, request_map)
-        -- blocked results returns as table
-        if type(waf_result) == "table" then
-            addentry(timeline, "10b waf_check/tag_request")
-            tag_request(request_map, sfmt("wafsig:%s", waf_result.sig_id))
+        if acl_bot_code == ACLDenyBot and not is_human then
+            handle:logDebug("002 ACL DENY BOT MATCHED!")
+            addentry(timeline, "9c challenge_verified/challenge_phase01")
+            handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
+            challenge_phase01(handle, request_map, "1")
 
-            if waf_code == WAFBlock then
-                addentry(timeline, "10c waf_check/deny_request")
-                local action_params = {
-                    ["reason"] = waf_result,
-                    ["block_mode"] = waf_active
-                }
-                custom_response(request_map, action_params)
+        else
+            -- ACLAllow / ACLAllowBot/ ACLNoMatch
+            -- move to WAF
+            addentry(timeline, "10 waf_check")
+            local waf_code, waf_result = waf_check(waf_profile, request_map)
+            -- blocked results returns as table
+            if type(waf_result) == "table" then
+                addentry(timeline, "10b waf_check/tag_request")
+                tag_request(request_map, sfmt("wafsig:%s", waf_result.sig_id))
+
+                if waf_code == WAFBlock then
+                    addentry(timeline, "10c waf_check/deny_request")
+                    local action_params = {
+                        ["reason"] = waf_result,
+                        ["block_mode"] = waf_active
+                    }
+                    custom_response(request_map, action_params)
+                end
             end
         end
     end
