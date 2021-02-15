@@ -6,6 +6,7 @@
       :clear-input-after-selection="clearInputAfterSelection"
       :auto-focus="autoFocus"
       :selection-type="selectionType"
+      :minimum-value-length="minimumTagLength"
       @value-changed="tagChanged"
       @value-submitted="tagSubmitted"
       @keyup="bubbleEvent('keyup', $event)"
@@ -18,7 +19,6 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import RequestsUtils from '@/assets/RequestsUtils.ts'
 import AutocompleteInput, {AutocompleteInputEvents, AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
 import Vue from 'vue'
@@ -70,14 +70,14 @@ export default Vue.extend({
       focusedSuggestionIndex: -1,
       db: 'system',
       key: 'tags',
-
       defaultKeyData: defaultKeyData,
       defaultDatabaseData: {
         tags: defaultKeyData,
       },
+      minimumTagLength: 3,
 
-      apiRoot: DatasetsUtils.ConfAPIRoot,
-      apiVersion: DatasetsUtils.ConfAPIVersion,
+      apiRoot: RequestsUtils.confAPIRoot,
+      apiVersion: RequestsUtils.confAPIVersion,
     }
   },
 

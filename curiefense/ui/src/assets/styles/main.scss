@@ -5,6 +5,8 @@
 @import 'node_modules/bulma/sass/utilities/functions.sass';
 @import 'node_modules/bulma/sass/utilities/derived-variables.sass';
 @import 'node_modules/bulma/sass/helpers/color.sass';
+@import 'node_modules/bulma/sass/utilities/mixins.sass';
+@import 'node_modules/bulma/sass/helpers/typography.sass';
 
 /* Element width */
 
@@ -125,6 +127,11 @@
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
+}
+
+.seconds-suffix::after {
+  @extend .is-size-7;
+  content: 'seconds';
 }
 
 /* Bulma enhancement */

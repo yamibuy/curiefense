@@ -317,7 +317,7 @@ export default Vue.extend({
     return {
       filters: ['include', 'exclude'] as IncludeExcludeType[],
       addNewTagColName: null,
-      titles: DatasetsUtils.Titles,
+      titles: DatasetsUtils.titles,
       defaultSequenceItem: {
         'method': 'GET',
         'uri': '/',
@@ -505,9 +505,7 @@ export default Vue.extend({
 @import 'node_modules/bulma/sass/utilities/initial-variables.sass';
 @import 'node_modules/bulma/sass/utilities/functions.sass';
 @import 'node_modules/bulma/sass/utilities/derived-variables.sass';
-@import 'node_modules/bulma/sass/utilities/mixins.sass';
 @import 'node_modules/bulma/sass/helpers/color.sass';
-@import 'node_modules/bulma/sass/helpers/typography.sass';
 
 .bar {
   margin: 1rem 0 0.5rem;
@@ -562,11 +560,6 @@ export default Vue.extend({
   input {
     padding-right: 60px;
   }
-}
-
-.seconds-suffix::after {
-  @extend .is-size-7;
-  content: 'seconds';
 }
 
 ::v-deep .tag-input {

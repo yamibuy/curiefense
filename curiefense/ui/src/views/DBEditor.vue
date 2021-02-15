@@ -244,7 +244,6 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import RequestsUtils from '@/assets/RequestsUtils.ts'
 import Utils from '@/assets/Utils.ts'
 import GitHistory from '@/components/GitHistory.vue'
@@ -291,8 +290,8 @@ export default Vue.extend({
 
       gitLog: [] as Commit[],
 
-      apiRoot: DatasetsUtils.ConfAPIRoot,
-      apiVersion: DatasetsUtils.ConfAPIVersion,
+      apiRoot: RequestsUtils.confAPIRoot,
+      apiVersion: RequestsUtils.confAPIVersion,
     }
   },
   computed: {

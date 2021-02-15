@@ -363,7 +363,7 @@ export default Vue.extend({
       tab: 'args' as ArgsCookiesHeadersType,
       newWAFLine: null as ArgsCookiesHeadersType,
       newEntry: defaultNewEntry,
-      titles: DatasetsUtils.Titles,
+      titles: DatasetsUtils.titles,
       defaultNewEntry: defaultNewEntry,
     }
   },

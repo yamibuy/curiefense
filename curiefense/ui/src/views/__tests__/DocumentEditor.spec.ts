@@ -852,7 +852,7 @@ describe('DocumentEditor.vue', () => {
   })
 
   test('should be able to add a new document', async () => {
-    const newDoc = DatasetsUtils.NewDocEntryFactory.aclpolicies();
+    const newDoc = DatasetsUtils.newDocEntryFactory.aclpolicies();
     (newDoc.id as any) = expect.any(String)
     const postSpy = jest.spyOn(axios, 'post')
     postSpy.mockImplementation(() => Promise.resolve())

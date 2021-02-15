@@ -59,14 +59,16 @@
               @change="emitActionUpdate"
               title="Status code"
               placeholder="Status code">
-          <input
-              v-if="localAction && localAction.type === 'ban'"
-              class="input is-small"
-              type="text"
-              v-model="localAction.params.ttl"
-              @change="emitActionUpdate"
-              title="Duration"
-              placeholder="Duration">
+          <span class="suffix seconds-suffix">
+            <input
+                v-if="localAction && localAction.type === 'ban'"
+                class="input is-small"
+                type="text"
+                v-model="localAction.params.ttl"
+                @change="emitActionUpdate"
+                title="Duration"
+                placeholder="Duration">
+          </span>
           <input
               v-if="localAction && localAction.type === 'request_header'"
               class="input is-small"
@@ -127,9 +129,18 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import Vue, {PropType} from 'vue'
 import {ResponseActionType} from '@/types'
+
+export const responseActions = {
+  'default': {'title': '503 Service Unavailable'},
+  'challenge': {'title': 'Challenge'},
+  'monitor': {'title': 'Tag Only'},
+  'response': {'title': 'Response', 'params': {'status': '', 'content': ''}},
+  'redirect': {'title': 'Redirect', 'params': {'status': '30[12378]', 'location': 'https?://.+'}},
+  'ban': {'title': 'Ban', 'params': {'ttl': '[0-9]+', 'action': {'type': 'default', 'params': {}}}},
+  'request_header': {'title': 'Header', 'params': {'headers': ''}},
+}
 
 export default Vue.extend({
   name: 'ResponseAction',
@@ -157,7 +168,7 @@ export default Vue.extend({
 
   data() {
     return {
-      options: _.pickBy({...DatasetsUtils.ResponseActions}, (value, key) => {
+      options: _.pickBy({...responseActions}, (value, key) => {
         return !this.ignore || !this.ignore.includes(key)
       }),
     }
@@ -212,5 +223,6 @@ export default Vue.extend({
 .response-actions .column.additional {
   padding-top: 0;
 }
+
 
 </style>

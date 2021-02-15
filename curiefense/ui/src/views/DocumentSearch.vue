@@ -169,7 +169,7 @@ export default Vue.extend({
   props: {},
   components: {},
   data() {
-    const titles = DatasetsUtils.Titles
+    const titles = DatasetsUtils.titles
     // Order is important
     // We load [urlmaps] before [aclpolicies, wafpolicies, ratelimits] so we can pull all references correctly
     const componentsMap: {

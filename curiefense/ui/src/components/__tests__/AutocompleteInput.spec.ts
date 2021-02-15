@@ -225,6 +225,26 @@ describe('AutocompleteInput.vue', () => {
       expect((input.element as any).value).toEqual('test-value-1')
     })
 
+    test('should select input value when input is longer than the minimumValueLength prop', async () => {
+      wrapper.setProps({minimumValueLength: 3})
+      await Vue.nextTick();
+      (input.element as HTMLInputElement).value = 'test-value-1'
+      input.trigger('input')
+      input.trigger('keydown.enter')
+      await Vue.nextTick()
+      expect(wrapper.emitted('value-submitted')).toBeTruthy()
+    })
+
+    test('should not select input value when input is shorter than the minimumValueLength prop', async () => {
+      wrapper.setProps({minimumValueLength: 3})
+      await Vue.nextTick();
+      (input.element as HTMLInputElement).value = 't'
+      input.trigger('input')
+      input.trigger('keydown.enter')
+      await Vue.nextTick()
+      expect(wrapper.emitted('value-submitted')).toBeFalsy()
+    })
+
     test('should emit selected value when space is pressed', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
       input.trigger('keydown.space')

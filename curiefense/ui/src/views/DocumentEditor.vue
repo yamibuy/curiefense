@@ -270,8 +270,8 @@ export default Vue.extend({
         'wafrules': {component: WAFSigsEditor, title: 'WAF Rules'},
       },
 
-      apiRoot: DatasetsUtils.ConfAPIRoot,
-      apiVersion: DatasetsUtils.ConfAPIVersion,
+      apiRoot: RequestsUtils.confAPIRoot,
+      apiVersion: RequestsUtils.confAPIVersion,
     }
   },
   computed: {
@@ -360,7 +360,7 @@ export default Vue.extend({
     },
 
     newDoc(): Document {
-      const factory = DatasetsUtils.NewDocEntryFactory[this.selectedDocType]
+      const factory = DatasetsUtils.newDocEntryFactory[this.selectedDocType]
       return factory && factory()
     },
 
@@ -489,7 +489,7 @@ export default Vue.extend({
       this.isForkLoading = true
       const docToAdd = _.cloneDeep(this.selectedDoc) as Document
       docToAdd.name = 'copy of ' + docToAdd.name
-      docToAdd.id = DatasetsUtils.convertToUUID2()
+      docToAdd.id = DatasetsUtils.generateUUID2()
       await this.addNewDoc(docToAdd)
       this.isForkLoading = false
       this.setLoadingDocStatus(false)

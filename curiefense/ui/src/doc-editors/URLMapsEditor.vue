@@ -513,7 +513,7 @@ export default (Vue as VueConstructor<Vue & {
       if (this.isRateLimitReferencedElsewhere(this.rateLimitAnalyzed.id, this.mapEntryAnalyzed)) {
         // ID is referenced, copy rate limit
         recommendedRateLimit.name = 'copy of ' + recommendedRateLimit.name
-        recommendedRateLimit.id = DatasetsUtils.convertToUUID2()
+        recommendedRateLimit.id = DatasetsUtils.generateUUID2()
         RequestsUtils.sendRequest('POST',
             `configs/${this.selectedBranch}/d/ratelimits/e/${recommendedRateLimit.id}`).then(() => {
           _.remove(this.mapEntryAnalyzed.limit_ids, (id) => {

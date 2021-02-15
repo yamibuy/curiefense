@@ -99,7 +99,7 @@ export default Vue.extend({
   data() {
     return {
       operations: ['force_deny', 'bypass', 'allow_bot', 'deny_bot', 'allow', 'deny'] as ACLPolicyFilter[],
-      titles: DatasetsUtils.Titles,
+      titles: DatasetsUtils.titles,
       addNewColName: null,
     }
   },
@@ -147,11 +147,8 @@ export default Vue.extend({
     },
 
     addNewEntry(section: ACLPolicyFilter, entry: string) {
-      entry = entry.trim()
-      if (entry && entry.length > 2) {
-        this.localDoc[section].push(entry)
-        this.emitDocUpdate()
-      }
+      this.localDoc[section].push(entry)
+      this.emitDocUpdate()
     },
 
     openTagInput(section: ACLPolicyFilter) {

@@ -78,6 +78,19 @@ export type OptionObject = {
   oldKey?: string
 }
 
+export const limitAttributes = {
+  'ip': 'IP Address',
+  'asn': 'Provider',
+  'uri': 'URI',
+  'path': 'Path',
+  'tags': 'Tag',
+  'query': 'Query',
+  'method': 'Method',
+  'company': 'Company',
+  'country': 'Country',
+  'authority': 'Authority',
+}
+
 export default Vue.extend({
   name: 'LimitOption',
   props: {
@@ -111,23 +124,23 @@ export default Vue.extend({
     },
   },
   data() {
-    const {LimitRulesTypes, LimitAttributes} = DatasetsUtils
+    const {limitOptionsTypes} = DatasetsUtils
     const optionsData: { [key: string]: OptionObject } = {
       self: {
         type: 'self',
         key: 'self',
       },
     }
-    const attributes = _.pickBy(LimitAttributes, (value, key) => {
+    const attributes = _.pickBy(limitAttributes, (value, key) => {
       return !this.ignoreAttributes || !this.ignoreAttributes.includes(key)
     })
-    Object.keys(LimitRulesTypes).forEach((ruleType) => {
+    Object.keys(limitOptionsTypes).forEach((ruleType) => {
       const {type, key = '', value} = this.option || {}
       optionsData[ruleType] = {type, key, value}
     })
     return {
       optionsData,
-      options: LimitRulesTypes,
+      options: limitOptionsTypes,
       attributes: attributes,
       type: this.option?.type || 'attrs',
     }

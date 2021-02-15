@@ -9,6 +9,7 @@
              class="autocomplete-input input is-small"
              aria-haspopup="true"
              aria-controls="dropdown-menu"
+             @blur="closeDropdown(); selectValue()"
              @keydown.enter="selectValue"
              @keydown.space="selectValue"
              @keydown.down='focusNextSuggestion'
@@ -36,6 +37,7 @@
 </template>
 
 <script lang="ts">
+import Utils from '@/assets/Utils.ts'
 import Vue, {PropType, VueConstructor} from 'vue'
 
 export type AutocompleteSuggestion = {
@@ -72,6 +74,10 @@ export default (Vue as VueConstructor<Vue & {
         return ['single', 'multiple'].includes(val.toLowerCase())
       },
       default: 'single',
+    },
+    minimumValueLength: {
+      type: Number,
+      default: 0,
     },
   },
 
@@ -135,7 +141,7 @@ export default (Vue as VueConstructor<Vue & {
           values[values.length - 1] = currentValue
           this.autocompleteValue = values.join(' ')
         } else {
-          this.autocompleteValue = (currentValue as any).trim()
+          this.autocompleteValue = currentValue.trim()
         }
       },
     },
@@ -168,6 +174,12 @@ export default (Vue as VueConstructor<Vue & {
     async selectValue() {
       if (this.focusedSuggestionIndex !== -1) {
         this.currentValue = this.matches[this.focusedSuggestionIndex].value
+      }
+      if (this.currentValue.length < this.minimumValueLength) {
+        Utils.failureToast(
+            `Selected tag [${this.currentValue}] is invalid! Tags must be at least three characters long.`,
+        )
+        return
       }
       this.valueSubmitted()
       this.valueChanged()
