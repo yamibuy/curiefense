@@ -90,7 +90,12 @@ function map_args(map)
         map.attrs.uri = _uri
         map.attrs.path = path
         map.attrs.query = query
-        local url_args = parse_query(query)
+        local url_args = {}
+        
+        if query then
+            url_args = parse_query(query)
+        end
+        
         for name, value in pairs(url_args) do
             map.args[name] = value
         end
