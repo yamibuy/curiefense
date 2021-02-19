@@ -13,6 +13,7 @@ BUILD_OPT=${BUILD_OPT:-}
 
 declare -A status
 
+GLOBALSTATUS=0
 GITTAG="$(git describe --tag --long --dirty)"
 DOCKER_DIR_HASH="$(git rev-parse --short=12 HEAD:curiefense)"
 DOCKER_TAG="${DOCKER_TAG:-$GITTAG-$DOCKER_DIR_HASH}"
@@ -41,13 +42,19 @@ do
         if tar -C "$image" -czh . | docker build -t "$IMG:$DOCKER_TAG" ${BUILD_OPT} -; then
             STB="ok"
             if [ -n "$PUSH" ]; then
-                docker push "$IMG:$DOCKER_TAG" && STP="ok" || STP="KO"
+                if docker push "$IMG:$DOCKER_TAG"; then
+                    STP="ok"
+                else
+                    STP="KO"
+                    GLOBALSTATUS=1
+                fi
             else
                 STP="SKIP"
             fi
         else
             STB="KO"
             STP="SKIP"
+            GLOBALSTATUS=1
         fi
         status[$image]="build=$STB  push=$STP"
 done
@@ -67,3 +74,4 @@ else
     echo "To deploy this set of images later, export \"DOCKER_TAG=$DOCKER_TAG\" before running deploy.sh or docker-compose up"
 fi
 
+exit $GLOBALSTATUS
