@@ -253,7 +253,7 @@ export default Vue.extend({
             if (_.isString(item[0]) && (item[0].toLowerCase() === 'ip' || item[0].toLowerCase() === 'asn') &&
                 _.isString(item[1]) && singleIP.test(item[1])) {
               const annotation = (item[2] && _.isString(item[2])) ? item[2] : null
-              store.push([item[0].toLowerCase(), item[1], annotation])
+              store.push([item[0].toLowerCase() as Category, item[1], annotation])
             } else {
               objectParser(item, store)
             }

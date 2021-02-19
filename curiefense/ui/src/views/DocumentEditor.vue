@@ -418,11 +418,11 @@ export default Vue.extend({
             `configs/${branch}/d/${doctype}/`, {headers: {'x-fields': 'id, name'}})
         this.docs = response.data
         // After we load the basic data (id and name) we can async load the full data
-        // this.cancelSource.cancel(`Operation cancelled and restarted for a new document type ${doctype}`)
+        this.cancelSource.cancel(`Operation cancelled and restarted for a new document type ${doctype}`)
         RequestsUtils.sendRequest('GET',
             `configs/${branch}/d/${doctype}/`,
             null,
-            {cancelToken: this.cancelSource.token}).then((response) => {
+            {cancelToken: this.cancelSource.token}).then((response: AxiosResponse) => {
           this.docs = response.data
           this.isDownloadLoading = false
         })
