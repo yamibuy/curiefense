@@ -411,7 +411,7 @@ export default (Vue as VueConstructor<Vue & {
 
   computed: {
     localDoc(): URLMap {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
     },
   },
 

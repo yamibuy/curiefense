@@ -273,7 +273,7 @@ export default Vue.extend({
   },
   computed: {
     localDoc(): RateLimit {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
     },
 
     eventOption: {

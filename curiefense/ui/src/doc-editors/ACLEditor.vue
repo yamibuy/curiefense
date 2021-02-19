@@ -113,7 +113,7 @@ export default Vue.extend({
   },
   computed: {
     localDoc(): ACLPolicy {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
     },
 
     duplicateTags(): Dictionary<string> {
