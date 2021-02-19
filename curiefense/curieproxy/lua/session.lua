@@ -129,7 +129,7 @@ function addentry(t, msg)
     table.insert(t, {gettime()*1000, msg})
 end
 
-function inspect(handle)
+function _inspect(handle)
 
     local timeline = {}
 
@@ -296,4 +296,6 @@ function inspect3(handle)
 
     log_request(request_map)
 end
+
+inspect = inspect0
 
