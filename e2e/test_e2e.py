@@ -6,23 +6,38 @@
 # (cd ../curiefense/curieconf/client ; pip3 install .)
 #
 # To run this with minikube (does not support IPv6):
-# pytest --base-protected-url http://$(minikube ip):30081 --base-conf-url http://$(minikube ip):30000/api/v1/ --base-ui-url http://$(minikube ip):30080 .
+# pytest --base-protected-url http://$(minikube ip):30081 --base-conf-url http://$(minikube ip):30000/api/v1/ --base-ui-url http://$(minikube ip):30080 .      # pylint: disable=line-too-long
 #
 # To run this with docker-compose:
 # Wait until https://github.com/curiefense/curiefense/issues/48 is fixed
-# pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v1/ --base-ui-url http://localhost:30080 .
+# pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v1/ --base-ui-url http://localhost:30080 .      # pylint: disable=line-too-long
 
-# TODO add Flow Control tests
+# pylint: disable=too-many-lines,too-many-public-methods
+# pylint: disable=too-many-arguments,too-few-public-methods,too-many-statements
+# pylint: disable=missing-function-docstring,missing-module-docstring
+# pylint: disable=missing-class-docstring
 
+# This is not really a problem for fixtures
+# pylint: disable=redefined-outer-name
+
+# This is often wrong: fixtures are not mentioned in the function, but they
+# define the required test environment
+# pylint: disable=unused-argument
+
+# This follows examples from the pytest doc: tests are class methods, even
+# though they don't use self
+# pylint: disable=no-self-use
+
+
+from urllib.parse import urlparse
 import json
 import logging
-import pytest
 import random
-import requests
 import string
 import subprocess
 import time
-from urllib.parse import urlparse
+import pytest
+import requests
 
 log = logging.getLogger("e2e")
 
@@ -42,14 +57,14 @@ class CliHelper():
         indata = None
         if inputjson:
             indata = json.dumps(inputjson).encode("utf-8")
-        p = subprocess.run(cmd, shell=False, input=indata, check=True,
-                           capture_output=True)
-        if p.stdout:
-            logging.debug("CLI output: %s", p.stdout)
+        process = subprocess.run(cmd, shell=False, input=indata, check=True,
+                                 capture_output=True)
+        if process.stdout:
+            logging.debug("CLI output: %s", process.stdout)
             try:
-                return json.loads(p.stdout.decode("utf-8"))
+                return json.loads(process.stdout.decode("utf-8"))
             except json.JSONDecodeError:
-                return p.stdout.decode("utf-8")
+                return process.stdout.decode("utf-8")
         else:
             return []
 
@@ -77,9 +92,9 @@ class CliHelper():
 
     def publish_and_apply(self):
         buckets = self.call("key get system publishinfo")
-        for b in buckets["buckets"]:
-            if b["name"] == "prod":
-                url = b["url"]
+        for bucket in buckets["buckets"]:
+            if bucket["name"] == "prod":
+                url = bucket["url"]
         self.call(f"sync export master {url}")
         time.sleep(20)
 
@@ -93,7 +108,8 @@ class TargetHelper():
     def __init__(self, base_url):
         self._base_url = base_url
 
-    def query(self, path="/", suffix="", method="GET", headers=None, srcip=None, *args, **kwargs):
+    def query(self, path="/", suffix="", method="GET", headers=None,
+              srcip=None, **kwargs):
         # specifying a path helps spot tests easily in the access log
         if headers is None:
             headers = {}
@@ -134,7 +150,7 @@ IP6_1 = "0000:0000:0000:0000:0000:0000:0000:0001"
 IP6_2 = "0000:0000:0000:0000:0000:0000:0000:0002"
 
 
-class UIHelper():
+class LogHelper():
     def __init__(self, base_url, es_url):
         self._base_url = base_url
         self._es_url = es_url + '/_search'
@@ -159,10 +175,10 @@ class UIHelper():
 
 
 @pytest.fixture(scope="session")
-def ui(request):
+def log_fixture(request):
     url = request.config.getoption("--base-ui-url").rstrip("/")
     es_url = request.config.getoption("--elasticsearch-url").rstrip("/")
-    return UIHelper(url, es_url)
+    return LogHelper(url, es_url)
 
 
 class ACLHelper:
@@ -172,8 +188,8 @@ class ACLHelper:
     def set_acl(self, updates: dict):
         acl = self._cli.empty_acl()
         # update acl
-        for k, v in updates.items():
-            acl[0][k].append(v)
+        for key, value in updates.items():
+            acl[0][key].append(value)
         self._cli.call(f"doc update {TEST_CONFIG_NAME} aclpolicies /dev/stdin",
                        inputjson=acl)
 
@@ -203,12 +219,12 @@ def section(request):
 
 
 class TestLogs:
-    def test_logs(self, default_config, cli, target, ui):
+    def test_logs(self, default_config, cli, target, log_fixture):
         test_pattern = "/test" + "".join([
             random.choice(string.ascii_lowercase) for i in range(20)])
-        assert(target.is_reachable(test_pattern))
+        assert target.is_reachable(test_pattern)
         time.sleep(10)
-        assert ui.check_log_pattern(test_pattern)
+        assert log_fixture.check_log_pattern(test_pattern)
 
 
 class TestACL:
@@ -229,7 +245,7 @@ class TestACL:
 
     def test_deny_bot_all(self, acl, target):
         acl.reset_and_set_acl({"deny_bot": "all"})
-        res = target.query("/deny_bot-all")
+        res = target.query(path="/deny_bot-all")
         assert res.status_code == 247
         assert ";;window.rbzns={bereshit:" in res.text
 
@@ -261,28 +277,28 @@ class TestACL:
         assert target.is_reachable("/")
 
     def test_ipv6(self, acl, target):
-        acl.reset_and_set_acl({"deny": "ip:0000:0000:0000:0000:0000:0000:0000:0001"})
+        acl.reset_and_set_acl(
+            {"deny": "ip:0000:0000:0000:0000:0000:0000:0000:0001"})
         assert not target.is_reachable("/acl-ipv6", srcip=IP6_1)
         assert target.is_reachable("/")
 
 
 # --- Rate limit tests ---
 
-# TODO test RateLimit Actions
 def gen_rl_rules(authority):
-    RL_RULES = []
-    MAP_PATH = {}
+    rl_rules = []
+    map_path = {}
 
     def add_rl_rule(path, action_ext=None, subaction_ext=None, param_ext=None, **kwargs):
-        rule_id = f"e2e1{len(RL_RULES):0>9}"
+        rule_id = f"e2e1{len(rl_rules):0>9}"
         if subaction_ext is None:
             subaction_ext = {}
         if action_ext is None:
             action_ext = {}
         if param_ext is None:
             param_ext = {}
-        MAP_PATH[path] = rule_id
-        RL_RULES.append({
+        map_path[path] = rule_id
+        rl_rules.append({
             "id": rule_id,
             "name": "Rate Limit Rule 3/10 " + path,
             "description": "3 requests per 10 seconds",
@@ -382,7 +398,6 @@ def gen_rl_rules(authority):
     add_rl_rule("countby-headers-params", key=[{"headers": "countby"}, {"args": "countby"}])
     add_rl_rule("countby-params-cookies", key=[{"args": "countby"}, {"cookies": "countby"}])
     # RL Event condition
-    # TODO https://docs.curiefense.io/console/document-editor/rate-limits#the-event-option-changing-the-meaning-of-the-rate-limit mentions "attribute / Organization" and "attribute / Username", which are not in the UI anymore
     add_rl_rule("event-cookies", pairwith={"cookies": "event"})
     add_rl_rule("event-headers", pairwith={"headers": "event"})
     add_rl_rule("event-params", pairwith={"args": "event"})
@@ -450,7 +465,7 @@ def gen_rl_rules(authority):
         param_ext={"headers": "foo: bar"}
     )
 
-    RL_URLMAP = [
+    rl_urlmap = [
         {
             "id": "__default__",
             "name": "default entry",
@@ -474,10 +489,10 @@ def gen_rl_rules(authority):
                     "waf_profile": "__default__",
                     "waf_active": True,
                     "limit_ids": [v],
-                } for k, v in MAP_PATH.items()]
+                } for k, v in map_path.items()]
         }
     ]
-    return (RL_RULES, RL_URLMAP)
+    return (rl_rules, rl_urlmap)
 
 
 @pytest.fixture(scope="class")
@@ -485,13 +500,13 @@ def ratelimit_config(cli, target):
     cli.revert_and_enable()
     # Add new RL rules
     rl_rules = cli.call(f"doc get {TEST_CONFIG_NAME} ratelimits")
-    (NEW_RULES, NEW_URLMAP) = gen_rl_rules(target.authority())
-    rl_rules.extend(NEW_RULES)
+    (new_rules, new_urlmap) = gen_rl_rules(target.authority())
+    rl_rules.extend(new_rules)
     cli.call(f"doc update {TEST_CONFIG_NAME} ratelimits /dev/stdin",
              inputjson=rl_rules)
     # Apply NEW_URLMAP
     cli.call(f"doc update {TEST_CONFIG_NAME} urlmaps /dev/stdin",
-             inputjson=NEW_URLMAP)
+             inputjson=new_urlmap)
     cli.publish_and_apply()
 
 
@@ -500,26 +515,31 @@ class TestRateLimit:
         # rate limit: max 3 requests within 10 seconds
         param = {section: {"include": "true"}}
         for i in range(1, 4):
-            assert target.is_reachable(f"/scope-{section}/include/{i}", **param), \
+            assert target.is_reachable(
+                f"/scope-{section}/include/{i}", **param), \
                 f"Request #{i} for {section} should be allowed"
-        assert not target.is_reachable(f"/scope-{section}/include/4", **param), \
+        assert not target.is_reachable(
+            f"/scope-{section}/include/4", **param), \
             f"Request #4 for {section} should be blocked by the rate limit"
         time.sleep(10)
         assert target.is_reachable(f"/scope-{section}/include/5", **param), \
             f"Request #5 for {section} should be allowed"
 
-    def test_ratelimit_scope_include_exclude(self, target, ratelimit_config, section):
+    def test_ratelimit_scope_include_exclude(
+            self, target, ratelimit_config, section):
         # rate limit: max 3 requests within 10 seconds
         param = {section: {"include": "true", "exclude": "true"}}
         for i in range(1, 5):
-            assert target.is_reachable(f"/scope-{section}/include-exclude/{i}", **param), \
+            assert target.is_reachable(
+                f"/scope-{section}/include-exclude/{i}", **param), \
                 f"Request #{i} for {section} should be allowed"
 
     def test_ratelimit_scope_exclude(self, target, ratelimit_config, section):
         # rate limit: max 3 requests within 10 seconds
         param = {section: {"exclude": "true"}}
         for i in range(1, 5):
-            assert target.is_reachable(f"/scope-{section}/exclude/{i}", **param), \
+            assert target.is_reachable(
+                f"/scope-{section}/exclude/{i}", **param), \
                 f"Request #{i} for {section} should be allowed"
 
     def test_ratelimit_scope_path_include(self, target, ratelimit_config):
@@ -550,7 +570,8 @@ class TestRateLimit:
         assert target.is_reachable("/scope-uri/include/5"), \
             "Request #5 for uri should be allowed"
 
-    def test_ratelimit_scope_uri_include_exclude(self, target, ratelimit_config):
+    def test_ratelimit_scope_uri_include_exclude(
+            self, target, ratelimit_config):
         # rate limit: max 3 requests within 10 seconds
         for i in range(1, 5):
             assert target.is_reachable(f"/scope-uri/include/exclude/{i}"), \
@@ -558,84 +579,108 @@ class TestRateLimit:
 
     def test_ratelimit_scope_ipv4_include(self, target, ratelimit_config):
         for i in range(1, 4):
-            assert target.is_reachable("/scope-ipv4-include/included", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-ipv4-include/included", srcip=IP4_US), \
                 f"Request #{i} for included ipv4 should be allowed"
-        assert not target.is_reachable("/scope-ipv4-include/included", srcip=IP4_US), \
+        assert not target.is_reachable(
+            "/scope-ipv4-include/included", srcip=IP4_US), \
             "Request #4 for included ipv4 should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-ipv4-include/not-included", srcip=IP4_JP), \
+            assert target.is_reachable(
+                "/scope-ipv4-include/not-included", srcip=IP4_JP), \
                 f"Request #{i} for non included ipv4 should be allowed"
 
     def test_ratelimit_scope_ipv4_exclude(self, target, ratelimit_config):
         for i in range(1, 5):
-            assert target.is_reachable("/scope-ipv4-exclude/excluded", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-ipv4-exclude/excluded", srcip=IP4_US), \
                 f"Request #{i} for excluded ipv4 should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
+            assert target.is_reachable(
+                "/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
                 f"Request #{i} for non excluded ipv4 should be allowed"
-        assert not target.is_reachable("/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
+        assert not target.is_reachable(
+            "/scope-ipv4-exclude/not-excluded", srcip=IP4_JP), \
             "Request #4 for non excluded ipv4 should be denied"
 
     def test_ratelimit_scope_country_include(self, target, ratelimit_config):
         for i in range(1, 4):
-            assert target.is_reachable("/scope-country-include/included", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-country-include/included", srcip=IP4_US), \
                 f"Request #{i} for included country should be allowed"
-        assert not target.is_reachable("/scope-country-include/included", srcip=IP4_US), \
+        assert not target.is_reachable(
+            "/scope-country-include/included", srcip=IP4_US), \
             "Request #4 for included country should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-country-include/not-included", srcip=IP4_JP), \
+            assert target.is_reachable(
+                "/scope-country-include/not-included", srcip=IP4_JP), \
                 f"Request #{i} for non included country should be allowed"
 
     def test_ratelimit_scope_country_exclude(self, target, ratelimit_config):
         for i in range(1, 5):
-            assert target.is_reachable("/scope-country-exclude/excluded", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-country-exclude/excluded", srcip=IP4_US), \
                 f"Request #{i} for excluded country should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-country-exclude/not-excluded", srcip=IP4_JP), \
+            assert target.is_reachable(
+                "/scope-country-exclude/not-excluded", srcip=IP4_JP), \
                 f"Request #{i} for non excluded country should be allowed"
-        assert not target.is_reachable("/scope-country-exclude/not-excluded", srcip=IP4_JP), \
+        assert not target.is_reachable(
+            "/scope-country-exclude/not-excluded", srcip=IP4_JP), \
             "Request #4 for non excluded country should be denied"
 
     def test_ratelimit_scope_company_include(self, target, ratelimit_config):
         for i in range(1, 4):
-            assert target.is_reachable("/scope-company-include/included", srcip=IP4_CLOUDFLARE), \
+            assert target.is_reachable(
+                "/scope-company-include/included", srcip=IP4_CLOUDFLARE), \
                 f"Request #{i} for included company should be allowed"
-        assert not target.is_reachable("/scope-company-include/included", srcip=IP4_CLOUDFLARE), \
+        assert not target.is_reachable(
+            "/scope-company-include/included", srcip=IP4_CLOUDFLARE), \
             "Request #4 for included company should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-company-include/not-included", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-company-include/not-included", srcip=IP4_US), \
                 f"Request #{i} for non included company should be allowed"
 
     def test_ratelimit_scope_company_exclude(self, target, ratelimit_config):
         for i in range(1, 5):
-            assert target.is_reachable("/scope-company-exclude/excluded", srcip=IP4_CLOUDFLARE), \
+            assert target.is_reachable(
+                "/scope-company-exclude/excluded", srcip=IP4_CLOUDFLARE), \
                 f"Request #{i} for excluded company should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-company-exclude/not-excluded", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-company-exclude/not-excluded", srcip=IP4_US), \
                 f"Request #{i} for non excluded company should be allowed"
-        assert not target.is_reachable("/scope-company-exclude/not-excluded", srcip=IP4_US), \
+        assert not target.is_reachable(
+            "/scope-company-exclude/not-excluded", srcip=IP4_US), \
             "Request #4 for non excluded company should be denied"
 
     def test_ratelimit_scope_provider_include(self, target, ratelimit_config):
         # "provider" means "asn"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-provider-include/included", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-provider-include/included", srcip=IP4_US), \
                 f"Request #{i} for included provider should be allowed"
-        assert not target.is_reachable("/scope-provider-include/included", srcip=IP4_US), \
+        assert not target.is_reachable(
+            "/scope-provider-include/included", srcip=IP4_US), \
             "Request #4 for included provider should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-provider-include/not-included", srcip=IP4_JP), \
+            assert target.is_reachable(
+                "/scope-provider-include/not-included", srcip=IP4_JP), \
                 f"Request #{i} for non included provider should be allowed"
 
     def test_ratelimit_scope_provider_exclude(self, target, ratelimit_config):
         # "provider" means "asn"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-provider-exclude/excluded", srcip=IP4_US), \
+            assert target.is_reachable(
+                "/scope-provider-exclude/excluded", srcip=IP4_US), \
                 f"Request #{i} for excluded provider should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-provider-exclude/not-excluded", srcip=IP4_JP), \
+            assert target.is_reachable(
+                "/scope-provider-exclude/not-excluded", srcip=IP4_JP), \
                 f"Request #{i} for non excluded provider should be allowed"
-        assert not target.is_reachable("/scope-provider-exclude/not-excluded", srcip=IP4_JP), \
+        assert not target.is_reachable(
+            "/scope-provider-exclude/not-excluded", srcip=IP4_JP), \
             "Request #4 for non excluded provider should be denied"
 
     def test_ratelimit_scope_method_include(self, target, ratelimit_config):
@@ -645,7 +690,8 @@ class TestRateLimit:
         assert not target.is_reachable("/scope-method-include/included"), \
             "Request #4 for included method should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-method-include/not-included", method="HEAD"), \
+            assert target.is_reachable(
+                "/scope-method-include/not-included", method="HEAD"), \
                 f"Request #{i} for non included method should be allowed"
 
     def test_ratelimit_scope_method_exclude(self, target, ratelimit_config):
@@ -653,51 +699,65 @@ class TestRateLimit:
             assert target.is_reachable("/scope-method-exclude/excluded"), \
                 f"Request #{i} for excluded method should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-method-exclude/not-excluded", method="HEAD"), \
+            assert target.is_reachable(
+                "/scope-method-exclude/not-excluded", method="HEAD"), \
                 f"Request #{i} for non excluded method should be allowed"
-        assert not target.is_reachable("/scope-method-exclude/not-excluded", method="HEAD"), \
+        assert not target.is_reachable(
+            "/scope-method-exclude/not-excluded", method="HEAD"), \
             "Request #4 for non excluded method should be denied"
 
     def test_ratelimit_scope_query_include(self, target, ratelimit_config):
         # if "QUERY" is a substring of the query, rate limiting applies
         for i in range(1, 4):
-            assert target.is_reachable("/scope-query-include/included?QUERY"), \
+            assert target.is_reachable(
+                "/scope-query-include/included?QUERY"), \
                 f"Request #{i} for included query should be allowed"
-        assert not target.is_reachable("/scope-query-include/included?QUERY"), \
+        assert not target.is_reachable(
+            "/scope-query-include/included?QUERY"), \
             "Request #4 for included query should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-query-include/not-included?SOMETHINGELSE"), \
+            assert target.is_reachable(
+                "/scope-query-include/not-included?SOMETHINGELSE"), \
                 f"Request #{i} for non included query should be allowed"
 
     def test_ratelimit_scope_query_exclude(self, target, ratelimit_config):
         # if "QUERY" is a substring of the query, rate limiting does not apply
         for i in range(1, 5):
-            assert target.is_reachable("/scope-query-exclude/excluded?QUERY"), \
+            assert target.is_reachable(
+                "/scope-query-exclude/excluded?QUERY"), \
                 f"Request #{i} for excluded query should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-query-exclude/not-excluded?SOMETHINGELSE"), \
+            assert target.is_reachable(
+                "/scope-query-exclude/not-excluded?SOMETHINGELSE"), \
                 f"Request #{i} for non excluded query should be allowed"
-        assert not target.is_reachable("/scope-query-exclude/not-excluded?SOMETHINGELSE"), \
+        assert not target.is_reachable(
+            "/scope-query-exclude/not-excluded?SOMETHINGELSE"), \
             "Request #4 for non excluded query should be denied"
 
     def test_ratelimit_scope_authority_include(self, target, ratelimit_config):
         for i in range(1, 4):
-            assert target.is_reachable("/scope-authority-include/included"), \
+            assert target.is_reachable(
+                "/scope-authority-include/included"), \
                 f"Request #{i} for included authority should be allowed"
-        assert not target.is_reachable("/scope-authority-include/included"), \
+        assert not target.is_reachable(
+            "/scope-authority-include/included"), \
             "Request #4 for included authority should be denied"
         for i in range(1, 5):
-            assert target.is_reachable("/scope-other-authority-include/not-included"), \
+            assert target.is_reachable(
+                "/scope-other-authority-include/not-included"), \
                 f"Request #{i} for non included authority should be allowed"
 
     def test_ratelimit_scope_authority_exclude(self, target, ratelimit_config):
         for i in range(1, 5):
-            assert target.is_reachable("/scope-authority-exclude/excluded"), \
+            assert target.is_reachable(
+                "/scope-authority-exclude/excluded"), \
                 f"Request #{i} for excluded authority should be allowed"
         for i in range(1, 4):
-            assert target.is_reachable("/scope-other-authority-exclude/not-excluded"), \
+            assert target.is_reachable(
+                "/scope-other-authority-exclude/not-excluded"), \
                 f"Request #{i} for non excluded authority should be allowed"
-        assert not target.is_reachable("/scope-other-authority-exclude/not-excluded"), \
+        assert not target.is_reachable(
+            "/scope-other-authority-exclude/not-excluded"), \
             "Request #4 for non excluded authority should be denied"
 
     def ratelimit_countby_helper(self, target, name, param1, param2, nocount=False):
@@ -705,8 +765,7 @@ class TestRateLimit:
             # do not change URLs when countby is set to uri or path
             if nocount:
                 return ""
-            else:
-                return i
+            return i
         for i in range(1, 4):
             assert target.is_reachable(f"/countby-{name}/1/{disp(i)}", **param1), \
                 f"Request #{i} with {name} countby 1 should be allowed"
@@ -989,10 +1048,8 @@ class TestTagRules:
             "/e2e-tagrules-method-PUT", method="PUT") is not active
 
     def test_path(self, target, tagrules_config, active):
-        assert target.is_reachable(
-            "/e2e-tagrules-path/") is not active
-        assert target.is_reachable(
-            "/e2e-tagrules-valid-path/") is True
+        assert target.is_reachable("/e2e-tagrules-path/") is not active
+        assert target.is_reachable("/e2e-tagrules-valid-path/") is True
 
     def test_query(self, target, tagrules_config, active):
         assert target.is_reachable(
@@ -1001,20 +1058,16 @@ class TestTagRules:
             "/e2e-tagrules-query", params={"e2e": "allowed"}) is True
 
     def test_uri(self, target, tagrules_config, active):
-        assert target.is_reachable(
-            "/e2e-tagrules-uri") is not active
-        assert target.is_reachable(
-            "/e2e-tagrules-allowed-uri") is True
+        assert target.is_reachable("/e2e-tagrules-uri") is not active
+        assert target.is_reachable("/e2e-tagrules-allowed-uri") is True
 
     def test_ipv4(self, target, tagrules_config, active):
         assert target.is_reachable("/tag-ipv4-1", srcip=IP4_US) is not active
         assert target.is_reachable("/tag-ipv4-2", srcip=IP4_ORANGE) is True
 
     def test_ipv6(self, target, tagrules_config, active):
-        assert target.is_reachable(
-            "/tag-ipv6-1", srcip=IP6_1) is not active
-        assert target.is_reachable(
-            "/tag-ipv6-2", srcip=IP6_2) is True
+        assert target.is_reachable("/tag-ipv6-1", srcip=IP6_1) is not active
+        assert target.is_reachable("/tag-ipv6-2", srcip=IP6_2) is True
 
     def test_country(self, target, tagrules_config, active):
         # JP address (Softbank)
@@ -1283,14 +1336,17 @@ def restrict(request):
 
 
 class TestWAFParamsConstraints:
-    def test_allowlisted_value(self, wafparam_config, section, name_regex, restrict, target):
+    def test_allowlisted_value(self, wafparam_config, section, name_regex,
+                               restrict, target):
         paramname = name_regex + "-" + restrict
         assert target.is_reachable(
             f"/allowlisted-value-{paramname}",
             **{section: {paramname: "value"}}), \
             f"Not reachable despite allowlisted {section} value"
 
-    def test_non_allowlisted_value_restrict(self, wafparam_config, section, name_regex, target, ignore_alphanum):
+    def test_non_allowlisted_value_restrict(self, wafparam_config, section,
+                                            name_regex, target,
+                                            ignore_alphanum):
         paramname = name_regex + "-restrict"
         if ignore_alphanum:
             assert target.is_reachable(
@@ -1303,21 +1359,24 @@ class TestWAFParamsConstraints:
                 **{section: {paramname: "invalid"}}), \
                 f"Reachable despite blocklisted {section} value (restrict is enabled)"
 
-    def test_non_allowlisted_value_norestrict_nowafmatch(self, wafparam_config, section, name_regex, target):
+    def test_non_allowlisted_value_norestrict_nowafmatch(
+            self, wafparam_config, section, name_regex, target):
         paramname = name_regex + "-norestrict"
         assert target.is_reachable(
             f"/blocklisted-value-{paramname}",
             **{section: {paramname: "invalid"}}), \
             f"Not reachable despite 'restricted' not checked (non-matching {section} value)"
 
-    def test_non_allowlisted_value_norestrict_wafmatch(self, wafparam_config, section, name_regex, target):
+    def test_non_allowlisted_value_norestrict_wafmatch(
+            self, wafparam_config, section, name_regex, target):
         paramname = name_regex + "-norestrict"
         assert not target.is_reachable(
             f"/blocklisted-value-{paramname}-wafmatch",
             **{section: {paramname: "../../../../../"}}), \
             f"Reachable despite matching wafsig 100116 (non-matching {section} value)"
 
-    def test_non_allowlisted_value_norestrict_wafmatch_excludesig(self, wafparam_config, section, name_regex, target):
+    def test_non_allowlisted_value_norestrict_wafmatch_excludesig(
+            self, wafparam_config, section, name_regex, target):
         paramname = name_regex + "-norestrict"
         assert target.is_reachable(
             f"/blocklisted-value-{paramname}-wafmatch-excludedsig",

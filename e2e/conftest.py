@@ -1,6 +1,5 @@
-import pytest
-
 # run with --log-level info for debugging tests & fixtures
+# pylint: disable=missing-function-docstring,missing-module-docstring
 
 
 def pytest_addoption(parser):
