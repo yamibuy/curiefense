@@ -39,7 +39,7 @@ global:
     curiefense_kibana_url: 'http://kibana:5601/'
     # change curiefense_db_hostname if you supply your own postgres server
     curiefense_db_hostname: 'logdb'
-    # supported types: 's3', 'gs'
+    # supported types: 's3', 'gs', 'local-bucket'
     curiefense_bucket_type: 's3'
     curiefense_es_index_name: 'curieaccesslog'
     # docker_tag will be overridden by deploy.sh

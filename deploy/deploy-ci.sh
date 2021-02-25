@@ -1,51 +1,51 @@
+#!/bin/bash
+
 set +x
 
-eval $(minikube docker-env)
+eval "$(minikube docker-env)"
 
-export DATE="$(date --iso=m)"
-export GITTAG="$(git describe --tag --long --dirty)"
-export DOCKER_DIR_HASH="$(git rev-parse --short=12 HEAD:curiefense)"
+GITTAG="$(git describe --tag --long --dirty)"
+DOCKER_DIR_HASH="$(git rev-parse --short=12 HEAD:curiefense)"
 export DOCKER_TAG="$GITTAG-$DOCKER_DIR_HASH"
-export BASEDIR="$(dirname "$(readlink -f "$0")")"
 
-export ROOT_DIR=$(git rev-parse --show-toplevel)
-export WORKDIR=$(mktemp -d -t ci-XXXXXXXXXX)
-export LOGS_DIR=$WORKDIR/logs
+ROOT_DIR=$(git rev-parse --show-toplevel)
+WORKDIR=$(mktemp -d -t ci-XXXXXXXXXX)
+LOGS_DIR="$WORKDIR/logs"
 
-mkdir -p $LOGS_DIR
+mkdir -p "$LOGS_DIR"
 
 # Let's run the script from the root directory
-pushd $ROOT_DIR
+pushd "$ROOT_DIR" || exit
 
-pushd curiefense/images
+pushd curiefense/images || exit
 ./build-docker-images.sh
-popd
+popd || exit
 
 # curieconfctl will try to write to this
 # path during the tests. This is currently
 # not configurable.
-mkdir -p $WORKDIR/bucket
-chmod 777 $WORKDIR/bucket
+mkdir -p "$WORKDIR/bucket"
+chmod 777 "$WORKDIR/bucket"
 
 # Make sure the *local* bucket directory is mounted on minikube's
 # VM. This will make sure that the `/bucket` hostPath mounted in the
 # PODs is also shared locally
-nohup minikube mount $WORKDIR/bucket:/bucket > $LOGS_DIR/minikube-mount.log &
+nohup minikube mount "$WORKDIR/bucket":/bucket > "$LOGS_DIR/minikube-mount.log" &
 
 # Create a tunnel so we can guarantee that the gateway's LoadBalancer will
 # get an IP from the host. We could use a different service type for the
 # gateway but let's try to keep it as close to production-like as possible.
-nohup minikube tunnel > $LOGS_DIR/minikube-tunnel.log &
+nohup minikube tunnel > "$LOGS_DIR/minikube-tunnel.log" &
 
-pushd deploy/istio-helm
+pushd deploy/istio-helm || exit
 ./deploy.sh -f chart/use-local-bucket.yaml -f chart/values-istio-ci.yaml
 sleep 10
 # reduce cpu requests for istio components so that this fits on a 4-CPU node
 kubectl patch -n istio-system deployment istio-pilot --patch '{"spec": {"template": {"spec": {"containers": [{"name": "discovery", "resources": {"requests": {"cpu": "10m"}}}]}}}}'
 sleep 5
-popd
+popd || exit
 
-pushd deploy/curiefense-helm
+pushd deploy/curiefense-helm || exit
 ./deploy.sh -f curiefense/use-local-bucket.yaml -f curiefense/e2e-ci.yaml
 
 # Expose services
@@ -53,7 +53,7 @@ pushd deploy/curiefense-helm
 # specified in the k8s manifest itself. Two namespaces
 # are used in this manifest: istio-system, and curiefense
 kubectl create -f expose-services.yaml
-popd
+popd || exit
 
 echo "-- Deploy echoserver (test app) --"
 kubectl -n echoserver create -f deploy/echo-server.yaml
