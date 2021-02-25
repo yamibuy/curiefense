@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -326,6 +327,15 @@ const (
 }
 	`
 
+	KIBANA_INDEX_PATTERN = `
+{
+  "attributes": {
+    "timeFieldName": "@timestamp",
+    "title": "{{.AccessLogIndexName}}*"
+  }
+}
+	`
+
 	METRICS_ES_PREFIX   = "curiemetrics"
 	ACCESSLOG_ES_PREFIX = "curieaccesslog"
 )
@@ -333,6 +343,7 @@ const (
 type ElasticsearchConfig struct {
 	Enabled            bool   `mapstructure:"enabled"`
 	Url                string `mapstructure:"url"`
+	KibanaUrl          string `mapstructure:"kibana_url"`
 	Initialize         bool   `mapstructure:"initialize"`
 	Overwrite          bool   `mapstructure:"overwrite"`
 	AccessLogIndexName string `mapstructure:"accesslog_index_name"`
@@ -360,6 +371,49 @@ func (l ElasticsearchLogger) getESClient() *elasticsearch.Client {
 		time.Sleep(time.Second)
 	}
 	return l.client
+}
+
+func (l *ElasticsearchLogger) ConfigureKibana() {
+
+	var ktpl bytes.Buffer
+	gTpl := template.Must(template.New("it").Parse(KIBANA_INDEX_PATTERN))
+	gTpl.Execute(&ktpl, l.config)
+
+	body := bytes.NewReader(ktpl.Bytes())
+
+	log.Printf("[DEBUG]: configuring kibana")
+	kbUrl := fmt.Sprintf("%s/api/saved_objects/index-pattern/%s*", l.config.KibanaUrl, l.config.AccessLogIndexName)
+
+	client := http.Client{
+		Timeout: time.Duration(5 * time.Second),
+	}
+
+	req, err := http.NewRequest("POST", kbUrl, body)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("kbn-xsrf", "true")
+
+	for i := 0; i < 60; i++ {
+
+		rst, err := client.Do(req)
+
+		if err == nil && rst.StatusCode == 200 {
+			log.Printf("[INFO]: kibana index pattern created %s", kbUrl)
+			break
+		}
+
+		if rst.StatusCode == 409 {
+			log.Printf("[INFO]: kibana index pattern already exists %s", kbUrl)
+			break
+		}
+
+		log.Printf("[ERROR]: kibana index pattern creation failed (retrying in 5s) %s %v %v", kbUrl, err, rst)
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
@@ -465,6 +519,10 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 			log.Printf("[ERROR] index template creation failed %v %v", err, resp)
 		}
 	}
+
+	// Attempt to configure Kibana's index patterns
+	// and dashboards in the background.
+	go l.ConfigureKibana()
 
 	return nil
 }
