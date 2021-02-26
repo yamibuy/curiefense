@@ -401,14 +401,16 @@ func (l *ElasticsearchLogger) ConfigureKibana() {
 
 		rst, err := client.Do(req)
 
-		if err == nil && rst.StatusCode == 200 {
-			log.Printf("[INFO]: kibana index pattern created %s", kbUrl)
-			break
-		}
+		if rst != nil {
+			if rst.StatusCode == 200 {
+				log.Printf("[INFO]: kibana index pattern created %s", kbUrl)
+				break
+			}
 
-		if rst.StatusCode == 409 {
-			log.Printf("[INFO]: kibana index pattern already exists %s", kbUrl)
-			break
+			if rst.StatusCode == 409 {
+				log.Printf("[INFO]: kibana index pattern already exists %s", kbUrl)
+				break
+			}
 		}
 
 		log.Printf("[ERROR]: kibana index pattern creation failed (retrying in 5s) %s %v %v", kbUrl, err, rst)
