@@ -29,11 +29,10 @@ if ! kubectl get namespaces|grep -q curiefense; then
     echo "curiefense namespace created"
 fi
 
-helm upgrade --install --namespace curiefense --reuse-values $HELM_ARGS \
+# shellcheck disable=SC2086
+if helm upgrade --install --namespace curiefense --reuse-values ${HELM_ARGS} \
     --set "global.settings.docker_tag=$DOCKER_TAG" \
     "${PARAMS[@]}" "$@" curiefense curiefense/
-
-if [[ $? -ne 0 ]];
 then
     echo "curiefense deployment failure... "
     kubectl --namespace curiefense describe pods

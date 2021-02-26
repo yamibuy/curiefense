@@ -62,7 +62,7 @@ kubectl -n echoserver create -f deploy/echo-server.yaml
 runtime="5 minute"
 endtime=$(date -ud "$runtime" +%s)
 
-while [[ ! $(curl -fsS "http://$(minikube ip):30081/productpage" | grep "command=GET" ) ]];
+while ! curl -fsS "http://$(minikube ip):30081/productpage" | grep -q "command=GET";
 do
     if [[ $(date -u +%s) -ge $endtime ]];
     then

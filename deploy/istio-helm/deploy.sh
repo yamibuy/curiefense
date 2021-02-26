@@ -29,14 +29,13 @@ if [ -n "$NOPULL" ]; then
     PARAMS+=("--set" "global.imagePullPolicy=Never")
 fi
 
-helm upgrade --install --namespace istio-system --reuse-values \
+# shellcheck disable=SC2086
+if helm upgrade --install --namespace istio-system --reuse-values \
     $HELM_ARGS \
     -f chart/custom/enable-waf-ingress.yaml \
     --set "global.proxy.gw_image=curiefense/curieproxy-istio:$DOCKER_TAG" \
     --set "global.proxy.curiesync_image=curiefense/curiesync:$DOCKER_TAG" \
     "${PARAMS[@]}" "$@" istio-cf chart/
-
-if [[ $? -ne 0 ]];
 then
     echo "istio deployment failure... "
     kubectl --namespace istio-system describe pods
