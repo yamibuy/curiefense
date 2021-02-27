@@ -6,11 +6,11 @@
 # (cd ../curiefense/curieconf/client ; pip3 install .)
 #
 # To run this with minikube (does not support IPv6):
-# pytest --base-protected-url http://$(minikube ip):30081 --base-conf-url http://$(minikube ip):30000/api/v1/ --base-ui-url http://$(minikube ip):30080 .      # pylint: disable=line-too-long
+#
+# pytest --base-protected-url http://$(minikube ip):30081 --base-conf-url http://$(minikube ip):30000/api/v1/ --base-ui-url http://$(minikube ip):30080 --elasticsearch-url http://$IP:30200 .      # pylint: disable=line-too-long
 #
 # To run this with docker-compose:
-# Wait until https://github.com/curiefense/curiefense/issues/48 is fixed
-# pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v1/ --base-ui-url http://localhost:30080 .      # pylint: disable=line-too-long
+# pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v1/ --base-ui-url http://localhost:30080 --elasticsearch-url http://localhost:9200 .      # pylint: disable=line-too-long
 
 # pylint: disable=too-many-lines,too-many-public-methods
 # pylint: disable=too-many-arguments,too-few-public-methods,too-many-statements
@@ -57,10 +57,13 @@ class CliHelper():
         indata = None
         if inputjson:
             indata = json.dumps(inputjson).encode("utf-8")
+
         process = subprocess.run(cmd, shell=False, input=indata, check=True,
-                                 capture_output=True)
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
         if process.stdout:
             logging.debug("CLI output: %s", process.stdout)
+
             try:
                 return json.loads(process.stdout.decode("utf-8"))
             except json.JSONDecodeError:
@@ -92,10 +95,11 @@ class CliHelper():
 
     def publish_and_apply(self):
         buckets = self.call("key get system publishinfo")
+
         for bucket in buckets["buckets"]:
             if bucket["name"] == "prod":
                 url = bucket["url"]
-        self.call(f"sync export master {url}")
+        self.call(f"tool publish master {url}")
         time.sleep(20)
 
 

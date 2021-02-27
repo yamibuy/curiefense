@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Change directory to this script's location
-cd "${0%/*}"
+cd "${0%/*}" || exit 1
 
 # Parameters should be passed as environment variables.
 # By default, builds and tags images locally, without pushing
@@ -13,6 +13,7 @@ BUILD_OPT=${BUILD_OPT:-}
 
 declare -A status
 
+GLOBALSTATUS=0
 GITTAG="$(git describe --tag --long --dirty)"
 DOCKER_DIR_HASH="$(git rev-parse --short=12 HEAD:curiefense)"
 DOCKER_TAG="${DOCKER_TAG:-$GITTAG-$DOCKER_DIR_HASH}"
@@ -28,7 +29,7 @@ else
 fi
 
 echo "-------"
-echo "Building images: ${IMAGES[@]}"
+echo "Building images: " "${IMAGES[@]}"
 echo "with tag       : $DOCKER_TAG"
 echo "-------"
 
@@ -37,16 +38,23 @@ for image in "${IMAGES[@]}"
 do
         IMG=${REPO}/$image
         echo "=================== $IMG:$DOCKER_TAG ====================="
+        # shellcheck disable=SC2086
         if tar -C "$image" -czh . | docker build -t "$IMG:$DOCKER_TAG" ${BUILD_OPT} -; then
             STB="ok"
             if [ -n "$PUSH" ]; then
-                docker push "$IMG:$DOCKER_TAG" && STP="ok" || STP="KO"
+                if docker push "$IMG:$DOCKER_TAG"; then
+                    STP="ok"
+                else
+                    STP="KO"
+                    GLOBALSTATUS=1
+                fi
             else
                 STP="SKIP"
             fi
         else
             STB="KO"
             STP="SKIP"
+            GLOBALSTATUS=1
         fi
         status[$image]="build=$STB  push=$STP"
 done
@@ -66,3 +74,4 @@ else
     echo "To deploy this set of images later, export \"DOCKER_TAG=$DOCKER_TAG\" before running deploy.sh or docker-compose up"
 fi
 
+exit $GLOBALSTATUS
