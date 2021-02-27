@@ -6,6 +6,7 @@ outputs:
         overwrite: true
         use_data_stream: true
         url: "http://elasticsearch:9200/"
+        kibana_url: "http://kibana:5601"
 
     - logstash:
         enabled: true
