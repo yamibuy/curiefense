@@ -30,7 +30,7 @@ if [ -n "$NOPULL" ]; then
 fi
 
 # shellcheck disable=SC2086
-if helm upgrade --install --namespace istio-system --reuse-values \
+if ! helm upgrade --install --namespace istio-system --reuse-values \
     $HELM_ARGS \
     -f chart/custom/enable-waf-ingress.yaml \
     --set "global.proxy.gw_image=curiefense/curieproxy-istio:$DOCKER_TAG" \

@@ -30,7 +30,7 @@ if ! kubectl get namespaces|grep -q curiefense; then
 fi
 
 # shellcheck disable=SC2086
-if helm upgrade --install --namespace curiefense --reuse-values ${HELM_ARGS} \
+if ! helm upgrade --install --namespace curiefense --reuse-values ${HELM_ARGS} \
     --set "global.settings.docker_tag=$DOCKER_TAG" \
     "${PARAMS[@]}" "$@" curiefense curiefense/
 then
