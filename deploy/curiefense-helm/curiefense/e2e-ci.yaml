@@ -6,7 +6,6 @@ global:
       redis: "1m"
       logstash: "1m"
       kibana: "1m"
-      logdb: "1m"
       uiserver: "1m"
       confserver-init: "1m"
       confserver-nginx: "1m"
@@ -27,8 +26,6 @@ global:
     # set to false to disable parts of this deployment, ex. if you prefer to use your own versions
     grafana: false
     prometheus: false
-    # postgres database to store logs. Can be replaced with AWS Aurora
-    logdb: false
     kibana: true
     fluentd: false
     logstash: true

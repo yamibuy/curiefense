@@ -23,43 +23,6 @@ services:
       - curieproxysslcrt
       - curieproxysslkey
 
-  logdb:
-    container_name: logdb
-    image: "curiefense/logdb:${DOCKER_TAG}"
-    restart: always
-    volumes:
-      - persistent_logdb:/logdb/data
-    environment:
-      - POSTGRES_READONLY_PASSWORD_FILE=/run/secrets/postgres_ro_password
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_superuser_password
-    networks:
-      - curiemesh
-    ports:
-      - "5432:5432"
-    secrets:
-      - postgres_ro_password
-      - postgres_superuser_password
-
-  curielogserver:
-    container_name: curielogserver
-    image: "curiefense/curielogserver:${DOCKER_TAG}"
-    restart: always
-    environment:
-      - CURIELOGSERVER_DBHOST=logdb
-      - CURIELOGSERVER_DBUSER=logserver_ro
-      - CURIELOGSERVER_DBPASSWORD_FILE=/run/secrets/postgres_ro_password
-    networks:
-      curiemesh:
-        aliases:
-          - curielogserver
-      confnet:
-        aliases:
-          - curielogserver
-    ports:
-      - "80:80"
-    secrets:
-      - postgres_ro_password
-
   confserver:
     container_name: confserver
     image: "curiefense/confserver:${DOCKER_TAG}"
@@ -134,10 +97,6 @@ services:
     image: "curiefense/curielogger:${DOCKER_TAG}"
     restart: always
     environment:
-      - CURIELOGGER_USES_POSTGRES=0
-      - CURIELOGGER_DBHOST=logdb
-      - CURIELOGGER_DBUSER=postgres
-      - CURIELOGGER_DBPASSWORD_FILE=/run/secrets/postgres_superuser_password
       - CURIELOGGER_OUTPUTS_LOGSTASH_ENABLED=true
       - CURIELOGGER_OUTPUTS_LOGSTASH_URL=http://logstash:5001/
       - CURIELOGGER_USES_FLUENTD=0
@@ -150,10 +109,6 @@ services:
     ports:
       - "9001:9001"
       - "2112:2112"
-    depends_on:
-      - logdb
-    secrets:
-      - postgres_superuser_password
 
   uiserver:
     container_name: uiserver
@@ -279,7 +234,6 @@ networks:
 
 volumes:
   # persistent volumes
-  persistent_logdb:
   persistent_confdb:
   persistent_elasticsearch:
   persistent_grafana:
@@ -303,8 +257,3 @@ secrets:
     file: "curiesecrets/curieproxy_ssl/site.crt"
   curieproxysslkey:
     file: "curiesecrets/curieproxy_ssl/site.key"
-  postgres_ro_password:
-    file: "curiesecrets/logdb/ro_password.txt"
-  postgres_superuser_password:
-    file: "curiesecrets/logdb/postgres_password.txt"
-
