@@ -898,8 +898,10 @@ func main() {
 	var loggers []Logger
 
 	// Prometheus
-	prom := promLogger{logger{name: "prometheus", channel: make(chan LogEntry, config.ChannelCapacity)}}
-	loggers = append(loggers, &prom)
+	if check_env_flag("CURIELOGGER_METRICS_PROMETHEUS_ENABLED") {
+		prom := promLogger{logger{name: "prometheus", channel: make(chan LogEntry, config.ChannelCapacity)}}
+		loggers = append(loggers, &prom)
+	}
 
 	// PostgreSQL
 	if check_env_flag("CURIELOGGER_USES_POSTGRES") {
