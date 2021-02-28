@@ -297,5 +297,5 @@ function inspect3(handle)
     log_request(request_map)
 end
 
-inspect = inspect0
+inspect = _inspect
 
