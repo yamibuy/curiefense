@@ -41,7 +41,7 @@ import Utils from '@/assets/Utils.ts'
 import Vue, {PropType, VueConstructor} from 'vue'
 
 export type AutocompleteSuggestion = {
-  prefix: string
+  prefix?: string
   value: string
 }
 
@@ -175,7 +175,7 @@ export default (Vue as VueConstructor<Vue & {
     suggestionClick(index: number) {
       this.clearInputBlurredTimeout()
       this.focusedSuggestionIndex = index
-      this.selectValue()
+      this.selectValue(!this.autoFocus)
       if (this.autoFocus) {
         // Putting the focus at the end of the queue so the suggestion focus event would finish beforehand
         setImmediate(() => {
