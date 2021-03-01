@@ -41,8 +41,12 @@
                 </td>
                 <td class="is-size-7 width-20px">
                   <a title="remove entry"
+                     tabindex="0"
                      class="is-small has-text-grey remove-entry-button"
-                     @click="removeTag(operation, idx)">
+                     @click="removeTag(operation, idx)"
+                     @keypress.space.prevent
+                     @keypress.space="removeTag(operation, idx)"
+                     @keypress.enter="removeTag(operation, idx)">
                     &ndash;
                   </a>
                 </td>
@@ -60,8 +64,12 @@
                 </td>
                 <td class="is-size-7 width-20px">
                   <a title="add new entry"
+                     tabindex="0"
                      class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
-                     @click="openTagInput(operation)">
+                     @click="openTagInput(operation)"
+                     @keypress.space.prevent
+                     @keypress.space="openTagInput(operation)"
+                     @keypress.enter="openTagInput(operation)">
                     +
                   </a>
                 </td>
@@ -99,13 +107,13 @@ export default Vue.extend({
   data() {
     return {
       operations: ['force_deny', 'bypass', 'allow_bot', 'deny_bot', 'allow', 'deny'] as ACLPolicyFilter[],
-      titles: DatasetsUtils.Titles,
+      titles: DatasetsUtils.titles,
       addNewColName: null,
     }
   },
   computed: {
     localDoc(): ACLPolicy {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
     },
 
     duplicateTags(): Dictionary<string> {
@@ -147,11 +155,8 @@ export default Vue.extend({
     },
 
     addNewEntry(section: ACLPolicyFilter, entry: string) {
-      entry = entry.trim()
-      if (entry && entry.length > 2) {
-        this.localDoc[section].push(entry)
-        this.emitDocUpdate()
-      }
+      this.localDoc[section].push(entry)
+      this.emitDocUpdate()
     },
 
     openTagInput(section: ACLPolicyFilter) {

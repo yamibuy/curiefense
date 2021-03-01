@@ -1,5 +1,4 @@
 import RequestsUtils from '../../assets/RequestsUtils'
-import DatasetsUtils from '../../assets/DatasetsUtils'
 import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals'
 import * as bulmaToast from 'bulma-toast'
 import {Options} from 'bulma-toast'
@@ -191,11 +190,11 @@ describe('RequestsUtils.ts', () => {
     })
   }
 
-  const sendRequestBaseUrl = `${DatasetsUtils.ConfAPIRoot}/${DatasetsUtils.ConfAPIVersion}/`
+  const sendRequestBaseUrl = `${RequestsUtils.confAPIRoot}/${RequestsUtils.confAPIVersion}/`
   const sendRequestUrlTrail = 'configs/master/'
   buildFuncDescribe(RequestsUtils.sendRequest, sendRequestBaseUrl, sendRequestUrlTrail)
 
-  const sendLogsRequestBaseUrl = `${DatasetsUtils.LogsAPIRoot}/${DatasetsUtils.LogsAPIVersion}/`
+  const sendLogsRequestBaseUrl = `${RequestsUtils.logsAPIRoot}/${RequestsUtils.logsAPIVersion}/`
   const sendLogsRequestUrlTrail = 'exec/'
   buildFuncDescribe(RequestsUtils.sendLogsRequest, sendLogsRequestBaseUrl, sendLogsRequestUrlTrail)
 })

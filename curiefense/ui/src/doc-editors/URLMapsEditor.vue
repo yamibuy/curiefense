@@ -29,7 +29,10 @@
                          class="input is-small"
                          placeholder="(api|service).company.(io|com)"
                          @change="emitDocUpdate"
+                         @input="validateInput($event, isSelectedDomainMatchValid)"
                          v-model="localDoc.match"
+                         :disabled="localDoc.id === '__default__'"
+                         :readonly="localDoc.id === '__default__'"
                          title="Enter a regex to match hosts headers (domain names)">
                   <span class="icon is-small is-left has-text-grey"><i class="fas fa-code"></i></span>
                 </div>
@@ -117,15 +120,20 @@
                               <label class="label is-small">
                                 Match
                               </label>
-                              <div class="control">
+                              <div class="control has-icons-left">
                                 <input class="input is-small" type="text"
                                        @change="emitDocUpdate"
-                                       title="Match"
-                                       placeholder="matching domain(s) regex"
+                                       @input="validateInput($event, isSelectedMapEntryMatchValid(idx))"
+                                       title="A unique matching regex value, not overlapping other URL Map definitions"
+                                       placeholder="Matching domain(s) regex"
                                        required
-                                       :disabled="mapEntry.match === '__default__'"
-                                       :readonly="mapEntry.match === '__default__'"
+                                       :disabled="localDoc.id === '__default__' && initialMapEntryMatch === '/'"
+                                       :readonly="localDoc.id === '__default__' && initialMapEntryMatch === '/'"
+                                       ref="mapEntryMatch"
                                        v-model="mapEntry.match">
+                                <span class="icon is-small is-left has-text-grey">
+                                  <i class="fas fa-code"></i>
+                                </span>
                               </div>
                             </div>
                             <hr/>
@@ -154,7 +162,11 @@
                                              limitRuleNames.length > mapEntry.limit_ids.length"
                                        class="has-text-grey-dark is-small"
                                        title="Add new"
-                                       @click="limitNewEntryModeMapEntryId = idx">
+                                       tabindex="0"
+                                       @click="limitNewEntryModeMapEntryId = idx"
+                                       @keypress.space.prevent
+                                       @keypress.space="limitNewEntryModeMapEntryId = idx"
+                                       @keypress.enter="limitNewEntryModeMapEntryId = idx">
                                       <span class="icon is-small"><i class="fas fa-plus"></i></span>
                                     </a>
                                   </th>
@@ -185,8 +197,12 @@
                                     {{ limitDetails(limitId).ttl }}
                                   </td>
                                   <td class="has-text-centered is-size-7 width-60px">
-                                    <a class="is-small has-text-grey" title="remove entry"
-                                       @click="removeLimitEntry(mapEntry, idx)">
+                                    <a class="is-small has-text-grey" title="Remove entry"
+                                       tabindex="0"
+                                       @click="removeLimitEntry(mapEntry, idx)"
+                                       @keypress.space.prevent
+                                       @keypress.space="removeLimitEntry(mapEntry, idx)"
+                                       @keypress.enter="removeLimitEntry(mapEntry, idx)">
                                       remove
                                     </a>
                                   </td>
@@ -207,7 +223,11 @@
                                   </td>
                                   <td class="has-text-centered is-size-7 width-60px">
                                     <a class="is-small has-text-grey" title="Add this entry"
-                                       @click="addLimitEntry(mapEntry, limitMapEntryId)">
+                                       tabindex="0"
+                                       @click="addLimitEntry(mapEntry, limitMapEntryId)"
+                                       @keypress.space.prevent
+                                       @keypress.space="addLimitEntry(mapEntry, limitMapEntryId)"
+                                       @keypress.enter="addLimitEntry(mapEntry, limitMapEntryId)">
                                       add
                                     </a>
                                   </td>
@@ -268,12 +288,12 @@
                           </div>
                           <div class="column is-4">
                             <div class="field">
-                              <label class="label is-small">WAF Profile</label>
+                              <label class="label is-small">WAF Policy</label>
                               <div class="control is-expanded">
                                 <div class="select is-fullwidth is-small">
                                   <select v-model="mapEntry.waf_profile"
                                           @change="emitDocUpdate"
-                                          title="WAF profile">
+                                          title="WAF policy">
                                     <option v-for="waf in wafProfileNames"
                                             :value="waf[0]"
                                             :key="waf[0]">
@@ -294,13 +314,13 @@
                             <hr/>
                             <div class="field">
                               <label class="label is-small">
-                                ACL Profile
+                                ACL Policy
                               </label>
                               <div class="control is-expanded">
                                 <div class="select is-fullwidth is-small">
                                   <select v-model="mapEntry.acl_profile"
                                           @change="emitDocUpdate"
-                                          title="ACL profile">
+                                          title="ACL policy">
                                     <option v-for="acl in aclProfileNames" :value="acl[0]" :key="acl[0]">
                                       {{ acl[1] }}
                                     </option>
@@ -318,7 +338,7 @@
                             </div>
                             <hr/>
                             <div class="field">
-                              <button title="Create new profile based on this one"
+                              <button title="Create a new profile based on this one"
                                       class="button is-small is-pulled-left is-light"
                                       @click="addNewProfile(mapEntry, idx)">
                                 <span class="icon"><i class="fas fa-code-branch"></i></span>
@@ -356,10 +376,12 @@ import RequestsUtils from '@/assets/RequestsUtils.ts'
 import Vue, {VueConstructor} from 'vue'
 import {ACLPolicy, LimitRuleType, RateLimit, URLMap, URLMapEntryMatch, WAFPolicy} from '@/types'
 import {AxiosResponse} from 'axios'
+import Utils from '@/assets/Utils'
 
 export default (Vue as VueConstructor<Vue & {
   $refs: {
-    profileName: InstanceType<typeof HTMLInputElement>
+    profileName: HTMLInputElement[]
+    mapEntryMatch: HTMLInputElement[]
   }
 }>).extend({
   name: 'URLMapsEditor',
@@ -377,13 +399,16 @@ export default (Vue as VueConstructor<Vue & {
       mapEntryIndex: -1,
 
       // for URLMap drop downs
-      wafProfileNames: [] as [string, string][],
-      aclProfileNames: [] as [string, string][],
+      wafProfileNames: [] as [WAFPolicy['id'], WAFPolicy['name']][],
+      aclProfileNames: [] as [ACLPolicy['id'], ACLPolicy['name']][],
       limitRuleNames: [] as RateLimit[],
+      domainNames: [] as URLMap['match'][],
+      entriesMatchNames: [] as URLMapEntryMatch['match'][],
 
       limitNewEntryModeMapEntryId: null,
       limitMapEntryId: null,
-
+      initialDocDomainMatch: '',
+      initialMapEntryMatch: '',
       upstreams: [],
 
       rateLimitRecommendation: null,
@@ -396,13 +421,50 @@ export default (Vue as VueConstructor<Vue & {
 
   computed: {
     localDoc(): URLMap {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
+    },
+
+    isFormInvalid(): boolean {
+      const isDomainMatchValid = this.isSelectedDomainMatchValid()
+      // Entries are reverted to valid state on close, so if no entry is opened they are valid
+      const isCurrentEntryMatchValid = this.mapEntryIndex === -1 ||
+          this.isSelectedMapEntryMatchValid(this.mapEntryIndex)
+      return !isDomainMatchValid || !isCurrentEntryMatchValid
     },
   },
 
   methods: {
     emitDocUpdate(): void {
       this.$emit('update:selectedDoc', this.localDoc)
+    },
+
+    emitCurrentDocInvalidity(): void {
+      this.$emit('form-invalid', this.isFormInvalid)
+    },
+
+    validateInput(event: Event, validator: Function | boolean) {
+      const isValid = Utils.validateInput(event, validator)
+      if (!isValid) {
+        this.$emit('form-invalid', true)
+      } else {
+        this.emitCurrentDocInvalidity()
+      }
+    },
+
+    isSelectedDomainMatchValid(): boolean {
+      const newDomainMatch = this.localDoc.match?.trim()
+      const isDomainMatchEmpty = newDomainMatch === ''
+      const isDomainMatchDuplicate = this.domainNames.includes(
+          newDomainMatch) ? this.initialDocDomainMatch !== newDomainMatch : false
+      return !isDomainMatchEmpty && !isDomainMatchDuplicate
+    },
+
+    isSelectedMapEntryMatchValid(index: number): boolean {
+      const newMapEntryMatch = this.localDoc.map[index].match.trim()
+      const isMapEntryMatchEmpty = newMapEntryMatch === ''
+      const isMapEntryMatchDuplicate = this.entriesMatchNames.includes(
+          newMapEntryMatch) ? this.initialMapEntryMatch !== newMapEntryMatch : false
+      return !isMapEntryMatchEmpty && !isMapEntryMatchDuplicate
     },
 
     aclProfileName(id: string): [string, string] {
@@ -435,21 +497,39 @@ export default (Vue as VueConstructor<Vue & {
 
     addNewProfile(map: URLMapEntryMatch, idx: number) {
       const mapEntry = _.cloneDeep(map)
+      const randomUniqueString = DatasetsUtils.generateUUID2()
       mapEntry.name = 'New Security Profile'
-      mapEntry.match = '/new/path/to/match/profile'
+      mapEntry.match = `/new/path/to/match/profile/${randomUniqueString}`
 
+      // reverting the entry match to a stable and valid state if invalid
+      if (!this.isSelectedMapEntryMatchValid(idx)) {
+        this.localDoc.map[idx].match = this.initialMapEntryMatch
+        Utils.clearInputValidationClasses(this.$refs.mapEntryMatch[0])
+        this.emitCurrentDocInvalidity()
+      }
       this.localDoc.map.splice(idx, 0, mapEntry)
       this.emitDocUpdate()
-      const element = this.$refs.profileName
-      element.focus()
+      const element = this.$refs.profileName[0]
+      this.initialMapEntryMatch = mapEntry.match
+      this.entriesMatchNames = _.map(this.localDoc.map, 'match')
+      this.clearRateLimitRecommendation()
       // Pushing the select action to the end of queue in order for the new profile to be rendered beforehand
-      setTimeout(() => {
+      setImmediate(() => {
         element.select()
-      }, 0)
+        element.focus()
+      })
     },
 
     changeSelectedMapEntry(index: number) {
       this.mapEntryIndex = (this.mapEntryIndex === index ? -1 : index)
+      // reverting the entry match to a stable and valid state if invalid on close
+      if (this.mapEntryIndex === -1 && !this.isSelectedMapEntryMatchValid(index)) {
+        this.localDoc.map[index].match = this.initialMapEntryMatch
+        Utils.clearInputValidationClasses(this.$refs.mapEntryMatch[0])
+        this.emitCurrentDocInvalidity()
+      }
+      this.initialMapEntryMatch = this.localDoc.map[index].match
+      this.entriesMatchNames = _.map(this.localDoc.map, 'match')
       this.clearRateLimitRecommendation()
     },
 
@@ -513,7 +593,7 @@ export default (Vue as VueConstructor<Vue & {
       if (this.isRateLimitReferencedElsewhere(this.rateLimitAnalyzed.id, this.mapEntryAnalyzed)) {
         // ID is referenced, copy rate limit
         recommendedRateLimit.name = 'copy of ' + recommendedRateLimit.name
-        recommendedRateLimit.id = DatasetsUtils.convertToUUID2()
+        recommendedRateLimit.id = DatasetsUtils.generateUUID2()
         RequestsUtils.sendRequest('POST',
             `configs/${this.selectedBranch}/d/ratelimits/e/${recommendedRateLimit.id}`).then(() => {
           _.remove(this.mapEntryAnalyzed.limit_ids, (id) => {
@@ -551,7 +631,9 @@ export default (Vue as VueConstructor<Vue & {
       const branch = this.selectedBranch
 
       RequestsUtils.sendRequest('GET',
-          `configs/${branch}/d/wafpolicies/`).then((response: AxiosResponse<WAFPolicy[]>) => {
+          `configs/${branch}/d/wafpolicies/`,
+          null,
+          {headers: {'x-fields': 'id, name'}}).then((response: AxiosResponse<WAFPolicy[]>) => {
         this.wafProfileNames = _.sortBy(_.map(response.data, (entity) => {
           return [entity.id, entity.name]
         }), (e) => {
@@ -560,7 +642,9 @@ export default (Vue as VueConstructor<Vue & {
       })
 
       RequestsUtils.sendRequest('GET',
-          `configs/${branch}/d/aclpolicies/`).then((response: AxiosResponse<ACLPolicy[]>) => {
+          `configs/${branch}/d/aclpolicies/`,
+          null,
+          {headers: {'x-fields': 'id, name'}}).then((response: AxiosResponse<ACLPolicy[]>) => {
         this.aclProfileNames = _.sortBy(_.map(response.data, (entity) => {
           return [entity.id, entity.name]
         }), (e) => {
@@ -571,6 +655,17 @@ export default (Vue as VueConstructor<Vue & {
       RequestsUtils.sendRequest('GET',
           `configs/${branch}/d/ratelimits/`).then((response: AxiosResponse<RateLimit[]>) => {
         this.limitRuleNames = response.data
+      })
+    },
+
+    urlMapsDomainMatches() {
+      const branch = this.selectedBranch
+
+      RequestsUtils.sendRequest('GET',
+          `configs/${branch}/d/urlmaps/`,
+          null,
+          {headers: {'x-fields': 'match'}}).then((response: AxiosResponse<URLMap[]>) => {
+        this.domainNames = _.map(response.data, 'match')
       })
     },
 
@@ -593,8 +688,12 @@ export default (Vue as VueConstructor<Vue & {
 
   watch: {
     selectedDoc: {
-      handler: function() {
-        this.wafacllimitProfileNames()
+      handler: function(val, oldVal) {
+        if (!val || !oldVal || val.id !== oldVal.id) {
+          this.wafacllimitProfileNames()
+          this.urlMapsDomainMatches()
+          this.initialDocDomainMatch = this.selectedDoc.match
+        }
       },
       immediate: true,
       deep: true,

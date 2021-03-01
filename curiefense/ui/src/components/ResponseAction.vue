@@ -59,14 +59,16 @@
               @change="emitActionUpdate"
               title="Status code"
               placeholder="Status code">
-          <input
-              v-if="localAction && localAction.type === 'ban'"
-              class="input is-small"
-              type="text"
-              v-model="localAction.params.ttl"
-              @change="emitActionUpdate"
-              title="Duration"
-              placeholder="Duration">
+          <span v-if="localAction && localAction.type === 'ban'"
+                class="suffix seconds-suffix">
+            <input
+                class="input is-small"
+                type="text"
+                v-model="localAction.params.ttl"
+                @change="emitActionUpdate"
+                title="Duration"
+                placeholder="Duration">
+          </span>
           <input
               v-if="localAction && localAction.type === 'request_header'"
               class="input is-small"
@@ -127,9 +129,18 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import Vue, {PropType} from 'vue'
 import {ResponseActionType} from '@/types'
+
+export const responseActions = {
+  'default': {'title': '503 Service Unavailable'},
+  'challenge': {'title': 'Challenge'},
+  'monitor': {'title': 'Tag Only'},
+  'response': {'title': 'Response', 'params': {'status': '', 'content': ''}},
+  'redirect': {'title': 'Redirect', 'params': {'status': '30[12378]', 'location': 'https?://.+'}},
+  'ban': {'title': 'Ban', 'params': {'ttl': '[0-9]+', 'action': {'type': 'default', 'params': {}}}},
+  'request_header': {'title': 'Header', 'params': {'headers': ''}},
+}
 
 export default Vue.extend({
   name: 'ResponseAction',
@@ -157,14 +168,14 @@ export default Vue.extend({
 
   data() {
     return {
-      options: _.pickBy({...DatasetsUtils.ResponseActions}, (value, key) => {
+      options: _.pickBy({...responseActions}, (value, key) => {
         return !this.ignore || !this.ignore.includes(key)
       }),
     }
   },
   computed: {
     localAction(): ResponseActionType {
-      return JSON.parse(JSON.stringify(this.action || {}))
+      return _.cloneDeep(this.action)
     },
 
     labelDisplayedInline(): boolean {
@@ -175,31 +186,39 @@ export default Vue.extend({
     emitActionUpdate() {
       this.$emit('update:action', this.localAction)
     },
-
-    normalizeAction() {
-      // adding necessary fields to action field
-      const normalizedAction: ResponseActionType = {
-        ...{
-          params: {
-            action: {
-              type: 'default',
-              params: {},
-            },
-          },
-        },
-        ...this.localAction,
-      }
-      this.localAction.type = normalizedAction.type
-      this.localAction.params = normalizedAction.params
-      if (!_.isEqual(this.localAction, this.action)) {
-        this.emitActionUpdate()
-      }
-    },
   },
   watch: {
     action: {
-      handler: function() {
-        this.normalizeAction()
+      handler: function(value) {
+        if (!value) {
+          this.$emit('update:action', {
+            type: 'default',
+            params: {
+              action: {
+                type: 'default',
+                params: {},
+              },
+            },
+          })
+          return
+        }
+        // adding necessary fields to action field
+        const normalizedAction: ResponseActionType = {
+          ...{
+            params: {
+              action: {
+                type: 'default',
+                params: {},
+              },
+            },
+          },
+          ...this.localAction,
+        }
+        this.localAction.type = normalizedAction.type
+        this.localAction.params = normalizedAction.params
+        if (!_.isEqual(this.localAction, this.action)) {
+          this.emitActionUpdate()
+        }
       },
       immediate: true,
       deep: true,
@@ -212,5 +231,6 @@ export default Vue.extend({
 .response-actions .column.additional {
   padding-top: 0;
 }
+
 
 </style>

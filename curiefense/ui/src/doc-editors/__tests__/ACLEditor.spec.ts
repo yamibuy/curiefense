@@ -116,17 +116,6 @@ describe('ACLEditor.vue', () => {
     expect((wrapper.vm as any).localDoc.bypass.includes(newTag)).toBeTruthy()
   })
 
-  test('should not add tag when tag selected is 2 or less characters long', async () => {
-    const newBypassEntryButton = wrapper.findAll('.add-new-entry-button').at(1)
-    newBypassEntryButton.trigger('click')
-    await Vue.nextTick()
-    const newTag = 't'
-    const tagAutocompleteInput = wrapper.findComponent(TagAutocompleteInput)
-    tagAutocompleteInput.vm.$emit('tag-submitted', newTag)
-    await Vue.nextTick()
-    expect((wrapper.vm as any).localDoc.bypass.includes(newTag)).toBeFalsy()
-  })
-
   test('should remove tag from correct section when tag removed', async () => {
     const removeBypassEntryButton = wrapper.findAll('.remove-entry-button').at(3)
     removeBypassEntryButton.trigger('click')

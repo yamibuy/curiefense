@@ -4,7 +4,7 @@
        :class="{'is-active': suggestionsVisible}">
     <div class="dropdown-trigger">
       <input v-model="autocompleteValue"
-             title="Value"
+             :title="title"
              type="text"
              class="autocomplete-input input is-small"
              aria-haspopup="true"
@@ -15,6 +15,7 @@
              @keydown.up='focusPreviousSuggestion'
              @keydown.esc='closeDropdown'
              @input="openDropdown(); valueChanged()"
+             @blur="inputBlurred"
              ref="autocompleteInput"/>
     </div>
     <div class="dropdown-menu"
@@ -23,7 +24,7 @@
       <div class="dropdown-content">
         <a v-for="(suggestion, index) in matches"
            :class="{'is-active': isSuggestionFocused(index)}"
-           @click="suggestionClick(index)"
+           @mousedown="suggestionClick(index)"
            :key="index"
            class="dropdown-item">
           <span v-if="suggestion.prefix" v-html="suggestion.prefix"></span>
@@ -36,6 +37,7 @@
 </template>
 
 <script lang="ts">
+import Utils from '@/assets/Utils.ts'
 import Vue, {PropType, VueConstructor} from 'vue'
 
 export type AutocompleteSuggestion = {
@@ -47,7 +49,7 @@ export type AutocompleteInputEvents = 'keyup' | 'keydown' | 'keypress' | 'focus'
 
 export default (Vue as VueConstructor<Vue & {
   $refs: {
-    autocompleteInput: InstanceType<typeof HTMLInputElement>
+    autocompleteInput: HTMLInputElement
   }
 }>).extend({
   name: 'AutocompleteInput',
@@ -72,6 +74,15 @@ export default (Vue as VueConstructor<Vue & {
         return ['single', 'multiple'].includes(val.toLowerCase())
       },
       default: 'single',
+    },
+    // Minimum characters length allowed for the value
+    minimumValueLength: {
+      type: Number,
+      default: 0,
+    },
+    title: {
+      type: String,
+      default: 'Value',
     },
   },
 
@@ -102,6 +113,7 @@ export default (Vue as VueConstructor<Vue & {
       autocompleteValue: this.initialValue,
       open: false,
       focusedSuggestionIndex: -1,
+      inputBlurredTimeout: null,
     }
   },
 
@@ -135,7 +147,7 @@ export default (Vue as VueConstructor<Vue & {
           values[values.length - 1] = currentValue
           this.autocompleteValue = values.join(' ')
         } else {
-          this.autocompleteValue = (currentValue as any).trim()
+          this.autocompleteValue = currentValue.trim()
         }
       },
     },
@@ -161,19 +173,38 @@ export default (Vue as VueConstructor<Vue & {
     },
 
     suggestionClick(index: number) {
+      this.clearInputBlurredTimeout()
       this.focusedSuggestionIndex = index
       this.selectValue()
+      if (this.autoFocus) {
+        // Putting the focus at the end of the queue so the suggestion focus event would finish beforehand
+        setImmediate(() => {
+          this.$refs.autocompleteInput.focus()
+        })
+      }
     },
 
-    async selectValue() {
+    async selectValue(skipFocus?: boolean) {
       if (this.focusedSuggestionIndex !== -1) {
         this.currentValue = this.matches[this.focusedSuggestionIndex].value
       }
-      this.valueSubmitted()
-      this.valueChanged()
+      if (this.currentValue.length < this.minimumValueLength) {
+        if (!this.currentValue.length) {
+          return
+        }
+        Utils.failureToast(
+            `Selected tag [${this.currentValue}] is invalid! Tags must be at least three characters long.`,
+        )
+        this.currentValue = ''
+      } else {
+        this.valueSubmitted()
+        this.valueChanged()
+      }
       this.focusedSuggestionIndex = -1
-      this.$refs.autocompleteInput.focus()
-      this.open = false
+      if (!skipFocus) {
+        this.$refs.autocompleteInput.focus()
+      }
+      this.closeDropdown()
       if (this.clearInputAfterSelection) {
         this.autocompleteValue = ''
       }
@@ -195,6 +226,21 @@ export default (Vue as VueConstructor<Vue & {
       return index === this.focusedSuggestionIndex
     },
 
+    inputBlurred() {
+      // If the blur is due to a suggestion click, we want to cancel and skip this selection
+      this.inputBlurredTimeout = setImmediate(() => {
+        this.selectValue(true)
+      })
+    },
+
+    clearInputBlurredTimeout() {
+      clearTimeout(this.inputBlurredTimeout)
+    },
+
+  },
+
+  destroyed() {
+    this.clearInputBlurredTimeout()
   },
 })
 </script>

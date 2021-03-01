@@ -103,13 +103,13 @@
             </td>
             <td class="is-size-7 width-50px">
               <p class="control has-text-centered" v-if="rowOverIndex === index">
-                <a class="button is-small go-to-link-button"
+                <button class="button is-small go-to-link-button"
                    @click="goToDocument(doc)"
                    title="Go to document">
                     <span class="icon is-small">
                       <i class="fas fa-link"></i>
                     </span>
-                </a>
+                </button>
               </p>
             </td>
           </tr>
@@ -169,7 +169,7 @@ export default Vue.extend({
   props: {},
   components: {},
   data() {
-    const titles = DatasetsUtils.Titles
+    const titles = DatasetsUtils.titles
     // Order is important
     // We load [urlmaps] before [aclpolicies, wafpolicies, ratelimits] so we can pull all references correctly
     const componentsMap: {
@@ -384,15 +384,21 @@ export default Vue.extend({
     },
 
     buildURLMapConnections(doc: SearchDocument) {
-      const connectedACL = []
-      const connectedWAF = []
-      const connectedRateLimits = []
+      const connectedACL: string[] = []
+      const connectedWAF: string[] = []
+      const connectedRateLimits: string[] = []
       for (let i = 0; i < doc.map.length; i++) {
         const map = doc.map[i]
-        connectedACL.push(map.acl_profile)
-        connectedWAF.push(map.waf_profile)
+        if (!connectedACL.includes(map.acl_profile)) {
+          connectedACL.push(map.acl_profile)
+        }
+        if (!connectedWAF.includes(map.waf_profile)) {
+          connectedWAF.push(map.waf_profile)
+        }
         for (let j = 0; j < map.limit_ids.length; j++) {
-          connectedRateLimits.push(map.limit_ids[j])
+          if (!connectedRateLimits.includes(map.limit_ids[j])) {
+            connectedRateLimits.push(map.limit_ids[j])
+          }
         }
       }
       doc.connectedACL = connectedACL
