@@ -151,9 +151,9 @@ export default Vue.extend({
       selectedBucketNames: [],
       // buckets which are within an ongoing publish operation
       publishedBuckets: [],
-      apiRoot: DatasetsUtils.ConfAPIRoot,
-      apiVersion: DatasetsUtils.ConfAPIVersion,
-      titles: DatasetsUtils.Titles,
+      apiRoot: RequestsUtils.confAPIRoot,
+      apiVersion: RequestsUtils.confAPIVersion,
+      titles: DatasetsUtils.titles,
     }
   },
   computed: {
@@ -238,7 +238,11 @@ export default Vue.extend({
           return list.name === this.selectedBranchName
         })
         if (bucketList) {
-          this.selectedBucketNames = _.cloneDeep(bucketList.buckets)
+          this.selectedBucketNames = _.cloneDeep(_.filter(bucketList.buckets, (bucket) => {
+            return _.find(this.publishInfo.buckets, (publishInfoBucket) => {
+              return publishInfoBucket.name === bucket
+            })
+          }))
         }
       }
 

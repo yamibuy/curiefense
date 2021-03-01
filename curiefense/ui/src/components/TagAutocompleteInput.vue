@@ -6,6 +6,8 @@
       :clear-input-after-selection="clearInputAfterSelection"
       :auto-focus="autoFocus"
       :selection-type="selectionType"
+      :minimum-value-length="minimumTagLength"
+      :title="inputTitle"
       @value-changed="tagChanged"
       @value-submitted="tagSubmitted"
       @keyup="bubbleEvent('keyup', $event)"
@@ -18,7 +20,6 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import RequestsUtils from '@/assets/RequestsUtils.ts'
 import AutocompleteInput, {AutocompleteInputEvents, AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
 import Vue from 'vue'
@@ -67,17 +68,19 @@ export default Vue.extend({
       tag: this.initialTag,
       open: false,
       tagsSuggestions: [] as AutocompleteSuggestion[],
+      tagsSuggestionsLoading: false,
+      tagsAddedWhileSuggestionsLoading: [] as string[],
       focusedSuggestionIndex: -1,
       db: 'system',
       key: 'tags',
-
       defaultKeyData: defaultKeyData,
       defaultDatabaseData: {
         tags: defaultKeyData,
       },
+      minimumTagLength: 3,
 
-      apiRoot: DatasetsUtils.ConfAPIRoot,
-      apiVersion: DatasetsUtils.ConfAPIVersion,
+      apiRoot: RequestsUtils.confAPIRoot,
+      apiVersion: RequestsUtils.confAPIVersion,
     }
   },
 
@@ -94,22 +97,34 @@ export default Vue.extend({
       return currentTag
     },
 
+    inputTitle(): string {
+      return this.selectionType.toLowerCase() === 'multiple' ? 'Space separated tags' : 'Tag'
+    },
+
   },
 
   methods: {
 
     loadAutocompleteSuggestions() {
+      this.tagsSuggestionsLoading = true
       RequestsUtils.sendRequest('GET',
           `db/${this.db}/k/${this.key}/`).then((response: AxiosResponse<TagsDatabaseDocument>) => {
         this.buildTagsSuggestionsFromData(response.data)
+        this.tagsSuggestionsLoading = false
+        if (this.tagsAddedWhileSuggestionsLoading.length > 0) {
+          this.addUnknownTagsToDB(this.tagsAddedWhileSuggestionsLoading)
+          this.tagsAddedWhileSuggestionsLoading = []
+        }
       }).catch(() => {
         // key does not exist, check if db exists
-        RequestsUtils.sendRequest('GET', `db/${this.db}/`).then(() => {
+        RequestsUtils.sendRequest('GET', `db/${this.db}/`).then(async () => {
           // db exits, key does not exist -> create a key
-          RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, this.defaultKeyData)
-        }).catch(() => {
+          await RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, this.defaultKeyData)
+          this.tagsSuggestionsLoading = false
+        }).catch(async () => {
           // db doest not exist, key does not exist -> create a db with key
-          RequestsUtils.sendRequest('POST', `db/${this.db}/`, this.defaultDatabaseData)
+          await RequestsUtils.sendRequest('POST', `db/${this.db}/`, this.defaultDatabaseData)
+          this.tagsSuggestionsLoading = false
         })
       })
     },
@@ -151,25 +166,39 @@ export default Vue.extend({
       this.tag = newTag
       // if submitting a tag we don't recognize -> add it to the DB
       if (!this.tagsSuggestions.find((suggestion) => {
-        return suggestion.value === this.currentTag.toLowerCase()
+        return suggestion.value.toLowerCase() === this.currentTag.toLowerCase()
       })) {
-        this.addUnknownTagToDB(this.currentTag)
+        this.addUnknownTagsToDB([this.currentTag])
       }
       this.$emit('tag-submitted', this.tag)
     },
 
-    async addUnknownTagToDB(tag: string) {
-      tag = tag.toLowerCase()
-      // get current tags from db
+    async addUnknownTagsToDB(tags: string[]) {
+      // do not add tags to DB if DB hasn't loaded
+      if (this.tagsSuggestionsLoading) {
+        this.tagsAddedWhileSuggestionsLoading.concat(tags)
+        return
+      }
+      // get current tags from DB
       const response = await RequestsUtils.sendRequest('GET', `db/${this.db}/k/${this.key}/`)
       const document = {...this.defaultKeyData, ...response.data}
-      // add new tag to neutral group
-      document.neutral.push(tag)
+      // add each new tag to neutral group if does not exist anywhere
+      for (let i = 0; i < tags.length; i++) {
+        // set both the temporary tag and the tag in array to lowercase for easier logging later
+        const tag = tags[i] = tags[i].toLowerCase()
+        if ((!document.legitimate || _.findIndex(document.legitimate, (dbTag) => dbTag === tag) === -1) &&
+            (!document.malicious || _.findIndex(document.malicious, (dbTag) => dbTag === tag) === -1) &&
+            (!document.neutral || _.findIndex(document.neutral, (dbTag) => dbTag === tag) === -1)) {
+          document.neutral.push(tag)
+        }
+      }
       // save to DB
       RequestsUtils.sendRequest('PUT', `db/${this.db}/k/${this.key}/`, document).then(() => {
         // rebuild the tags suggestion list after a successful save
         this.buildTagsSuggestionsFromData(document)
-        console.log(`saved tag [${tag}] to database, it will now be available for autocomplete!`)
+        console.log(
+            `saved to database the following tags list: [${tags.join(',')}],it will now be available for autocomplete!`,
+        )
       })
     },
 

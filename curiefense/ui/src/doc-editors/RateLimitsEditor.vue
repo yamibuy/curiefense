@@ -74,7 +74,11 @@
                               :key="getOptionTextKey(option, index)"/>
                 <a title="Add new option rule"
                    class="is-text is-small is-size-7 ml-3 add-key-button"
-                   @click="addKey()">
+                   tabindex="0"
+                   @click="addKey()"
+                   @keypress.space.prevent
+                   @keypress.space="addKey()"
+                   @keypress.enter="addKey()">
                   New entry
                 </a>
                 <p class="has-text-danger is-size-7 ml-3 mt-3 key-invalid"
@@ -110,7 +114,11 @@
                   <div class="column is-narrow">
                     <a title="Add new option rule"
                        class="is-text is-small is-size-7 new-include-exclude-button"
-                       @click="newIncludeOrExcludeEntry.visible = !newIncludeOrExcludeEntry.visible">
+                       tabindex="0"
+                       @click="toggleNewIncludeExcludeEntryVisibility()"
+                       @keypress.space.prevent
+                       @keypress.space="toggleNewIncludeExcludeEntryVisibility()"
+                       @keypress.enter="toggleNewIncludeExcludeEntryVisibility()">
                       {{ newIncludeOrExcludeEntry.visible ? 'Cancel' : 'New entry' }}
                     </a>
                   </div>
@@ -229,12 +237,12 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import ResponseAction from '@/components/ResponseAction.vue'
 import LimitOption, {OptionObject} from '@/components/LimitOption.vue'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput.vue'
 import Vue from 'vue'
 import {LimitOptionType, LimitRuleType, RateLimit} from '@/types'
+import DatasetsUtils from '@/assets/DatasetsUtils'
 
 export default Vue.extend({
   name: 'RateLimits',
@@ -265,7 +273,7 @@ export default Vue.extend({
   },
   computed: {
     localDoc(): RateLimit {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
     },
 
     eventOption: {
@@ -411,11 +419,11 @@ export default Vue.extend({
     normalizeIncludesOrExcludes(value: OptionObject[], include: boolean) {
       // converting includes/excludes from component arrays to selectedDoc objects
       const includeOrExcludeKey = include ? 'include' : 'exclude'
-      const LimitRulesTypes = DatasetsUtils.LimitRulesTypes
+      const limitOptionsTypes = DatasetsUtils.limitOptionsTypes
       if (!this.localDoc[includeOrExcludeKey]) {
         this.$set(this.localDoc, includeOrExcludeKey, {})
       }
-      Object.keys(LimitRulesTypes).forEach((t) => {
+      Object.keys(limitOptionsTypes).forEach((t) => {
         this.$set(this.localDoc[includeOrExcludeKey], t, {})
       })
       value.forEach((el: OptionObject) => {
@@ -424,6 +432,10 @@ export default Vue.extend({
       if (!_.isEqual(this.localDoc, this.selectedDoc)) {
         this.emitDocUpdate()
       }
+    },
+
+    toggleNewIncludeExcludeEntryVisibility() {
+      this.newIncludeOrExcludeEntry.visible = !this.newIncludeOrExcludeEntry.visible
     },
   },
   mounted() {
@@ -453,12 +465,6 @@ export default Vue.extend({
 
 <style scoped lang="scss">
 
-@import 'node_modules/bulma/sass/utilities/initial-variables.sass';
-@import 'node_modules/bulma/sass/utilities/functions.sass';
-@import 'node_modules/bulma/sass/utilities/derived-variables.sass';
-@import 'node_modules/bulma/sass/utilities/mixins.sass';
-@import 'node_modules/bulma/sass/helpers/typography.sass';
-
 .form-label {
   padding-top: 0.25rem;
 }
@@ -467,11 +473,6 @@ export default Vue.extend({
   input {
     padding-right: 60px;
   }
-}
-
-.seconds-suffix::after {
-  @extend .is-size-7;
-  content: 'seconds';
 }
 
 </style>

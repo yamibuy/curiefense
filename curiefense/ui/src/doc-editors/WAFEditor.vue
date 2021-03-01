@@ -117,9 +117,33 @@
                   <td>
                     <div class="tabs is-centered">
                       <ul>
-                        <li :class=" tab === 'headers' ? 'is-active' : '' "><a @click='tab="headers"'>Headers</a></li>
-                        <li :class=" tab === 'cookies' ? 'is-active' : '' "><a @click='tab="cookies"'>Cookies</a></li>
-                        <li :class=" tab === 'args' ? 'is-active' : '' "><a @click='tab="args"'>Arguments</a></li>
+                        <li :class=" tab === 'headers' ? 'is-active' : '' ">
+                          <a tabindex="0"
+                             @click='tab="headers"'
+                             @keypress.space.prevent
+                             @keypress.space='tab="headers"'
+                             @keypress.enter='tab="headers"'>
+                            Headers
+                          </a>
+                        </li>
+                        <li :class=" tab === 'cookies' ? 'is-active' : '' ">
+                          <a tabindex="0"
+                             @click='tab="cookies"'
+                             @keypress.space.prevent
+                             @keypress.space='tab="cookies"'
+                             @keypress.enter='tab="cookies"'>
+                            Cookies
+                          </a>
+                        </li>
+                        <li :class=" tab === 'args' ? 'is-active' : '' ">
+                          <a tabindex="0"
+                             @click='tab="args"'
+                             @keypress.space.prevent
+                             @keypress.space='tab="args"'
+                             @keypress.enter='tab="args"'>
+                            Arguments
+                          </a>
+                        </li>
                       </ul>
                     </div>
                   </td>
@@ -134,16 +158,24 @@
                         <th class="has-text-centered">Matching Value</th>
                         <th class="has-text-centered">Restrict?</th>
                         <th class="has-text-centered">Mask?</th>
-                        <th class="has-text-centered">Exclude Sig</th>
+                        <th class="has-text-centered">Exclude WAF Rule</th>
                         <th class="has-text-centered">
                           <a v-show="newWAFLine !== tab"
                              class="has-text-grey-dark is-small" title="Add new parameter"
-                             @click="openAddNewParameter(tab)">
+                             tabindex="0"
+                             @click="openAddNewParameter(tab)"
+                             @keypress.space.prevent
+                             @keypress.space="openAddNewParameter(tab)"
+                             @keypress.enter="openAddNewParameter(tab)">
                             <span class="icon is-small"><i class="fas fa-plus"></i></span>
                           </a>
                           <a v-show="newWAFLine === tab"
                              class="has-text-grey-dark is-small" title="Cancel adding new parameter"
-                             @click="newWAFLine = null">
+                             tabindex="0"
+                             @click="newWAFLine = null"
+                             @keypress.space.prevent
+                             @keypress.space="newWAFLine = null"
+                             @keypress.enter="newWAFLine = null">
                             <span class="icon is-small"><i class="fas fa-minus"></i></span>
                           </a>
                         </th>
@@ -209,9 +241,12 @@
                           </label>
                         </td>
                         <td>
-                          <serialized-input :placeholder="'comma separated sig IDs'" :value="newEntry.exclusions"
-                                            :get-function="unpackExclusions" :set-function="packExclusions"
-                                            @blur="newEntry.exclusions = $event"></serialized-input>
+                          <serialized-input placeholder="Space separated rule IDs"
+                                            :value="newEntry.exclusions"
+                                            :get-function="unpackExclusions"
+                                            :set-function="packExclusions"
+                                            @blur="newEntry.exclusions = $event">
+                          </serialized-input>
                         </td>
                         <td class="has-text-centered">
                           <button title="Add new parameter" class="button is-light is-small" @click="addNewParameter">
@@ -254,8 +289,10 @@
                           </label>
                         </td>
                         <td>
-                          <serialized-input :placeholder="'comma separated sig IDs'" :value="entry.exclusions"
-                                            :get-function="unpackExclusions" :set-function="packExclusions"
+                          <serialized-input placeholder="Space separated rule IDs"
+                                            :value="entry.exclusions"
+                                            :get-function="unpackExclusions"
+                                            :set-function="packExclusions"
                                             @blur="entry.exclusions = $event">
                           </serialized-input>
                         </td>
@@ -305,8 +342,10 @@
                           </label>
                         </td>
                         <td>
-                          <serialized-input :placeholder="'comma separated sig IDs'" :value="entry.exclusions"
-                                            :get-function="unpackExclusions" :set-function="packExclusions"
+                          <serialized-input placeholder="Space separated rule IDs"
+                                            :value="entry.exclusions"
+                                            :get-function="unpackExclusions"
+                                            :set-function="packExclusions"
                                             @blur="entry.exclusions = $event">
                           </serialized-input>
                         </td>
@@ -363,14 +402,14 @@ export default Vue.extend({
       tab: 'args' as ArgsCookiesHeadersType,
       newWAFLine: null as ArgsCookiesHeadersType,
       newEntry: defaultNewEntry,
-      titles: DatasetsUtils.Titles,
+      titles: DatasetsUtils.titles,
       defaultNewEntry: defaultNewEntry,
     }
   },
 
   computed: {
     localDoc(): WAFPolicy {
-      return JSON.parse(JSON.stringify(this.selectedDoc))
+      return _.cloneDeep(this.selectedDoc)
     },
   },
 
@@ -399,13 +438,13 @@ export default Vue.extend({
         return ret
       }
 
-      return _.fromPairs(_.map(exclusions.split(','), (ex) => {
+      return _.fromPairs(_.map(exclusions.split(' '), (ex) => {
         return [ex.trim(), 1]
       }))
     },
 
     unpackExclusions(exclusions: string[]) {
-      return _.keys(exclusions).join(', ')
+      return _.keys(exclusions).join(' ')
     },
 
     genRowKey(tab: string, type: string, idx: number) {

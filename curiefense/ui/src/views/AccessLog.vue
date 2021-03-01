@@ -321,15 +321,12 @@ import Utils from '@/assets/Utils.ts'
 import Vue from 'vue'
 
 export default Vue.extend({
-
   name: 'AccessLog',
-  props: {},
-  components: {},
-
-
   data() {
-    return {
+    const accessLogSQL = `SELECT * FROM (SELECT *, CAST(row_to_json(row) as text) as json_row FROM logs row) rows`
+    const accessLogSQLSuffix = ' ORDER BY StartTime DESC LIMIT 2048'
 
+    return {
       loading: false,
 
       databaseRows: [],
@@ -338,11 +335,13 @@ export default Vue.extend({
       logFilterInput: '',
       logFilterInterval: '30 minutes',
       logFilterCriteria: '',
-      logFilterSQL: `${DatasetsUtils.ACCESSLOG_SQL} ${DatasetsUtils.ACCESSLOG_SQL_SUFFIX}`,
+      accessLogSQL: accessLogSQL,
+      accessLogSQLSuffix: accessLogSQLSuffix,
+      logFilterSQL: `${accessLogSQL} ${accessLogSQLSuffix}`,
 
-      apiRoot: DatasetsUtils.LogsAPIRoot,
-      apiVersion: DatasetsUtils.LogsAPIVersion,
-      titles: DatasetsUtils.Titles,
+      apiRoot: RequestsUtils.logsAPIRoot,
+      apiVersion: RequestsUtils.logsAPIVersion,
+      titles: DatasetsUtils.titles,
 
     }
   },
@@ -368,7 +367,7 @@ export default Vue.extend({
       }
 
       this.logFilterSQL =
-          `${DatasetsUtils.ACCESSLOG_SQL} ${this.logFilterCriteria} ${DatasetsUtils.ACCESSLOG_SQL_SUFFIX}`
+          `${this.accessLogSQL} ${this.logFilterCriteria} ${this.accessLogSQLSuffix}`
       this.loadDatabases()
     },
 
