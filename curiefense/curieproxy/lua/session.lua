@@ -16,16 +16,10 @@ local cjson       = require "cjson"
 
 local init          = globals.init
 
-<<<<<<< HEAD
-local acl_check     = acl.check
-local acl_check_bot = acl.check_bot
-local waf_check     = waf.check
-=======
 local waf_check         = waf.check
 local acl_check         = acl.check
 local limit_check       = limit.check
 local flowcontrol_check = flowcontrol.check
->>>>>>> controlflow
 
 local ACLNoMatch    = globals.ACLNoMatch
 local ACLForceDeny  = globals.ACLForceDeny
