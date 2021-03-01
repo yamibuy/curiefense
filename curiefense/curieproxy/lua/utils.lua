@@ -113,6 +113,7 @@ function map_metadata(metadata, map)
     for key, value in pairs(metadata) do
         map.attrs[key] = value
     end
+
 end
 
 function map_ip(headers, metadata, map)
@@ -175,6 +176,13 @@ function map_request(handle)
     map_metadata(metadata, map)
     map_ip(headers, metadata, map)
     map_args(map)
+
+    map.attrs.session_sequence_key = string.format(
+        "%s%s%s",
+        map.headers.host or map.attrs.authority,
+        map.attrs.method,
+        map.attrs.path
+    )
 
     return map
 end

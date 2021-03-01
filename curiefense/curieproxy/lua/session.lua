@@ -5,6 +5,7 @@ local waf           = require "lua.waf"
 local globals       = require "lua.globals"
 local utils         = require "lua.utils"
 local tagprofiler   = require "lua.tagprofiler"
+local flowcontrol   = require "lua.flowcontrol"
 local restysha1     = require "lua.resty.sha1"
 local limit         = require "lua.limit"
 local accesslog     = require "lua.accesslog"
@@ -15,8 +16,10 @@ local cjson       = require "cjson"
 
 local init          = globals.init
 
-local acl_check     = acl.check
-local waf_check     = waf.check
+local waf_check         = waf.check
+local acl_check         = acl.check
+local limit_check       = limit.check
+local flowcontrol_check = flowcontrol.check
 
 local ACLNoMatch    = globals.ACLNoMatch
 local ACLForceDeny  = globals.ACLForceDeny
@@ -38,7 +41,6 @@ local custom_response  = utils.custom_response
 local tag_lists     = tagprofiler.tag_lists
 
 local log_request   = accesslog.log_request
-local limit_check   = limit.check
 
 local challenge_verified = challenge.verified
 local challenge_phase01 = challenge.phase01
@@ -46,12 +48,10 @@ local challenge_phase02 = challenge.phase02
 
 local sfmt = string.format
 
-function match_urlmap(request_map)
+function match_urlmap(host, url, request_map)
     local default_map = nil
     local selected_map = nil
     local matched_path = "/"
-    local url = request_map.attrs.path
-    local host = request_map.headers.host or request_map.attrs.authority
     local handle = request_map.handle
 
     for _, profile in pairs(globals.URLMap) do
@@ -145,7 +145,7 @@ function inspect(handle)
 
     -- unified the following 3 into a single operaiton
     addentry(timeline, "3 match_urlmap")
-    local urlmap_entry, url_map = match_urlmap(request_map)
+    local urlmap_entry, url_map = match_urlmap(host, url, request_map)
 
     addentry(timeline, "4 profiles assignment")
     local acl_active        = urlmap_entry["acl_active"]
@@ -165,7 +165,10 @@ function inspect(handle)
         sfmt("wafname:%s", waf_profile.name)
     )
 
-    addentry(timeline, "6 session_profiling")
+    addentry(timeline, "6a flowcontrol")
+    flowcontrol_check(request_map)
+
+    addentry(timeline, "6b session_profiling")
     -- session profiling
     tag_lists(request_map)
 
