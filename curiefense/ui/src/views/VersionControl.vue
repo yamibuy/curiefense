@@ -301,9 +301,6 @@ export default Vue.extend({
     },
 
     deleteBranch() {
-      if (!this.isSelectedBranchDeleteNameValid) {
-        return
-      }
       RequestsUtils.sendRequest('DELETE', `configs/${this.selectedBranch}/`, null, null,
           `Branch [${this.selectedBranch}] deleted successfully!`,
           `Failed deleting branch [${this.selectedBranch}]!`).then(() => {
@@ -313,9 +310,6 @@ export default Vue.extend({
     },
 
     forkBranch() {
-      if (!this.isSelectedBranchForkNameValid) {
-        return
-      }
       const newBranchName = this.forkBranchName
       RequestsUtils.sendRequest('POST', `configs/${this.selectedBranch}/clone/${newBranchName}/`,
           {

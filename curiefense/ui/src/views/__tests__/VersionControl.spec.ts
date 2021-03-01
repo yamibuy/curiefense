@@ -5,12 +5,13 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 import {mount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
 import axios from 'axios'
+import {Branch} from '@/types'
 
 jest.mock('axios')
 
 describe('VersionControl.vue', () => {
   let wrapper: Wrapper<Vue>
-  let gitData: any[]
+  let gitData: Branch[]
   beforeEach(() => {
     gitData = [
       {

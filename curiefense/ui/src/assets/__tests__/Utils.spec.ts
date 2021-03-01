@@ -167,7 +167,7 @@ describe('Utils.ts', () => {
   describe('downloadFile function', () => {
     let fileName: string
     let fileType: string
-    let data: any
+    let data: Object
     beforeEach(() => {
       fileName = 'test'
       fileType = 'json'

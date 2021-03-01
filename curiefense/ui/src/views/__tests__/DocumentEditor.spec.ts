@@ -7,6 +7,7 @@ import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
+import {ACLPolicy, Branch, Commit, FlowControl, TagRule, URLMap, WAFPolicy} from '@/types'
 
 jest.mock('axios')
 
@@ -14,15 +15,16 @@ describe('DocumentEditor.vue', () => {
   let wrapper: Wrapper<Vue>
   let mockRoute: any
   let mockRouter: any
-  let gitData: any[]
-  let aclDocs: any[]
-  let aclDocsLogs: any[]
-  let aclGitOldVersion: any[]
-  let profilingListDocs: any[]
-  let profilingListDocsLogs: any[]
-  let urlMapsDocs: any[]
-  let urlMapsDocsLogs: any[]
-  let flowControlDocs: any[]
+  let gitData: Branch[]
+  let aclDocs: ACLPolicy[]
+  let aclDocsLogs: Commit[][]
+  let aclGitOldVersion: ACLPolicy[]
+  let profilingListDocs: TagRule[]
+  let profilingListDocsLogs: Commit[][]
+  let urlMapsDocs: URLMap[]
+  let urlMapsDocsLogs: Commit[][]
+  let flowControlDocs: FlowControl[]
+  let wafDocs: WAFPolicy[]
   beforeEach((done) => {
     gitData = [
       {
@@ -507,78 +509,37 @@ describe('DocumentEditor.vue', () => {
         'mdate': '2020-05-23T00:04:41',
         'notes': 'Tag API Requests',
         'active': true,
-        'entries_relation': 'OR',
-        'tags': [
-          'api',
-        ],
-        'entries': [
-          [
-            'headers',
-            [
-              'content-type',
-              '.*/(json|xml)',
-            ],
-            'content type',
-          ],
-          [
-            'headers',
-            [
-              'host',
-              '.?ap[ip]\\.',
-            ],
-            'app or api in domain name',
-          ],
-          [
-            'method',
-            '(POST|PUT|DELETE|PATCH)',
-            'Methods',
-          ],
-          [
-            'path',
-            '/api/',
-            'api path',
-          ],
-          [
-            'uri',
-            '/.+\\.json',
-            'URI JSON extention',
-          ],
-        ],
-      },
-      {
+        'tags': ['api'],
+        'action': {
+          'type': 'monitor',
+          'params': {},
+        },
+        'rule': {
+          'relation': 'OR',
+          'sections': [
+            {'relation': 'OR', 'entries': [['ip', '1.1.1.1', null]]},
+            {'relation': 'OR', 'entries': [['ip', '2.2.2.2', null]]},
+            {'relation': 'OR', 'entries': [['headers', ['headerrr', 'valueeee'], 'anooo']]}],
+        },
+      }, {
         'id': '07656fbe',
         'name': 'devop internal demo',
         'source': 'self-managed',
         'mdate': '2020-05-23T00:04:41',
         'notes': 'this is my own list',
         'active': false,
-        'entries_relation': 'OR',
-        'tags': [
-          'internal',
-          'devops',
-        ],
-        'entries': [
-          [
-            'ip',
-            '12.34.56.78/32',
-            'testers',
-          ],
-          [
-            'ip',
-            '98.76.54.0/24',
-            'monitoring',
-          ],
-          [
-            'ip',
-            '!5.4.3.2/32',
-            'old monitoring',
-          ],
-          [
-            'path',
-            '/test/app/status',
-            'monitoring path',
-          ],
-        ],
+        'tags': ['internal', 'devops'],
+        'action': {
+          'type': 'monitor',
+          'params': {},
+        },
+        'rule': {
+          'relation': 'OR',
+          'sections': [
+            {'relation': 'OR', 'entries': [['ip', '1.1.1.1', null]]},
+            {'relation': 'OR', 'entries': [['ip', '2.2.2.2', null]]},
+            {'relation': 'OR', 'entries': [['headers', ['headerrr', 'valueeee'], 'anooo']]}],
+        },
       },
     ]
     profilingListDocsLogs = [
@@ -629,6 +590,8 @@ describe('DocumentEditor.vue', () => {
     ]
     flowControlDocs = [
       {
+        'active': true,
+        'notes': '',
         'exclude': [],
         'include': ['all'],
         'name': 'flow control',
@@ -665,10 +628,25 @@ describe('DocumentEditor.vue', () => {
         'id': 'c03dabe4b9ca',
       },
     ]
+    wafDocs = [{
+      'id': '__default__',
+      'name': 'default waf',
+      'ignore_alphanum': true,
+      'max_header_length': 1024,
+      'max_cookie_length': 2048,
+      'max_arg_length': 1536,
+      'max_headers_count': 36,
+      'max_cookies_count': 42,
+      'max_args_count': 512,
+      'args': {'names': [], 'regex': []},
+      'headers': {'names': [], 'regex': []},
+      'cookies': {'names': [], 'regex': []},
+    }]
     jest.spyOn(axios.CancelToken, 'source').mockImplementation(() => {
       return {
         token: null,
-        cancel: () => {},
+        cancel: () => {
+        },
       }
     })
     jest.spyOn(axios, 'get').mockImplementation((path, config) => {
@@ -730,6 +708,15 @@ describe('DocumentEditor.vue', () => {
       }
       if (path === `/conf/api/v1/configs/${branch}/d/flowcontrol/e/c03dabe4b9ca/`) {
         return Promise.resolve({data: flowControlDocs[0]})
+      }
+      if (path === `/conf/api/v1/configs/${branch}/d/wafpolicies/`) {
+        if (config && config.headers && config.headers['x-fields'] === 'id, name') {
+          return Promise.resolve({data: _.map(wafDocs, (i) => _.pick(i, 'id', 'name'))})
+        }
+        return Promise.resolve({data: wafDocs})
+      }
+      if (path === `/conf/api/v1/configs/${branch}/d/wafpolicies/e/__default__/`) {
+        return Promise.resolve({data: wafDocs[0]})
       }
       if (path === '/conf/api/v1/configs/master/v/') {
         return Promise.resolve({data: gitData[0].logs})
@@ -920,7 +907,7 @@ describe('DocumentEditor.vue', () => {
     options.at(1).setSelected()
     // allow all requests to finish
     setImmediate(() => {
-      expect((branchSelection.element as any).selectedIndex).toEqual(1)
+      expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
       done()
     })
   })
@@ -937,7 +924,7 @@ describe('DocumentEditor.vue', () => {
     branchOptions.at(1).setSelected()
     // allow all requests to finish
     setImmediate(() => {
-      expect((docTypeSelection.element as any).selectedIndex).toEqual(2)
+      expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(2)
       done()
     })
   })
@@ -954,7 +941,7 @@ describe('DocumentEditor.vue', () => {
     branchOptions.at(1).setSelected()
     // allow all requests to finish
     setImmediate(() => {
-      expect((docSelection.element as any).selectedIndex).toEqual(1)
+      expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
       done()
     })
   })
@@ -966,7 +953,7 @@ describe('DocumentEditor.vue', () => {
     options.at(2).setSelected()
     // allow all requests to finish
     setImmediate(() => {
-      expect((docTypeSelection.element as any).selectedIndex).toEqual(2)
+      expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(2)
       done()
     })
   })
@@ -986,7 +973,7 @@ describe('DocumentEditor.vue', () => {
       options.at(1).setSelected()
       // allow all requests to finish
       setImmediate(() => {
-        expect((docSelection.element as any).selectedIndex).toEqual(1)
+        expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
         done()
       })
     })
@@ -1038,8 +1025,8 @@ describe('DocumentEditor.vue', () => {
   })
 
   test('should be able to add a new document', async () => {
-    const newDoc = DatasetsUtils.newDocEntryFactory.aclpolicies();
-    (newDoc.id as any) = expect.any(String)
+    const newDoc = DatasetsUtils.newDocEntryFactory.aclpolicies()
+    newDoc.id = expect.any(String)
     const postSpy = jest.spyOn(axios, 'post')
     postSpy.mockImplementation(() => Promise.resolve())
     const newDocumentButton = wrapper.find('.new-document-button')
@@ -1089,12 +1076,29 @@ describe('DocumentEditor.vue', () => {
     expect(deleteSpy).not.toHaveBeenCalled()
   })
 
-  test('should not be able to delete a document if it is referenced by a url map', async () => {
+  test('should not be able to delete an ACL Policy document if it is referenced by a url map', async () => {
     // switch to a different document
     const docSelection = wrapper.find('.doc-selection')
     docSelection.trigger('click')
     const options = docSelection.findAll('option')
     options.at(1).setSelected()
+    await Vue.nextTick()
+    const deleteSpy = jest.spyOn(axios, 'delete')
+    deleteSpy.mockImplementation(() => Promise.resolve());
+    (wrapper.vm as any).selectedDoc.id = '__default__'
+    const deleteDocumentButton = wrapper.find('.delete-document-button')
+    deleteDocumentButton.trigger('click')
+    await Vue.nextTick()
+    expect(deleteSpy).not.toHaveBeenCalled()
+  })
+
+  test('should not be able to delete an WAF Policy document if it is referenced by a url map', async () => {
+    // switch to WAF Policies
+    const docTypeSelection = wrapper.find('.doc-type-selection')
+    docTypeSelection.trigger('click')
+    const docTypeOptions = docTypeSelection.findAll('option')
+    docTypeOptions.at(5).setSelected()
+    await Vue.nextTick()
     await Vue.nextTick()
     const deleteSpy = jest.spyOn(axios, 'delete')
     deleteSpy.mockImplementation(() => Promise.resolve());
