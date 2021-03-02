@@ -440,7 +440,7 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 
 	if err != nil {
 		log.Printf("[ERROR] There was an error while querying the ILM Policies %v", err)
-		return nil
+		return err
 	}
 
 	var ilm map[string]json.RawMessage
@@ -475,7 +475,7 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 
 	if err != nil {
 		log.Printf("[ERROR] there was an error while querying the template %v", err)
-		return nil
+		return err
 	}
 
 	if l.config.Overwrite || tplExists.IsError() {
@@ -504,7 +504,7 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 
 		if err != nil {
 			log.Printf("[ERROR] there was an error while querying the template %v", err)
-			return nil
+			return err
 		}
 
 		if !iExists.IsError() {
@@ -519,6 +519,7 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 		resp, err := client.Indices.Create(indexName, client.Indices.Create.WithBody(bytes.NewReader(iTpl.Bytes())))
 		if err != nil || resp.IsError() {
 			log.Printf("[ERROR] index template creation failed %v %v", err, resp)
+			return err
 		}
 	}
 

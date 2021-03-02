@@ -486,7 +486,7 @@ func (l *logstashLogger) Configure(channel_capacity int) error {
 	if l.config.Elasticsearch.Url != "" {
 		log.Printf("[DEBUG] elasticsearch configs set, initializing configuration steps for %s", l.config.Elasticsearch.Url)
 		es := ElasticsearchLogger{config: l.config.Elasticsearch}
-		es.Configure(0)
+		return es.Configure(0)
 	}
 
 	return nil
@@ -594,7 +594,6 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 			var curieProxyLog CurieProxyLog
 
 			cfm := curiefense_meta.GetFields()
-			log.Printf("%v", cfm)
 			if rqinfo_s, ok := cfm["request.info"]; ok {
 				curiefense_json_string := rqinfo_s.GetStringValue()
 				err := json.Unmarshal([]byte(curiefense_json_string), &curieProxyLog)
@@ -820,11 +819,26 @@ func main() {
 		loggers = append(loggers, &prom)
 	}
 
+	// configRetry := func(logger Logger) {
+	// 	for i := 0; i < 60; i++ {
+	// 		err := logger.Configure(config.ChannelCapacity)
+
+	// 		if err == nil {
+	// 			loggers = append(loggers, logger)
+	// 			break
+	// 		}
+
+	// 		log.Printf("[ERROR]: failed to configure logger (retrying in 5s) %v %v", logger, err)
+	// 		time.Sleep(5 * time.Second)
+	// 	}
+	// }
+
 	for _, output := range config.Outputs {
 		// ElasticSearch
 		if output.Elasticsearch.Enabled {
 			log.Printf("[DEBUG] Elasticsearch enabled with URL: %s", output.Elasticsearch.Url)
 			es := ElasticsearchLogger{config: output.Elasticsearch}
+			// go configRetry(&es)
 			es.Configure(config.ChannelCapacity)
 			loggers = append(loggers, &es)
 		}
@@ -833,6 +847,7 @@ func main() {
 		if output.Logstash.Enabled {
 			log.Printf("[DEBUG] Logstash enabled with URL: %s", output.Logstash.Url)
 			ls := logstashLogger{config: output.Logstash}
+			// go configRetry(&ls)
 			ls.Configure(config.ChannelCapacity)
 			loggers = append(loggers, &ls)
 		}
