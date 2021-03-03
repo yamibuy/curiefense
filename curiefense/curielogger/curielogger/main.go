@@ -833,25 +833,22 @@ func main() {
 	// 	}
 	// }
 
-	for _, output := range config.Outputs {
-		// ElasticSearch
-		if output.Elasticsearch.Enabled {
-			log.Printf("[DEBUG] Elasticsearch enabled with URL: %s", output.Elasticsearch.Url)
-			es := ElasticsearchLogger{config: output.Elasticsearch}
-			// go configRetry(&es)
-			es.Configure(config.ChannelCapacity)
-			loggers = append(loggers, &es)
-		}
+	// ElasticSearch
+	if config.Outputs.Elasticsearch.Enabled {
+		log.Printf("[DEBUG] Elasticsearch enabled with URL: %s", config.Outputs.Elasticsearch.Url)
+		es := ElasticsearchLogger{config: config.Outputs.Elasticsearch}
+		// go configRetry(&es)
+		es.Configure(config.ChannelCapacity)
+		loggers = append(loggers, &es)
+	}
 
-		// Logstash
-		if output.Logstash.Enabled {
-			log.Printf("[DEBUG] Logstash enabled with URL: %s", output.Logstash.Url)
-			ls := logstashLogger{config: output.Logstash}
-			// go configRetry(&ls)
-			ls.Configure(config.ChannelCapacity)
-			loggers = append(loggers, &ls)
-		}
-
+	// Logstash
+	if config.Outputs.Logstash.Enabled {
+		log.Printf("[DEBUG] Logstash enabled with URL: %s", config.Outputs.Logstash.Url)
+		ls := logstashLogger{config: config.Outputs.Logstash}
+		// go configRetry(&ls)
+		ls.Configure(config.ChannelCapacity)
+		loggers = append(loggers, &ls)
 	}
 
 	// Fluentd
