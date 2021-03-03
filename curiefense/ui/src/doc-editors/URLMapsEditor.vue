@@ -624,7 +624,7 @@ export default (Vue as VueConstructor<Vue & {
     },
 
     referToRateLimit() {
-      this.$emit('switch-doc-type', 'limits')
+      this.$router.push(`/config/${this.selectedBranch}/ratelimits`)
     },
 
     wafacllimitProfileNames() {
