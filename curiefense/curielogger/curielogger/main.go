@@ -733,6 +733,7 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 			}
 
 			for _, l := range s.loggers {
+				log.Print(l)
 				l.SendEntry(log_entry)
 			}
 		}
@@ -811,57 +812,51 @@ func main() {
 	// set up loggers //
 	////////////////////
 
-	var loggers []Logger
+	grpcParams := grpcServerParams{loggers: []Logger{}}
 
 	// Prometheus
 	if check_env_flag("CURIELOGGER_METRICS_PROMETHEUS_ENABLED") {
 		prom := promLogger{logger{name: "prometheus", channel: make(chan LogEntry, config.ChannelCapacity)}}
-		loggers = append(loggers, &prom)
+		grpcParams.loggers = append(grpcParams.loggers, &prom)
 	}
 
-	// configRetry := func(logger Logger) {
-	// 	for i := 0; i < 60; i++ {
-	// 		err := logger.Configure(config.ChannelCapacity)
+	configRetry := func(params *grpcServerParams, logger Logger) {
+		for i := 0; i < 60; i++ {
+			err := logger.Configure(config.ChannelCapacity)
 
-	// 		if err == nil {
-	// 			loggers = append(loggers, logger)
-	// 			break
-	// 		}
+			if err == nil {
+				grpcParams.loggers = append(params.loggers, logger)
+				logger.Start()
+				break
+			}
 
-	// 		log.Printf("[ERROR]: failed to configure logger (retrying in 5s) %v %v", logger, err)
-	// 		time.Sleep(5 * time.Second)
-	// 	}
-	// }
-
-	for _, output := range config.Outputs {
-		// ElasticSearch
-		if output.Elasticsearch.Enabled {
-			log.Printf("[DEBUG] Elasticsearch enabled with URL: %s", output.Elasticsearch.Url)
-			es := ElasticsearchLogger{config: output.Elasticsearch}
-			// go configRetry(&es)
-			es.Configure(config.ChannelCapacity)
-			loggers = append(loggers, &es)
+			log.Printf("[ERROR]: failed to configure logger (retrying in 5s) %v %v", logger, err)
+			time.Sleep(5 * time.Second)
 		}
+	}
 
-		// Logstash
-		if output.Logstash.Enabled {
-			log.Printf("[DEBUG] Logstash enabled with URL: %s", output.Logstash.Url)
-			ls := logstashLogger{config: output.Logstash}
-			// go configRetry(&ls)
-			ls.Configure(config.ChannelCapacity)
-			loggers = append(loggers, &ls)
-		}
+	// ElasticSearch
+	if config.Outputs.Elasticsearch.Enabled {
+		log.Printf("[DEBUG] Elasticsearch enabled with URL: %s", config.Outputs.Elasticsearch.Url)
+		es := ElasticsearchLogger{config: config.Outputs.Elasticsearch}
+		go configRetry(&grpcParams, &es)
+	}
 
+	// Logstash
+	if config.Outputs.Logstash.Enabled {
+		log.Printf("[DEBUG] Logstash enabled with URL: %s", config.Outputs.Logstash.Url)
+		ls := logstashLogger{config: config.Outputs.Logstash}
+		go configRetry(&grpcParams, &ls)
 	}
 
 	// Fluentd
 	if check_env_flag("CURIELOGGER_USES_FLUENTD") {
 		fd := fluentdLogger{}
 		fd.ConfigureFromEnv("CURIELOGGER_FLUENTD_URL", config.ChannelCapacity)
-		loggers = append(loggers, &fd)
+		grpcParams.loggers = append(grpcParams.loggers, &fd)
 	}
 
-	for _, l := range loggers {
+	for _, l := range grpcParams.loggers {
 		go l.Start()
 	}
 
@@ -876,7 +871,7 @@ func main() {
 	log.Printf("GRPC server listening on %v", grpc_addr)
 	s := grpc.NewServer()
 
-	als.RegisterAccessLogServiceServer(s, &grpcServerParams{loggers: loggers})
+	als.RegisterAccessLogServiceServer(s, &grpcParams)
 	if err := s.Serve(sock); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
