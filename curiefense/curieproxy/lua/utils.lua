@@ -162,7 +162,7 @@ function map_ip(headers, metadata, map)
     map.geo.continent = {}
 
     if city then
-        map.geo.city.name = city.names.en
+        map.geo.city.name = (city.city and city.city.names.en) or "-"
 
         -- Use lat and lon to match the key names
         -- expected by Elasticsearch's geo_ip field type
