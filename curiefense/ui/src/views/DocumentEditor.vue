@@ -118,7 +118,8 @@
                   <button class="button is-small save-document-button"
                           :class="{'is-loading': isSaveLoading}"
                           @click="saveChanges()"
-                          title="Save changes">
+                          title="Save changes"
+                          :disabled="isDocumentInvalid">
                     <span class="icon is-small">
                       <i class="fas fa-save"></i>
                     </span>
@@ -155,6 +156,7 @@
             :docs.sync="docs"
             :apiPath="documentAPIPath"
             @switch-doc-type="switchDocType"
+            @form-invalid="isDocumentInvalid = $event"
             ref="currentComponent">
         </component>
         <hr/>
@@ -215,7 +217,7 @@ import FlowControlEditor from '@/doc-editors/FlowControlEditor.vue'
 import GitHistory from '@/components/GitHistory.vue'
 import {mdiSourceBranch, mdiSourceCommit} from '@mdi/js'
 import Vue from 'vue'
-import {BasicDocument, Commit, Document, DocumentType} from '@/types'
+import {BasicDocument, Commit, Document, DocumentType, URLMap} from '@/types'
 import axios, {AxiosResponse} from 'axios'
 
 export default Vue.extend({
@@ -256,10 +258,11 @@ export default Vue.extend({
       selectedDocType: null as DocumentType,
 
       docs: [],
-      docIdNames: [],
+      docIdNames: [] as [Document['id'], Document['name']][],
       selectedDocID: null,
       cancelSource: axios.CancelToken.source(),
       isDownloadLoading: false,
+      isDocumentInvalid: false,
 
       gitLog: [],
       commits: 0,
@@ -391,9 +394,11 @@ export default Vue.extend({
       console.log('config counters', this.branches, this.commits)
     },
 
-    async initDocTypes() {
-      const doctype = this.selectedDocType = Object.keys(this.componentsMap)[0] as DocumentType
-      await this.loadDocs(doctype)
+    async initDocTypes(skipDocSelection?: boolean) {
+      if (!skipDocSelection) {
+        this.selectedDocType = Object.keys(this.componentsMap)[0] as DocumentType
+      }
+      await this.loadDocs(this.selectedDocType, skipDocSelection)
     },
 
     updateDocIdNames() {
@@ -410,7 +415,7 @@ export default Vue.extend({
       this.setLoadingDocStatus(false)
     },
 
-    async loadDocs(doctype: DocumentType) {
+    async loadDocs(doctype: DocumentType, skipDocSelection?: boolean) {
       this.isDownloadLoading = true
       const branch = this.selectedBranch
       try {
@@ -434,7 +439,11 @@ export default Vue.extend({
       }
       this.updateDocIdNames()
       if (this.docIdNames && this.docIdNames.length && this.docIdNames[0].length) {
-        this.selectedDocID = this.docIdNames[0][0]
+        if (!skipDocSelection || !_.find(this.docIdNames, (idName: [Document['id'], Document['name']]) => {
+          return idName[0] === this.selectedDocID
+        })) {
+          this.selectedDocID = this.docIdNames[0][0]
+        }
         await this.loadSelectedDocData()
         this.addMissingDefaultsToDoc()
       }
@@ -463,7 +472,7 @@ export default Vue.extend({
         this.selectedBranch = branch
       }
       this.resetGitLog()
-      await this.initDocTypes()
+      await this.initDocTypes(true)
       await this.loadReferencedDocsIDs()
       this.goToRoute()
       this.setLoadingDocStatus(false)
@@ -479,7 +488,7 @@ export default Vue.extend({
       this.docs = []
       this.selectedDocID = null
       this.resetGitLog()
-      await this.loadDocs(docType)
+      await this.loadDocs(docType, true)
       this.goToRoute()
       this.setLoadingDocStatus(false)
     },
@@ -505,9 +514,14 @@ export default Vue.extend({
     async forkDoc() {
       this.setLoadingDocStatus(true)
       this.isForkLoading = true
-      const docToAdd = _.cloneDeep(this.selectedDoc) as Document
+      let docToAdd = _.cloneDeep(this.selectedDoc) as Document
       docToAdd.name = 'copy of ' + docToAdd.name
       docToAdd.id = DatasetsUtils.generateUUID2()
+      // A special check for urlmaps as we would want to change the domain name to be unique
+      if (this.selectedDocType === 'urlmaps') {
+        docToAdd = docToAdd as URLMap
+        docToAdd.match = `${docToAdd.id}.${docToAdd.match}`
+      }
       await this.addNewDoc(docToAdd)
       this.isForkLoading = false
       this.setLoadingDocStatus(false)
@@ -603,7 +617,7 @@ export default Vue.extend({
           null,
           `Document [${docTitle}] restored to version [${versionId}]!`,
           `Failed restoring document [${docTitle}] to version [${versionId}]!`)
-      await this.loadDocs(this.selectedDocType)
+      await this.loadDocs(this.selectedDocType, true)
     },
 
     addMissingDefaultsToDoc() {
