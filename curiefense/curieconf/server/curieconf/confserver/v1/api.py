@@ -256,17 +256,19 @@ m_document_list_entry = api.model(
 
 m_config_documents = api.model(
     "Config Documents",
-    {x: fields.List(fields.Nested(models[x], default=[])) for x in utils.DOCUMENTS_PATH},
+    {
+        x: fields.List(fields.Nested(models[x], default=[]))
+        for x in utils.DOCUMENTS_PATH
+    },
 )
 
 m_config_blobs = api.model(
     "Config Blobs",
-    {x: fields.Nested(m_blob_entry, default={}) for x in utils.BLOBS_PATH}
+    {x: fields.Nested(m_blob_entry, default={}) for x in utils.BLOBS_PATH},
 )
 
 m_config_delete_blobs = api.model(
-    "Config Delete Blobs",
-    {x: fields.Boolean() for x in utils.BLOBS_PATH}
+    "Config Delete Blobs", {x: fields.Boolean() for x in utils.BLOBS_PATH}
 )
 
 m_config = api.model(
