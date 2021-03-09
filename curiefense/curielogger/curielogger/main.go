@@ -733,7 +733,6 @@ func (s grpcServerParams) StreamAccessLogs(x als.AccessLogService_StreamAccessLo
 			}
 
 			for _, l := range s.loggers {
-				log.Print(l)
 				l.SendEntry(log_entry)
 			}
 		}
