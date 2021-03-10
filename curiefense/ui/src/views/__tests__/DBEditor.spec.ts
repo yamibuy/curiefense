@@ -227,6 +227,21 @@ describe('DBEditor.vue', () => {
     expect(downloadFileSpy).toHaveBeenCalledWith(wantedFileName, wantedFileType, wantedFileData)
   })
 
+  test('should not attempt to download key when download button is clicked if document does not exist', async () => {
+    const wantedFileName = 'publishinfo'
+    const wantedFileType = 'json'
+    const wantedFileData = publishInfoData
+    const downloadFileSpy = jest.spyOn(Utils, 'downloadFile');
+    (wrapper.vm as any).document = null
+    // force update because downloadFile is mocked after it is read to be used as event handler
+    await (wrapper.vm as any).$forceUpdate()
+    await Vue.nextTick()
+    const downloadKeyButton = wrapper.find('.download-key-button')
+    downloadKeyButton.trigger('click')
+    await Vue.nextTick()
+    expect(downloadFileSpy).not.toHaveBeenCalledWith(wantedFileName, wantedFileType, wantedFileData)
+  })
+
   describe('database action buttons', () => {
     test('should be able to fork database', async () => {
       const dbData = (wrapper.vm as any).selectedDatabaseData

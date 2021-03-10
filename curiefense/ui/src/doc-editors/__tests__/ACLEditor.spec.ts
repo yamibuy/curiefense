@@ -3,9 +3,10 @@ import TagAutocompleteInput from '@/components/TagAutocompleteInput.vue'
 import {describe, test, expect, beforeEach} from '@jest/globals'
 import {mount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
+import {ACLPolicy} from '@/types'
 
 describe('ACLEditor.vue', () => {
-  let docs: any[]
+  let docs: ACLPolicy[]
   let wrapper: Wrapper<Vue>
   beforeEach(() => {
     docs = [
@@ -44,7 +45,7 @@ describe('ACLEditor.vue', () => {
   })
 
   test('should have correct name in input', () => {
-    const element = wrapper.find('.document-name').element as any
+    const element = wrapper.find('.document-name').element as HTMLInputElement
     expect(element.value).toEqual(docs[0].name)
   })
 
