@@ -12,6 +12,7 @@ local challenge     = require "lua.challenge"
 local utils         = require "lua.utils"
 
 local cjson       = require "cjson"
+local rust        = require "curiefense"
 
 local init          = globals.init
 
@@ -129,12 +130,60 @@ function addentry(t, msg)
     table.insert(t, {gettime()*1000, msg})
 end
 
+function rust_inspect(handle)
+
+    local headerm = {}
+    for k, v in pairs(handle:headers()) do
+        headerm[k] = v
+    end
+    local metam = {}
+    for k, v in pairs(handle:metadata()) do
+        metam[k] = v
+    end
+
+    res = rust.inspect(headerm, metam, grasshopper)
+    handle:logInfo(string.format("res:pass() %s", res:pass()))
+    if res and res:pass() == false then
+        handle:logInfo(string.format("res atype %s", cjson.encode(res:atype())))
+        handle:logInfo(string.format("res ban %s", cjson.encode(res:ban())))
+        handle:logInfo(string.format("res reason %s", res:reason()))
+        local action_params = {
+            ["reason"] = res:reason(),
+            ["block_mode"] = true
+        }
+        local headers = res:headers()
+        if headers == nil then
+            headers = { ["x-curiefense"] = "response" }
+        end
+        headers[":status"] = res:status()
+        handle:respond(headers, res:content())
+    else
+        return
+    end
+end
+
+function encode_request_map(request_map)
+    local s_request_map = {
+        headers = request_map.headers,
+        cookies = request_map.cookies,
+        params = request_map.params,
+        attrs = request_map.attrs,
+        args = request_map.args,
+    }
+
+    return cjson.encode(s_request_map)
+
+end
+
 function inspect(handle)
 
     local timeline = {}
 
     addentry(timeline, "0 init")
     init(handle)
+
+    handle:logInfo("******* START ********")
+    rust_init = rust.rust_init_config()
 
     -- handle:logDebug("inspection initiated")
     addentry(timeline, "1 map_request")
@@ -144,6 +193,12 @@ function inspect(handle)
     local url = request_map.attrs.path
     local host = request_map.headers.host or request_map.attrs.authority
 
+    -- rust alternative
+    local session_uuid = nil
+    if rust_init then
+        session_uuid = rust.rust_session_init(encode_request_map(request_map))
+        handle:logInfo(sfmt("rust uuid: %s", session_uuid))
+    end
 
     -- unified the following 3 into a single operaiton
     addentry(timeline, "3 match_urlmap")
@@ -167,10 +222,24 @@ function inspect(handle)
         sfmt("wafname:%s", waf_profile.name)
     )
 
+    -- rust alternative
+    local rust_urlmap = nil
+    if session_uuid then
+        local rust_urlmap = rust.rust_session_match_urlmap(session_uuid)
+        handle:logInfo(sfmt("rust urlmap: %s", cjson.encode(rust_urlmap)))
+    end
+
     addentry(timeline, "6 session_profiling")
     -- session profiling
     tag_lists(request_map)
 
+    if session_uuid then
+        local tagresult = rust.rust_session_tag_request(session_uuid)
+        handle:logInfo(sfmt("rust tag_request: %s", tagresult))
+        local rust_request_map = rust.rust_session_serialize_request_map(session_uuid)
+        handle:logInfo(sfmt("rust request_map: %s", cjson.encode(rust_request_map)))
+        rust.rust_session_clean(session_uuid)
+    end
 
     if url:startswith("/7060ac19f50208cbb6b45328ef94140a612ee92387e015594234077b4d1e64f1/") then
         -- handle:logDebug("CHALLENGE PHASE02")
