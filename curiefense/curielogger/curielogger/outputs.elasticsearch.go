@@ -34,6 +34,7 @@ type ElasticsearchConfig struct {
 	Overwrite          bool   `mapstructure:"overwrite"`
 	AccessLogIndexName string `mapstructure:"accesslog_index_name"`
 	UseDataStream      bool   `mapstructure:"use_data_stream"`
+	ILMPolicy          string `mapstructure:"ilm_policy"`
 }
 
 type ElasticsearchLogger struct {
@@ -152,12 +153,16 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 	if l.config.Overwrite || !exists {
 		log.Printf("[DEBUG] creating / overwriting elasticsearch ilm policy %s for %s\n", l.config.AccessLogIndexName, l.config.Url)
 
-		var iTpl bytes.Buffer
-		res, _ := getResource("files/kibana/ilm_policy.json")
-		gTpl := template.Must(template.New("it").Parse(string(res)))
-		gTpl.Execute(&iTpl, l.config)
+		policy := l.config.ILMPolicy
+		if policy == "" {
+			var iTpl bytes.Buffer
+			res, _ := getResource("files/elasticsearch/ilm_policy.json")
+			gTpl := template.Must(template.New("it").Parse(string(res)))
+			gTpl.Execute(&iTpl, l.config)
+			policy = string(iTpl.Bytes())
+		}
 
-		body := client.ILM.PutLifecycle.WithBody(bytes.NewReader(iTpl.Bytes()))
+		body := client.ILM.PutLifecycle.WithBody(strings.NewReader(policy))
 		resp, err := client.ILM.PutLifecycle(l.config.AccessLogIndexName, body)
 		if err != nil || resp.IsError() {
 			log.Printf("[ERROR] index template creation failed %v %v", err, resp)
@@ -182,7 +187,7 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 	if l.config.Overwrite || tplExists.IsError() {
 		log.Printf("[DEBUG] creating / overwriting elasticsearch index template %s for %s\n", ACCESSLOG_ES_PREFIX, l.config.Url)
 		var iTpl bytes.Buffer
-		res, _ := getResource("files/kibana/es_index_template.json")
+		res, _ := getResource("files/elasticsearch/es_index_template.json")
 		gTpl := template.Must(template.New("it").Parse(string(res)))
 		gTpl.Execute(&iTpl, l.config)
 
@@ -215,7 +220,7 @@ func (l *ElasticsearchLogger) Configure(channel_capacity int) error {
 		}
 
 		var iTpl bytes.Buffer
-		res, _ := getResource("files/kibana/index_settings.json")
+		res, _ := getResource("files/elasticsearch/index_settings.json")
 		gTpl := template.Must(template.New("it").Parse(string(res)))
 		gTpl.Execute(&iTpl, l.config)
 
