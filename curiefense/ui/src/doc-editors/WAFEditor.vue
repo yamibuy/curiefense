@@ -254,12 +254,14 @@
                           </label>
                         </td>
                         <td>
-                          <serialized-input placeholder="Space separated rule IDs"
-                                            class="new-entry-exclusions"
-                                            :value.sync="newEntry.exclusions"
-                                            :get-function="unpackExclusions"
-                                            :set-function="packExclusions">
-                          </serialized-input>
+                          <autocomplete-input
+                              :suggestions="entryExclusionsSuggestions(newEntry)"
+                              :clear-input-after-selection="false"
+                              :auto-focus="false"
+                              class="new-entry-exclusions"
+                              selection-type="multiple"
+                              title="Space separated rule IDs"
+                              @value-submitted="updateEntryExclusions(newEntry, $event)"/>
                         </td>
                         <td class="has-text-centered">
                           <button title="Add new parameter"
@@ -287,6 +289,7 @@
                               </span>
                             </p>
                           </div>
+                        </td>
                         <td>
                           <p class="control has-icons-left">
                             <input required
@@ -317,13 +320,15 @@
                           </label>
                         </td>
                         <td>
-                          <serialized-input placeholder="Space separated rule IDs"
-                                            class="entry-exclusions"
-                                            @update:value="emitDocUpdate"
-                                            :value.sync="entry.exclusions"
-                                            :get-function="unpackExclusions"
-                                            :set-function="packExclusions">
-                          </serialized-input>
+                          <autocomplete-input
+                              :suggestions="entryExclusionsSuggestions(entry)"
+                              :clear-input-after-selection="false"
+                              :initial-value="unpackExclusions(entry.exclusions)"
+                              :auto-focus="false"
+                              class="entry-exclusions"
+                              selection-type="multiple"
+                              title="Space separated rule IDs"
+                              @value-submitted="updateEntryExclusions(entry, $event)"/>
                         </td>
                         <td class="has-text-centered">
                           <button title="Delete entry"
@@ -349,7 +354,7 @@
                                      v-model="entry.key"
                                      :title="titles.regex"/>
                               <span class="icon is-small is-left has-text-grey">
-                                  <i class="fas fa-code"></i>
+                                <i class="fas fa-code"></i>
                               </span>
                             </p>
                           </div>
@@ -384,18 +389,20 @@
                           </label>
                         </td>
                         <td>
-                          <serialized-input placeholder="Space separated rule IDs"
-                                            class="entry-exclusions"
-                                            @update:value="emitDocUpdate"
-                                            :value.sync="entry.exclusions"
-                                            :get-function="unpackExclusions"
-                                            :set-function="packExclusions">
-                          </serialized-input>
+                          <autocomplete-input
+                              :suggestions="entryExclusionsSuggestions(entry)"
+                              :clear-input-after-selection="false"
+                              :initial-value="unpackExclusions(entry.exclusions)"
+                              :auto-focus="false"
+                              class="entry-exclusions"
+                              selection-type="multiple"
+                              title="Space separated rule IDs"
+                              @value-submitted="updateEntryExclusions(entry, $event)"/>
                         </td>
                         <td class="has-text-centered">
-                          <button :data-curie="genRowKey(tab, 'regex', idx)"
+                          <button title="Delete entry"
+                                  :data-curie="genRowKey(tab, 'regex', idx)"
                                   @click="deleteEntryRow(tab, 'regex', idx)"
-                                  title="Delete entry"
                                   class="button is-light is-small remove-entry-button">
                               <span class="icon is-small">
                                 <i class="fas fa-trash fa-xs"></i>
@@ -421,15 +428,18 @@
 <script lang="ts">
 import _ from 'lodash'
 import DatasetsUtils from '@/assets/DatasetsUtils.ts'
-import SerializedInput from '@/components/SerializedInput.vue'
 import Vue from 'vue'
-import {ArgsCookiesHeadersType, NamesRegexType, WAFEntryMatch, WAFPolicy} from '@/types'
+import {ArgsCookiesHeadersType, NamesRegexType, WAFEntryMatch, WAFPolicy, WAFRule} from '@/types'
+import AutocompleteInput, {AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
+import RequestsUtils from '@/assets/RequestsUtils'
+import {AxiosResponse} from 'axios'
 
 export default Vue.extend({
   name: 'WAFEditor',
-  components: {SerializedInput},
+  components: {AutocompleteInput},
   props: {
     selectedDoc: Object,
+    selectedBranch: String,
     apiPath: String,
   },
 
@@ -448,6 +458,7 @@ export default Vue.extend({
       newEntry: defaultNewEntry,
       titles: DatasetsUtils.titles,
       defaultNewEntry: defaultNewEntry,
+      wafRuleIDsSuggestions: [] as AutocompleteSuggestion[],
     }
   },
 
@@ -476,6 +487,17 @@ export default Vue.extend({
       this.emitDocUpdate()
     },
 
+    updateEntryExclusions(entry: WAFEntryMatch, exclusions: string) {
+      entry.exclusions = this.packExclusions(exclusions)
+      this.emitDocUpdate()
+    },
+
+    entryExclusionsSuggestions(entry: WAFEntryMatch) {
+      return _.filter(this.wafRuleIDsSuggestions, ((suggestion) => {
+        return !_.keys(entry.exclusions).includes(suggestion.value)
+      }))
+    },
+
     packExclusions(exclusions: string) {
       const ret = {}
       if (_.size(exclusions) === 0 || !exclusions) {
@@ -498,6 +520,32 @@ export default Vue.extend({
     deleteEntryRow(tab: ArgsCookiesHeadersType, type: NamesRegexType, index: number) {
       this.localDoc[tab][type].splice(index, 1)
       this.emitDocUpdate()
+    },
+
+    loadWAFRuleIDs() {
+      const branch = this.selectedBranch
+
+      RequestsUtils.sendRequest('GET',
+          `configs/${branch}/d/wafrules/`,
+          null,
+          {headers: {'x-fields': 'id'}}).then((response: AxiosResponse<WAFRule[]>) => {
+        this.wafRuleIDsSuggestions = _.sortBy(_.map(response.data, (entity) => {
+          return {
+            value: entity.id,
+          }
+        }))
+      })
+    },
+  },
+  watch: {
+    selectedDoc: {
+      handler: function(val, oldVal) {
+        if (!val || !oldVal || val.id !== oldVal.id) {
+          this.loadWAFRuleIDs()
+        }
+      },
+      immediate: true,
+      deep: true,
     },
   },
 })
