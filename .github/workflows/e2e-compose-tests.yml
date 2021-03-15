@@ -1,6 +1,13 @@
 name: Run e2e tests on docker-compose
 
-on: [push, pull_request]
+on:
+  pull_request_target:
+    paths:
+      - "deploy/**"
+      - "curiefense/**"
+      - "e2e/**"
+      - ".github/workflows/e2e-compose-tests.yml"
+
 
 jobs:
   e2e-docker-compose:
