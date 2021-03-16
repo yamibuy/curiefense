@@ -1,13 +1,18 @@
 import WAFEditor from '@/doc-editors/WAFEditor.vue'
-import {beforeEach, describe, expect, test} from '@jest/globals'
+import {beforeEach, describe, expect, jest, test} from '@jest/globals'
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
-import {ArgsCookiesHeadersType, NamesRegexType, WAFPolicy} from '@/types'
-import SerializedInput from '@/components/SerializedInput.vue'
+import {ArgsCookiesHeadersType, NamesRegexType, WAFPolicy, WAFRule} from '@/types'
+import AutocompleteInput from '@/components/AutocompleteInput.vue'
+import _ from 'lodash'
+import axios from 'axios'
+
+jest.mock('axios')
 
 describe('WAFEditor.vue', () => {
   let docs: WAFPolicy[]
   let wrapper: Wrapper<Vue>
+  let wafRulesDocs: WAFRule[]
   beforeEach(() => {
     docs = [{
       'id': '__default__',
@@ -23,9 +28,61 @@ describe('WAFEditor.vue', () => {
       'headers': {'names': [], 'regex': []},
       'cookies': {'names': [], 'regex': []},
     }]
+    wafRulesDocs = [
+      {
+        'id': '100000',
+        'name': '100000',
+        'msg': 'SQLi Attempt (Conditional Operator Detected)',
+        'operand': '\\s(and|or)\\s+\\d+\\s+.*between\\s.*\\d+\\s+and\\s+\\d+.*',
+        'severity': 5,
+        'certainity': 5,
+        'category': 'sqli',
+        'subcategory': 'statement injection',
+      },
+      {
+        'id': '100001',
+        'name': '100001',
+        'subcategory': 'statement injection',
+        'category': 'sqli',
+        'certainity': 5,
+        'severity': 5,
+        'operand': '\\s(and|or)\\s+["\']\\w+["\']\\s+.*between\\s.*["\']\\w+["\']\\s+and\\s+["\']\\w+.*',
+        'msg': 'SQLi Attempt (Conditional Operator Detected)',
+      },
+      {
+        'id': '100002',
+        'name': '100002',
+        'subcategory': 'statement injection',
+        'category': 'sqli',
+        'certainity': 5,
+        'severity': 5,
+        'operand': '\\W(\\s*)?(and|or)\\s.*(\'|").+(\'|")(\\s+)?(=|>|<|>=|<=).*(\'|").+',
+        'msg': 'SQLi Attempt (Conditional Operator Detected)',
+      },
+    ]
+    jest.spyOn(axios, 'get').mockImplementation((path, config) => {
+      if (!wrapper) {
+        return Promise.resolve({data: []})
+      }
+      const branch = (wrapper.vm as any).selectedBranch
+      if (path === `/conf/api/v1/configs/${branch}/d/wafrules/`) {
+        if (config && config.headers && config.headers['x-fields'] === 'id, name') {
+          return Promise.resolve({data: _.map(wafRulesDocs, (i) => _.pick(i, 'id', 'name'))})
+        }
+        return Promise.resolve({data: wafRulesDocs})
+      }
+      return Promise.resolve({data: []})
+    })
+    const onUpdate = (doc: WAFPolicy) => {
+      wrapper.setProps({selectedDoc: doc})
+    }
     wrapper = shallowMount(WAFEditor, {
       propsData: {
         selectedDoc: docs[0],
+        selectedBranch: 'master',
+      },
+      listeners: {
+        'update:selectedDoc': onUpdate,
       },
     })
   })
@@ -119,8 +176,15 @@ describe('WAFEditor.vue', () => {
       beforeEach(async () => {
         // select tab
         const tabElement = wrapper.find(`.${tab}-tab`)
-        tabElement.trigger('click')
+        const anchorElement = tabElement.find('a')
+        anchorElement.trigger('click')
+        await wrapper.vm.$forceUpdate()
         await Vue.nextTick()
+      })
+
+      test('should have correct tab active', async () => {
+        const tabElement = wrapper.find(`.${tab}-tab`)
+        expect(tabElement.element.classList).toContain('is-active')
       })
 
       test('should open new parameter row when button is clicked', async () => {
@@ -200,13 +264,36 @@ describe('WAFEditor.vue', () => {
               '100040': 1,
               '100041': 1,
             }
-            const serializedInput = wrapper.findComponent(SerializedInput)
-            serializedInput.vm.$emit('update:value', wantedValue)
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('value-submitted', _.keys(wantedValue).join(' '))
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
             await Vue.nextTick()
-            const actualValue = wrapper.findComponent(SerializedInput).props('value')
+            const actualValue = (wrapper.vm as any).localDoc[tab][type][0].exclusions
+            expect(actualValue).toEqual(wantedValue)
+          })
+
+          test('should have all suggestions passed to AutocompleteInput', async () => {
+            const wantedValue = [
+              {value: '100000'},
+              {value: '100001'},
+              {value: '100002'},
+            ]
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            const actualValue = autocompleteInput.props('suggestions')
+            expect(actualValue).toEqual(wantedValue)
+          })
+
+          test('should have correct filtered suggestions passed to AutocompleteInput', async () => {
+            const existingRuleIDs = '100000 100002'
+            const wantedValue = [
+              {value: '100001'},
+            ]
+            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
+            autocompleteInput.vm.$emit('value-submitted', existingRuleIDs)
+            await Vue.nextTick()
+            const actualValue = autocompleteInput.props('suggestions')
             expect(actualValue).toEqual(wantedValue)
           })
 

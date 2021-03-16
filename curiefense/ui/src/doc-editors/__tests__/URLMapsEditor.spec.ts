@@ -226,13 +226,13 @@ describe('URLMapsEditor.vue', () => {
       expect(element.value).toEqual(urlMapsDocs[0].match)
     })
 
-    test('should have correct correct amount of entry rows in table', () => {
+    test('should have correct amount of entry rows in table', () => {
       const table = wrapper.find('.entries-table')
       const entryRows = table.findAll('.entry-row')
       expect(entryRows.length).toEqual(urlMapsDocs[0].map.length)
     })
 
-    test('should have correct correct entry data displayed in non-expanded rows (first row)', () => {
+    test('should have correct entry data displayed in non-expanded rows (first row)', () => {
       const table = wrapper.find('.entries-table')
       const entryRow = table.findAll('.entry-row').at(0)
       const entryName = entryRow.find('.entry-name')
@@ -247,7 +247,7 @@ describe('URLMapsEditor.vue', () => {
       expect(entryRateLimitCount.text()).toEqual(String(urlMapsDocs[0].map[0].limit_ids.length))
     })
 
-    test('should have correct correct entry data displayed in non-expanded rows (second row)', () => {
+    test('should have correct entry data displayed in non-expanded rows (second row)', () => {
       const table = wrapper.find('.entries-table')
       const entryRow = table.findAll('.entry-row').at(1)
       const entryName = entryRow.find('.entry-name')
@@ -262,7 +262,7 @@ describe('URLMapsEditor.vue', () => {
       expect(entryRateLimitCount.text()).toEqual(String(urlMapsDocs[0].map[1].limit_ids.length))
     })
 
-    test('should have correct correct entry data displayed in expanded row', async () => {
+    test('should have correct entry data displayed in expanded row', async () => {
       const table = wrapper.find('.entries-table')
       const entryRow = table.findAll('.entry-row').at(0)
       entryRow.trigger('click')
@@ -280,9 +280,45 @@ describe('URLMapsEditor.vue', () => {
       expect((entryACLSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
       const entryACLActive = currentEntryRow.find('.current-entry-acl-active')
       expect((entryACLActive.element as HTMLInputElement).checked).toEqual(urlMapsDocs[0].map[0].acl_active)
+    })
+
+    test('should have correct entry rate limit data displayed in expanded row', async () => {
+      const table = wrapper.find('.entries-table')
+      const entryRow = table.findAll('.entry-row').at(0)
+      entryRow.trigger('click')
+      await Vue.nextTick()
+      const currentEntryRow = table.findAll('.current-entry-row').at(0)
       const entryRateLimitsTable = currentEntryRow.find('.current-entry-rate-limits-table')
       const entryRateLimitsRows = entryRateLimitsTable.findAll('.rate-limit-row')
       expect(entryRateLimitsRows.length).toEqual(urlMapsDocs[0].map[0].limit_ids.length)
+      const rateLimitName = entryRateLimitsRows.at(0).find('.rate-limit-name')
+      expect(rateLimitName.text()).toEqual(rateLimitsDocs[0].name)
+      const rateLimitDescription = entryRateLimitsRows.at(0).find('.rate-limit-description')
+      expect(rateLimitDescription.text()).toEqual(rateLimitsDocs[0].description)
+      const rateLimitThreshold = entryRateLimitsRows.at(0).find('.rate-limit-threshold')
+      expect(rateLimitThreshold.text()).toEqual(rateLimitsDocs[0].limit)
+      const rateLimitTTL = entryRateLimitsRows.at(0).find('.rate-limit-ttl')
+      expect(rateLimitTTL.text()).toEqual(rateLimitsDocs[0].ttl)
+    })
+
+    test('should not have rate limit data displayed if no corresponding rate limit exists', async () => {
+      urlMapsDocs[1].map[0].limit_ids.push('invalid')
+      wrapper.setProps({
+        selectedDoc: urlMapsDocs[1],
+      })
+      await Vue.nextTick()
+      const table = wrapper.find('.entries-table')
+      const entryRow = table.findAll('.entry-row').at(0)
+      entryRow.trigger('click')
+      await Vue.nextTick()
+      const currentEntryRow = table.findAll('.current-entry-row').at(0)
+      const entryRateLimitsTable = currentEntryRow.find('.current-entry-rate-limits-table')
+      const entryRateLimitsRows = entryRateLimitsTable.findAll('.rate-limit-row')
+      expect(entryRateLimitsRows.length).toEqual(urlMapsDocs[1].map[0].limit_ids.length - 1)
+      const rateLimitName0 = entryRateLimitsRows.at(0).find('.rate-limit-name')
+      expect(rateLimitName0.text()).toEqual(rateLimitsDocs[0].name)
+      const rateLimitName1 = entryRateLimitsRows.at(1).find('.rate-limit-name')
+      expect(rateLimitName1.text()).toEqual(rateLimitsDocs[1].name)
     })
 
     test('should open new rate limit row from add button', async () => {
@@ -721,9 +757,24 @@ describe('URLMapsEditor.vue', () => {
         expect((entryACLSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         const entryACLActive = currentEntryRow.find('.current-entry-acl-active')
         expect((entryACLActive.element as HTMLInputElement).checked).toEqual(urlMapsDocs[0].map[1].acl_active)
+      })
+
+      test('should have correct copied rate limit data after forking an entry', async () => {
+        forkButton.trigger('click')
+        await Vue.nextTick()
+        const table = wrapper.find('.entries-table')
+        const currentEntryRow = table.findAll('.current-entry-row').at(0)
         const entryRateLimitsTable = currentEntryRow.find('.current-entry-rate-limits-table')
         const entryRateLimitsRows = entryRateLimitsTable.findAll('.rate-limit-row')
         expect(entryRateLimitsRows.length).toEqual(urlMapsDocs[0].map[1].limit_ids.length)
+        const rateLimitName = entryRateLimitsRows.at(0).find('.rate-limit-name')
+        expect(rateLimitName.text()).toEqual(rateLimitsDocs[1].name)
+        const rateLimitDescription = entryRateLimitsRows.at(0).find('.rate-limit-description')
+        expect(rateLimitDescription.text()).toEqual(rateLimitsDocs[1].description)
+        const rateLimitThreshold = entryRateLimitsRows.at(0).find('.rate-limit-threshold')
+        expect(rateLimitThreshold.text()).toEqual(rateLimitsDocs[1].limit)
+        const rateLimitTTL = entryRateLimitsRows.at(0).find('.rate-limit-ttl')
+        expect(rateLimitTTL.text()).toEqual(rateLimitsDocs[1].ttl)
       })
 
       test('should revert old match data to be valid before forking if invalid', async () => {
