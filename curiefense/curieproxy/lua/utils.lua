@@ -82,8 +82,13 @@ function map_cookies(cookiestr, map)
     end
 end
 
-function map_args(map)
+function map_args(handle, map)
     local _uri = urldecode(map.attrs.path)
+
+    if not _uri then
+        handle:logErr("Could not decode uri as a string: " .. map.attrs.path)
+        _uri = map.attrs.path
+    end
 
     -- query
     if _uri:find("?") then
@@ -215,7 +220,7 @@ function map_request(handle)
     map_headers(headers, map)
     map_metadata(metadata, map)
     map_ip(headers, metadata, map)
-    map_args(map)
+    map_args(handle, map)
 
     return map
 end
