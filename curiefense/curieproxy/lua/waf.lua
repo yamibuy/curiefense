@@ -204,29 +204,33 @@ function check(waf_profile, request)
 
 
 
-    local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
+    if globals.WAFHScanDB then
+        local matches = globals.WAFHScanDB:scan(hca_values, globals.WAFHScanScratch)
 
-    for k,v in pairs(matches) do
-        local matched_sigs = {}
-        if type(v) == "table" then
-            if v.id then
-                table.insert(matched_sigs, v.id)
+        for k,v in pairs(matches) do
+            local matched_sigs = {}
+            if type(v) == "table" then
+                if v.id then
+                    table.insert(matched_sigs, v.id)
+                end
             end
-        end
 
-        if #matched_sigs > 0 then
-            local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
-            for _, msig in ipairs(matched_sigs) do
-                -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
-                if not section_exclude_ids[msig] then
-                    if globals.WAFSignatures then
-                        local waf_sig = globals.WAFSignatures[tostring(msig)]
-                        -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
-                        return WAFBlock, gen_block_info(section, name, value, waf_sig)
+            if #matched_sigs > 0 then
+                local section_exclude_ids = (exclude_sigs[section] and exclude_sigs[section][name]) or {}
+                for _, msig in ipairs(matched_sigs) do
+                    -- request.handle:logInfo(string.format("WAFRustSignatures MATCHED -- iter over %s", msig))
+                    if not section_exclude_ids[msig] then
+                        if globals.WAFSignatures then
+                            local waf_sig = globals.WAFSignatures[tostring(msig)]
+                            -- request.handle:logInfo(string.format("WAF block by Sig %s", waf_sig.id))
+                            return WAFBlock, gen_block_info(section, name, value, waf_sig)
+                        end
                     end
                 end
             end
         end
+    else
+        return WAFPass, "waf-passed (regex compilation failed)"
     end
 
     return WAFPass, "waf-passed"
