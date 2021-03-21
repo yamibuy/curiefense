@@ -221,7 +221,7 @@ def default_config(cli):
     cli.publish_and_apply()
 
 
-@pytest.fixture(scope="session", params=["headers", "cookies", "params"])
+@pytest.fixture(scope="function", params=["headers", "cookies", "params"])
 def section(request):
     return request.param
 
@@ -1440,12 +1440,12 @@ def wafparam_config(cli, request, ignore_alphanum):
     cli.publish_and_apply()
 
 
-@pytest.fixture(scope="session", params=["name", "regex"])
+@pytest.fixture(scope="function", params=["name", "regex"])
 def name_regex(request):
     return request.param
 
 
-@pytest.fixture(scope="session", params=["restrict", "norestrict"])
+@pytest.fixture(scope="function", params=["restrict", "norestrict"])
 def restrict(request):
     return request.param
 
@@ -1505,7 +1505,7 @@ class TestWAFParamsConstraints:
 
 
 @pytest.fixture(
-    scope="session", params=[(100140, "htaccess"), (100112, "../../../../../")]
+    scope="function", params=[(100140, "htaccess"), (100112, "../../../../../")]
 )
 def wafrules(request):
     return request.param
