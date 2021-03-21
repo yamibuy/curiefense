@@ -1505,15 +1505,21 @@ class TestWAFParamsConstraints:
 
 
 @pytest.fixture(
-    scope="session", params=[(100140, "htaccess"), (100116, "../../../../../")]
+    scope="session", params=[(100140, "htaccess"), (100112, "../../../../../")]
 )
 def wafrules(request):
     return request.param
 
 
 class TestWAFRules:
-    def test_wafsig(self, default_config, target, section, wafrules):
+    def test_wafsig(self, wafparam_config, target, section, wafrules, ignore_alphanum):
         ruleid, rulestr = wafrules
-        assert not target.is_reachable(
-            f"/wafsig-{section}", **{section: {"key": rulestr}}
-        ), f"Reachable despite matching rule {ruleid}"
+        has_nonalpha = "." in rulestr
+        if ignore_alphanum and not has_nonalpha:
+            assert target.is_reachable(
+                f"/wafsig-{section}", **{section: {"key": rulestr}}
+            ), f"Unreachable despite ignore_alphanum=True for rule {ruleid}"
+        else:
+            assert not target.is_reachable(
+                f"/wafsig-{section}", **{section: {"key": rulestr}}
+            ), f"Reachable despite matching rule {ruleid}"
