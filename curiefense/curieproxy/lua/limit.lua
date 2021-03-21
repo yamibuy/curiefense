@@ -143,8 +143,17 @@ function build_key(request_map, limit_set, url_map_name)
         local section, name = next(entry)
         -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
         if section and name then
-            local entry = request_map[section][name]
             -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
             if entry then
                 key = key .. entry
             else
