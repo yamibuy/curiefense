@@ -189,8 +189,8 @@ function inspect(handle)
     local acl_bot_code, acl_bot_result = acl_check_bot(acl_profile, request_map, acl_active)
 
     if acl_result then
-        handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
-        handle:logDebug(sfmt("001b request_map.attrs: %s", cjson.encode(request_map.attrs) ))
+        -- handle:logDebug(sfmt("001 ACL REASON: %s", acl_result.reason))
+        -- handle:logDebug(sfmt("001b request_map.attrs: %s", cjson.encode(request_map.attrs) ))
         addentry(timeline, "8b acl_check/tag_request")
         tag_request(request_map, sfmt("acltag:%s" , acl_result.reason))
     end
@@ -208,9 +208,9 @@ function inspect(handle)
 
     if acl_code ~= ACLBypass then
         if acl_bot_code == ACLDenyBot and not is_human then
-            handle:logDebug("002 ACL DENY BOT MATCHED!")
+            -- handle:logDebug("002 ACL DENY BOT MATCHED!")
             addentry(timeline, "9c challenge_verified/challenge_phase01")
-            handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
+            -- handle:logDebug("003 ACL DENY BOT MATCHED! << let's do some challenge >>")
             challenge_phase01(handle, request_map, "1")
 
         else
@@ -240,6 +240,6 @@ function inspect(handle)
     addentry(timeline, "11 log_request")
     log_request(request_map)
     addentry(timeline, "12 done")
-    handle:logDebug(string.format("timeline %s",cjson.encode(timeline)))
+    -- handle:logDebug(string.format("timeline %s",cjson.encode(timeline)))
 
 end

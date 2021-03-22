@@ -45,7 +45,7 @@ istio-ingressgateway:
       memory: 128Mi
     limits:
       cpu: 2000m
-      memory: 2048Mi
+      memory: 3048Mi
   cpu:
     targetAverageUtilization: 80
   loadBalancerIP: ""
