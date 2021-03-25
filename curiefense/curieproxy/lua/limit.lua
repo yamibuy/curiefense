@@ -43,8 +43,18 @@ function should_exclude(request_map, limit_set)
     local exclude = false
     for section, entries in pairs(limit_set["exclude"]) do
         for name, value in pairs(entries) do
-            if request_map[section][name] then
-                if re_match(request_map[section][name], value) then
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
+            if entry then
+                if re_match(entry, value) then
                     -- request_map.handle:logDebug(string.format("limit excluding (%s)[%s]=='%s'", section, name, value))
                     exclude = true
                     break
@@ -59,8 +69,18 @@ function should_include(request_map, limit_set)
     local include = true
     for section, entries in pairs(limit_set["include"]) do
         for name, value in pairs(entries) do
-            if request_map[section][name] then
-                if not re_match(request_map[section][name], value) then
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
+            if entry then
+                if not re_match(entry, value) then
                     -- request_map.handle:logDebug(string.format("limit NOT including (%s)[%s]=='%s'", section, name, value))
                     include = false
                     break
@@ -143,8 +163,16 @@ function build_key(request_map, limit_set, url_map_name)
         local section, name = next(entry)
         -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
         if section and name then
-            local entry = request_map[section][name]
-            -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
             if entry then
                 key = key .. entry
             else

@@ -221,7 +221,7 @@ def default_config(cli):
     cli.publish_and_apply()
 
 
-@pytest.fixture(scope="session", params=["headers", "cookies", "params"])
+@pytest.fixture(scope="function", params=["headers", "cookies", "params"])
 def section(request):
     return request.param
 
@@ -1440,12 +1440,12 @@ def wafparam_config(cli, request, ignore_alphanum):
     cli.publish_and_apply()
 
 
-@pytest.fixture(scope="session", params=["name", "regex"])
+@pytest.fixture(scope="function", params=["name", "regex"])
 def name_regex(request):
     return request.param
 
 
-@pytest.fixture(scope="session", params=["restrict", "norestrict"])
+@pytest.fixture(scope="function", params=["restrict", "norestrict"])
 def restrict(request):
     return request.param
 
@@ -1505,15 +1505,21 @@ class TestWAFParamsConstraints:
 
 
 @pytest.fixture(
-    scope="session", params=[(100140, "htaccess"), (100116, "../../../../../")]
+    scope="function", params=[(100140, "htaccess"), (100112, "../../../../../")]
 )
 def wafrules(request):
     return request.param
 
 
 class TestWAFRules:
-    def test_wafsig(self, default_config, target, section, wafrules):
+    def test_wafsig(self, wafparam_config, target, section, wafrules, ignore_alphanum):
         ruleid, rulestr = wafrules
-        assert not target.is_reachable(
-            f"/wafsig-{section}", **{section: {"key": rulestr}}
-        ), f"Reachable despite matching rule {ruleid}"
+        has_nonalpha = "." in rulestr
+        if ignore_alphanum and not has_nonalpha:
+            assert target.is_reachable(
+                f"/wafsig-{section}", **{section: {"key": rulestr}}
+            ), f"Unreachable despite ignore_alphanum=True for rule {ruleid}"
+        else:
+            assert not target.is_reachable(
+                f"/wafsig-{section}", **{section: {"key": rulestr}}
+            ), f"Reachable despite matching rule {ruleid}"
