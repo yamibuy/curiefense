@@ -12,6 +12,9 @@ local accesslog     = require "lua.accesslog"
 local challenge     = require "lua.challenge"
 local utils         = require "lua.utils"
 
+local curiefense  = require "curiefense"
+
+
 local cjson       = require "cjson"
 
 local init          = globals.init
@@ -130,11 +133,46 @@ local gettime = socket.gettime
 --     table.insert(t, {gettime()*1000, msg})
 -- end
 
+
+
+-------[[[ rust copy/ paste ]]]
+
+function encode_request_map(request_map)
+    local s_request_map = {
+        headers = request_map.headers,
+        cookies = request_map.cookies,
+        attrs = request_map.attrs,
+        args = request_map.args,
+        geo = request_map.geo
+    }
+
+    return cjson.encode(s_request_map)
+
+end
+
+
+
+-------[[[ rust copy/ paste ]]]
+
+
+
 function inspect(handle)
 
     local timeline = {}
 
     init(handle)
+
+
+    handle:logInfo("******* RUST START ********")
+    local rust_init = false
+    local _, err = curiefense.init_config()
+    if err then
+        handle.logErr(sfmt("curiefense.init_config failed %s", err))
+    else
+        rust_init = true
+    end
+
+    handle:logInfo("******* RUST END ********")
 
     -- handle:logDebug("inspection initiated")
     local request_map = map_request(handle)
@@ -142,6 +180,23 @@ function inspect(handle)
     local url = request_map.attrs.path
     local host = request_map.headers.host or request_map.attrs.authority
 
+
+
+    -- rust alternative
+    local session_uuid = nil
+    if rust_init then
+        local encoded = encode_request_map(request_map)
+        handle:logInfo("encoded: " .. encoded)
+        session_uuid, err = curiefense.session_init(encoded)
+        if err then
+            handle:logErr(sfmt("session_init error %s", err))
+            session_uuid = nil
+        else
+            handle:logInfo(sfmt("curiefense uuid: %s", session_uuid))
+        end
+    else
+        handle:logErr("curiefense.init_config failed")
+    end
 
     -- unified the following 3 into a single operaiton
     local urlmap_entry, url_map = match_urlmap(host, url, request_map)
