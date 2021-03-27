@@ -8,7 +8,7 @@ local resty_md5 = require "resty.md5"
 local maxmind   = require "lua.maxmind"
 local globals   = require "lua.globals"
 local accesslog = require "lua.accesslog"
-local iptools   =  require "iptools"
+local iptools   =  require "curiefense"
 
 local find      = string.find
 local gsub      = string.gsub
@@ -28,8 +28,6 @@ local ipinfo    = maxmind.ipinfo
 local json_decode   = json_safe.decode
 local json_encode   = json_safe.encode
 local log_request   = accesslog.log_request
-
-local iptools       = require "iptools"
 
 local urldecode     = iptools.decodeurl
 local urlencode     = iptools.encodeurl
@@ -84,8 +82,13 @@ function map_cookies(cookiestr, map)
     end
 end
 
-function map_args(map)
+function map_args(handle, map)
     local _uri = urldecode(map.attrs.path)
+
+    if not _uri then
+        handle:logErr("Could not decode uri as a string: " .. map.attrs.path)
+        _uri = map.attrs.path
+    end
 
     -- query
     if _uri:find("?") then
@@ -155,7 +158,7 @@ function map_ip(headers, metadata, map)
     map.attrs.remote_addr = client_addr
     map.attrs.ipnum = ip_to_num(client_addr)
 
-    local city, country, asn, company = unpack(ipinfo(client_addr, map.handle))
+    local city, country, iso, asn, company = unpack(ipinfo(client_addr, map.handle))
 
     map.geo = {
         city      = {},
@@ -165,7 +168,7 @@ function map_ip(headers, metadata, map)
     }
 
     if city then
-        map.geo.city.name = city.city.names.en
+        map.geo.city.name = (city.city and city.city.names.en) or "-"
 
         -- Use lat and lon to match the key names
         -- expected by Elasticsearch's geo_ip field type
@@ -220,7 +223,7 @@ function map_request(handle)
     map_headers(headers, map)
     map_metadata(metadata, map)
     map_ip(headers, metadata, map)
-    map_args(map)
+    map_args(handle, map)
 
     map.attrs.session_sequence_key = string.format(
         "%s%s%s",
