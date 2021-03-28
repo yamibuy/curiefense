@@ -332,6 +332,13 @@ func main() {
 		go configRetry(&grpcParams, &ls)
 	}
 
+	// Webhoook
+	if config.Outputs.Webhook.Enabled {
+		log.Printf("[DEBUG] Webhook enabled with URL: %s", config.Outputs.Webhook.Url)
+		wh := webhookLogger{config: config.Outputs.Webhook}
+		go configRetry(&grpcParams, &wh)
+	}
+
 	// Fluentd
 	if check_env_flag("CURIELOGGER_USES_FLUENTD") {
 		fd := fluentdLogger{}

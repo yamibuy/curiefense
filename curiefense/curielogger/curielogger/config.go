@@ -16,6 +16,7 @@ type Config struct {
 type OutputsConfig struct {
 	Elasticsearch ElasticsearchConfig `mapstructure:"elasticsearch,omitempty"`
 	Logstash      LogstashConfig      `mapstructure:"logstash,omitempty"`
+	Webhook       WebhookConfig       `mapstructure:"webhook,omitempty"`
 }
 
 func LoadConfig() (config Config, err error) {
