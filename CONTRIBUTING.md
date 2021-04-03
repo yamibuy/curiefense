@@ -17,6 +17,23 @@ Please, do join the rest of the team in triaging issues, reviewing PRs, and
 providing any feedback that would help making the community stronger, and
 processes easier for everyone.
 
+## Triaging Issues
+
+Here you can find some guidelines about Curiefense's triaging process. We will present them in the
+form of bullet points for the sake of simplicity. All the points presented here are equally
+important:
+
+* All issues should either belong to a milestone or be labeled as backlog. Issues without one of
+these attributes will be considered untriaged. The `backlog` label and the milestone attribute are
+mutually exclusive.
+
+* Issues labeled as `backlog` will be reviewed at  the beginning of the development cycle (after
+every release) or during a backlog review meeting.
+
+* Every issue that is actively being worked on should have, at most, one assignee. Conversely, there
+should not be anyone assigned to an issue that is not being worked on.
+
+
 # 👩‍💻 Contributing With Code
 
 Curiefense follows a very simple process that is referred to as the [GitHub
