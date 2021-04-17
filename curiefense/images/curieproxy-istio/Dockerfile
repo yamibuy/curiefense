@@ -1,5 +1,5 @@
-FROM curiefense/envoy-istio-cf:aad1978ca8a4af4a3aa2704a54d1d076d9271697 AS envoy-istio-cf
-FROM docker.io/istio/proxyv2:1.9.2
+FROM curiefense/envoy-istio-cf:1fc81107d58c138eba288f3d8b567bbca4b6423f AS envoy-istio-cf
+FROM docker.io/istio/proxyv2:1.9.3
 
 RUN apt-get update && \
     apt-get -yq --no-install-recommends install jq luarocks libpcre2-dev libgeoip-dev python dumb-init gcc g++ make unzip libhyperscan4 libhyperscan-dev && \
