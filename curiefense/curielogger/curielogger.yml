@@ -1,5 +1,8 @@
 log_level: info
 outputs:
+  stdout:
+    enabled: false
+
   elasticsearch: &es
     enabled: false
     initialize: true

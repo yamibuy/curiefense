@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/curiefense/curiefense/curielogger/pkg"
 	"github.com/curiefense/curiefense/curielogger/pkg/entities"
 	ald "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v3"
@@ -11,7 +13,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 var (
@@ -38,7 +39,7 @@ func (s grpcServer) StreamAccessLogs(x als.AccessLogService_StreamAccessLogsServ
 }
 
 func (s *grpcServer) sendLogs(msg *als.StreamAccessLogsMessage) {
-	log.Printf("[DEBUG] ====>[%v]", msg.LogEntries)
+	log.Debugf("[DEBUG] %v", msg.LogEntries)
 	for _, entry := range msg.GetHttpLogs().GetLogEntry() {
 		outputLog, err := s.parseRawEntry(entry)
 		if err != nil {
@@ -48,6 +49,7 @@ func (s *grpcServer) sendLogs(msg *als.StreamAccessLogsMessage) {
 		if outputLog == nil {
 			continue
 		}
+
 		if err = s.logger.Write(outputLog); err != nil {
 			log.Error(err)
 		}

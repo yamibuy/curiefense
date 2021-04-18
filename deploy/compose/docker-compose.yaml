@@ -105,11 +105,12 @@ services:
     #image: "curielogger"
     restart: always
     environment:
+      - CURIELOGGER_LOG_LEVEL=info
+      - CURIELOGGER_OUTPUTS_STDOUT_ENABLED=false
       - CURIELOGGER_OUTPUTS_LOGSTASH_ENABLED=true
       - CURIELOGGER_OUTPUTS_LOGSTASH_URL=http://logstash:5001/
       - CURIELOGGER_METRICS_PROMETHEUS_ENABLED=true
       - ELASTICSEARCH_URL=http://elasticsearch:9200/
-      - STDOUT_ENABLED=false
     networks:
       - curiemesh
     ports:

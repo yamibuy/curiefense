@@ -1,13 +1,19 @@
 package pkg
 
 import (
-	"github.com/curiefense/curiefense/curielogger/pkg/outputs"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/dealancer/validate.v2"
-	"strings"
 )
 
-func NewConfig() (*viper.Viper, outputs.Config) {
+type Config struct {
+	LogLevel string        `mapstructure:"log_level" validate:"one_of=info,debug,error"`
+	Outputs  OutputsConfig `mapstructure:"outputs,omitempty"`
+}
+
+func NewConfig() (*viper.Viper, Config) {
 	v := viper.New()
 	v.AutomaticEnv()
 	viper.AddConfigPath(".")
@@ -18,7 +24,7 @@ func NewConfig() (*viper.Viper, outputs.Config) {
 	viper.SetEnvPrefix("CURIELOGGER")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	var cfg outputs.Config
+	var cfg Config
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
@@ -30,5 +36,8 @@ func NewConfig() (*viper.Viper, outputs.Config) {
 	}
 
 	err = validate.Validate(&cfg)
+
+	lvl, err := log.ParseLevel(cfg.LogLevel)
+	log.SetLevel(lvl)
 	return v, cfg
 }
