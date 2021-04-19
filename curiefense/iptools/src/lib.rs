@@ -430,7 +430,7 @@ fn iptools(lua: &Lua) -> LuaResult<LuaTable> {
 }
 
 #[cfg(test)]
-mod tests {
+mod test_lib {
     use super::*;
 
     #[test]
@@ -473,5 +473,39 @@ mod tests {
             println!("Testing {:?}", a);
             assert!(!ipset.contains(&a));
         }
+    }
+
+    fn dec(url: &str) -> String {
+        String::from_utf8_lossy(&urldecode(url.to_string())).into_owned()
+    }
+
+    #[test]
+    fn test_urldecode_normal() {
+        assert!(dec("ABCD") == "ABCD");
+        assert!(dec("ABCD%40") == "ABCD@");
+        assert!(dec("ABCD%40EFG") == "ABCD@EFG");
+        assert!(dec("%27%28%29%2a%2b%2C%2D%2e%2F") == "'()*+,-./");
+        assert!(dec("ABCD+EFG") == "ABCD+EFG");
+        assert!(
+            dec("http://www.example.com/foo/bar?x=AB%20CD%3d~~F%7C%60G")
+                == "http://www.example.com/foo/bar?x=AB CD=~~F|`G"
+        );
+    }
+
+    #[test]
+    fn test_urldecode_utf8() {
+        assert!(dec("%F0%9F%91%BE%20Exterminate%21") == "👾 Exterminate!");
+    }
+
+    #[test]
+    fn test_urldecode_incorrect() {
+        assert!(dec("%") == "%");
+        assert!(dec("%a") == "%a");
+        assert!(dec("%p1") == "%p1");
+        assert!(dec("%ap") == "%ap");
+        assert!(dec("%%41") == "%A");
+        assert!(dec("%a%41") == "%aA");
+        assert!(dec("%F0%9F%91%BE%20Exterminate%21%") == "👾 Exterminate!%");
+        assert!(dec("%F0%9F%BE%20%21%") == "� !%");
     }
 }
