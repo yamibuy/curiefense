@@ -57,12 +57,12 @@
                 <th></th>
               </tr>
               </thead>
-              <tbody v-for="(mapEntry, idx) in localDoc.map" :key="idx">
-              <tr @click="changeSelectedMapEntry(idx)"
+              <tbody v-for="(mapEntry, mapIndex) in localDoc.map" :key="mapIndex">
+              <tr @click="changeSelectedMapEntry(mapIndex)"
                   class="has-row-clickable entry-row"
-                  :class=" mapEntryIndex === idx ? 'has-background-light borderless' : ''">
+                  :class=" mapEntryIndex === mapIndex ? 'has-background-light borderless' : ''">
                 <td class="is-size-7 width-50px has-text-right has-text-grey-light entry-index">
-                  {{ idx + 1 }}
+                  {{ mapIndex + 1 }}
                 </td>
                 <td class="is-size-7 entry-name">
                   {{ mapEntry.name }}
@@ -83,19 +83,19 @@
                   {{ aclProfileName(mapEntry.acl_profile) ? aclProfileName(mapEntry.acl_profile)[1] : '' }}
                 </td>
                 <td class="is-size-7 entry-rate-limits-count"
-                    v-if="mapEntry.limit_ids">
-                  {{ mapEntry.limit_ids.length }}
+                    v-if="existingRateLimitIDs(mapEntry)">
+                  {{ existingRateLimitIDs(mapEntry).length }}
                 </td>
                 <td class="is-size-7"
-                    :rowspan="mapEntryIndex === idx ? '2' : '1'">
+                    :rowspan="mapEntryIndex === mapIndex ? '2' : '1'">
                   <a class="has-text-grey"
                      title="more details">
-                    {{ mapEntryIndex === idx ? 'close' : 'expand' }}
+                    {{ mapEntryIndex === mapIndex ? 'close' : 'expand' }}
                   </a>
                 </td>
               </tr>
-              <tr v-if="mapEntryIndex === idx"
-                  :class=" mapEntryIndex === idx ? 'has-background-light borderless' : ''"
+              <tr v-if="mapEntryIndex === mapIndex"
+                  :class=" mapEntryIndex === mapIndex ? 'has-background-light borderless' : ''"
                   class="expanded current-entry-row">
                 <td colspan="10">
                   <div class="card">
@@ -125,7 +125,7 @@
                                 <input class="input is-small current-entry-match"
                                        type="text"
                                        @input="emitDocUpdate();
-                                               validateInput($event, isSelectedMapEntryMatchValid(idx))"
+                                               validateInput($event, isSelectedMapEntryMatchValid(mapIndex))"
                                        title="A unique matching regex value, not overlapping other URL Map definitions"
                                        placeholder="Matching domain(s) regex"
                                        required
@@ -160,52 +160,54 @@
                                   </th>
                                   <th class="has-text-centered is-size-7 width-60px">
                                     <a v-if="limitRuleNames && mapEntry.limit_ids &&
-                                             limitRuleNames.length > mapEntry.limit_ids.length"
+                                             limitRuleNames.length > existingRateLimitIDs(mapEntry).length"
                                        class="has-text-grey-dark is-small rate-limit-add-button"
                                        title="Add new"
                                        tabindex="0"
-                                       @click="limitNewEntryModeMapEntryId = idx"
+                                       @click="limitNewEntryModeMapEntryId = mapIndex"
                                        @keypress.space.prevent
-                                       @keypress.space="limitNewEntryModeMapEntryId = idx"
-                                       @keypress.enter="limitNewEntryModeMapEntryId = idx">
+                                       @keypress.space="limitNewEntryModeMapEntryId = mapIndex"
+                                       @keypress.enter="limitNewEntryModeMapEntryId = mapIndex">
                                       <span class="icon is-small"><i class="fas fa-plus"></i></span>
                                     </a>
                                   </th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="(limitId, idx) in mapEntry.limit_ids"
-                                    :key="limitId"
-                                    class="rate-limit-row">
-                                  <td class="is-size-7 rate-limit-name"
-                                      v-if="limitDetails(limitId)">
-                                    {{ limitDetails(limitId).name }}
-                                  </td>
-                                  <td class="is-size-7 rate-limit-description"
-                                      v-if="limitDetails(limitId)">
-                                    {{ limitDetails(limitId).description }}
-                                  </td>
-                                  <td class="is-size-7 rate-limit-threshold"
-                                      v-if="limitDetails(limitId)">
-                                    {{ limitDetails(limitId).limit }}
-                                  </td>
-                                  <td class="is-size-7 rate-limit-ttl"
-                                      v-if="limitDetails(limitId)">
-                                    {{ limitDetails(limitId).ttl }}
-                                  </td>
-                                  <td class="has-text-centered is-size-7 width-60px">
-                                    <a class="is-small has-text-grey rate-limit-remove-button"
-                                       title="Remove entry"
-                                       tabindex="0"
-                                       @click="removeRateLimitFromEntry(mapEntry, idx)"
-                                       @keypress.space.prevent
-                                       @keypress.space="removeRateLimitFromEntry(mapEntry, idx)"
-                                       @keypress.enter="removeRateLimitFromEntry(mapEntry, idx)">
-                                      remove
-                                    </a>
-                                  </td>
-                                </tr>
-                                <tr v-if="limitNewEntryMode(idx)"
+                                <template v-for="(limitId, limitIndex) in mapEntry.limit_ids">
+                                  <tr v-if="limitDetails(limitId)"
+                                      :key="limitId"
+                                      class="rate-limit-row">
+                                    <td class="is-size-7 rate-limit-name"
+                                        v-if="limitDetails(limitId)">
+                                      {{ limitDetails(limitId).name }}
+                                    </td>
+                                    <td class="is-size-7 rate-limit-description"
+                                        v-if="limitDetails(limitId)">
+                                      {{ limitDetails(limitId).description }}
+                                    </td>
+                                    <td class="is-size-7 rate-limit-threshold"
+                                        v-if="limitDetails(limitId)">
+                                      {{ limitDetails(limitId).limit }}
+                                    </td>
+                                    <td class="is-size-7 rate-limit-ttl"
+                                        v-if="limitDetails(limitId)">
+                                      {{ limitDetails(limitId).ttl }}
+                                    </td>
+                                    <td class="has-text-centered is-size-7 width-60px">
+                                      <a class="is-small has-text-grey rate-limit-remove-button"
+                                         title="Remove entry"
+                                         tabindex="0"
+                                         @click="removeRateLimitFromEntry(mapEntry, limitIndex)"
+                                         @keypress.space.prevent
+                                         @keypress.space="removeRateLimitFromEntry(mapEntry, limitIndex)"
+                                         @keypress.enter="removeRateLimitFromEntry(mapEntry, limitIndex)">
+                                        remove
+                                      </a>
+                                    </td>
+                                  </tr>
+                                </template>
+                                <tr v-if="limitNewEntryMode(mapIndex)"
                                     class="new-rate-limit-row">
                                   <td colspan="4">
                                     <div class="control is-expanded">
@@ -232,13 +234,13 @@
                                     </a>
                                   </td>
                                 </tr>
-                                <tr v-if="mapEntry.limit_ids && mapEntry.limit_ids.length === 0 ">
+                                <tr v-if="mapEntry.limit_ids && existingRateLimitIDs(mapEntry).length === 0 ">
                                   <td colspan="5">
                                     <p class="is-size-7 has-text-grey has-text-centered">
                                       To attach an existing rule, click
                                       <a class="rate-limit-text-add-button"
                                          title="Add New"
-                                         @click="limitNewEntryModeMapEntryId = idx">here</a>.
+                                         @click="limitNewEntryModeMapEntryId = mapIndex">here</a>.
                                       <br/>
                                       To create a new rate-limit rule, click
                                       <a class="rate-limit-referral-button"
@@ -308,7 +310,7 @@
                             <div class="field">
                               <button title="Create a new profile based on this one"
                                       class="button is-small is-pulled-left is-light fork-entry-button"
-                                      @click="addNewProfile(mapEntry, idx)">
+                                      @click="addNewProfile(mapEntry, mapIndex)">
                                 <span class="icon"><i class="fas fa-code-branch"></i></span>
                                 <span>
                                 Fork profile
@@ -316,7 +318,7 @@
                               </button>
                               <button title="Delete this profile"
                                       class="button is-small is-pulled-right is-danger is-light remove-entry-button"
-                                      @click="removeMapEntry(idx)"
+                                      @click="removeMapEntry(mapIndex)"
                                       v-if="localDoc.id !== '__default__' || initialMapEntryMatch !== '/'">
                                 Delete
                               </button>
@@ -466,6 +468,12 @@ export default (Vue as VueConstructor<Vue & {
 
     limitNewEntryMode(id: number): boolean {
       return this.limitNewEntryModeMapEntryId === id
+    },
+
+    existingRateLimitIDs(mapEntry: URLMapEntryMatch): RateLimit['id'][] {
+      return _.filter(mapEntry.limit_ids, (limitId) => {
+        return this.limitDetails(limitId) !== undefined
+      })
     },
 
     addNewProfile(map: URLMapEntryMatch, idx: number) {

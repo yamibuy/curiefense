@@ -165,23 +165,12 @@ class LogHelper:
         self._es_url = es_url + "/_search"
 
     def check_log_pattern(self, pattern):
-        if self._es_url == "/_search":
-            data = {
-                "statement": (
-                    "SELECT Path FROM logs " "ORDER BY StartTime DESC LIMIT 1024"
-                ),
-                "parameters": [],
-            }
-            res = requests.post(self._base_url + "/logs/api/v1/exec/", json=data)
-            for log in res.json():
-                if pattern in log[0]:
-                    return True
-        else:
-            data = {"query": {"bool": {"must": {"match": {"path": pattern}}}}}
-            res = requests.get(self._es_url, json=data)
-            nbhits = res.json()["hits"]["total"]["value"]
-            return nbhits == 1
-        return False
+        data = {
+            "query": {"bool": {"must": {"match": {"request.attributes.uri": pattern}}}}
+        }
+        res = requests.get(self._es_url, json=data)
+        nbhits = res.json()["hits"]["total"]["value"]
+        return nbhits == 1
 
 
 @pytest.fixture(scope="session")
@@ -221,7 +210,7 @@ def default_config(cli):
     cli.publish_and_apply()
 
 
-@pytest.fixture(scope="session", params=["headers", "cookies", "params"])
+@pytest.fixture(scope="function", params=["headers", "cookies", "params"])
 def section(request):
     return request.param
 
@@ -283,7 +272,7 @@ class TestACL:
         assert target.is_reachable("/")
 
     def test_geo(self, acl, target):
-        acl.reset_and_set_acl({"deny": "geo:us"})
+        acl.reset_and_set_acl({"deny": "geo:united-states"})
         assert not target.is_reachable("/acl-geo", srcip=IP4_US)
         assert target.is_reachable("/acl-geo", srcip=IP4_JP)
         assert target.is_reachable("/")
@@ -430,16 +419,16 @@ def gen_rl_rules(authority):
     add_rl_rule("event-cookies", pairwith={"cookies": "event"})
     add_rl_rule("event-headers", pairwith={"headers": "event"})
     add_rl_rule("event-params", pairwith={"args": "event"})
-    add_rl_rule("event-ipv4", pairwith={"attrs": "ip"})
-    add_rl_rule("event-ipv6", pairwith={"attrs": "ip"})
+    add_rl_rule("event-ipv4", key=[{"attrs": "path"}], pairwith={"attrs": "ip"})
+    add_rl_rule("event-ipv6", key=[{"attrs": "path"}], pairwith={"attrs": "ip"})
     # "Provider" in the UI maps to "asn"
-    add_rl_rule("event-provider", pairwith={"attrs": "asn"})
+    add_rl_rule("event-provider", key=[{"attrs": "path"}], pairwith={"attrs": "asn"})
     add_rl_rule("event-uri", pairwith={"attrs": "uri"})
     add_rl_rule("event-path", pairwith={"attrs": "path"})
     add_rl_rule("event-query", pairwith={"attrs": "query"})
     add_rl_rule("event-method", pairwith={"attrs": "method"})
-    add_rl_rule("event-company", pairwith={"attrs": "company"})
-    add_rl_rule("event-country", pairwith={"attrs": "country"})
+    add_rl_rule("event-company", key=[{"attrs": "path"}], pairwith={"attrs": "company"})
+    add_rl_rule("event-country", key=[{"attrs": "path"}], pairwith={"attrs": "country"})
     add_rl_rule("event-authority", pairwith={"attrs": "authority"})
     # action
     add_rl_rule("action-challenge", action="challenge")
@@ -986,19 +975,19 @@ class TestRateLimit:
         limit = len(params)
         for i in range(limit - 1):
             assert target.is_reachable(
-                f"/event-{name}/1/{i+1}", **params[i]
+                f"/event-{name}/1/", **params[i]
             ), f"Request for value #{i+1} with {name} event should be allowed"
         assert not target.is_reachable(
-            f"/event-{name}/1/{limit}", **params[limit - 1]
+            f"/event-{name}/1/", **params[limit - 1]
         ), f"Request for value #{limit} with {name} event should be denied"
         for i in range(limit):
             assert not target.is_reachable(
-                f"/event-{name}/1/{i+1}", **params[i]
+                f"/event-{name}/1/", **params[i]
             ), f"Request for value #{i+1} with {name} event should be denied"
         time.sleep(10)
         for i in range(limit - 1):
             assert target.is_reachable(
-                f"/event-{name}/1/{i+1}", **params[i]
+                f"/event-{name}/1/", **params[i]
             ), f"Request for value #{i+1} with {name} event should be allowed"
 
     def test_ratelimit_event_section(self, target, ratelimit_config, section):
@@ -1022,18 +1011,13 @@ class TestRateLimit:
 
     def test_ratelimit_event_uri(self, target, ratelimit_config):
         # URI is different for each query, nothing more needs changing
-        params = [{} for i in range(1, 5)]
+        params = [{"suffix": f"{i}"} for i in range(1, 5)]
         self.ratelimit_event_param_helper(target, "uri", params)
 
     def test_ratelimit_event_path(self, target, ratelimit_config):
         # Path is different for each query, nothing more needs changing
-        params = [{} for i in range(1, 5)]
+        params = [{"suffix": f"{i}"} for i in range(1, 5)]
         self.ratelimit_event_param_helper(target, "path", params)
-
-    def test_ratelimit_event_tag(self, target, ratelimit_config):
-        # changing the source IP will change the ip tag
-        params = [{"srcip": f"199.0.0.{i}"} for i in range(1, 5)]
-        self.ratelimit_event_param_helper(target, "tag", params)
 
     def test_ratelimit_event_query(self, target, ratelimit_config):
         params = [{"suffix": f"?QUERY-{i}"} for i in range(1, 5)]
@@ -1085,7 +1069,7 @@ TEST_TAGRULES = {
                     ["uri", "/e2e-tagrules-uri", "annotation"],
                     ["ip", IP6_1, "annotation"],
                     ["ip", IP4_US, "annotation"],
-                    ["country", "jp", "annotation"],
+                    ["country", "JP", "annotation"],
                     ["asn", "13335", "annotation"],
                 ],
             },
@@ -1183,7 +1167,7 @@ class TestTagRules:
 
     def test_asn(self, target, tagrules_config, active):
         # ASN 13335
-        assert target.is_reachable("/tag-asn", srcip="1.1.1.1") is not active
+        assert target.is_reachable("/tag-asn", srcip=IP4_CLOUDFLARE) is not active
 
     def test_and(self, target, tagrules_config, active):
         assert (
@@ -1445,12 +1429,12 @@ def wafparam_config(cli, request, ignore_alphanum):
     cli.publish_and_apply()
 
 
-@pytest.fixture(scope="session", params=["name", "regex"])
+@pytest.fixture(scope="function", params=["name", "regex"])
 def name_regex(request):
     return request.param
 
 
-@pytest.fixture(scope="session", params=["restrict", "norestrict"])
+@pytest.fixture(scope="function", params=["restrict", "norestrict"])
 def restrict(request):
     return request.param
 
@@ -1510,15 +1494,21 @@ class TestWAFParamsConstraints:
 
 
 @pytest.fixture(
-    scope="session", params=[(100140, "htaccess"), (100116, "../../../../../")]
+    scope="function", params=[(100140, "htaccess"), (100112, "../../../../../")]
 )
 def wafrules(request):
     return request.param
 
 
 class TestWAFRules:
-    def test_wafsig(self, default_config, target, section, wafrules):
+    def test_wafsig(self, wafparam_config, target, section, wafrules, ignore_alphanum):
         ruleid, rulestr = wafrules
-        assert not target.is_reachable(
-            f"/wafsig-{section}", **{section: {"key": rulestr}}
-        ), f"Reachable despite matching rule {ruleid}"
+        has_nonalpha = "." in rulestr
+        if ignore_alphanum and not has_nonalpha:
+            assert target.is_reachable(
+                f"/wafsig-{section}", **{section: {"key": rulestr}}
+            ), f"Unreachable despite ignore_alphanum=True for rule {ruleid}"
+        else:
+            assert not target.is_reachable(
+                f"/wafsig-{section}", **{section: {"key": rulestr}}
+            ), f"Reachable despite matching rule {ruleid}"
