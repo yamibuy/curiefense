@@ -64,15 +64,19 @@ pub fn inspect_request_map(
     let jvalue: serde_json::Value = match serde_json::from_str(&encoded_request_map) {
         Ok(v) => v,
         Err(rr) => {
+            println!("Could not decode the request map: {}", rr);
             return Ok((
                 Decision::Pass.to_json(serde_json::Value::Null),
                 vec![format!("{}", rr)],
-            ))
+            ));
         }
     };
     let jmap: JRequestMap = match serde_json::from_value(jvalue.clone()) {
         Ok(v) => v,
-        Err(rr) => return Ok((Decision::Pass.to_json(jvalue), vec![format!("{}", rr)])),
+        Err(rr) => {
+            println!("Could not decode the request_map: {}", rr);
+            return Ok((Decision::Pass.to_json(jvalue), vec![format!("{}", rr)]));
+        }
     };
     let (rinfo, itags) = jmap.into_request_info();
 
@@ -85,6 +89,9 @@ pub fn inspect_request_map(
             serde_json::Value::Null
         }
     };
+    for rr in errs.iter() {
+        println!("{}", rr);
+    }
     Ok((
         res.to_json(updated_request_map),
         errs.into_iter().map(|x| format!("{}", x)).collect(),
@@ -207,48 +214,49 @@ fn inspect_generic_request_map<GH: Grasshopper>(
         return (limit_check, tags, errs);
     }
 
-    let acl_result = check_acl(&tags, &urlmap.acl_profile);
-    match acl_result {
-        ACLResult::Bypass(dec) => {
-            if dec.allowed {
-                return (Decision::Pass, tags, errs);
-            } else {
-                return (acl_block(urlmap.acl_active, 0, &dec.tags), tags, errs);
-            }
-        }
-        // human blocked, always block, even if it is a bot
-        ACLResult::Match(BotHuman {
-            bot: _,
-            human:
-                Some(ACLDecision {
-                    allowed: false,
-                    tags: dtags,
-                }),
-        }) => return (acl_block(urlmap.acl_active, 5, &dtags), tags, errs),
-        // robot blocked, should be challenged
-        ACLResult::Match(BotHuman {
-            bot:
-                Some(ACLDecision {
-                    allowed: false,
-                    tags: dtags,
-                }),
-            human: _,
-        }) => {
-            // if grasshopper is available, run these tests
-            if let Some(gh) = mgh {
-                if !challenge_verified(&gh, &reqinfo) {
-                    return (
-                        match reqinfo.headers.get("user-agent") {
-                            None => acl_block(urlmap.acl_active, 3, &dtags),
-                            Some(ua) => challenge_phase01(&gh, ua, dtags),
-                        },
-                        tags,
-                        errs,
-                    );
+    if urlmap.acl_active {
+        match check_acl(&tags, &urlmap.acl_profile) {
+            ACLResult::Bypass(dec) => {
+                if dec.allowed {
+                    return (Decision::Pass, tags, errs);
+                } else {
+                    return (acl_block(urlmap.acl_active, 0, &dec.tags), tags, errs);
                 }
             }
+            // human blocked, always block, even if it is a bot
+            ACLResult::Match(BotHuman {
+                bot: _,
+                human:
+                    Some(ACLDecision {
+                        allowed: false,
+                        tags: dtags,
+                    }),
+            }) => return (acl_block(urlmap.acl_active, 5, &dtags), tags, errs),
+            // robot blocked, should be challenged
+            ACLResult::Match(BotHuman {
+                bot:
+                    Some(ACLDecision {
+                        allowed: false,
+                        tags: dtags,
+                    }),
+                human: _,
+            }) => {
+                // if grasshopper is available, run these tests
+                if let Some(gh) = mgh {
+                    if !challenge_verified(&gh, &reqinfo) {
+                        return (
+                            match reqinfo.headers.get("user-agent") {
+                                None => acl_block(urlmap.acl_active, 3, &dtags),
+                                Some(ua) => challenge_phase01(&gh, ua, dtags),
+                            },
+                            tags,
+                            errs,
+                        );
+                    }
+                }
+            }
+            _ => (),
         }
-        _ => (),
     }
     let waf_result = match HSDB.read() {
         Ok(rd) => waf_check(&reqinfo, &urlmap.waf_profile, rd),
@@ -261,7 +269,13 @@ fn inspect_generic_request_map<GH: Grasshopper>(
     (
         match waf_result {
             Ok(()) => Decision::Pass,
-            Err(wb) => Decision::Action(wb.to_action()),
+            Err(wb) => {
+                if urlmap.waf_active {
+                    Decision::Action(wb.to_action())
+                } else {
+                    Decision::Pass
+                }
+            }
         },
         tags,
         errs,
@@ -440,11 +454,13 @@ mod tests {
 
     #[test]
     fn config_load() {
-        let (_, errs) = with_config("../config", |_| {});
+        let (cfg, errs) = with_config("../config", |c| c.clone());
         for r in &errs {
-            println!("{}", r);
+            println!("ERR: {}", r);
         }
-        assert!(errs.len() == 1);
-        assert!(format!("{}", errs[0]).contains("profiling-lists.json"))
+        assert!(cfg.is_some());
+        assert!(errs.len() == 2);
+        assert!(format!("{}", errs[0]).contains("profiling-lists.json"));
+        assert!(format!("{}", errs[1]).contains("rbz-cloud-platforms"));
     }
 }
