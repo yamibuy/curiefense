@@ -24,8 +24,9 @@ if [ -n "$TESTING" ]; then
     DOCKER_TAG="test"
     echo "Building only image $TESTIMG"
 else
-    IMAGES=(confserver curielogger curieproxy-istio curieproxy-envoy curiesync \
-            curietasker grafana prometheus redis uiserver fluentd)
+    IMAGES=(confserver curielogger curieproxy-istio curieproxy-envoy \
+        curieproxy-nginx curiesync curietasker grafana prometheus \
+        redis uiserver fluentd)
 fi
 
 echo "-------"
