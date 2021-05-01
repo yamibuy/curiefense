@@ -65,9 +65,16 @@ jobs:
         if: ${{ failure() }}
         run: |
             kubectl -n curiefense describe pods
-            kubectl -n curiefense get logs -l app.kubernetes.io/name=curielogger
-            kubectl -n curiefense get logs -l app.kubernetes.io/name=curietasker
-            kubectl -n curiefense get logs -l app.kubernetes.io/name=uiserver
+            echo "--- Logs for curielogger ---"
+            kubectl -n curiefense logs --all-containers -l app.kubernetes.io/name=curielogger
+            echo "--- Logs for curietasker ---"
+            kubectl -n curiefense logs --all-containers -l app.kubernetes.io/name=curietasker
+            echo "--- Logs for uiserver ---"
+            kubectl -n curiefense logs --all-containers -l app.kubernetes.io/name=uiserver
+            echo "--- Logs for kibana ---"
+            kubectl -n curiefense logs --all-containers -l app.kubernetes.io/name=kibana
+            echo "--- Logs for elasticsearch ---"
+            kubectl -n curiefense logs --all-containers -l app.kubernetes.io/name=elasticsearch
 
 
       - name: Publish Unit Test Results
