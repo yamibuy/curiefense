@@ -31,11 +31,13 @@ helm install curiefense
 * [FAQ](https://www.curiefense.io/faq)
 * [Contribute to our docs](https://github.com/curiefense/curiefense-gitbook)
 
-## Contact
+## Community
 
-* [Form](https://www.curiefense.io/contact-us)
+There are many ways to get involved with Curiefense. 
+
 * [Twitter](https://twitter.com/curiefense)
-* [GitHub Discussions](https://github.com/curiefense/curiefense/discussions)
+* [CNCF Community Group](https://community.cncf.io/curiefense/)
+* [Slack](https://join.slack.com/t/curiefense/shared_invite/zt-nc8lyrjo-JJoY2mwrqNOfkmoA6ycTHg)
 
 <br>
 
