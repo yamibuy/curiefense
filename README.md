@@ -1,5 +1,5 @@
 <div>
-	<img width="300" src="https://assets.website-files.com/5f906e60f009d620eb2024dd/5fa033da9f8ff737f748f0bc_curie-01.svg" alt="Curiefense Logo">
+	<img width="300" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/curiefense/horizontal/color/curiefense-horizontal-color.svg" alt="Curiefense Logo">
 	<br><br>
 </div>
 
