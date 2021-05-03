@@ -3,7 +3,9 @@
 	<br><br>
 </div>
 
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4576/badge)](https://bestpractices.coreinfrastructure.org/projects/4576) [![GitHub](https://img.shields.io/github/license/curiefense/curiefense)](https://github.com/curiefense/curiefense/blob/master/LICENSE)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4576/badge)](https://bestpractices.coreinfrastructure.org/projects/4576) 
+[![CodeQL](https://github.com/curiefense/curiefense/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/curiefense/curiefense/actions/workflows/codeql-analysis.yml)
+[![GitHub](https://img.shields.io/github/license/curiefense/curiefense)](https://github.com/curiefense/curiefense/blob/master/LICENSE)
 
 ---
 
