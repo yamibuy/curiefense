@@ -8,12 +8,14 @@
 [![GitHub](https://img.shields.io/github/license/curiefense/curiefense)](https://github.com/curiefense/curiefense/blob/master/LICENSE)
 [![CNCF](https://shields.io/badge/CNCF-Sandbox%20project-blue?logo=linux-foundation&style=flat)](https://landscape.cncf.io/card-mode?project=sandbox&selected=curiefense)
 [![Slack](https://shields.io/badge/Slack-Join%20Us-yellow?logo=slack&style=flat)](https://join.slack.com/t/curiefense/shared_invite/zt-nc8lyrjo-JJoY2mwrqNOfkmoA6ycTHg)
+[![Twitter](https://img.shields.io/badge/Follow-@curiefense-blue.svg?style=flat&logo=twitter)](https://twitter.com/intent/follow?screen_name=curiefense)
+
 
 ---
 
 Curiefense is a new application security platform, which protects sites, services, and APIs. It extends Envoy proxy to defend against a variety of threats, including SQL and command injection, cross site scripting (XSS), account takeovers (ATOs), application-layer DDoS, remote file inclusion (RFI), API abuse, and more.
 
-## ▶️ Getting Started
+## Getting Started
 
 ### 🐳 Docker
 ```bash
