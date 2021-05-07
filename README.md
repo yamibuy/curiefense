@@ -41,7 +41,7 @@ This learning platform will allow you to explore what Curiefense can do without 
 <a href="https://www.youtube.com/watch?v=HkoDPW46a8I&t" target="_blank">
 <img width="450" src="https://p21.p4.n0.cdn.getcloudapp.com/items/d5u12qLG/44410d32-819d-4333-9703-063653794b05.jpg"></a>
 
-<br><br>
+<br>
 
 ## 👩‍💻👨🏽‍💻 Community
 
