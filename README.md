@@ -23,10 +23,7 @@ git clone https://github.com/curiefense/curiefense.git
 cd curiefense/deploy/compose/
 docker-compose up
 ```
-### ⛴ Helm
-```bash
-helm install curiefense
-```
+
 ### 🐯 Katacoda
 This learning platform will allow you to explore what Curiefense can do without needing to install anything. Current lessons available:
 
