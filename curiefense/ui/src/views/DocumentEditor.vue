@@ -29,7 +29,7 @@
                       <option v-for="(component, propertyName) in componentsMap"
                               :key="propertyName"
                               :value="propertyName">
-                        {{ component.title }}
+                        {{ titles[propertyName] }}
                       </option>
                     </select>
                   </div>
@@ -37,7 +37,7 @@
                 <p class="control">
                   <button class="button is-small download-doc-button"
                           :class="{'is-loading': isDownloadLoading}"
-                          @click="downloadDoc"
+                          @click="downloadDoc()"
                           title="Download document">
                     <span class="icon is-small">
                       <i class="fas fa-download"></i>
@@ -92,7 +92,7 @@
                    v-if="selectedDocType !== 'wafrules'">
                   <button class="button is-small fork-document-button"
                           :class="{'is-loading': isForkLoading}"
-                          @click="forkDoc"
+                          @click="forkDoc()"
                           title="Duplicate document"
                           :disabled="!selectedDoc">
                     <span class="icon is-small">
@@ -155,7 +155,6 @@
             :selectedDoc.sync="selectedDoc"
             :docs.sync="docs"
             :apiPath="documentAPIPath"
-            @switch-doc-type="switchDocType"
             @form-invalid="isDocumentInvalid = $event"
             ref="currentComponent">
         </component>
@@ -181,6 +180,7 @@
             <span v-if="!branchNames.includes(selectedBranch)">
               Missing branch. To be redirected to Version Control page where you will be able to create a new one, click
               <a title="Add new"
+                 class="version-control-referral-button"
                  @click="referToVersionControl()">
                 here
               </a>
@@ -234,6 +234,7 @@ export default Vue.extend({
         await this.setSelectedDataFromRouteParams()
         this.setLoadingDocStatus(false)
       },
+      deep: true,
     },
   },
   data() {
@@ -241,6 +242,7 @@ export default Vue.extend({
       configs: [],
       mdiSourceBranchPath: mdiSourceBranch,
       mdiSourceCommitPath: mdiSourceCommit,
+      titles: DatasetsUtils.titles,
 
       // Loading indicators
       loadingDocCounter: 0,
@@ -269,13 +271,13 @@ export default Vue.extend({
       branches: 0,
 
       componentsMap: {
-        'aclpolicies': {component: ACLEditor, title: 'ACL Policies'},
-        'flowcontrol': {component: FlowControlEditor, title: 'Flow Control'},
-        'tagrules': {component: ProfilingListEditor, title: 'Tag Rules'},
-        'ratelimits': {component: RateLimitsEditor, title: 'Rate Limits'},
-        'urlmaps': {component: URLMapsEditor, title: 'URL Maps'},
-        'wafpolicies': {component: WAFEditor, title: 'WAF Policies'},
-        'wafrules': {component: WAFSigsEditor, title: 'WAF Rules'},
+        'aclpolicies': {component: ACLEditor},
+        'flowcontrol': {component: FlowControlEditor},
+        'tagrules': {component: ProfilingListEditor},
+        'ratelimits': {component: RateLimitsEditor},
+        'urlmaps': {component: URLMapsEditor},
+        'wafpolicies': {component: WAFEditor},
+        'wafrules': {component: WAFSigsEditor},
       },
 
       apiRoot: RequestsUtils.confAPIRoot,
@@ -357,6 +359,7 @@ export default Vue.extend({
         await this.loadDocs(this.selectedDocType)
       }
       this.selectedDocID = this.$route.params.doc_id || this.docIdNames[0][0]
+      this.isDocumentInvalid = false
       await this.loadSelectedDocData()
       this.addMissingDefaultsToDoc()
       this.setLoadingDocStatus(false)
@@ -392,13 +395,6 @@ export default Vue.extend({
       }))
       this.branches = _.size(configs)
       console.log('config counters', this.branches, this.commits)
-    },
-
-    async initDocTypes(skipDocSelection?: boolean) {
-      if (!skipDocSelection) {
-        this.selectedDocType = Object.keys(this.componentsMap)[0] as DocumentType
-      }
-      await this.loadDocs(this.selectedDocType, skipDocSelection)
     },
 
     updateDocIdNames() {
@@ -466,41 +462,34 @@ export default Vue.extend({
       }
     },
 
-    async switchBranch(branch?: string) {
+    async switchBranch() {
       this.setLoadingDocStatus(true)
-      if (branch) {
-        this.selectedBranch = branch
-      }
       this.resetGitLog()
-      await this.initDocTypes(true)
+      Utils.toast(`Switched to branch "${this.selectedBranch}".`, 'is-info')
+      await this.loadDocs(this.selectedDocType, true)
       await this.loadReferencedDocsIDs()
       this.goToRoute()
       this.setLoadingDocStatus(false)
     },
 
-    async switchDocType(docType?: DocumentType) {
+    async switchDocType() {
       this.setLoadingDocStatus(true)
-      if (!docType) {
-        docType = this.selectedDocType
-      } else {
-        this.selectedDocType = docType
-      }
       this.docs = []
       this.selectedDocID = null
       this.resetGitLog()
-      await this.loadDocs(docType, true)
+      Utils.toast(`Switched to document type ${this.titles[this.selectedDocType]}.`, 'is-info')
+      await this.loadDocs(this.selectedDocType, true)
       this.goToRoute()
       this.setLoadingDocStatus(false)
     },
 
-    async switchDocID(docID?: string) {
+    async switchDocID() {
       this.setLoadingDocStatus(true)
-      if (docID) {
-        this.selectedDocID = docID
-        await this.loadSelectedDocData()
-        this.addMissingDefaultsToDoc()
-      }
       this.loadGitLog()
+      Utils.toast(
+          `Switched to document "${(this.selectedDoc as BasicDocument).name}" with ID "${this.selectedDocID}".`,
+          'is-info',
+      )
       this.goToRoute()
       this.setLoadingDocStatus(false)
     },
@@ -522,12 +511,15 @@ export default Vue.extend({
         docToAdd = docToAdd as URLMap
         docToAdd.match = `${docToAdd.id}.${docToAdd.match}`
       }
-      await this.addNewDoc(docToAdd)
+      const docTypeText = this.titles[this.selectedDocType + '-singular']
+      const successMessage = `The ${docTypeText} was duplicated.`
+      const failureMessage = `Failed while attempting to duplicate the ${docTypeText}.`
+      await this.addNewDoc(docToAdd, successMessage, failureMessage)
       this.isForkLoading = false
       this.setLoadingDocStatus(false)
     },
 
-    async addNewDoc(docToAdd?: Document) {
+    async addNewDoc(docToAdd?: Document, successMessage?: string, failureMessage?: string) {
       this.setLoadingDocStatus(true)
       this.isNewLoading = true
       if (!docToAdd) {
@@ -536,13 +528,20 @@ export default Vue.extend({
       this.resetGitLog()
       this.docs.unshift(docToAdd)
       this.selectedDocID = docToAdd.id
-      await this.saveChanges('POST')
+      const docTypeText = this.titles[this.selectedDocType + '-singular']
+      if (!successMessage) {
+        successMessage = `New ${docTypeText} was created.`
+      }
+      if (!failureMessage) {
+        failureMessage = `Failed while attempting to create the new ${docTypeText}.`
+      }
+      await this.saveChanges('POST', successMessage, failureMessage)
       this.goToRoute()
       this.isNewLoading = false
       this.setLoadingDocStatus(false)
     },
 
-    async saveChanges(methodName?: MethodNames) {
+    async saveChanges(methodName?: MethodNames, successMessage?: string, failureMessage?: string) {
       this.isSaveLoading = true
       if (!methodName) {
         methodName = 'PUT'
@@ -553,9 +552,14 @@ export default Vue.extend({
       }
       const doc = this.selectedDoc
 
-      await RequestsUtils.sendRequest(methodName, urlTrail, doc, null,
-          'Changes saved!', 'Failed while saving changes!',
-      ).then(() => {
+      const docTypeText = this.titles[this.selectedDocType + '-singular']
+      if (!successMessage) {
+        successMessage = `Changes to the ${docTypeText} were saved.`
+      }
+      if (!failureMessage) {
+        failureMessage = `Failed while attempting to save the changes to the ${docTypeText}.`
+      }
+      await RequestsUtils.sendRequest(methodName, urlTrail, doc, null, successMessage, failureMessage).then(() => {
         this.updateDocIdNames()
         this.loadGitLog(true)
         // If the saved doc was a url map, refresh the referenced IDs lists
@@ -570,9 +574,12 @@ export default Vue.extend({
       this.setLoadingDocStatus(true)
       this.isDeleteLoading = true
       this.docs.splice(this.selectedDocIndex, 1)
+      const docTypeText = this.titles[this.selectedDocType + '-singular']
+      const successMessage = `The ${docTypeText} was deleted.`
+      const failureMessage = `Failed while attempting to delete the ${docTypeText}.`
       await RequestsUtils.sendRequest('DELETE',
           `configs/${this.selectedBranch}/d/${this.selectedDocType}/e/${this.selectedDocID}/`,
-          null, null, 'Document deleted!', 'Failed while deleting document!',
+          null, null, successMessage, failureMessage,
       ).then(() => {
         this.updateDocIdNames()
         this.loadGitLog(true)
@@ -607,7 +614,7 @@ export default Vue.extend({
     async restoreGitVersion(gitVersion: Commit) {
       const branch = this.selectedBranch
       const doctype: DocumentType = this.selectedDocType
-      const docTitle = this.componentsMap[doctype].title
+      const docTitle = this.titles[doctype]
       const versionId = gitVersion.version
       const urlTrail = `configs/${branch}/d/${doctype}/v/${versionId}/`
 

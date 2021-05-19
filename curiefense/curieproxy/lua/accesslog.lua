@@ -49,7 +49,7 @@ function log_request(request_map)
 
 
   local str_map = json_encode(log_table)
-  request_handle:logDebug(str_map)
+  -- request_handle:logDebug(str_map)
 
   request_handle:streamInfo():dynamicMetadata():set(DMFN, LOG_KEY, str_map)
 

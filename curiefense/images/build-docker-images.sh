@@ -9,7 +9,6 @@ cd "${0%/*}" || exit 1
 # To specify a different repo, set `REPO=my.repo.tld`
 
 REPO=${REPO:-curiefense}
-BUILD_OPT=${BUILD_OPT:-}
 
 declare -A status
 
@@ -24,7 +23,7 @@ if [ -n "$TESTING" ]; then
     DOCKER_TAG="test"
     echo "Building only image $TESTIMG"
 else
-    IMAGES=(confserver curielogger curieproxy-istio curieproxy-envoy curiesync \
+    IMAGES=(curielogger confserver curieproxy-istio curieproxy-envoy curiesync \
             curietasker grafana prometheus redis uiserver fluentd)
 fi
 
@@ -39,7 +38,10 @@ do
         IMG=${REPO}/$image
         echo "=================== $IMG:$DOCKER_TAG ====================="
         # shellcheck disable=SC2086
-        if tar -C "$image" -czh . | docker build -t "$IMG:$DOCKER_TAG" ${BUILD_OPT} -; then
+        # a temporary file is needed on macos -- docker complains otherwise
+        TMPFILE=$(mktemp)
+        tar -czhf "$TMPFILE" -C "$image" .
+        if docker build -t "$IMG:$DOCKER_TAG" "$@" - < "$TMPFILE"; then
             STB="ok"
             if [ -n "$PUSH" ]; then
                 if docker push "$IMG:$DOCKER_TAG"; then
@@ -56,6 +58,7 @@ do
             STP="SKIP"
             GLOBALSTATUS=1
         fi
+        rm "$TMPFILE"
         status[$image]="build=$STB  push=$STP"
 done
 

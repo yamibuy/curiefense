@@ -16,7 +16,7 @@ const axiosMethodsMap: Record<MethodNames, Function> = {
 }
 
 const processRequest = (methodName: MethodNames, apiUrl: string, data: any, config: AxiosRequestConfig,
-                        successMessage: string, failureMessage: string) => {
+                        successMessage: string, failureMessage: string, undoFunction: () => any) => {
   // Get correct axios method
   if (!methodName) {
     methodName = 'GET'
@@ -48,13 +48,13 @@ const processRequest = (methodName: MethodNames, apiUrl: string, data: any, conf
   request = request.then((response: AxiosResponse) => {
     // Toast message
     if (successMessage) {
-      Utils.successToast(successMessage)
+      Utils.toast(successMessage, 'is-success', undoFunction)
     }
     return response
   }).catch((error: Error) => {
     // Toast message
     if (failureMessage) {
-      Utils.failureToast(failureMessage)
+      Utils.toast(failureMessage, 'is-danger', undoFunction)
     }
     throw error
   })
@@ -62,21 +62,14 @@ const processRequest = (methodName: MethodNames, apiUrl: string, data: any, conf
 }
 
 const sendRequest = (methodName: MethodNames, urlTail: string, data?: any, config?: AxiosRequestConfig,
-                     successMessage?: string, failureMessage?: string) => {
+                     successMessage?: string, failureMessage?: string, undoFunction?: () => any) => {
   const apiUrl = `${confAPIRoot}/${confAPIVersion}/${urlTail}`
-  return processRequest(methodName, apiUrl, data, config, successMessage, failureMessage)
-}
-
-const sendLogsRequest = (methodName: MethodNames, urlTail: string, data?: any, config?: AxiosRequestConfig,
-                         successMessage?: string, failureMessage?: string) => {
-  const apiUrl = `${logsAPIRoot}/${logsAPIVersion}/${urlTail}`
-  return processRequest(methodName, apiUrl, data, config, successMessage, failureMessage)
+  return processRequest(methodName, apiUrl, data, config, successMessage, failureMessage, undoFunction)
 }
 
 export default {
   name: 'RequestsUtils',
   sendRequest,
-  sendLogsRequest,
   confAPIRoot,
   confAPIVersion,
   logsAPIRoot,

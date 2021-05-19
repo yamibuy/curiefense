@@ -43,8 +43,18 @@ function should_exclude(request_map, limit_set)
     local exclude = false
     for section, entries in pairs(limit_set["exclude"]) do
         for name, value in pairs(entries) do
-            if request_map[section][name] then
-                if re_match(request_map[section][name], value) then
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
+            if entry then
+                if re_match(entry, value) then
                     -- request_map.handle:logDebug(string.format("limit excluding (%s)[%s]=='%s'", section, name, value))
                     exclude = true
                     break
@@ -59,8 +69,18 @@ function should_include(request_map, limit_set)
     local include = true
     for section, entries in pairs(limit_set["include"]) do
         for name, value in pairs(entries) do
-            if request_map[section][name] then
-                if not re_match(request_map[section][name], value) then
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
+            if entry then
+                if not re_match(entry, value) then
                     -- request_map.handle:logDebug(string.format("limit NOT including (%s)[%s]=='%s'", section, name, value))
                     include = false
                     break
@@ -143,8 +163,16 @@ function build_key(request_map, limit_set, url_map_name)
         local section, name = next(entry)
         -- handle:logDebug(string.format("limit build_key -- iterate key entrie's section %s, name %s", section, name))
         if section and name then
-            local entry = request_map[section][name]
-            -- handle:logDebug(string.format("limit build_key -- iterate key request_map[section][name] %s", request_map[section][name]))
+            local entry
+            if section == 'attrs' and name == 'country' then
+                entry = request_map.geo.country.iso
+            elseif section == 'attrs' and name == 'company' then
+                entry = request_map.geo.company
+            elseif section == 'attrs' and name == 'asn' then
+                entry = request_map.geo.asn
+            else
+                entry = request_map[section][name]
+            end
             if entry then
                 key = key .. entry
             else
@@ -158,9 +186,9 @@ function build_key(request_map, limit_set, url_map_name)
     end
     key = string.format("%s%s%s", url_map_name, limit_set.id, key)
     -- handle:logDebug(string.format("limit build_key -- key %s", key))
-    request_map.handle:logDebug(string.format("limit REQUEST KEY (%s)[%s]=='%s'", url_map_name, limit_set.id, key))
+    -- request_map.handle:logDebug(string.format("limit REQUEST KEY (%s)[%s]=='%s'", url_map_name, limit_set.id, key))
     local hashed_key = hashkey(key)
-    request_map.handle:logDebug(string.format("limit REQUEST KEY hashed (%s)", hashed_key))
+    -- request_map.handle:logDebug(string.format("limit REQUEST KEY hashed (%s)", hashed_key))
     return hashed_key
 end
 
@@ -203,7 +231,7 @@ function check_request(request_map, limit_set, url_map_name)
         local ban_key = gen_ban_key(key)
 
         if redis_is_banned(ban_key) then
-            request_map.handle:logDebug(string.format("redis-limit KEY is BANNED", pair_name, pair_value, pairing_value))
+            -- request_map.handle:logDebug(string.format("redis-limit KEY is BANNED", pair_name, pair_value, pairing_value))
 
             if limit_set.action and limit_set.action.params then
                 limit_react(request_map, limit_set.name, limit_set.action.params.action, ban_key, ttl)
@@ -212,9 +240,9 @@ function check_request(request_map, limit_set, url_map_name)
             end
         end
 
-        request_map.handle:logDebug(string.format("not banned key - going with standard limit check"))
+        -- request_map.handle:logDebug(string.format("not banned key - going with standard limit check"))
         local xert = redis_check_limit(request_map, key, limit, ttl, pairing_value)
-        request_map.handle:logDebug(string.format("redis_check_limit xert  came back with %s", xert))
+        -- request_map.handle:logDebug(string.format("redis_check_limit xert  came back with %s", xert))
         if xert == 503 then
             limit_react(request_map, limit_set.name, limit_set.action, key, ttl)
         end
@@ -300,13 +328,13 @@ function redis_check_set(request_map, redis_conn, key, threshold, set_value, ttl
         end
     )
 
-    request_map.handle:logDebug(string.format("redis_check_set result: %s", json_encode(result)))
+    -- request_map.handle:logDebug(string.format("redis_check_set result: %s", json_encode(result)))
 
     if type(result) == "table" then
         current = result[2]
         expire = result[3]
 
-        request_map.handle:logDebug(string.format("redis_check_set current: %s, expire %s", current, expire))
+        -- request_map.handle:logDebug(string.format("redis_check_set current: %s, expire %s", current, expire))
 
         if "userdata: NULL" == tostring(current) then
             current = 0

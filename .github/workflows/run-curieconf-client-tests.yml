@@ -1,5 +1,10 @@
 name: Run curieconf client Javascript (Jest) tests
-on: [push, pull_request]
+
+on:
+  pull_request:
+    paths:
+      - "curiefense/ui/**"
+      - ".github/workflows/run-curieconf-client-tests.yml"
 
 jobs:
   coverage:

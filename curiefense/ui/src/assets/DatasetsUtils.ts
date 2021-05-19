@@ -32,12 +32,19 @@ const titles: { [key: string]: string } = {
   'args-entry': 'Argument',
   'attrs-entry': 'Attribute',
   'aclpolicies': 'ACL Policies',
+  'aclpolicies-singular': 'ACL Policy',
   'ratelimits': 'Rate Limits',
+  'ratelimits-singular': 'Rate Limit',
   'urlmaps': 'URL Maps',
+  'urlmaps-singular': 'URL Map',
   'wafpolicies': 'WAF Policies',
-  'wafrules': 'WAF Signatures',
+  'wafpolicies-singular': 'WAF Policy',
+  'wafrules': 'WAF Rules',
+  'wafrules-singular': 'WAF Rule',
   'tagrules': 'Tag Rules',
+  'tagrules-singular': 'Tag Rule',
   'flowcontrol': 'Flow Control',
+  'flowcontrol-singular': 'Flow Control',
 }
 
 const limitOptionsTypes = {
@@ -106,11 +113,10 @@ const newDocEntryFactory: { [key: string]: Function } = {
   tagrules(): TagRule {
     return {
       'id': generateUUID2(),
-      'name': 'New Tag Rules',
+      'name': 'New Tag Rule',
       'source': 'self-managed',
       'mdate': (new Date()).toISOString(),
       'notes': 'New List Notes and Remarks',
-      'entries_relation': 'OR',
       'active': true,
       'tags': [],
       'action': {

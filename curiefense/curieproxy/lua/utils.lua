@@ -154,7 +154,7 @@ function map_ip(headers, metadata, map)
     map.attrs.remote_addr = client_addr
     map.attrs.ipnum = ip_to_num(client_addr)
 
-    local city, country, asn, company = unpack(ipinfo(client_addr, map.handle))
+    local city, country, iso, asn, company = unpack(ipinfo(client_addr, map.handle))
 
     map.geo.city = {}
     map.geo.country = {}
@@ -162,7 +162,7 @@ function map_ip(headers, metadata, map)
     map.geo.continent = {}
 
     if city then
-        map.geo.city.name = city.city.names.en
+        map.geo.city.name = (city.city and city.city.names.en) or "-"
 
         -- Use lat and lon to match the key names
         -- expected by Elasticsearch's geo_ip field type
@@ -195,7 +195,7 @@ function tagify(input)
 end
 
 function tag_request(r_map, tags)
-    r_map.handle:logDebug(format('r_map.attrs %s', cjson.encode(r_map.attrs)))
+    -- r_map.handle:logDebug(format('r_map.attrs %s', cjson.encode(r_map.attrs)))
     if type(tags) == "table" then
         for _, tag in ipairs(tags) do
             tag = tagify(tag)
