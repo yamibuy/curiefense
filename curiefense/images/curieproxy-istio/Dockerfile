@@ -1,4 +1,4 @@
-FROM curiefense/envoy-istio-cf:1fc81107d58c138eba288f3d8b567bbca4b6423f AS envoy-istio-cf
+FROM curiefense/envoy-istio-cf:66815c263c6b178df7cecacf69f9b374435d1bcd AS envoy-istio-cf
 FROM docker.io/istio/proxyv2:1.9.3
 
 RUN apt-get update && \
