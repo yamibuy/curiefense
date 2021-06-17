@@ -359,6 +359,7 @@ export default Vue.extend({
       await this.loadSelectedDocData()
       this.addMissingDefaultsToDoc()
       this.setLoadingDocStatus(false)
+      this.loadGitLog()
       this.goToRoute()
     },
 

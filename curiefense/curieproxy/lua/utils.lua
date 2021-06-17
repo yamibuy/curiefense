@@ -1,5 +1,6 @@
 module(..., package.seeall)
 
+local os        = require "os"
 local cjson     = require "cjson"
 local json_safe = require "cjson.safe"
 local rex       = require "rex_pcre2"
@@ -135,8 +136,12 @@ end
 function map_ip(headers, metadata, map)
     local client_addr = "1.1.1.1"
     local xff = headers:get("x-forwarded-for")
-    local hops = metadata:get("xff_trusted_hops") or "1"
-
+    
+    local hops = os.getenv("XFF_TRUSTED_HOPS")
+    if not hops then
+        hops = metadata:get("xff_trusted_hops") or "1"
+    end
+    
     hops = tonumber(hops)
     local addrs = map_fn(xff:split(","), trim)
 
