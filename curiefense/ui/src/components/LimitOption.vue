@@ -136,7 +136,6 @@ export default Vue.extend({
         return [] as string[]
       },
     },
-    index: Number,
   },
   data() {
     const limitOptionsTypes = DatasetsUtils.limitOptionsTypes
@@ -192,9 +191,7 @@ export default Vue.extend({
     },
   },
   updated() {
-    const selectedOption = {...this.selectedOption}
-    const emitValue = this.index ? [selectedOption, this.index] : [selectedOption];
-    this.$emit( 'change', ...emitValue )
+    this.$emit( 'change', {...this.selectedOption})
   },
   methods: {
     isCategoryArgsCookiesHeaders(limitRuleType: LimitRuleType) {

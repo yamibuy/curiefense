@@ -7,7 +7,6 @@ import Vue from 'vue'
 describe('LimitOption.vue', () => {
   let option: OptionObject
   let wrapper: Wrapper<Vue>
-  const WANTED_INDEX: Number = Math.floor( Math.random() * 10000 )
 
   beforeEach(async () => {
     option = {
@@ -18,7 +17,6 @@ describe('LimitOption.vue', () => {
         option: option,
         useDefaultSelf: true,
         useValue: true,
-        index: WANTED_INDEX,
       },
     })
     await Vue.nextTick()
@@ -180,29 +178,8 @@ describe('LimitOption.vue', () => {
 
   describe('emit changes', () => {
     describe('type dropdown', () => {
-      test('should emit new option and no index if it wasn\'t passed as props', async () => {
-        const wantedEmit = {
-          type: 'self',
-          key: 'self',
-        }
-        const wrapperNoIndex = mount(LimitOption, {
-          propsData: {
-            option: option,
-            useDefaultSelf: true,
-            useValue: true,
-          },
-        })
-        const selection = wrapperNoIndex.find('.option-type-selection')
-        const options = selection.findAll('option')
-        // set to not self so we would be able to change to default
-        options.at(1).setSelected()
-        options.at(0).setSelected()
-        await Vue.nextTick()
-        expect(wrapperNoIndex.emitted('change')).toBeTruthy()
-        expect(wrapperNoIndex.emitted('change')[0]).toEqual([wantedEmit])
-      })
 
-      test('should emit new option and index when type selected from dropdown - self', async () => {
+      test('should emit new option when type selected from dropdown - self', async () => {
         const wantedEmit = {
           type: 'self',
           key: 'self',
@@ -214,7 +191,7 @@ describe('LimitOption.vue', () => {
         options.at(0).setSelected()
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
       })
 
       test('should emit new option when type selected from dropdown - headers', async () => {
@@ -228,7 +205,7 @@ describe('LimitOption.vue', () => {
         options.at(1).setSelected()
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
       })
 
       test('should emit new option when type selected from dropdown - cookies', async () => {
@@ -242,7 +219,7 @@ describe('LimitOption.vue', () => {
         options.at(2).setSelected()
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
       })
 
       test('should emit new option when type selected from dropdown - args', async () => {
@@ -256,7 +233,7 @@ describe('LimitOption.vue', () => {
         options.at(3).setSelected()
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
       })
 
       test('should emit new option when type selected from dropdown - attrs', async () => {
@@ -270,7 +247,7 @@ describe('LimitOption.vue', () => {
         options.at(4).setSelected()
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
       })
     })
 
@@ -291,7 +268,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedKeyValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
 
       test('should emit new option when key selected from dropdown - cookies', async () => {
@@ -310,7 +287,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedKeyValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
 
       test('should emit new option when key input changes - args', async () => {
@@ -329,7 +306,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedKeyValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
 
       test('should emit new option when key selected from dropdown - attrs', async () => {
@@ -348,7 +325,7 @@ describe('LimitOption.vue', () => {
         keyOptions.at(3).setSelected()
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
     })
 
@@ -368,7 +345,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
 
       test('should emit new option when value selected from dropdown - cookies', async () => {
@@ -386,7 +363,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
 
       test('should emit new option when value input changes - args', async () => {
@@ -404,7 +381,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
 
       test('should emit new option when value input changes - attrs', async () => {
@@ -422,7 +399,7 @@ describe('LimitOption.vue', () => {
         input.setValue(wantedValue)
         await Vue.nextTick()
         expect(wrapper.emitted('change')).toBeTruthy()
-        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+        expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
       })
     })
 
@@ -435,7 +412,6 @@ describe('LimitOption.vue', () => {
                 oldKey: '',
               },
               useValue: true,
-              index: WANTED_INDEX,
             },
           })
           await Vue.nextTick()
@@ -452,7 +428,7 @@ describe('LimitOption.vue', () => {
             value: undefined as string,
           }
           expect(wrapper.emitted('change')).toBeTruthy()
-          expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+          expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
         })
 
         test('should emit key change correctly', async () => {
@@ -467,7 +443,7 @@ describe('LimitOption.vue', () => {
           input.setValue(wantedKeyValue)
           await Vue.nextTick()
           expect(wrapper.emitted('change')).toBeTruthy()
-          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
         })
 
         test('should emit value change correctly', async () => {
@@ -481,7 +457,7 @@ describe('LimitOption.vue', () => {
           input.setValue(wantedValue)
           await Vue.nextTick()
           expect(wrapper.emitted('change')).toBeTruthy()
-          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
         })
       })
 
@@ -491,7 +467,6 @@ describe('LimitOption.vue', () => {
             propsData: {
               option: undefined,
               useValue: true,
-              index: WANTED_INDEX,
             },
           })
           await Vue.nextTick()
@@ -508,7 +483,7 @@ describe('LimitOption.vue', () => {
             value: undefined as string,
           }
           expect(wrapper.emitted('change')).toBeTruthy()
-          expect(wrapper.emitted('change')[0]).toEqual([wantedEmit, WANTED_INDEX])
+          expect(wrapper.emitted('change')[0]).toEqual([wantedEmit])
         })
 
         test('should emit key change correctly', async () => {
@@ -523,7 +498,7 @@ describe('LimitOption.vue', () => {
           input.setValue(wantedKeyValue)
           await Vue.nextTick()
           expect(wrapper.emitted('change')).toBeTruthy()
-          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
         })
 
         test('should emit value change correctly', async () => {
@@ -537,7 +512,7 @@ describe('LimitOption.vue', () => {
           input.setValue(wantedValue)
           await Vue.nextTick()
           expect(wrapper.emitted('change')).toBeTruthy()
-          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit, WANTED_INDEX])
+          expect(wrapper.emitted('change')[1]).toEqual([wantedEmit])
         })
       })
     })
