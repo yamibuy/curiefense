@@ -5,10 +5,9 @@ import {mount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
 
 describe('LimitOption.vue', () => {
-
   let option: OptionObject
   let wrapper: Wrapper<Vue>
-  const WANTED_INDEX: Number = Math.floor ( Math.random() * 10000 )
+  const WANTED_INDEX: Number = Math.floor( Math.random() * 10000 )
 
   beforeEach(async () => {
     option = {
@@ -19,7 +18,7 @@ describe('LimitOption.vue', () => {
         option: option,
         useDefaultSelf: true,
         useValue: true,
-        index: WANTED_INDEX
+        index: WANTED_INDEX,
       },
     })
     await Vue.nextTick()
@@ -180,10 +179,8 @@ describe('LimitOption.vue', () => {
   })
 
   describe('emit changes', () => {
-
     describe('type dropdown', () => {
-
-      test("should emit new option and no index if it wasn't passed as props", async () => {
+      test('should emit new option and no index if it wasn\'t passed as props', async () => {
         const wantedEmit = {
           type: 'self',
           key: 'self',
@@ -438,7 +435,7 @@ describe('LimitOption.vue', () => {
                 oldKey: '',
               },
               useValue: true,
-              index: WANTED_INDEX
+              index: WANTED_INDEX,
             },
           })
           await Vue.nextTick()
@@ -494,7 +491,7 @@ describe('LimitOption.vue', () => {
             propsData: {
               option: undefined,
               useValue: true,
-              index: WANTED_INDEX
+              index: WANTED_INDEX,
             },
           })
           await Vue.nextTick()
