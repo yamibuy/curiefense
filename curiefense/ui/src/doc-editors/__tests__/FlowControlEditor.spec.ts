@@ -11,52 +11,53 @@ import axios from 'axios'
 import {FlowControl} from '@/types'
 
 describe('FlowControlEditor.vue', () => {
+  let docs: FlowControl[]
   let wrapper: Wrapper<Vue>
-  const docs: FlowControl[] = [
-    {
-      'exclude': ['devops', 'internal'],
-      'include': ['china'],
-      'name': 'flow control',
-      'key': [
-        {
-          'attrs': 'ip',
-        },
-      ],
-      'sequence': [
-        {
-          'method': 'GET',
-          'uri': '/login',
-          'cookies': {
-            'foo': 'bar',
-          },
-          'headers': {
-            'host': 'www.example.com',
-          },
-          'args': {},
-        },
-        {
-          'method': 'POST',
-          'uri': '/login',
-          'cookies': {
-            'foo': 'bar',
-          },
-          'headers': {
-            'host': 'www.example.com',
-            'test': 'one',
-          },
-          'args': {},
-        },
-      ],
-      'active': true,
-      'notes': 'New Flow Control Notes and Remarks',
-      'action': {
-        'type': 'default',
-      },
-      'ttl': 60,
-      'id': 'c03dabe4b9ca',
-    },
-  ]
   beforeEach(() => {
+    docs = [
+      {
+        'exclude': ['devops', 'internal'],
+        'include': ['china'],
+        'name': 'flow control',
+        'key': [
+          {
+            'attrs': 'ip',
+          },
+        ],
+        'sequence': [
+          {
+            'method': 'GET',
+            'uri': '/login',
+            'cookies': {
+              'foo': 'bar',
+            },
+            'headers': {
+              'host': 'www.example.com',
+            },
+            'args': {},
+          },
+          {
+            'method': 'POST',
+            'uri': '/login',
+            'cookies': {
+              'foo': 'bar',
+            },
+            'headers': {
+              'host': 'www.example.com',
+              'test': 'one',
+            },
+            'args': {},
+          },
+        ],
+        'active': true,
+        'notes': 'New Flow Control Notes and Remarks',
+        'action': {
+          'type': 'default',
+        },
+        'ttl': 60,
+        'id': 'c03dabe4b9ca',
+      },
+    ]
     wrapper = shallowMount(FlowControlEditor, {
       propsData: {
         selectedDoc: docs[0],
