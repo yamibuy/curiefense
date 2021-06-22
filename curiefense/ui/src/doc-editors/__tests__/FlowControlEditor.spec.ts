@@ -121,7 +121,6 @@ describe('FlowControlEditor.vue', () => {
   })
 
   describe('count by key', () => {
-
     test('should not change any key except the one was changed in case of multiple keys', async () => {
       const wantedKeys = [
         {
@@ -135,15 +134,15 @@ describe('FlowControlEditor.vue', () => {
         propsData: {
           selectedDoc: {
             ...docs[0],
-            key: wantedKeys
+            key: wantedKeys,
           },
         },
       })
       await Vue.nextTick()
       const lastLimitOptions = wrapperMultipleKeys.findAllComponents(LimitOption).at(1)
       const newOption = {
-        type: "args",
-        key: "ip",
+        type: 'args',
+        key: 'ip',
       }
       lastLimitOptions.vm.$emit('change', newOption, 0)
       await Vue.nextTick()
