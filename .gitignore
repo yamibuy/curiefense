@@ -32,4 +32,3 @@ venv-*
 */node_modules
 internal-notes/
 curiefense/ui/yarn.lock
-.gitignore
