@@ -11,53 +11,52 @@ import axios from 'axios'
 import {FlowControl} from '@/types'
 
 describe('FlowControlEditor.vue', () => {
-  let docs: FlowControl[]
   let wrapper: Wrapper<Vue>
-  beforeEach(() => {
-    docs = [
-      {
-        'exclude': ['devops', 'internal'],
-        'include': ['china'],
-        'name': 'flow control',
-        'key': [
-          {
-            'attrs': 'ip',
-          },
-        ],
-        'sequence': [
-          {
-            'method': 'GET',
-            'uri': '/login',
-            'cookies': {
-              'foo': 'bar',
-            },
-            'headers': {
-              'host': 'www.example.com',
-            },
-            'args': {},
-          },
-          {
-            'method': 'POST',
-            'uri': '/login',
-            'cookies': {
-              'foo': 'bar',
-            },
-            'headers': {
-              'host': 'www.example.com',
-              'test': 'one',
-            },
-            'args': {},
-          },
-        ],
-        'active': true,
-        'notes': 'New Flow Control Notes and Remarks',
-        'action': {
-          'type': 'default',
+  const docs: FlowControl[] = [
+    {
+      'exclude': ['devops', 'internal'],
+      'include': ['china'],
+      'name': 'flow control',
+      'key': [
+        {
+          'attrs': 'ip',
         },
-        'ttl': 60,
-        'id': 'c03dabe4b9ca',
+      ],
+      'sequence': [
+        {
+          'method': 'GET',
+          'uri': '/login',
+          'cookies': {
+            'foo': 'bar',
+          },
+          'headers': {
+            'host': 'www.example.com',
+          },
+          'args': {},
+        },
+        {
+          'method': 'POST',
+          'uri': '/login',
+          'cookies': {
+            'foo': 'bar',
+          },
+          'headers': {
+            'host': 'www.example.com',
+            'test': 'one',
+          },
+          'args': {},
+        },
+      ],
+      'active': true,
+      'notes': 'New Flow Control Notes and Remarks',
+      'action': {
+        'type': 'default',
       },
-    ]
+      'ttl': 60,
+      'id': 'c03dabe4b9ca',
+    },
+  ]
+  beforeEach(() => {
     wrapper = shallowMount(FlowControlEditor, {
       propsData: {
         selectedDoc: docs[0],
@@ -122,6 +121,35 @@ describe('FlowControlEditor.vue', () => {
   })
 
   describe('count by key', () => {
+
+    test('should not change any key except the one was changed in case of multiple keys', async () => {
+      const wantedKeys = [
+        {
+          'attrs': 'ip',
+        },
+        {
+          'cookies': 'ip',
+        },
+      ]
+      const wrapperMultipleKeys = shallowMount(FlowControlEditor, {
+        propsData: {
+          selectedDoc: {
+            ...docs[0],
+            key: wantedKeys
+          },
+        },
+      })
+      await Vue.nextTick()
+      const lastLimitOptions = wrapperMultipleKeys.findAllComponents(LimitOption).at(1)
+      const newOption = {
+        type: "args",
+        key: "ip",
+      }
+      lastLimitOptions.vm.$emit('change', newOption, 0)
+      await Vue.nextTick()
+      expect((wrapperMultipleKeys.vm as any).localDoc.key[0]).toEqual(wantedKeys[0])
+    })
+
     test('should add key when button is clicked', async () => {
       const addKeyButton = wrapper.find('.add-key-button')
       addKeyButton.trigger('click')
