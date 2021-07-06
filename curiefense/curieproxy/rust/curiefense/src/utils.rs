@@ -211,7 +211,10 @@ impl RequestInfo {
                 "path": self.rinfo.qinfo.qpath,
                 "query": self.rinfo.qinfo.query,
                 "ip": self.rinfo.geoip.ipstr,
-                "ipnum": ipnum
+                "ipnum": ipnum,
+                "authority": self.rinfo.meta.authority,
+                "method": self.rinfo.meta.method,
+                "path": self.rinfo.meta.path
             },
             "tags": tags,
             "geo": self.rinfo.geoip.to_json()
