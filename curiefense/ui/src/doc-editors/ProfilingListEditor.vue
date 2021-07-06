@@ -124,7 +124,8 @@
           <div class="column is-9">
             <entries-relation-list :rule.sync="localDoc.rule"
                                    :editable="editable"
-                                   @update:rule="emitDocUpdate">
+                                   @update:rule="emitDocUpdate"
+                                   @valid="emitFormValid">
             </entries-relation-list>
           </div>
         </div>
@@ -157,6 +158,7 @@ export default Vue.extend({
   props: {
     selectedDoc: Object,
     apiPath: String,
+    docs: Array,
   },
 
   computed: {
@@ -211,12 +213,16 @@ export default Vue.extend({
     fullFormattedModifiedDate(): string {
       return DateTimeUtils.isoToNowFullCuriefenseFormat(this.localDoc?.mdate)
     },
-
   },
 
   methods: {
+
     emitDocUpdate() {
       this.$emit('update:selectedDoc', this.localDoc)
+    },
+
+    emitFormValid( isValid: boolean ) {
+      this.$emit('form-invalid', isValid)
     },
 
     setRuleRelation(relation: Relation) {
@@ -305,7 +311,6 @@ export default Vue.extend({
       })
     },
   },
-
 })
 </script>
 
