@@ -214,7 +214,8 @@ impl RequestInfo {
                 "ipnum": ipnum,
                 "authority": self.rinfo.meta.authority,
                 "method": self.rinfo.meta.method,
-                "path": self.rinfo.meta.path
+                "path": self.rinfo.meta.path,
+                "extra": self.rinfo.meta.extra                
             },
             "tags": tags,
             "geo": self.rinfo.geoip.to_json()
