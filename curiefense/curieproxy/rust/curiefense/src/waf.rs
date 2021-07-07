@@ -62,41 +62,43 @@ impl WafBlock {
                 .unwrap_or(Value::Null),
             WafBlock::TooManyEntries(idx) => json!({
                 "section": idx,
-                "value": {
-                    "msg": "Too many entries"
-                }
+                "value": "msg": "Too many entries"
+                // "value": {
+                //     "msg": "Too many entries"
+                // }
             }),
             WafBlock::EntryTooLarge(idx, nm) => json!({
                 "section": idx,
                 "name": nm,
-                "value": {
-                    "msg": "Entry too large"
-                }
+                "value": "Entry too large"
+                // "value": {
+                //     "msg": "Entry too large"
+                // }
             }),
             WafBlock::SqlInjection(wmatch, fp) => json!({
                 "section": wmatch.section,
                 "name": wmatch.name,
-                "value": wmatch.value,
-                "value": {
-                    "msg": "SQLi",
-                    "fingerprint": fp
-                }
+                "value": wmatch.value
+                // "value": {
+                //     "msg": "SQLi",
+                //     "fingerprint": fp
+                // }
             }),
             WafBlock::Xss(wmatch) => json!({
                 "section": wmatch.section,
                 "name": wmatch.name,
-                "value": wmatch.value,
-                "value": {
-                    "msg": "XSS"
-                }
+                "value": wmatch.value
+                // "value": {
+                //     "msg": "XSS"
+                // }
             }),
             WafBlock::Mismatch(wmatch) => json!({
                 "section": wmatch.section,
                 "name": wmatch.name,
-                "value": wmatch.value,
-                "value": {
-                    "msg": "Mismatch"
-                }
+                "value": wmatch.value
+                // "value": {
+                //     "msg": "Mismatch"
+                // }
             }),
         };
 
