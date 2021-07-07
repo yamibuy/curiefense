@@ -102,6 +102,7 @@ local function run_inspect_request(raw_request_map)
     return response
 end
 
+--[[ should restore this once waf fixes are done
 -- testing from envoy metadata
 local function test_raw_request(request_path)
   print("Testing " .. request_path)
@@ -138,6 +139,7 @@ local function test_raw_request(request_path)
     end
   end
 end
+]]--
 
 -- remove all keys from redis
 local function clean_redis()
