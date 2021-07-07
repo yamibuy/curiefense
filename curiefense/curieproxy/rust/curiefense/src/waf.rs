@@ -62,7 +62,7 @@ impl WafBlock {
                 .unwrap_or(Value::Null),
             WafBlock::TooManyEntries(idx) => json!({
                 "section": idx,
-                "value": "msg": "Too many entries"
+                "value": "Too many entries"
                 // "value": {
                 //     "msg": "Too many entries"
                 // }
