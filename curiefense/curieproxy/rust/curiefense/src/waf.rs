@@ -62,6 +62,7 @@ impl WafBlock {
                 .unwrap_or(Value::Null),
             WafBlock::TooManyEntries(idx) => json!({
                 "section": idx,
+                "initiator": "waf",
                 "value": "Too many entries"
                 // "value": {
                 //     "msg": "Too many entries"
@@ -69,6 +70,7 @@ impl WafBlock {
             }),
             WafBlock::EntryTooLarge(idx, nm) => json!({
                 "section": idx,
+                "initiator": "waf",
                 "name": nm,
                 "value": "Entry too large"
                 // "value": {
@@ -77,6 +79,7 @@ impl WafBlock {
             }),
             WafBlock::SqlInjection(wmatch, fp) => json!({
                 "section": wmatch.section,
+                "initiator": "waf",
                 "name": wmatch.name,
                 "value": wmatch.value
                 // "value": {
@@ -86,6 +89,7 @@ impl WafBlock {
             }),
             WafBlock::Xss(wmatch) => json!({
                 "section": wmatch.section,
+                "initiator": "waf",
                 "name": wmatch.name,
                 "value": wmatch.value
                 // "value": {
@@ -94,6 +98,7 @@ impl WafBlock {
             }),
             WafBlock::Mismatch(wmatch) => json!({
                 "section": wmatch.section,
+                "initiator": "waf",
                 "name": wmatch.name,
                 "value": wmatch.value
                 // "value": {
@@ -106,7 +111,7 @@ impl WafBlock {
             atype: ActionType::Block,
             block_mode: true,
             ban: false,
-            status: 503,
+            status: 403,
             headers: None,
             reason,
             content: "Access denied".to_string(),
