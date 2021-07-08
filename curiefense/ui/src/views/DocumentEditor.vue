@@ -151,7 +151,7 @@
             :selectedDoc.sync="selectedDoc"
             :docs.sync="docs"
             :apiPath="documentAPIPath"
-            @form-invalid="isDocumentInvalid = $event"
+            @form-valid="isDocumentInvalid = $event"
             ref="currentComponent">
         </component>
         <hr/>

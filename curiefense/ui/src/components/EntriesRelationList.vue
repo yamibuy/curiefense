@@ -98,25 +98,25 @@
                     <div v-if="isCategoryArgsCookiesHeaders(newEntryCategory)"
                          class="control has-icons-left is-fullwidth new-entry-name">
                       <input class="input is-small new-entry-name-input"
-                             :class="{ 'is-danger': isError( `${newEntryCategory}${sectionIndex}` )}"
+                             :class="{ 'is-danger': isErrorField( `${newEntryCategory}${sectionIndex}` )}"
                              title="Name"
                              placeholder="Name"
-                             @keyup="validateRegex( `${newEntryCategory}${sectionIndex}`, $event.target )"
+                             @input="validateRegex( `${newEntryCategory}${sectionIndex}`, $event.target.value )"
                              v-model="newEntryItem.firstAttr"/>
                       <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                     </div>
                     <textarea v-else
                               title="Entries"
                               v-model="newEntryItem.firstAttr"
-                              @input="validateValue( sectionIndex, $event.target )"
+                              @input="validateValue( sectionIndex, $event.target.value )"
                               placeholder="One entry per line, use '#' for annotation"
                               class="textarea is-small is-fullwidth new-entry-textarea"
-                              :class="{ 'is-danger': isError( `${newEntryCategory}${sectionIndex}` )}"
+                              :class="{ 'is-danger': isErrorField( `${newEntryCategory}${sectionIndex}` )}"
                               rows="3">
                     </textarea>
-                    <div class="help is-danger" v-if="errorsIps.length">
+                    <div class="help is-danger" v-if="invalidIPs.length">
                       <div class="mr-2">Please check the following:</div>
-                      <div v-for="(err,errIndex) in errorsIps" :key="errIndex">
+                      <div v-for="(err,errIndex) in invalidIPs" :key="errIndex">
                         {{ err }}
                       </div>
                     </div>
@@ -128,7 +128,7 @@
                         :class="{'is-danger': errorSecondAttr( sectionIndex )}"
                         :placeholder="isCategoryArgsCookiesHeaders( newEntryCategory ) ? 'Value' : 'Annotation'"
                         v-model="newEntryItem.secondAttr"
-                        @input="onSecondAttr( sectionIndex, $event.target )"
+                        @input="onChangeSecondAttr( sectionIndex, $event.target.value )"
                       />
                       <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
                     </div>
@@ -269,9 +269,9 @@ export default Vue.extend({
         firstAttr: '',
         secondAttr: '',
       },
-      duplicates: [],
-      errorsIps: [],
-      errors: [],
+      duplicatedEntries: [],
+      invalidIPs: [],
+      entriesErrors: [],
     }
   },
 
@@ -315,7 +315,7 @@ export default Vue.extend({
       immediate: true,
       deep: true,
     },
-    errors: {
+    entriesErrors: {
       handler( value ) {
         this.$emit('valid', !!value.length)
       },
@@ -407,8 +407,8 @@ export default Vue.extend({
     },
 
     addEntry(section: TagRuleSection, sectionIndex: number) {
-      if ( this.isError( `${this.newEntryCategory}${sectionIndex}` ) || !this.newEntryItem.firstAttr.trim() ) {
-        return;
+      if ( this.isErrorField( `${this.newEntryCategory}${sectionIndex}` ) || !this.newEntryItem.firstAttr.trim() ) {
+        return
       }
       // args cookies or headers
       if (this.isCategoryArgsCookiesHeaders(this.newEntryCategory)) {
@@ -447,139 +447,130 @@ export default Vue.extend({
 
     cancelEntry( sectionIndex: number ) {
       this.setNewEntryIndex(-1)
-      this.errorsIps = []
+      this.invalidIPs = []
       this.clearError( `${this.newEntryCategory}${sectionIndex}` )
-      this.localRule.sections.forEach(({entries}, i: number ) => {
-        if ( !entries?.length ) {
-          this.localRule.sections.splice( i, 1 );
-        }
-      });
+      if ( !this.localRule.sections[sectionIndex].entries.length ) {
+        this.removeSection(sectionIndex)
+      }
     },
 
     clearFields() {
       this.newEntryItem = {
         firstAttr: '',
         secondAttr: '',
-      };
-      this.clearError();
-      this.errorsIps = [];
+      }
+      this.clearError()
+      this.invalidIPs = []
     },
 
     clearError( field: string='' ) {
-      this.errors = field ? this.errors.filter( (err: string) => err !== field ) : []
+      this.entriesErrors = field ? this.entriesErrors.filter( (err: string) => err !== field ) : []
     },
 
-    isError( field: string ) {
-      return this.errors.includes( field )
+    isErrorField( field: string ) {
+      return this.entriesErrors.includes( field )
     },
 
     addError( field: string ) {
-      if ( !this.isError( field )) {
-        this.errors.push( field );
+      if ( !this.isErrorField( field )) {
+        this.entriesErrors.push( field )
       }
     },
 
     validateDuplicates() {
-      this.resetDuplicates()
+      this.duplicatedEntries = []
       this.rule.sections.forEach(
         ({entries}, sectionIndex: number ) => entries.map(
           ({0: category, 1: value}) => {
             const isDuplicate = entries.filter(({0: eCat, 1: eVal}) => eCat === category && eVal === value )?.length > 1
             if ( isDuplicate && !this.isEntryDuplicate( sectionIndex, [category, value])) {
-              this.duplicates.push( [sectionIndex, category, value] )
+              this.duplicatedEntries.push( [sectionIndex, category, value] )
             }
             return !isDuplicate
           },
         ).every((entry) => entry ),
       )
-      if ( this.duplicates.length ) {
-        const sectionsMsg = (number: number) => this.rule.sections.length > 1 ? `Section ${number+1}: ` : '';
-        const duplicatesMsg = this.duplicates.reduce(
-          ( prev: string, [section, category, value]: [ number, Category, string] ) => `
-            ${prev}<br />${sectionsMsg( section )}${this.listEntryTypes[category]?.title} = ${this.dualCell( value )}
-          `,
+      if ( this.duplicatedEntries.length ) {
+        const duplicatesMsg = this.duplicatedEntries.reduce(
+          ( prev: string, [section, category, value]: [ number, Category, string] ) => {
+            const sectionMsg = this.rule.sections.length > 1 ? `Section ${section+1}: ` : ''
+            return `${prev}<br />${sectionMsg}${this.listEntryTypes[category]?.title} = ${this.dualCell( value )}`
+          },
           '',
-        );
+        )
         this.addError( 'duplicate' )
-        Utils.toast( `There are duplicate entries in the list:${duplicatesMsg}`, 'is-danger' );
+        Utils.toast( `There are duplicate entries in the list:${duplicatesMsg}`, 'is-danger' )
       } else {
         this.clearError( 'duplicate' )
-        Utils.closeToast()
       }
     },
 
-    resetDuplicates() {
-      this.duplicates = []
-    },
-
-    isEntryDuplicate( sIdx: number, [curCat, curVal]: [string, TagRuleSectionEntry[1]] ) {
-      return this.duplicates.findIndex(
-        ([section, category, value]) => section === sIdx && category === curCat && value === curVal,
+    isEntryDuplicate( sectionIndex: number, [currentCategory, currentValue]: [string, TagRuleSectionEntry[1]] ) {
+      return this.duplicatedEntries.findIndex(
+        ([section, category, value]) => section === sectionIndex && category === currentCategory && value === currentValue,
       ) > -1
     },
 
-    validateValue( sectionId: number, target: HTMLInputElement ) {
-      const {validateNotEmpty, newEntryCategory, validateIp, validateRegex} = this;
-      let validator: Function = validateNotEmpty;
+    validateValue( sectionIndex: number, value: string ) {
+      const {validateNotEmpty, newEntryCategory, validateIp, validateRegex} = this
+      let validator: Function = validateNotEmpty
       if (['path', 'query', 'uri'].includes( newEntryCategory )) {
-        validator = validateRegex;
+        validator = validateRegex
       } else if ( newEntryCategory === 'ip' ) {
-        validator = validateIp;
+        validator = validateIp
       }
-      validator( `${this.newEntryCategory}${sectionId}`, target );
+      validator( `${newEntryCategory}${sectionIndex}`, value )
     },
 
-    validateIp( id: string, target: HTMLInputElement ) {
-      target.style.height = 'auto';
-      target.style.height = `${target.scrollHeight}px`;
-      const ipPattern = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*(:([0-9]|[1-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|(\/[0-9]|\/[1-2][0-9]|\/[1-3][0-2]))?(\s?(#([a-zA-Z0-9$@$!%*?&#^-_. +:"'/\\;,-=]+)?)?)?$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*(:([0-9]|[1-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|(\/[0-9]|\/[1-2][0-9]|\/[1-3][0-2]))?(\s?(#([a-zA-Z0-9$@$!%*?&#^-_. +:"'/\\;,-=]+)?)?)?$))/;
-      const ipList = target.value.split('\n').filter( (ip) => ip );
-      this.errorsIps = [];
+    validateIp( id: string, value: string ) {
+      const ipPattern = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*(:([0-9]|[1-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|(\/[0-9]|\/[1-2][0-9]|\/[1-3][0-2]))?(\s?(#([a-zA-Z0-9$@$!%*?&#^-_. +:"'/\\;,-=]+)?)?)?$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*(:([0-9]|[1-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])|(\/[0-9]|\/[1-2][0-9]|\/[1-3][0-2]))?(\s?(#([a-zA-Z0-9$@$!%*?&#^-_. +:"'/\\;,-=]+)?)?)?$))/
+      const ipList = value.split('\n').filter( (ip) => ip )
+      this.invalidIPs = []
       ipList.forEach(( line, index ) => {
         if ( !this.validate( line, ipPattern, id )) {
-          this.errorsIps.push( ipList.length > 1 ? `(line ${index+1}) ${line}` : line )
+          this.invalidIPs.push( ipList.length > 1 ? `(line ${index+1}) ${line}` : line )
         }
-      });
-      if ( this.errorsIps.length ) {
-        this.addError( id );
+      })
+      if ( this.invalidIPs.length ) {
+        this.addError( id )
       }
     },
 
-    validateRegex( id: string, target: HTMLInputElement ) {
-      const val = target.value.trim();
+    validateRegex( id: string, value: string ) {
+      const val = value.trim()
       try {
-        this.clearError( id );
-        new RegExp( val );
+        this.clearError( id )
+        new RegExp( val )
       } catch {
-        this.validate( val, /^[\w-]+$/, id );
+        this.validate( val, /^[\w-]+$/, id )
       }
     },
 
-    validateNotEmpty( id: string, target: HTMLInputElement ) {
-      const val = target.value.trim();
-      this.clearError( id );
-      this.validate( val, null, id );
+    validateNotEmpty( id: string, value: string ) {
+      const val = value.trim()
+      this.clearError( id )
+      this.validate( val, null, id )
     },
 
     validate( value: string, pattern: RegExp, name: string ) {
-      const isValid = pattern ? ( new RegExp( pattern )).test( value ) : value.length;
-      if ( !isValid && !this.isError( name )) {
-        this.addError( name );
+      const isValid = pattern ? ( new RegExp( pattern )).test( value ) : value.length
+      if ( !isValid && !this.isErrorField( name )) {
+        this.addError( name )
       } else if ( isValid ) {
-        this.clearError( name );
+        this.clearError( name )
       }
-      return isValid;
+      return isValid
     },
 
     errorSecondAttr( sectionIndex: number ) {
-      const {isCategoryArgsCookiesHeaders, newEntryCategory, isError} = this;
-      return isCategoryArgsCookiesHeaders(newEntryCategory) && isError(`${newEntryCategory}${sectionIndex}-secondAttr`);
+      const {isCategoryArgsCookiesHeaders, newEntryCategory, isErrorField} = this
+      return isCategoryArgsCookiesHeaders(newEntryCategory) && isErrorField(`${newEntryCategory}${sectionIndex}-secondAttr`)
     },
 
-    onSecondAttr( sectionIndex: number, target: HTMLInputElement ) {
-      const {isCategoryArgsCookiesHeaders, newEntryCategory, validateRegex} = this;
+    onChangeSecondAttr( sectionIndex: number, value: string ) {
+      const {isCategoryArgsCookiesHeaders, newEntryCategory, validateRegex} = this
       if ( isCategoryArgsCookiesHeaders( newEntryCategory )) {
-        validateRegex( `${newEntryCategory}${sectionIndex}-secondAttr`, target );
+        validateRegex( `${newEntryCategory}${sectionIndex}-secondAttr`, value )
       }
     },
   },

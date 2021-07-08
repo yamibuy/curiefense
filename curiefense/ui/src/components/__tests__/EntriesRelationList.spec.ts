@@ -701,7 +701,7 @@ describe('EntriesRelationList.vue', () => {
       confirmAddEntryButton.trigger('click')
       await Vue.nextTick()
       // check
-      expect((wrapper.vm as any).duplicates.length).toEqual(1)
+      expect((wrapper.vm as any).duplicatedEntries.length).toEqual(1)
     })
     test('should validate value as regex if category is path, query, or uri', async () => {
       // change entry type to path
@@ -709,7 +709,7 @@ describe('EntriesRelationList.vue', () => {
       await Vue.nextTick()
       newEntryTextarea.setValue('\\')
       // check
-      expect((wrapper.vm as any).errors.length).toEqual(1)
+      expect((wrapper.vm as any).entriesErrors.length).toEqual(1)
     })
     test('should validate value as ip if category is ip', async () => {
       // change entry type to ip
@@ -717,7 +717,7 @@ describe('EntriesRelationList.vue', () => {
       await Vue.nextTick()
       newEntryTextarea.setValue('1.1.1.1.')
       // check
-      expect((wrapper.vm as any).errors.length).toEqual(1)
+      expect((wrapper.vm as any).entriesErrors.length).toEqual(1)
     })
     test('should validate value as non-empty if category is not ip, path, query, uri', async () => {
       // change entry type to method
@@ -725,7 +725,7 @@ describe('EntriesRelationList.vue', () => {
       await Vue.nextTick()
       newEntryTextarea.setValue(' ')
       // check
-      expect((wrapper.vm as any).errors.length).toEqual(1)
+      expect((wrapper.vm as any).entriesErrors.length).toEqual(1)
     })
     test('should validate second attribute if category is args, cookies, headers', async () => {
       // change entry type to headers
@@ -734,7 +734,7 @@ describe('EntriesRelationList.vue', () => {
       const newEntrySecondAttr = newEntryRow.find('.new-entry-value-annotation-input')
       newEntrySecondAttr.setValue('\\')
       // check
-      expect((wrapper.vm as any).errors.length).toEqual(1)
+      expect((wrapper.vm as any).entriesErrors.length).toEqual(1)
     })
     test('should clear errors', async () => {
       // change entry type to headers
@@ -746,7 +746,7 @@ describe('EntriesRelationList.vue', () => {
       newEntrySecondAttr.setValue('something')
       await Vue.nextTick()
       // check
-      expect((wrapper.vm as any).errors.length).toEqual(0)
+      expect((wrapper.vm as any).entriesErrors.length).toEqual(0)
     })
   })
 })

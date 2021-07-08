@@ -221,8 +221,8 @@ export default Vue.extend({
       this.$emit('update:selectedDoc', this.localDoc)
     },
 
-    emitFormValid( isValid: boolean ) {
-      this.$emit('form-invalid', isValid)
+    emitFormValid( isFormValid: boolean ) {
+      this.$emit('form-valid', isFormValid)
     },
 
     setRuleRelation(relation: Relation) {
