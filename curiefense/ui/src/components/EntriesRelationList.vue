@@ -492,9 +492,9 @@ export default Vue.extend({
       )
       if ( this.duplicatedEntries.length ) {
         const duplicatesMsg = this.duplicatedEntries.reduce(
-          ( prev: string, [section, category, value]: [ number, Category, string] ) => {
+          ( prev: string, [section, category, value]: TagRuleSectionEntry ) => {
             const sectionMsg = this.rule.sections.length > 1 ? `Section ${section+1}: ` : ''
-            return `${prev}<br />${sectionMsg}${this.listEntryTypes[category]?.title} = ${this.dualCell( value )}`
+            return `${prev}<br />${sectionMsg}${this.listEntryTypes[category as Category]?.title} = ${this.dualCell( value )}`
           },
           '',
         )
@@ -505,7 +505,7 @@ export default Vue.extend({
       }
     },
 
-    isEntryDuplicate( sectionIndex: number, [currentCategory, currentValue]: [string, TagRuleSectionEntry[1]] ) {
+    isEntryDuplicate( sectionIndex: number, [currentCategory, currentValue]: TagRuleSectionEntry ) {
       return this.duplicatedEntries.findIndex(
         ([section, category, value]) => section === sectionIndex && category === currentCategory && value === currentValue,
       ) > -1
