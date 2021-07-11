@@ -61,7 +61,8 @@ impl JRequestMap {
         let meta = RequestMeta {
             authority: self.attrs.authority,
             method: self.attrs.method,
-            path: self.attrs.uri.clone(), // this is wrong, uri should be url-encoded back
+            // path: self.attrs.uri.clone(), // this is wrong, uri should be url-encoded back
+            path: self.attrs.path,
             extra: HashMap::new(),
         };
         let qinfo = QueryInfo {
