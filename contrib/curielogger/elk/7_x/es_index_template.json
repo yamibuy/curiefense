@@ -147,7 +147,10 @@
               "type": "flattened"
             },
             "headers": {
-              "type": "object"
+              "dynamic": true,
+              "properties": {
+
+              }
             },
             "headersbytes": {
               "type": "integer"
