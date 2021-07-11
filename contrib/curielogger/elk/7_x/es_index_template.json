@@ -147,7 +147,14 @@
               "type": "flattened"
             },
             "headers": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "x-forwarded-proto": "keyword",
+                "x-forwarded-for": "keyword",
+                "accept": "keyword",
+                "user-agent": "keyword",
+                "x-forwarded-for": "keyword"
+              }
             },
             "headersbytes": {
               "type": "integer"
