@@ -317,7 +317,7 @@ export default Vue.extend({
     },
     entriesErrors: {
       handler( value ) {
-        this.$emit('valid', !!value.length)
+        this.$emit('invalid', !!value.length)
       },
     },
   },

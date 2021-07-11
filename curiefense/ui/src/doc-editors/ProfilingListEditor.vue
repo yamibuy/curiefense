@@ -125,7 +125,7 @@
             <entries-relation-list :rule.sync="localDoc.rule"
                                    :editable="editable"
                                    @update:rule="emitDocUpdate"
-                                   @valid="emitFormValid">
+                                   @invalid="emitFormInvalid">
             </entries-relation-list>
           </div>
         </div>
@@ -221,8 +221,8 @@ export default Vue.extend({
       this.$emit('update:selectedDoc', this.localDoc)
     },
 
-    emitFormValid( isFormValid: boolean ) {
-      this.$emit('form-invalid', !isFormValid)
+    emitFormInvalid( isFormInvalid: boolean ) {
+      this.$emit('form-invalid', isFormInvalid)
     },
 
     setRuleRelation(relation: Relation) {
