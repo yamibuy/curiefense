@@ -9,10 +9,12 @@ RUN apt-get update && \
         make unzip git redis-server
 RUN ln -s /usr/bin/python2.7 /usr/bin/python2
 
-RUN luarocks install lua-cjson && \
-    luarocks install luafilesystem && \
-    luarocks install luasocket && \
-    luarocks install redis-lua
+#RUN luarocks install lua-cjson && \
+#    luarocks install luafilesystem && \
+#    luarocks install luasocket && \
+#    luarocks install redis-lua
+
+RUN luarocks install lua-cjson
 
 RUN useradd -m -s /bin/bash builder
 USER builder
