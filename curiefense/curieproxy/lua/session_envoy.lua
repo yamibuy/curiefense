@@ -41,9 +41,10 @@ function session_rust_envoy.inspect(handle)
     for k, v in pairs(handle:headers()) do
         if utils.startswith(k, ":") then
             meta[k:sub(2):lower()] = v
-        else
-            headers[k] = v
         end
+        -- else
+        headers[k] = v
+        -- end
     end
 
     local hbody = handle:body()
