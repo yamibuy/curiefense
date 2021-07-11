@@ -245,7 +245,7 @@ describe('ProfilingListEditor.vue', () => {
       entriesRelationListComponent.vm.$emit('valid', false)
       await Vue.nextTick()
       // check
-      expect(wrapper.emitted('form-valid')).toBeTruthy()
+      expect(wrapper.emitted('form-invalid')).toBeTruthy()
     })
 
     test('should set document tags to be an empty array if empty string provided', async () => {

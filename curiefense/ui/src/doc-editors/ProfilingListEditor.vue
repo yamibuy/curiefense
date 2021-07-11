@@ -222,7 +222,7 @@ export default Vue.extend({
     },
 
     emitFormValid( isFormValid: boolean ) {
-      this.$emit('form-valid', isFormValid)
+      this.$emit('form-invalid', !isFormValid)
     },
 
     setRuleRelation(relation: Relation) {
