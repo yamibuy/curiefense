@@ -147,7 +147,7 @@
               "type": "flattened"
             },
             "headers": {
-              "type": "flattened"
+              "type": "object"
             },
             "headersbytes": {
               "type": "integer"
