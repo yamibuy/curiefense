@@ -77,14 +77,14 @@ impl WafBlock {
                 //     "msg": "Entry too large"
                 // }
             }),
-            WafBlock::SqlInjection(wmatch, fp) => json!({
+            WafBlock::SqlInjection(wmatch, _fp) => json!({
                 "section": wmatch.section,
                 "initiator": "waf",
                 "name": wmatch.name,
                 "value": wmatch.value
                 // "value": {
                 //     "msg": "SQLi",
-                //     "fingerprint": fp
+                //     "fingerprint": _fp
                 // }
             }),
             WafBlock::Xss(wmatch) => json!({
