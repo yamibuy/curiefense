@@ -242,7 +242,7 @@ describe('ProfilingListEditor.vue', () => {
 
     test('should emit form validness when EntriesRelationList is validated', async () => {
       const entriesRelationListComponent = wrapper.findComponent(EntriesRelationList)
-      entriesRelationListComponent.vm.$emit('valid', false)
+      entriesRelationListComponent.vm.$emit('invalid', false)
       await Vue.nextTick()
       // check
       expect(wrapper.emitted('form-invalid')).toBeTruthy()
