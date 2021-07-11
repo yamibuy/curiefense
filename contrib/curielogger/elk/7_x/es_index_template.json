@@ -135,6 +135,9 @@
                 "uri": {
                   "type": "keyword"
                 },
+                "method": {
+                  "type": "keyword"
+                },
                 "path": {
                   "type": "keyword"
                 }
@@ -148,13 +151,8 @@
             },
             "headers": {
               "type": "object",
-              "properties": {
-                "x-forwarded-proto": "keyword",
-                "x-forwarded-for": "keyword",
-                "accept": "keyword",
-                "user-agent": "keyword",
-                "x-forwarded-for": "keyword"
-              }
+              "dynamic": true,
+              "properties": {}
             },
             "headersbytes": {
               "type": "integer"
