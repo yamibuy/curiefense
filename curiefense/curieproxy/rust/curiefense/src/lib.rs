@@ -45,11 +45,22 @@ fn acl_block(blocking: bool, code: i32, tags: &[String]) -> Decision {
     })
 }
 
-fn challenge_verified<GH: Grasshopper>(gh: &GH, reqinfo: &RequestInfo) -> bool {
+fn challenge_verified<GH: Grasshopper>(gh: &GH, reqinfo: &RequestInfo, logs: &mut Logs) -> bool {
     if let Some(rbzid) = reqinfo.cookies.get("rbzid") {
         if let Some(ua) = reqinfo.headers.get("user-agent") {
-            return gh.parse_rbzid(&rbzid.replace('-', "="), ua).unwrap_or(false);
+            logs.debug(format!("Checking rbzid cookie {} with user-agent {}",rbzid, ua));
+            return match gh.parse_rbzid(&rbzid.replace('-', "="), ua) {
+                Some(b) => b,
+                None => {
+                    logs.error("Something when wrong when calling parse_rbzid");
+                    false
+                }
+            }
+        } else {
+            logs.warning("Could not find useragent!");
         }
+    } else {
+        logs.warning("Could not find rbzid cookie!")
     }
     false
 }
@@ -64,14 +75,16 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 ) -> (Decision, Tags) {
     let mut tags = itags;
 
-    logs.debug("Inspection starts");
+    logs.debug(format!("Inspection starts (grasshopper active: {})", mgh.is_some()));
 
     // without grasshopper, default to being human
     let is_human = if let Some(gh) = &mgh {
-        challenge_verified(gh, &reqinfo)
+        challenge_verified(gh, &reqinfo, logs)
     } else {
         false
     };
+
+    logs.debug(format!("Human check result: {}", is_human));
 
     // do all config queries in the lambda once
     // there is a lot of copying taking place, to minimize the lock time
@@ -95,6 +108,19 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     tags.insert_qualified("aclname", &urlmap.acl_profile.name);
     tags.insert_qualified("wafid", &urlmap.waf_profile.name);
 
+    if let Some(dec) = mgh.as_ref().and_then(|gh| {
+        reqinfo
+            .rinfo
+            .qinfo
+            .uri
+            .as_ref()
+            .and_then(|uri| challenge_phase02(gh, uri, &reqinfo.headers))
+    }) {
+        // TODO, check for monitor
+        return (dec, tags);
+    }
+    logs.debug("challenge phase2 ignored");
+
     if let SimpleDecision::Action(action, reason) = profiling_dec {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_blocking() {
@@ -114,18 +140,6 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         }
     }
     logs.debug("flow checks done");
-
-    if let Some(dec) = mgh.as_ref().and_then(|gh| {
-        reqinfo
-            .rinfo
-            .qinfo
-            .uri
-            .as_ref()
-            .and_then(|uri| challenge_phase02(gh, uri, &reqinfo.headers))
-    }) {
-        // TODO, check for monitor
-        return (dec, tags);
-    }
 
     // limit checks
     let limit_check = limit_check(logs, &urlmap.name, &reqinfo, &urlmap.limits, &mut tags);
