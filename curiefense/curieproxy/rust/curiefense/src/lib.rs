@@ -96,7 +96,12 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         (murlmap, ntags, nflows)
     }) {
         Some((Some(stuff), itags, iflows)) => (stuff, itags, iflows),
-        _ => {
+        Some((None, _, _)) => {
+            logs.debug("Could not find a matching urlmap");
+            return (Decision::Pass, Tags::default());
+        }
+        None => {
+            logs.debug("Something went wrong during request tagging");
             return (Decision::Pass, Tags::default());
         }
     };
@@ -188,13 +193,17 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             } else {
                 match (reqinfo.headers.get("user-agent"), mgh) {
                     (Some(ua), Some(gh)) => {
-                      logs.debug("ACL challenge detected: challenged");
-                      return (challenge_phase01(&gh, ua, dtags), tags)
-                    },
+                        logs.debug("ACL challenge detected: challenged");
+                        return (challenge_phase01(&gh, ua, dtags), tags);
+                    }
                     (gua, ggh) => {
-                      logs.debug(format!("ACL challenge detected: can't challenge, ua={} gh={}", gua.is_some(), ggh.is_some()));
-                      Some((3, dtags))
-                    },
+                        logs.debug(format!(
+                            "ACL challenge detected: can't challenge, ua={} gh={}",
+                            gua.is_some(),
+                            ggh.is_some()
+                        ));
+                        Some((3, dtags))
+                    }
                 }
             }
         }
