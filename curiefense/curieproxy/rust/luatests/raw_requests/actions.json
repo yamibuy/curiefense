@@ -23,7 +23,8 @@
         "aclname:default-acl",
         "aclid:--default--",
         "asn:7018",
-        "tagbyip"
+        "tagbyip",
+        "bot"
       ]
     }
   }

@@ -84,6 +84,12 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         false
     };
 
+    if is_human {
+        tags.insert("human");
+    } else {
+        tags.insert("bot");
+    }
+
     logs.debug(format!("Human check result: {}", is_human));
 
     // do all config queries in the lambda once

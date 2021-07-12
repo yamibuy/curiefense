@@ -28,6 +28,7 @@ def make_request(st: Set[str]) -> Tuple[Any, str]:
                 "urlmap:default-entry",
                 "asn:396507",
                 "urlmap-entry:direct-association",
+                "bot",
                 "sante",
             ],
             "action": "pass",
@@ -51,6 +52,7 @@ def make_request(st: Set[str]) -> Tuple[Any, str]:
         r["response"]["action"] = "custom_response"
         r["response"]["block_mode"] = True
         r["response"]["status"] = 247
+        r["response"]["tags"].append("challenge-phase01")
     return (r, name)
 
 
