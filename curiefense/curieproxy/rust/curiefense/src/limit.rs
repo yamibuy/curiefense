@@ -31,7 +31,11 @@ fn limit_react(cnx: &mut redis::Connection, limit: &Limit, key: String) -> Simpl
             println!("*** Redis error {}", rr);
         }
     }
-    SimpleDecision::Action(limit.action.clone(), None)
+    SimpleDecision::Action(limit.action.clone(), serde_json::json!({
+        "initiator": "limit",
+        "limitname": limit.name,
+        "key": key
+    }))
 }
 
 fn redis_check_limit(
