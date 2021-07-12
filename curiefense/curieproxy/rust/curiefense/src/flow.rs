@@ -6,15 +6,7 @@ use crate::interface::{SimpleDecision, Tags};
 use crate::utils::{check_selector_cond, select_string, RequestInfo};
 
 fn session_sequence_key(ri: &RequestInfo) -> SequenceKey {
-    let host_part: &str = ri
-        .rinfo
-        .meta
-        .authority
-        .as_ref()
-        .or_else(|| ri.headers.get("host"))
-        .map(|x| x.as_str())
-        .unwrap_or("nil");
-    SequenceKey(ri.rinfo.meta.method.to_string() + host_part + &ri.rinfo.qinfo.qpath)
+    SequenceKey(ri.rinfo.meta.method.to_string() + &ri.rinfo.host + &ri.rinfo.qinfo.qpath)
 }
 
 fn build_redis_key(reqinfo: &RequestInfo, key: &[RequestSelector], entry_id: &str, entry_name: &str) -> String {
