@@ -48,7 +48,7 @@ RUN mkdir -p /var/lib/nginx /etc/nginx/secrets /etc/nginx/stream-conf.d /var/cac
 	&& setcap -v 'cap_net_bind_service=+ep' /usr/sbin/rsyslogd  \
     && chown -R nginx:0 /var/lib/syslog /var/log/syslog
 
-RUN sed -i "/^http {/a log_format curiefenselog escape=none '$request_map';" /nginx.tmpl \
+RUN sed -i "/^http {/a log_format curiefenselog escape=none '\$request_map';" /nginx.tmpl \
         && sed -i "/^http {/a lua_package_path '/lua/?.lua;;';" /nginx.tmpl
 
 COPY curieproxy/lua/shared-objects/*.so /usr/local/lib/lua/5.1/
