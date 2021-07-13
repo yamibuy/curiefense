@@ -84,12 +84,6 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         false
     };
 
-    if is_human {
-        tags.insert("human");
-    } else {
-        tags.insert("bot");
-    }
-
     logs.debug(format!("Human check result: {}", is_human));
 
     // do all config queries in the lambda once
@@ -102,12 +96,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         (murlmap, ntags, nflows)
     }) {
         Some((Some(stuff), itags, iflows)) => (stuff, itags, iflows),
-        Some((None, _, _)) => {
-            logs.debug("Could not find a matching urlmap");
-            return (Decision::Pass, Tags::default());
-        }
-        None => {
-            logs.debug("Something went wrong during request tagging");
+        _ => {
             return (Decision::Pass, Tags::default());
         }
     };
@@ -117,8 +106,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     tags.insert_qualified("urlmap-entry", &urlmap.name);
     tags.insert_qualified("aclid", &urlmap.acl_profile.id);
     tags.insert_qualified("aclname", &urlmap.acl_profile.name);
-    tags.insert_qualified("wafid", &urlmap.waf_profile.id);
-    tags.insert_qualified("wafname", &urlmap.waf_profile.name);
+    tags.insert_qualified("wafid", &urlmap.waf_profile.name);
 
     if let Some(dec) = mgh.as_ref().and_then(|gh| {
         reqinfo
@@ -140,7 +128,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         }
     }
 
-    match flow_check(logs, &flows, &reqinfo, &mut tags) {
+    match flow_check(&flows, &reqinfo, &tags) {
         Err(rr) => logs.error(rr),
         Ok(SimpleDecision::Pass) => {}
         // TODO, check for monitor
@@ -200,17 +188,13 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             } else {
                 match (reqinfo.headers.get("user-agent"), mgh) {
                     (Some(ua), Some(gh)) => {
-                        logs.debug("ACL challenge detected: challenged");
-                        return (challenge_phase01(&gh, ua, dtags), tags);
-                    }
+                      logs.debug("ACL challenge detected: challenged");
+                      return (challenge_phase01(&gh, ua, dtags), tags)
+                    },
                     (gua, ggh) => {
-                        logs.debug(format!(
-                            "ACL challenge detected: can't challenge, ua={} gh={}",
-                            gua.is_some(),
-                            ggh.is_some()
-                        ));
-                        Some((3, dtags))
-                    }
+                      logs.debug(format!("ACL challenge detected: can't challenge, ua={} gh={}", gua.is_some(), ggh.is_some()));
+                      Some((3, dtags))
+                    },
                 }
             }
         }
