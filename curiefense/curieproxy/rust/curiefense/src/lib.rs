@@ -129,7 +129,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 
     if let SimpleDecision::Action(action, reason) = profiling_dec {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
-        if decision.is_blocking() {
+        if decision.is_final() {
             return (decision, tags);
         }
     }
@@ -140,7 +140,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         // TODO, check for monitor
         Ok(SimpleDecision::Action(a, reason)) => {
             let decision = a.to_decision(is_human, &mgh, &reqinfo.headers, reason);
-            if decision.is_blocking() {
+            if decision.is_final() {
                 return (decision, tags);
             }
         }
@@ -151,7 +151,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     let limit_check = limit_check(logs, &urlmap.name, &reqinfo, &urlmap.limits, &mut tags);
     if let SimpleDecision::Action(action, reason) = limit_check {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
-        if decision.is_blocking() {
+        if decision.is_final() {
             return (decision, tags);
         }
     }
