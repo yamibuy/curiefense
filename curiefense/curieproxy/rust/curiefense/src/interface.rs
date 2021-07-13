@@ -35,11 +35,19 @@ impl Decision {
     }
 
     pub fn to_json(&self, rinfo: RequestInfo, tags: Tags, logs: Logs) -> String {
+        let mut tgs = tags;
         let (action_desc, response) = match self {
             Decision::Pass => ("pass", None),
             Decision::Action(a) => ("custom_response", Some(a)),
         };
-        let request_map = rinfo.into_json(tags);
+        if let Decision::Action(a) = &self {
+            if let Some(extra) = &a.extra_tags {
+                for t in extra {
+                    tgs.insert(t);
+                }
+            }
+        }
+        let request_map = rinfo.into_json(tgs);
         let j = serde_json::json!({
             "request_map": request_map,
             "action": action_desc,

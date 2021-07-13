@@ -16,11 +16,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allow"
       ]
@@ -30,11 +30,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + allowbot",
+    "name": "allowbot + allow",
     "response": {
       "action": "pass",
       "tags": [
@@ -43,14 +43,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
-        "allowbot"
+        "allowbot",
+        "allow"
       ]
     }
   },
@@ -58,11 +58,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&deny=deny",
+      ":path": "/direct?deny=deny&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + deny",
+    "name": "deny + allow",
     "response": {
       "action": "pass",
       "tags": [
@@ -71,14 +71,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
-        "deny"
+        "deny",
+        "allow"
       ]
     }
   },
@@ -101,14 +101,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allow",
-        "denybot"
+        "denybot",
+        "challenge-phase01"
       ]
     }
   },
@@ -131,11 +132,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allow",
         "forcedeny"
@@ -146,11 +147,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&bypass=bypass",
+      ":path": "/direct?bypass=bypass&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + bypass",
+    "name": "bypass + allow",
     "response": {
       "action": "pass",
       "tags": [
@@ -159,14 +160,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
-        "bypass"
+        "bypass",
+        "allow"
       ]
     }
   },
@@ -174,11 +175,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&allowbot=allowbot&deny=deny",
+      ":path": "/direct?allowbot=allowbot&allow=allow&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + allowbot + deny",
+    "name": "allowbot + allow + deny",
     "response": {
       "action": "pass",
       "tags": [
@@ -187,14 +188,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "allowbot",
+        "allow",
         "deny"
       ]
     }
@@ -203,11 +204,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&allowbot=allowbot&denybot=denybot",
+      ":path": "/direct?allowbot=allowbot&allow=allow&denybot=denybot",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + allowbot + denybot",
+    "name": "allowbot + allow + denybot",
     "response": {
       "action": "pass",
       "tags": [
@@ -216,14 +217,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "allowbot",
+        "allow",
         "denybot"
       ]
     }
@@ -232,11 +233,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&forcedeny=forcedeny&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&allow=allow&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + forcedeny + allowbot",
+    "name": "allowbot + allow + forcedeny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -247,15 +248,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
+        "allowbot",
         "allow",
-        "forcedeny",
-        "allowbot"
+        "forcedeny"
       ]
     }
   },
@@ -263,11 +264,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&bypass=bypass&allowbot=allowbot",
+      ":path": "/direct?bypass=bypass&allowbot=allowbot&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + bypass + allowbot",
+    "name": "bypass + allowbot + allow",
     "response": {
       "action": "pass",
       "tags": [
@@ -276,15 +277,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "bypass",
-        "allowbot"
+        "allowbot",
+        "allow"
       ]
     }
   },
@@ -292,11 +293,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&deny=deny&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&deny=deny&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + deny + allowbot",
+    "name": "allowbot + deny + allow",
     "response": {
       "action": "pass",
       "tags": [
@@ -305,15 +306,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
+        "allowbot",
         "deny",
-        "allowbot"
+        "allow"
       ]
     }
   },
@@ -321,11 +322,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&deny=deny&denybot=denybot",
+      ":path": "/direct?deny=deny&allow=allow&denybot=denybot",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + deny + denybot",
+    "name": "deny + allow + denybot",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -336,15 +337,16 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "deny",
-        "denybot"
+        "allow",
+        "denybot",
+        "challenge-phase01"
       ]
     }
   },
@@ -352,11 +354,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&forcedeny=forcedeny&deny=deny",
+      ":path": "/direct?deny=deny&allow=allow&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + forcedeny + deny",
+    "name": "deny + allow + forcedeny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -367,15 +369,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
+        "deny",
         "allow",
-        "forcedeny",
-        "deny"
+        "forcedeny"
       ]
     }
   },
@@ -383,11 +385,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&bypass=bypass&deny=deny",
+      ":path": "/direct?bypass=bypass&deny=deny&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + bypass + deny",
+    "name": "bypass + deny + allow",
     "response": {
       "action": "pass",
       "tags": [
@@ -396,15 +398,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "bypass",
-        "deny"
+        "deny",
+        "allow"
       ]
     }
   },
@@ -427,11 +429,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allow",
         "forcedeny",
@@ -443,11 +445,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&bypass=bypass&denybot=denybot",
+      ":path": "/direct?bypass=bypass&allow=allow&denybot=denybot",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + bypass + denybot",
+    "name": "bypass + allow + denybot",
     "response": {
       "action": "pass",
       "tags": [
@@ -456,14 +458,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "bypass",
+        "allow",
         "denybot"
       ]
     }
@@ -472,11 +474,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&bypass=bypass&forcedeny=forcedeny",
+      ":path": "/direct?bypass=bypass&allow=allow&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + bypass + forcedeny",
+    "name": "bypass + allow + forcedeny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -487,14 +489,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "allow",
         "bypass",
+        "allow",
         "forcedeny"
       ]
     }
@@ -503,30 +505,57 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?allow=allow&forcedeny=forcedeny&bypass=bypass",
+      ":path": "/direct?allowbot=allowbot&bypass=bypass&allow=allow",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "allow + forcedeny + bypass",
+    "name": "allowbot + bypass + allow",
     "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
+      "action": "pass",
       "tags": [
         "all",
         "geo:united-states",
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
+        "allowbot",
+        "bypass",
+        "allow"
+      ]
+    }
+  },
+  {
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/direct?bypass=bypass&allow=allow&deny=deny",
+      "user-agent": "dummy",
+      "x-forwarded-for": "23.129.64.253"
+    },
+    "name": "bypass + allow + deny",
+    "response": {
+      "action": "pass",
+      "tags": [
+        "all",
+        "geo:united-states",
+        "ip:23-129-64-253",
+        "aclname:from-tags",
+        "aclid:fromtags",
+        "wafid:default-waf",
+        "urlmap:default-entry",
+        "asn:396507",
+        "urlmap-entry:direct-association",
+        "bot",
+        "sante",
+        "bypass",
         "allow",
-        "forcedeny",
-        "bypass"
+        "deny"
       ]
     }
   },
@@ -547,11 +576,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allowbot"
       ]
@@ -561,11 +590,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + allowbot",
+    "name": "allowbot + deny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -576,14 +605,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
-        "allowbot"
+        "allowbot",
+        "deny"
       ]
     }
   },
@@ -604,11 +633,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allowbot",
         "denybot"
@@ -619,11 +648,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?forcedeny=forcedeny&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "forcedeny + allowbot",
+    "name": "allowbot + forcedeny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -634,14 +663,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "forcedeny",
-        "allowbot"
+        "allowbot",
+        "forcedeny"
       ]
     }
   },
@@ -662,11 +691,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass",
         "allowbot"
@@ -677,40 +706,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&allowbot=allowbot&allow=allow",
+      ":path": "/direct?allowbot=allowbot&denybot=denybot&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + allowbot + allow",
-    "response": {
-      "action": "pass",
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "deny",
-        "allowbot",
-        "allow"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?deny=deny&allowbot=allowbot&denybot=denybot",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "deny + allowbot + denybot",
+    "name": "allowbot + denybot + deny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -721,15 +721,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
         "allowbot",
-        "denybot"
+        "denybot",
+        "deny"
       ]
     }
   },
@@ -737,11 +737,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&forcedeny=forcedeny&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&forcedeny=forcedeny&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + forcedeny + allowbot",
+    "name": "allowbot + forcedeny + deny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -752,15 +752,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
+        "allowbot",
         "forcedeny",
-        "allowbot"
+        "deny"
       ]
     }
   },
@@ -768,11 +768,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&bypass=bypass&allowbot=allowbot",
+      ":path": "/direct?bypass=bypass&allowbot=allowbot&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + bypass + allowbot",
+    "name": "bypass + allowbot + deny",
     "response": {
       "action": "pass",
       "tags": [
@@ -781,15 +781,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
         "bypass",
-        "allowbot"
+        "allowbot",
+        "deny"
       ]
     }
   },
@@ -797,11 +797,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?forcedeny=forcedeny&allowbot=allowbot&denybot=denybot",
+      ":path": "/direct?allowbot=allowbot&forcedeny=forcedeny&denybot=denybot",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "forcedeny + allowbot + denybot",
+    "name": "allowbot + forcedeny + denybot",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -812,14 +812,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "forcedeny",
         "allowbot",
+        "forcedeny",
         "denybot"
       ]
     }
@@ -841,11 +841,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass",
         "allowbot",
@@ -857,11 +857,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?bypass=bypass&forcedeny=forcedeny&allowbot=allowbot",
+      ":path": "/direct?bypass=bypass&allowbot=allowbot&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "bypass + forcedeny + allowbot",
+    "name": "bypass + allowbot + forcedeny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -872,15 +872,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass",
-        "forcedeny",
-        "allowbot"
+        "allowbot",
+        "forcedeny"
       ]
     }
   },
@@ -888,70 +888,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&allow=allow",
+      ":path": "/direct?allowbot=allowbot&deny=deny&denybot=denybot",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + allow",
-    "response": {
-      "action": "pass",
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "deny",
-        "allow"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?deny=deny&denybot=denybot&allow=allow",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "deny + denybot + allow",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 247,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "deny",
-        "denybot",
-        "allow"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?deny=deny&forcedeny=forcedeny&allow=allow",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "deny + forcedeny + allow",
+    "name": "allowbot + deny + denybot",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -962,15 +903,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
+        "allowbot",
         "deny",
-        "forcedeny",
-        "allow"
+        "denybot"
       ]
     }
   },
@@ -978,11 +919,42 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&bypass=bypass&allow=allow",
+      ":path": "/direct?allowbot=allowbot&deny=deny&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + bypass + allow",
+    "name": "allowbot + deny + forcedeny",
+    "response": {
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 503,
+      "tags": [
+        "all",
+        "geo:united-states",
+        "ip:23-129-64-253",
+        "aclname:from-tags",
+        "aclid:fromtags",
+        "wafid:default-waf",
+        "urlmap:default-entry",
+        "asn:396507",
+        "urlmap-entry:direct-association",
+        "bot",
+        "sante",
+        "allowbot",
+        "deny",
+        "forcedeny"
+      ]
+    }
+  },
+  {
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/direct?allowbot=allowbot&bypass=bypass&deny=deny",
+      "user-agent": "dummy",
+      "x-forwarded-for": "23.129.64.253"
+    },
+    "name": "allowbot + bypass + deny",
     "response": {
       "action": "pass",
       "tags": [
@@ -991,15 +963,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
+        "allowbot",
         "bypass",
-        "allow"
+        "deny"
       ]
     }
   },
@@ -1022,11 +994,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "deny"
       ]
@@ -1051,11 +1023,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "deny",
         "denybot"
@@ -1081,11 +1053,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "deny",
         "forcedeny"
@@ -1096,11 +1068,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&bypass=bypass",
+      ":path": "/direct?bypass=bypass&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + bypass",
+    "name": "bypass + deny",
     "response": {
       "action": "pass",
       "tags": [
@@ -1109,45 +1081,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
-        "bypass"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?deny=deny&allow=allow&denybot=denybot",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "deny + allow + denybot",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 247,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "deny",
-        "allow",
-        "denybot"
+        "bypass",
+        "deny"
       ]
     }
   },
@@ -1170,11 +1111,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "deny",
         "forcedeny",
@@ -1186,11 +1127,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&bypass=bypass&denybot=denybot",
+      ":path": "/direct?bypass=bypass&deny=deny&denybot=denybot",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + bypass + denybot",
+    "name": "bypass + deny + denybot",
     "response": {
       "action": "pass",
       "tags": [
@@ -1199,14 +1140,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
         "bypass",
+        "deny",
         "denybot"
       ]
     }
@@ -1215,11 +1156,11 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?deny=deny&bypass=bypass&forcedeny=forcedeny",
+      ":path": "/direct?bypass=bypass&deny=deny&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "deny + bypass + forcedeny",
+    "name": "bypass + deny + forcedeny",
     "response": {
       "action": "custom_response",
       "block_mode": true,
@@ -1230,46 +1171,15 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "deny",
         "bypass",
-        "forcedeny"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?deny=deny&forcedeny=forcedeny&bypass=bypass",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "deny + forcedeny + bypass",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
         "deny",
-        "forcedeny",
-        "bypass"
+        "forcedeny"
       ]
     }
   },
@@ -1292,13 +1202,14 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "denybot"
+        "denybot",
+        "challenge-phase01"
       ]
     }
   },
@@ -1321,11 +1232,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "forcedeny",
         "denybot"
@@ -1349,44 +1260,13 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass",
-        "denybot"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?allowbot=allowbot&forcedeny=forcedeny&denybot=denybot",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "allowbot + forcedeny + denybot",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "allowbot",
-        "forcedeny",
         "denybot"
       ]
     }
@@ -1410,11 +1290,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass",
         "forcedeny",
@@ -1439,11 +1319,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "allowbot",
         "bypass",
@@ -1455,61 +1335,28 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?forcedeny=forcedeny&bypass=bypass&denybot=denybot",
+      ":path": "/direct?bypass=bypass&denybot=denybot&deny=deny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "forcedeny + bypass + denybot",
+    "name": "bypass + denybot + deny",
     "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
+      "action": "pass",
       "tags": [
         "all",
         "geo:united-states",
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "forcedeny",
         "bypass",
-        "denybot"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?denybot=denybot&forcedeny=forcedeny&allowbot=allowbot",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "denybot + forcedeny + allowbot",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
         "denybot",
-        "forcedeny",
-        "allowbot"
+        "deny"
       ]
     }
   },
@@ -1532,11 +1379,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "forcedeny"
       ]
@@ -1561,11 +1408,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass",
         "forcedeny"
@@ -1576,11 +1423,73 @@
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
-      ":path": "/direct?denybot=denybot&bypass=bypass&allowbot=allowbot",
+      ":path": "/direct?allowbot=allowbot&bypass=bypass&forcedeny=forcedeny",
       "user-agent": "dummy",
       "x-forwarded-for": "23.129.64.253"
     },
-    "name": "denybot + bypass + allowbot",
+    "name": "allowbot + bypass + forcedeny",
+    "response": {
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 503,
+      "tags": [
+        "all",
+        "geo:united-states",
+        "ip:23-129-64-253",
+        "aclname:from-tags",
+        "aclid:fromtags",
+        "wafid:default-waf",
+        "urlmap:default-entry",
+        "asn:396507",
+        "urlmap-entry:direct-association",
+        "bot",
+        "sante",
+        "allowbot",
+        "bypass",
+        "forcedeny"
+      ]
+    }
+  },
+  {
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/direct?bypass=bypass&forcedeny=forcedeny&deny=deny",
+      "user-agent": "dummy",
+      "x-forwarded-for": "23.129.64.253"
+    },
+    "name": "bypass + forcedeny + deny",
+    "response": {
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 503,
+      "tags": [
+        "all",
+        "geo:united-states",
+        "ip:23-129-64-253",
+        "aclname:from-tags",
+        "aclid:fromtags",
+        "wafid:default-waf",
+        "urlmap:default-entry",
+        "asn:396507",
+        "urlmap-entry:direct-association",
+        "bot",
+        "sante",
+        "bypass",
+        "forcedeny",
+        "deny"
+      ]
+    }
+  },
+  {
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/direct?allowbot=allowbot&bypass=bypass",
+      "user-agent": "dummy",
+      "x-forwarded-for": "23.129.64.253"
+    },
+    "name": "allowbot + bypass",
     "response": {
       "action": "pass",
       "tags": [
@@ -1589,75 +1498,13 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
-        "denybot",
-        "bypass",
-        "allowbot"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?forcedeny=forcedeny&bypass=bypass&allowbot=allowbot",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "forcedeny + bypass + allowbot",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "forcedeny",
-        "bypass",
-        "allowbot"
-      ]
-    }
-  },
-  {
-    "headers": {
-      ":authority": "localhost:30081",
-      ":method": "GET",
-      ":path": "/direct?forcedeny=forcedeny&bypass=bypass",
-      "user-agent": "dummy",
-      "x-forwarded-for": "23.129.64.253"
-    },
-    "name": "forcedeny + bypass",
-    "response": {
-      "action": "custom_response",
-      "block_mode": true,
-      "status": 503,
-      "tags": [
-        "all",
-        "geo:united-states",
-        "ip:23-129-64-253",
-        "aclname:from-tags",
-        "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
-        "urlmap:default-entry",
-        "asn:396507",
-        "urlmap-entry:direct-association",
-        "sante",
-        "forcedeny",
+        "allowbot",
         "bypass"
       ]
     }
@@ -1679,11 +1526,11 @@
         "ip:23-129-64-253",
         "aclname:from-tags",
         "aclid:fromtags",
-        "wafname:default-waf",
-        "wafid:--default--",
+        "wafid:default-waf",
         "urlmap:default-entry",
         "asn:396507",
         "urlmap-entry:direct-association",
+        "bot",
         "sante",
         "bypass"
       ]
