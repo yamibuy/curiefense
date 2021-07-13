@@ -128,7 +128,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         }
     }
 
-    match flow_check(&flows, &reqinfo, &tags) {
+    match flow_check(logs, &flows, &reqinfo, &mut tags) {
         Err(rr) => logs.error(rr),
         Ok(SimpleDecision::Pass) => {}
         // TODO, check for monitor
