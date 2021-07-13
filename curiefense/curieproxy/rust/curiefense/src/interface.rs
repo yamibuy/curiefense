@@ -173,7 +173,7 @@ impl std::default::Default for Action {
             atype: ActionType::Block,
             block_mode: true,
             ban: false,
-            status: 503,
+            status: 403,
             headers: None,
             reason: serde_json::value::Value::Null,
             content: "curiefense - request denied".to_string(),
@@ -186,7 +186,7 @@ impl SimpleAction {
     pub fn from_reason(reason: String) -> Self {
         SimpleAction {
             atype: SimpleActionT::default(),
-            status: 503,
+            status: 403,
             reason,
         }
     }
@@ -237,7 +237,7 @@ impl SimpleAction {
                 Err(rr) => return Err(anyhow::anyhow!("Unparseable status: {} -> {}", sstatus, rr)),
             }
         } else {
-            503
+            403
         };
         Ok(SimpleAction {
             atype,
