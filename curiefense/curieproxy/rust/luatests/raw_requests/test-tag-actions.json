@@ -12,7 +12,6 @@
         "aclid:--default--",
         "urlmap:default-entry",
         "geo:united-states",
-        "bot",
         "ip:23-129-64-253"
       ],
       "action": "custom_response",
@@ -40,7 +39,6 @@
         "aclid:--default--",
         "urlmap:default-entry",
         "geo:united-states",
-        "bot",
         "ip:23-129-64-253"
       ],
       "action": "custom_response",
@@ -68,7 +66,6 @@
         "aclid:--default--",
         "urlmap:default-entry",
         "geo:united-states",
-        "bot",
         "ip:23-129-64-253"
       ],
       "action": "custom_response",
@@ -96,7 +93,6 @@
         "aclid:--default--",
         "urlmap:default-entry",
         "geo:united-states",
-        "bot",
         "ip:23-129-64-253"
       ],
       "action": "custom_response",
@@ -124,7 +120,6 @@
         "aclid:--default--",
         "urlmap:default-entry",
         "geo:united-states",
-        "bot",
         "ip:23-129-64-253"
       ],
       "action": "custom_response",
