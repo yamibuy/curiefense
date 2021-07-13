@@ -24,7 +24,8 @@
         "aclid:--default--",
         "asn:7018",
         "tagbyip",
-        "wafid:--default--"
+        "wafid:--default--",
+        "bot"
       ]
     }
   }

@@ -13,6 +13,7 @@
         "urlmap-entry:default",
         "aclid:--default--",
         "geo:united-states",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -42,6 +43,7 @@
         "wafid:--default--",
         "wafname:default-waf",
         "aclid:--default--",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -72,6 +74,7 @@
         "aclname:default-acl",
         "geo:united-states",
         "container:1e219d8ed6b4",
+        "bot",
         "sante"
       ],
       "action": "custom_response",
@@ -101,6 +104,7 @@
         "wafid:--default--",
         "wafname:default-waf",
         "asn:396507",
+        "bot",
         "sante"
       ],
       "action": "custom_response",
@@ -131,6 +135,7 @@
         "ip:23-5-64-253",
         "urlmap:default-entry",
         "aclid:--default--",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "pass"
@@ -158,6 +163,7 @@
         "sante",
         "container:1e219d8ed6b4",
         "ip:23-5-64-253",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -188,6 +194,7 @@
         "container:1e219d8ed6b4",
         "urlmap:default-entry",
         "aclname:default-acl",
+        "bot",
         "geo:united-states"
       ],
       "action": "custom_response",
@@ -217,6 +224,7 @@
         "geo:united-states",
         "urlmap-entry:waf-omit-tests",
         "aclid:--default--",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -246,6 +254,7 @@
         "container:1e219d8ed6b4",
         "aclid:--default--",
         "aclname:default-acl",
+        "bot",
         "asn:nil"
       ],
       "action": "custom_response",
@@ -275,6 +284,7 @@
         "wafid:omitted",
         "geo:united-states",
         "container:1e219d8ed6b4",
+        "bot",
         "aclid:--default--"
       ],
       "action": "custom_response",
@@ -304,6 +314,7 @@
         "wafid:noinject",
         "asn:396507",
         "geo:united-states",
+        "bot",
         "sante"
       ],
       "action": "pass"
@@ -331,6 +342,7 @@
         "wafid:omitted",
         "asn:nil",
         "all",
+        "bot",
         "geo:united-states"
       ],
       "action": "custom_response",
@@ -360,6 +372,7 @@
         "urlmap:default-entry",
         "wafid:noinject",
         "geo:united-states",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "pass"
@@ -387,6 +400,7 @@
         "asn:nil",
         "all",
         "urlmap:default-entry",
+        "bot",
         "geo:united-states"
       ],
       "action": "custom_response",
@@ -415,6 +429,7 @@
         "urlmap:default-entry",
         "sante",
         "geo:united-states",
+        "bot",
         "asn:nil"
       ],
       "action": "pass"
@@ -441,6 +456,7 @@
         "aclid:--default--",
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
+        "bot",
         "geo:united-states"
       ],
       "action": "pass"
@@ -467,6 +483,7 @@
         "asn:nil",
         "urlmap-entry:waf-args-tests",
         "urlmap:default-entry",
+        "bot",
         "all"
       ],
       "action": "pass"
@@ -493,6 +510,7 @@
         "urlmap:default-entry",
         "geo:united-states",
         "all",
+        "bot",
         "container:1e219d8ed6b4"
       ],
       "action": "pass"
@@ -519,6 +537,7 @@
         "ip:13-129-64-253",
         "wafname:args-checkes",
         "wafid:argschecks",
+        "bot",
         "container:1e219d8ed6b4"
       ],
       "action": "pass"
@@ -545,7 +564,8 @@
         "ip:13-129-64-253",
         "asn:nil",
         "wafname:args-checkes",
-        "wafid:argschecks"
+        "wafid:argschecks",
+        "bot"
       ],
       "action": "pass"
     },
@@ -571,6 +591,7 @@
         "urlmap-entry:waf-args-tests",
         "aclname:default-acl",
         "geo:united-states",
+        "bot",
         "asn:nil"
       ],
       "action": "custom_response",
@@ -599,6 +620,7 @@
         "geo:united-states",
         "sante",
         "ip:13-129-64-253",
+        "bot",
         "asn:nil"
       ],
       "action": "custom_response",
@@ -627,6 +649,7 @@
         "wafname:args-checkes",
         "wafid:argschecks",
         "aclid:--default--",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "pass"
@@ -653,6 +676,7 @@
         "wafname:args-checkes",
         "wafid:argschecks",
         "urlmap:default-entry",
+        "bot",
         "all"
       ],
       "action": "pass"
@@ -679,7 +703,8 @@
         "asn:nil",
         "urlmap-entry:waf-args-tests",
         "wafname:args-checkes",
-        "wafid:argschecks"
+        "wafid:argschecks",
+        "bot"
       ],
       "action": "pass"
     },
@@ -705,6 +730,7 @@
         "asn:nil",
         "ip:13-129-64-253",
         "sante",
+        "bot",
         "aclid:--default--"
       ],
       "action": "pass"
@@ -731,6 +757,7 @@
         "aclname:default-acl",
         "wafname:args-checkes",
         "wafid:argschecks",
+        "bot",
         "urlmap:default-entry"
       ],
       "action": "pass"
@@ -757,6 +784,7 @@
         "wafid:--default--",
         "wafname:default-waf",
         "all",
+        "bot",
         "container:1e219d8ed6b4"
       ],
       "action": "custom_response",
@@ -786,6 +814,7 @@
         "ip:13-129-64-253",
         "container:1e219d8ed6b4",
         "sante",
+        "bot",
         "urlmap-entry:waf-short-headers"
       ],
       "action": "pass"
@@ -813,6 +842,7 @@
         "wafid:e2e000000002",
         "asn:nil",
         "all",
+        "bot",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -842,6 +872,7 @@
         "wafid:rr",
         "aclname:default-acl",
         "sante",
+        "bot",
         "all"
       ],
       "action": "custom_response",
@@ -872,6 +903,7 @@
         "aclid:--default--",
         "urlmap-entry:waf-restrict-tests",
         "ip:13-129-64-253",
+        "bot",
         "asn:nil"
       ],
       "action": "custom_response",
