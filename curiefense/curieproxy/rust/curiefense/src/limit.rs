@@ -119,9 +119,6 @@ pub fn limit_check(
             continue;
         }
 
-        // every matching ratelimit rule is tagged by name
-        tags.insert(&limit.name);
-
         let key = match build_key(url_map_name, reqinfo, limit) {
             None => return SimpleDecision::Pass,
             Some(k) => k,
@@ -142,7 +139,10 @@ pub fn limit_check(
 
         match redis_check_limit(&mut redis, &key, limit.limit, limit.ttl, pairvalue) {
             Err(rr) => logs.error(rr),
-            Ok(true) => return limit_react(logs, &mut redis, limit, key),
+            Ok(true) => {
+                tags.insert(&limit.name);
+                return limit_react(logs, &mut redis, limit, key);
+            }
             Ok(false) => (),
         }
     }
