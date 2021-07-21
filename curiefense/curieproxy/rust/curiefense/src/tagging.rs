@@ -69,7 +69,6 @@ fn check_subsection(rinfo: &RequestInfo, sub: &ProfilingSSection) -> bool {
 
 pub fn tag_request(is_human: bool, cfg: &Config, rinfo: &RequestInfo) -> (Tags, SimpleDecision) {
     let mut tags = Tags::default();
-    tags.insert("all");
     tags.insert_qualified("ip", &rinfo.rinfo.geoip.ipstr);
     tags.insert_qualified("geo", rinfo.rinfo.geoip.country_name.as_deref().unwrap_or("nil"));
     match rinfo.rinfo.geoip.asn {
