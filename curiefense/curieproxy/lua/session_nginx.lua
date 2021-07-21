@@ -106,9 +106,6 @@ function session_rust_nginx.log(handle)
         req.blocked=false
     end
 
-    -- this is necessary for logstash to choose the right pipeline
-    table.insert(req.tags, "curieaccesslog")
-
     local raw_server_port = handle.var.server_port
     local raw_remote_port = handle.var.remote_port
     local server_port = tonumber(raw_server_port) or raw_server_port

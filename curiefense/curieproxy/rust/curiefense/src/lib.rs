@@ -75,6 +75,9 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 ) -> (Decision, Tags) {
     let mut tags = itags;
 
+    // insert the all tag here, to make sure it is always present, even in the presence of early errors
+    tags.insert("all");
+
     logs.debug(format!("Inspection starts (grasshopper active: {})", mgh.is_some()));
 
     // without grasshopper, default to being human
@@ -104,11 +107,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         Some((Some(stuff), itags, iflows)) => (stuff, itags, iflows),
         Some((None, _, _)) => {
             logs.debug("Could not find a matching urlmap");
-            return (Decision::Pass, Tags::default());
+            return (Decision::Pass, tags);
         }
         None => {
             logs.debug("Something went wrong during request tagging");
-            return (Decision::Pass, Tags::default());
+            return (Decision::Pass, tags);
         }
     };
     logs.debug("request tagged");
