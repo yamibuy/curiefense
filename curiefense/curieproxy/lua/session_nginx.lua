@@ -58,6 +58,9 @@ function session_rust_nginx.inspect(handle)
 end
 
 local function parse_ip_port(ipport)
+    if ipport == nil then
+        return nil, nil
+    end
     local s, _ = string.find(ipport, ":")
     if s == nil then
       return ipport, nil
