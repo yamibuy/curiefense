@@ -67,6 +67,16 @@ function generateUUID2(): string {
   return generateUUID().split('-')[4]
 }
 
+const defaultSequenceItem = {
+  'method': 'GET',
+  'uri': '/',
+  'cookies': {},
+  'headers': {
+    'host': 'www.example.com',
+  },
+  'args': {},
+}
+
 const newDocEntryFactory: { [key: string]: Function } = {
   aclpolicies(): ACLPolicy {
     return {
@@ -199,7 +209,13 @@ const newDocEntryFactory: { [key: string]: Function } = {
       },
       'exclude': [],
       'include': ['all'],
-      'sequence': [],
+      'sequence': [
+        {...defaultSequenceItem},
+        {
+          ...defaultSequenceItem,
+          method: 'POST',
+        },
+      ],
     }
   },
 
@@ -220,4 +236,5 @@ export default {
   generateUUID,
   generateUUID2,
   newDocEntryFactory,
+  defaultSequenceItem,
 }
