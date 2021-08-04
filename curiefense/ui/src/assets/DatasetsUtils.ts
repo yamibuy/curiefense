@@ -67,7 +67,7 @@ function generateUUID2(): string {
   return generateUUID().split('-')[4]
 }
 
-const defaultSequenceItem = {
+const defaultFlowControlSequenceItem = {
   'method': 'GET',
   'uri': '/',
   'cookies': {},
@@ -210,9 +210,9 @@ const newDocEntryFactory: { [key: string]: Function } = {
       'exclude': [],
       'include': ['all'],
       'sequence': [
-        {...defaultSequenceItem},
+        {...defaultFlowControlSequenceItem},
         {
-          ...defaultSequenceItem,
+          ...defaultFlowControlSequenceItem,
           method: 'POST',
         },
       ],
@@ -236,5 +236,5 @@ export default {
   generateUUID,
   generateUUID2,
   newDocEntryFactory,
-  defaultSequenceItem,
+  defaultFlowControlSequenceItem,
 }

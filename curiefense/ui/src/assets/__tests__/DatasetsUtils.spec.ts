@@ -103,7 +103,7 @@ describe('RequestsUtils.ts', () => {
     })
 
     test('should generate a new Flow Control', async () => {
-      const {newDocEntryFactory, defaultSequenceItem} = DatasetsUtils
+      const {newDocEntryFactory, defaultFlowControlSequenceItem} = DatasetsUtils
       const document = newDocEntryFactory.flowcontrol()
       expect(regexUUID2.test(document['id'])).toBeTruthy()
       expect(document['name']).toEqual('New Flow Control')
@@ -115,9 +115,9 @@ describe('RequestsUtils.ts', () => {
       expect(document['exclude']).toEqual([])
       expect(document['include']).toEqual(['all'])
       expect(document['sequence']).toEqual([
-        {...defaultSequenceItem},
+        {...defaultFlowControlSequenceItem},
         {
-          ...defaultSequenceItem,
+          ...defaultFlowControlSequenceItem,
           method: 'POST',
         },
       ])

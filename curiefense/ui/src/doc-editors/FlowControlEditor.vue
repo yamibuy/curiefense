@@ -357,7 +357,7 @@ export default Vue.extend({
       filters: ['include', 'exclude'] as IncludeExcludeType[],
       addNewTagColName: null,
       titles: DatasetsUtils.titles,
-      defaultSequenceItem: {...DatasetsUtils.defaultSequenceItem},
+      defaultSequenceItem: {...DatasetsUtils.defaultFlowControlSequenceItem},
       listEntryTypes: {
         'headers': {title: 'Header', pair: true},
         'args': {title: 'Argument', pair: true},
