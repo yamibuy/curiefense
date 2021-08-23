@@ -5,10 +5,10 @@ import TagAutocompleteInput from '@/components/TagAutocompleteInput.vue'
 import {beforeEach, describe, expect, test, jest} from '@jest/globals'
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
-
-jest.mock('axios')
 import axios from 'axios'
 import {FlowControl} from '@/types'
+
+jest.mock('axios')
 
 describe('FlowControlEditor.vue', () => {
   let docs: FlowControl[]
