@@ -56,7 +56,7 @@ m_limit = api.model(
 )
 
 
-# urlmap
+# securitypolicy
 
 m_secprofilemap = api.model(
     "Security Profile Map",
@@ -75,8 +75,8 @@ m_map = api.model(
     "Security Profile Map", {"*": fields.Wildcard(fields.Nested(m_secprofilemap))}
 )
 
-m_urlmap = api.model(
-    "URL Map",
+m_securitypolicy = api.model(
+    "Security Policy",
     {
         "id": fields.String(required=True),
         "name": fields.String(required=True),
@@ -121,10 +121,10 @@ m_wafpolicy = api.model(
     },
 )
 
-# aclpolicy
+# aclprofile
 
-m_aclpolicy = api.model(
-    "ACL Policy",
+m_aclprofile = api.model(
+    "ACL Profile",
     {
         "id": fields.String(required=True),
         "name": fields.String(required=True),
@@ -137,10 +137,10 @@ m_aclpolicy = api.model(
     },
 )
 
-# Tag Rule
+# Global Filter
 
-m_tagrule = api.model(
-    "Tag Rule",
+m_globalfilter = api.model(
+    "Global Filter",
     {
         "id": fields.String(required=True),
         "name": fields.String(required=True),
@@ -178,11 +178,11 @@ m_flowcontrol = api.model(
 
 models = {
     "ratelimits": m_limit,
-    "urlmaps": m_urlmap,
+    "securitypolicies": m_securitypolicy,
     "wafrules": m_wafrule,
     "wafpolicies": m_wafpolicy,
-    "aclpolicies": m_aclpolicy,
-    "tagrules": m_tagrule,
+    "aclprofiles": m_aclprofile,
+    "globalfilters": m_globalfilter,
     "flowcontrol": m_flowcontrol,
 }
 
@@ -256,10 +256,7 @@ m_document_list_entry = api.model(
 
 m_config_documents = api.model(
     "Config Documents",
-    {
-        x: fields.List(fields.Nested(models[x], default=[]))
-        for x in utils.DOCUMENTS_PATH
-    },
+    {x: fields.List(fields.Nested(models[x], default=[])) for x in models},
 )
 
 m_config_blobs = api.model(
@@ -328,21 +325,21 @@ def validateJson(json_data, schema_type):
 
 base_path = Path(__file__).parent
 # base_path = "/etc/curiefense/json/"
-acl_policy_file_path = (base_path / "../json/acl-policy.schema").resolve()
-with open(acl_policy_file_path) as json_file:
-    acl_policy_schema = json.load(json_file)
+acl_profile_file_path = (base_path / "./json/acl-profile.schema").resolve()
+with open(acl_profile_file_path) as json_file:
+    acl_profile_schema = json.load(json_file)
 ratelimits_file_path = (base_path / "../json/rate-limits.schema").resolve()
 with open(ratelimits_file_path) as json_file:
     ratelimits_schema = json.load(json_file)
-urlmaps_file_path = (base_path / "../json/url-maps.schema").resolve()
-with open(urlmaps_file_path) as json_file:
-    urlmaps_schema = json.load(json_file)
+securitypolicies_file_path = (base_path / "./json/security-policies.schema").resolve()
+with open(securitypolicies_file_path) as json_file:
+    securitypolicies_schema = json.load(json_file)
 waf_policy_file_path = (base_path / "../json/waf-policy.schema").resolve()
 with open(waf_policy_file_path) as json_file:
     waf_policy_schema = json.load(json_file)
-tagrules_file_path = (base_path / "../json/tag-rules.schema").resolve()
-with open(tagrules_file_path) as json_file:
-    tagrules_schema = json.load(json_file)
+globalfilters_file_path = (base_path / "./json/global-filters.schema").resolve()
+with open(globalfilters_file_path) as json_file:
+    globalfilters_schema = json.load(json_file)
 flowcontrol_file_path = (base_path / "../json/flow-control.schema").resolve()
 with open(flowcontrol_file_path) as json_file:
     flowcontrol_schema = json.load(json_file)
@@ -352,10 +349,10 @@ with open(waf_rule_file_path) as json_file:
 
 schema_type_map = {
     "ratelimits": ratelimits_schema,
-    "urlmaps": urlmaps_schema,
+    "securitypolicies": securitypolicies_schema,
     "wafpolicies": waf_policy_schema,
-    "aclpolicies": acl_policy_schema,
-    "tagrules": tagrules_schema,
+    "aclprofiles": acl_profile_schema,
+    "globalfilters": globalfilters_schema,
     "flowcontrol": flowcontrol_schema,
     "wafrules": waf_rule_schema,
 }

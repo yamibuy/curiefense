@@ -20,10 +20,10 @@ describe('RequestsUtils.ts', () => {
   })
 
   describe('newDocEntryFactory', () => {
-    test('should generate a new ACL Policy', async () => {
-      const document = DatasetsUtils.newDocEntryFactory.aclpolicies()
+    test('should generate a new ACL Profile', async () => {
+      const document = DatasetsUtils.newDocEntryFactory.aclprofiles()
       expect(regexUUID2.test(document['id'])).toBeTruthy()
-      expect(document['name']).toEqual('New ACL Policy')
+      expect(document['name']).toEqual('New ACL Profile')
       expect(document['allow']).toEqual([])
       expect(document['allow_bot']).toEqual([])
       expect(document['deny_bot']).toEqual([])
@@ -51,12 +51,12 @@ describe('RequestsUtils.ts', () => {
       expect(document['cookies']['regex']).toEqual([])
     })
 
-    test('should generate a new Tag Rule', async () => {
+    test('should generate a new Global Filter', async () => {
       // eslint-disable-next-line max-len
       const regexISODate = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)/
-      const document = DatasetsUtils.newDocEntryFactory.tagrules()
+      const document = DatasetsUtils.newDocEntryFactory.globalfilters()
       expect(regexUUID2.test(document['id'])).toBeTruthy()
-      expect(document['name']).toEqual('New Tag Rule')
+      expect(document['name']).toEqual('New Global Filter')
       expect(document['source']).toEqual('self-managed')
       expect(typeof document['mdate'] === 'string').toBeTruthy()
       expect(regexISODate.test(document['mdate'])).toBeTruthy()
@@ -68,10 +68,10 @@ describe('RequestsUtils.ts', () => {
       expect(document['rule']['sections']).toEqual([])
     })
 
-    test('should generate a new URL Map', async () => {
-      const document = DatasetsUtils.newDocEntryFactory.urlmaps()
+    test('should generate a new Security Policy', async () => {
+      const document = DatasetsUtils.newDocEntryFactory.securitypolicies()
       expect(regexUUID2.test(document['id'])).toBeTruthy()
-      expect(document['name']).toEqual('New URL Map')
+      expect(document['name']).toEqual('New Security Policy')
       expect(document['match']).toEqual(`${document['id']}.example.com`)
       expect(document['map'][0]['match']).toEqual('/')
       expect(document['map'][0]['name']).toEqual('default')
@@ -96,8 +96,9 @@ describe('RequestsUtils.ts', () => {
       expect(document['include']).toEqual(['blocklist'])
     })
 
-    test('should generate a new Rate Limit', async () => {
-      const document = DatasetsUtils.newDocEntryFactory.flowcontrol()
+    test('should generate a new Flow Control', async () => {
+      const {newDocEntryFactory, defaultFlowControlSequenceItem} = DatasetsUtils
+      const document = newDocEntryFactory.flowcontrol()
       expect(regexUUID2.test(document['id'])).toBeTruthy()
       expect(document['name']).toEqual('New Flow Control')
       expect(document['ttl']).toEqual(60)
@@ -107,7 +108,13 @@ describe('RequestsUtils.ts', () => {
       expect(document['action']).toEqual({'type': 'default'})
       expect(document['exclude']).toEqual([])
       expect(document['include']).toEqual(['all'])
-      expect(document['sequence']).toEqual([])
+      expect(document['sequence']).toEqual([
+        {...defaultFlowControlSequenceItem},
+        {
+          ...defaultFlowControlSequenceItem,
+          method: 'POST',
+        },
+      ])
     })
 
     test('should generate a new WAF Rule', async () => {

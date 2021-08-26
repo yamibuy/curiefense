@@ -1,4 +1,4 @@
-import {ACLPolicy, FlowControl, RateLimit, TagRule, URLMap, WAFPolicy, WAFRule} from '@/types'
+import {ACLProfile, FlowControl, RateLimit, GlobalFilter, SecurityPolicy, WAFPolicy, WAFRule} from '@/types'
 
 const titles: { [key: string]: string } = {
   'admin': 'Admin',
@@ -31,18 +31,18 @@ const titles: { [key: string]: string } = {
   'cookies-entry': 'Cookie',
   'args-entry': 'Argument',
   'attrs-entry': 'Attribute',
-  'aclpolicies': 'ACL Policies',
-  'aclpolicies-singular': 'ACL Policy',
+  'aclprofiles': 'ACL Profiles',
+  'aclprofiles-singular': 'ACL Profile',
   'ratelimits': 'Rate Limits',
   'ratelimits-singular': 'Rate Limit',
-  'urlmaps': 'URL Maps',
-  'urlmaps-singular': 'URL Map',
+  'securitypolicies': 'Security Policies',
+  'securitypolicies-singular': 'Security Policy',
   'wafpolicies': 'WAF Policies',
   'wafpolicies-singular': 'WAF Policy',
   'wafrules': 'WAF Rules',
   'wafrules-singular': 'WAF Rule',
-  'tagrules': 'Tag Rules',
-  'tagrules-singular': 'Tag Rule',
+  'globalfilters': 'Global Filters',
+  'globalfilters-singular': 'Global Filter',
   'flowcontrol': 'Flow Control',
   'flowcontrol-singular': 'Flow Control',
 }
@@ -67,11 +67,21 @@ function generateUUID2(): string {
   return generateUUID().split('-')[4]
 }
 
+const defaultFlowControlSequenceItem = {
+  'method': 'GET',
+  'uri': '/',
+  'cookies': {},
+  'headers': {
+    'host': 'www.example.com',
+  },
+  'args': {},
+}
+
 const newDocEntryFactory: { [key: string]: Function } = {
-  aclpolicies(): ACLPolicy {
+  aclprofiles(): ACLProfile {
     return {
       'id': generateUUID2(),
-      'name': 'New ACL Policy',
+      'name': 'New ACL Profile',
       'allow': [],
       'allow_bot': [],
       'deny_bot': [],
@@ -110,10 +120,10 @@ const newDocEntryFactory: { [key: string]: Function } = {
     }
   },
 
-  tagrules(): TagRule {
+  globalfilters(): GlobalFilter {
     return {
       'id': generateUUID2(),
-      'name': 'New Tag Rule',
+      'name': 'New Global Filter',
       'source': 'self-managed',
       'mdate': (new Date()).toISOString(),
       'notes': 'New List Notes and Remarks',
@@ -129,11 +139,11 @@ const newDocEntryFactory: { [key: string]: Function } = {
     }
   },
 
-  urlmaps(): URLMap {
+  securitypolicies(): SecurityPolicy {
     const id = generateUUID2()
     return {
       'id': id,
-      'name': 'New URL Map',
+      'name': 'New Security Policy',
       'match': `${id}.example.com`,
       'map': [
         {
@@ -189,7 +199,13 @@ const newDocEntryFactory: { [key: string]: Function } = {
       },
       'exclude': [],
       'include': ['all'],
-      'sequence': [],
+      'sequence': [
+        {...defaultFlowControlSequenceItem},
+        {
+          ...defaultFlowControlSequenceItem,
+          method: 'POST',
+        },
+      ],
     }
   },
 
@@ -210,4 +226,5 @@ export default {
   generateUUID,
   generateUUID2,
   newDocEntryFactory,
+  defaultFlowControlSequenceItem,
 }

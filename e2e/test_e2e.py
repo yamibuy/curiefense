@@ -7,10 +7,10 @@
 #
 # To run this with minikube (does not support IPv6):
 #
-# pytest --base-protected-url http://$(minikube ip):30081 --base-conf-url http://$(minikube ip):30000/api/v1/ --base-ui-url http://$(minikube ip):30080 --elasticsearch-url http://$IP:30200 .      # pylint: disable=line-too-long
+# pytest --base-protected-url http://$(minikube ip):30081 --base-conf-url http://$(minikube ip):30000/api/v2/ --base-ui-url http://$(minikube ip):30080 --elasticsearch-url http://$IP:30200 .      # pylint: disable=line-too-long
 #
 # To run this with docker-compose:
-# pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v1/ --base-ui-url http://localhost:30080 --elasticsearch-url http://localhost:9200 .      # pylint: disable=line-too-long
+# pytest --base-protected-url http://localhost:30081/ --base-conf-url http://localhost:30000/api/v2/ --base-ui-url http://localhost:30080 --elasticsearch-url http://localhost:9200 .      # pylint: disable=line-too-long
 
 # pylint: disable=too-many-lines,too-many-public-methods
 # pylint: disable=too-many-arguments,too-few-public-methods,too-many-statements
@@ -88,15 +88,18 @@ class CliHelper:
 
     def empty_acl(self):
         version = self.initial_version()
-        return self.call(f"doc get master aclpolicies --version {version}")
+        return self.call(f"doc get master aclprofiles --version {version}")
 
     def revert_and_enable(self, acl=True, waf=True):
         version = self.initial_version()
         self.call(f"conf revert {TEST_CONFIG_NAME} {version}")
-        urlmap = self.call(f"doc get {TEST_CONFIG_NAME} urlmaps")
-        urlmap[0]["map"][0]["acl_active"] = acl
-        urlmap[0]["map"][0]["waf_active"] = waf
-        self.call(f"doc update {TEST_CONFIG_NAME} urlmaps /dev/stdin", inputjson=urlmap)
+        securitypolicy = self.call(f"doc get {TEST_CONFIG_NAME} securitypolicies")
+        securitypolicy[0]["map"][0]["acl_active"] = acl
+        securitypolicy[0]["map"][0]["waf_active"] = waf
+        self.call(
+            f"doc update {TEST_CONFIG_NAME} securitypolicies /dev/stdin",
+            inputjson=securitypolicy,
+        )
 
     def publish_and_apply(self):
         buckets = self.call("key get system publishinfo")
@@ -196,7 +199,7 @@ class ACLHelper:
         for key, value in updates.items():
             acl[0][key].append(value)
         self._cli.call(
-            f"doc update {TEST_CONFIG_NAME} aclpolicies /dev/stdin", inputjson=acl
+            f"doc update {TEST_CONFIG_NAME} aclprofiles /dev/stdin", inputjson=acl
         )
 
     def reset_and_set_acl(self, updates: dict):
@@ -543,7 +546,7 @@ def gen_rl_rules(authority):
         param_ext={"headers": {"foo": "bar"}},
     )
 
-    rl_urlmap = [
+    rl_securitypolicy = [
         {
             "id": "__default__",
             "name": "default entry",
@@ -573,7 +576,7 @@ def gen_rl_rules(authority):
             ],
         }
     ]
-    return (rl_rules, rl_urlmap, prof_rules)
+    return (rl_rules, rl_securitypolicy, prof_rules)
 
 
 @pytest.fixture(scope="class")
@@ -581,16 +584,20 @@ def ratelimit_config(cli, target):
     cli.revert_and_enable()
     # Add new RL rules
     rl_rules = cli.call(f"doc get {TEST_CONFIG_NAME} ratelimits")
-    (new_rules, new_urlmap, new_profiling) = gen_rl_rules(target.authority())
+    (new_rules, new_securitypolicy, new_profiling) = gen_rl_rules(target.authority())
     rl_rules.extend(new_rules)
     # Apply new profiling
     cli.call(
-        f"doc update {TEST_CONFIG_NAME} tagrules /dev/stdin", inputjson=new_profiling
+        f"doc update {TEST_CONFIG_NAME} globalfilters /dev/stdin",
+        inputjson=new_profiling,
     )
     # Apply rl_rules
     cli.call(f"doc update {TEST_CONFIG_NAME} ratelimits /dev/stdin", inputjson=rl_rules)
-    # Apply new_urlmap
-    cli.call(f"doc update {TEST_CONFIG_NAME} urlmaps /dev/stdin", inputjson=new_urlmap)
+    # Apply new_securitypolicy
+    cli.call(
+        f"doc update {TEST_CONFIG_NAME} securitypolicies /dev/stdin",
+        inputjson=new_securitypolicy,
+    )
     cli.publish_and_apply()
 
 
@@ -1092,7 +1099,7 @@ class TestRateLimit:
 
 # --- Tag rules tests (formerly profiling lists) ---
 
-TEST_TAGRULES = {
+TEST_GLOBALFILTERS = {
     "id": "e2e000000000",
     "name": "e2e test tag rules",
     "source": "self-managed",
@@ -1110,9 +1117,9 @@ TEST_TAGRULES = {
                     ["cookies", ["e2e", "value"], "annotation"],
                     ["headers", ["e2e", "value"], "annotation"],
                     ["method", "(POST|PUT)", "annotation"],
-                    ["path", "/e2e-tagrules-path/", "annotation"],
+                    ["path", "/e2e-globalfilters-path/", "annotation"],
                     ["query", "e2e=value", "annotation"],
-                    ["uri", "/e2e-tagrules-uri", "annotation"],
+                    ["uri", "/e2e-globalfilters-uri", "annotation"],
                     ["ip", IP6_1, "annotation"],
                     ["ip", IP4_US, "annotation"],
                     [
@@ -1141,85 +1148,93 @@ def active(request):
 
 
 @pytest.fixture(scope="class")
-def tagrules_config(cli, acl, active):
+def globalfilters_config(cli, acl, active):
     cli.revert_and_enable()
     acl.set_acl({"force_deny": "e2e-test", "bypass": "all"})
-    # Apply TEST_TAGRULES
-    TEST_TAGRULES["active"] = active
+    # Apply TEST_GLOBALFILTERS
+    TEST_GLOBALFILTERS["active"] = active
     # 'updating' wafpolicies with a list containing a single entry adds this
     # entry, without removing pre-existing ones.
     cli.call(
-        f"doc update {TEST_CONFIG_NAME} tagrules /dev/stdin", inputjson=[TEST_TAGRULES]
+        f"doc update {TEST_CONFIG_NAME} globalfilters /dev/stdin",
+        inputjson=[TEST_GLOBALFILTERS],
     )
     cli.publish_and_apply()
 
 
-class TestTagRules:
-    def test_cookies(self, target, tagrules_config, active):
+class TestGlobalFilters:
+    def test_cookies(self, target, globalfilters_config, active):
         assert (
-            target.is_reachable("/e2e-tagrules-cookies", cookies={"e2e": "value"})
+            target.is_reachable("/e2e-globalfilters-cookies", cookies={"e2e": "value"})
             is not active
         )
         assert (
-            target.is_reachable("/e2e-tagrules-cookies", cookies={"e2e": "allowed"})
+            target.is_reachable(
+                "/e2e-globalfilters-cookies", cookies={"e2e": "allowed"}
+            )
             is True
         )
 
-    def test_headers(self, target, tagrules_config, active):
+    def test_headers(self, target, globalfilters_config, active):
         assert (
-            target.is_reachable("/e2e-tagrules-headers", headers={"e2e": "value"})
+            target.is_reachable("/e2e-globalfilters-headers", headers={"e2e": "value"})
             is not active
         )
         assert (
-            target.is_reachable("/e2e-tagrules-headers", headers={"e2e": "allowed"})
+            target.is_reachable(
+                "/e2e-globalfilters-headers", headers={"e2e": "allowed"}
+            )
             is True
         )
 
-    def test_method(self, target, tagrules_config, active):
-        assert target.is_reachable("/e2e-tagrules-method-GET", method="GET") is True
+    def test_method(self, target, globalfilters_config, active):
         assert (
-            target.is_reachable("/e2e-tagrules-method-POST", method="POST")
+            target.is_reachable("/e2e-globalfilters-method-GET", method="GET") is True
+        )
+        assert (
+            target.is_reachable("/e2e-globalfilters-method-POST", method="POST")
             is not active
         )
         assert (
-            target.is_reachable("/e2e-tagrules-method-PUT", method="PUT") is not active
+            target.is_reachable("/e2e-globalfilters-method-PUT", method="PUT")
+            is not active
         )
 
-    def test_path(self, target, tagrules_config, active):
-        assert target.is_reachable("/e2e-tagrules-path/") is not active
-        assert target.is_reachable("/e2e-tagrules-valid-path/") is True
+    def test_path(self, target, globalfilters_config, active):
+        assert target.is_reachable("/e2e-globalfilters-path/") is not active
+        assert target.is_reachable("/e2e-globalfilters-valid-path/") is True
 
-    def test_query(self, target, tagrules_config, active):
+    def test_query(self, target, globalfilters_config, active):
         assert (
-            target.is_reachable("/e2e-tagrules-query", params={"e2e": "value"})
+            target.is_reachable("/e2e-globalfilters-query", params={"e2e": "value"})
             is not active
         )
         assert (
-            target.is_reachable("/e2e-tagrules-query", params={"e2e": "allowed"})
+            target.is_reachable("/e2e-globalfilters-query", params={"e2e": "allowed"})
             is True
         )
 
-    def test_uri(self, target, tagrules_config, active):
-        assert target.is_reachable("/e2e-tagrules-uri") is not active
-        assert target.is_reachable("/e2e-tagrules-allowed-uri") is True
+    def test_uri(self, target, globalfilters_config, active):
+        assert target.is_reachable("/e2e-globalfilters-uri") is not active
+        assert target.is_reachable("/e2e-globalfilters-allowed-uri") is True
 
-    def test_ipv4(self, target, tagrules_config, active):
+    def test_ipv4(self, target, globalfilters_config, active):
         assert target.is_reachable("/tag-ipv4-1", srcip=IP4_US) is not active
         assert target.is_reachable("/tag-ipv4-2", srcip=IP4_ORANGE) is True
 
-    def test_ipv6(self, target, tagrules_config, active):
+    def test_ipv6(self, target, globalfilters_config, active):
         assert target.is_reachable("/tag-ipv6-1", srcip=IP6_1) is not active
         assert target.is_reachable("/tag-ipv6-2", srcip=IP6_2) is True
 
-    def test_country(self, target, tagrules_config, active):
+    def test_country(self, target, globalfilters_config, active):
         # JP address (Softbank)
         assert target.is_reachable("/tag-country", srcip=IP4_JP) is not active
 
-    def test_asn(self, target, tagrules_config, active):
+    def test_asn(self, target, globalfilters_config, active):
         # ASN 13335
         assert target.is_reachable("/tag-asn", srcip=IP4_CLOUDFLARE) is not active
 
-    def test_and(self, target, tagrules_config, active):
+    def test_and(self, target, globalfilters_config, active):
         assert (
             target.is_reachable("/e2e-and/", cookies={"e2e-and": "value"}) is not active
         )
@@ -1231,7 +1246,7 @@ class TestTagRules:
         )
 
 
-# --- URL Maps tests ---
+# --- Security Policies tests ---
 
 
 ACL_BYPASSALL = {
@@ -1260,10 +1275,10 @@ WAF_SHORT_HEADERS = {
     "cookies": {"names": [], "regex": []},
 }
 
-URLMAP = [
+SECURITYPOLICY = [
     {
         "id": "e2e000000001",
-        "name": "e2e URL map",
+        "name": "e2e Security Policy",
         "match": ".*",
         "map": [
             {
@@ -1331,14 +1346,14 @@ URLMAP = [
 
 
 @pytest.fixture(scope="class")
-def urlmap_config(cli, acl):
+def securitypolicy_config(cli, acl):
     cli.revert_and_enable()
     # Add ACL entry
     default_acl = cli.empty_acl()
     default_acl[0]["force_deny"].append("all")
     default_acl.append(ACL_BYPASSALL)
     cli.call(
-        f"doc update {TEST_CONFIG_NAME} aclpolicies /dev/stdin", inputjson=default_acl
+        f"doc update {TEST_CONFIG_NAME} aclprofiles /dev/stdin", inputjson=default_acl
     )
     # Add waf profile entry
     wafpolicy = cli.call(f"doc get {TEST_CONFIG_NAME} wafpolicies")
@@ -1346,43 +1361,46 @@ def urlmap_config(cli, acl):
     cli.call(
         f"doc update {TEST_CONFIG_NAME} wafpolicies /dev/stdin", inputjson=wafpolicy
     )
-    # Add urlmap entry URLMAP
-    cli.call(f"doc update {TEST_CONFIG_NAME} urlmaps /dev/stdin", inputjson=URLMAP)
+    # Add securitypolicy entry SECURITYPOLICY
+    cli.call(
+        f"doc update {TEST_CONFIG_NAME} securitypolicies /dev/stdin",
+        inputjson=SECURITYPOLICY,
+    )
     cli.publish_and_apply()
 
 
-class TestURLMap:
-    def test_nofilter(self, target, urlmap_config):
+class TestSecurityPolicy:
+    def test_nofilter(self, target, securitypolicy_config):
         assert target.is_reachable("/nofilter/")
         assert target.is_reachable(
             "/nofilter/", headers={"Long-header": "Overlong_header" * 100}
         )
 
-    def test_waffilter(self, target, urlmap_config):
+    def test_waffilter(self, target, securitypolicy_config):
         assert target.is_reachable("/waf/")
         assert not target.is_reachable(
             "/waf/", headers={"Long-header": "Overlong_header" * 100}
         )
 
-    def test_aclfilter(self, target, urlmap_config):
+    def test_aclfilter(self, target, securitypolicy_config):
         assert not target.is_reachable("/acl/")
         assert not target.is_reachable(
             "/acl/", headers={"Long-header": "Overlong_header" * 100}
         )
 
-    def test_nondefault_aclfilter_bypassall(self, target, urlmap_config):
+    def test_nondefault_aclfilter_bypassall(self, target, securitypolicy_config):
         assert target.is_reachable("/acl-bypassall/")
         assert target.is_reachable(
             "/acl-bypassall/", headers={"Long-header": "Overlong_header" * 100}
         )
 
-    def test_aclwaffilter(self, target, urlmap_config):
+    def test_aclwaffilter(self, target, securitypolicy_config):
         assert not target.is_reachable("/acl-waf/")
         assert not target.is_reachable(
             "/acl/", headers={"Long-header": "Overlong_header" * 100}
         )
 
-    def test_nondefault_wafpolicy_short_headers(self, target, urlmap_config):
+    def test_nondefault_wafpolicy_short_headers(self, target, securitypolicy_config):
         assert target.is_reachable(
             "/waf-short-headers/", headers={"Short-header": "0123456789" * 5}
         )

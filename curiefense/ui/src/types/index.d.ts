@@ -21,7 +21,7 @@ declare module CuriefenseClient {
     exclusions: { [key: string]: number }
   }
 
-  type URLMapEntryMatch = {
+  type SecurityPolicyEntryMatch = {
     match: string
     name: string
     acl_profile: string
@@ -31,10 +31,10 @@ declare module CuriefenseClient {
     limit_ids: string[]
   }
 
-  type TagRuleSectionEntry = [Category, string | string[], string?]
+  type GlobalFilterSectionEntry = [Category, string | string[], string?]
 
-  type TagRuleSection = {
-    entries: TagRuleSectionEntry[]
+  type GlobalFilterSection = {
+    entries: GlobalFilterSectionEntry[]
     relation: Relation
   }
 
@@ -54,7 +54,7 @@ declare module CuriefenseClient {
     }
   }
 
-  type ACLPolicyFilter = 'allow' | 'allow_bot' | 'deny_bot' | 'bypass' | 'force_deny' | 'deny'
+  type ACLProfileFilter = 'allow' | 'allow_bot' | 'deny_bot' | 'bypass' | 'force_deny' | 'deny'
 
   type IncludeExcludeType = 'include' | 'exclude'
 
@@ -68,9 +68,9 @@ declare module CuriefenseClient {
 
   type NamesRegexType = 'names' | 'regex'
 
-  type Document = BasicDocument & (ACLPolicy | FlowControl | TagRule | RateLimit | URLMap | WAFPolicy | WAFRule)
+  type Document = BasicDocument & (ACLProfile | FlowControl | GlobalFilter | RateLimit | SecurityPolicy | WAFPolicy | WAFRule)
 
-  type DocumentType = 'aclpolicies' | 'flowcontrol' | 'tagrules' | 'ratelimits' | 'urlmaps' | 'wafpolicies' | 'wafrules'
+  type DocumentType = 'aclprofiles' | 'flowcontrol' | 'globalfilters' | 'ratelimits' | 'securitypolicies' | 'wafpolicies' | 'wafrules'
 
   // Document types helpers - END
 
@@ -81,7 +81,7 @@ declare module CuriefenseClient {
     name: string
   }
 
-  type ACLPolicy = {
+  type ACLProfile = {
     id: string
     name: string
     allow: string[]
@@ -116,7 +116,7 @@ declare module CuriefenseClient {
     }
   }
 
-  type TagRule = {
+  type GlobalFilter = {
     id: string
     name: string
     source: string
@@ -127,15 +127,15 @@ declare module CuriefenseClient {
     action: ResponseActionType
     rule: {
       relation: Relation
-      sections: TagRuleSection[]
+      sections: GlobalFilterSection[]
     }
   }
 
-  type URLMap = {
+  type SecurityPolicy = {
     id: string
     name: string
     match: string
-    map: URLMapEntryMatch[]
+    map: SecurityPolicyEntryMatch[]
   }
 
   type RateLimit = {

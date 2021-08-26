@@ -47,7 +47,7 @@
                 }
             }
         ],
-        "urlmaps": [
+        "securitypolicies": [
             {
                 "id": "__default__",
                 "name": "default entry",
@@ -377,7 +377,7 @@
                 }
             }
         ],
-        "aclpolicies": [
+        "aclprofiles": [
             {
                 "id": "__default__",
                 "name": "default-acl",
@@ -417,7 +417,7 @@
                 "force_deny": []
             }
         ],
-        "tagrules": [
+        "globalfilters": [
             {
                 "id": "ed8f6efb",
                 "active": true,
