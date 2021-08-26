@@ -362,15 +362,7 @@ export default Vue.extend({
       filters: ['include', 'exclude'] as IncludeExcludeType[],
       addNewTagColName: null,
       titles: DatasetsUtils.titles,
-      defaultSequenceItem: {
-        'method': httpRequestMethods[0],
-        'uri': '/',
-        'cookies': {},
-        'headers': {
-          'host': 'www.example.com',
-        },
-        'args': {},
-      },
+      defaultSequenceItem: {...DatasetsUtils.defaultFlowControlSequenceItem},
       listEntryTypes: {
         'headers': {title: 'Header', pair: true},
         'args': {title: 'Argument', pair: true},
