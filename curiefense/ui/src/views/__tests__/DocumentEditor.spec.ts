@@ -7,7 +7,7 @@ import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
-import {ACLProfile, Branch, Commit, FlowControl, RateLimit, GlobalFilter, SecurityPolicy, WAFPolicy} from '@/types'
+import {ACLProfile, Branch, Commit, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, WAFPolicy} from '@/types'
 
 jest.mock('axios')
 
@@ -23,7 +23,7 @@ describe('DocumentEditor.vue', () => {
   let profilingListDocsLogs: Commit[][]
   let securityPoliciesDocs: SecurityPolicy[]
   let securityPoliciesDocsLogs: Commit[][]
-  let flowControlDocs: FlowControl[]
+  let flowControlPolicyDocs: FlowControlPolicy[]
   let wafDocs: WAFPolicy[]
   let rateLimitsDocs: RateLimit[]
   beforeEach((done) => {
@@ -611,13 +611,13 @@ describe('DocumentEditor.vue', () => {
         },
       ],
     ]
-    flowControlDocs = [
+    flowControlPolicyDocs = [
       {
         'active': true,
         'notes': '',
         'exclude': [],
         'include': ['all'],
-        'name': 'flow control',
+        'name': 'flow control policy',
         'key': [
           {'headers': 'something'},
         ],
@@ -743,12 +743,12 @@ describe('DocumentEditor.vue', () => {
       }
       if (path === `/conf/api/v2/configs/${branch}/d/flowcontrol/`) {
         if (config && config.headers && config.headers['x-fields'] === 'id, name') {
-          return Promise.resolve({data: _.map(flowControlDocs, (i) => _.pick(i, 'id', 'name'))})
+          return Promise.resolve({data: _.map(flowControlPolicyDocs, (i) => _.pick(i, 'id', 'name'))})
         }
-        return Promise.resolve({data: flowControlDocs})
+        return Promise.resolve({data: flowControlPolicyDocs})
       }
       if (path === `/conf/api/v2/configs/${branch}/d/flowcontrol/e/c03dabe4b9ca/`) {
-        return Promise.resolve({data: flowControlDocs[0]})
+        return Promise.resolve({data: flowControlPolicyDocs[0]})
       }
       if (path === `/conf/api/v2/configs/${branch}/d/wafpolicies/`) {
         if (config && config.headers && config.headers['x-fields'] === 'id, name') {

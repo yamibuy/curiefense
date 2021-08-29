@@ -3,7 +3,7 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import axios from 'axios'
 import Vue from 'vue'
-import {ACLProfile, BasicDocument, Branch, FlowControl, RateLimit, GlobalFilter, SecurityPolicy, WAFPolicy} from '@/types'
+import {ACLProfile, BasicDocument, Branch, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, WAFPolicy} from '@/types'
 
 jest.useFakeTimers()
 jest.mock('axios')
@@ -15,7 +15,7 @@ describe('DocumentSearch.vue', () => {
   let aclDocs: ACLProfile[]
   let profilingListDocs: GlobalFilter[]
   let securityPoliciesDocs: SecurityPolicy[]
-  let flowControlDocs: FlowControl[]
+  let flowControlPolicyDocs: FlowControlPolicy[]
   let rateLimitDocs: RateLimit[]
   let wafDocs: WAFPolicy[]
   beforeEach((done) => {
@@ -282,13 +282,13 @@ describe('DocumentSearch.vue', () => {
         ],
       },
     ]
-    flowControlDocs = [
+    flowControlPolicyDocs = [
       {
         'active': true,
         'notes': '',
         'exclude': [],
         'include': ['all'],
-        'name': 'flow control',
+        'name': 'flow control policy',
         'key': [
           {'headers': 'something'},
         ],
@@ -367,7 +367,7 @@ describe('DocumentSearch.vue', () => {
         return Promise.resolve({data: securityPoliciesDocs})
       }
       if (path === `/conf/api/v2/configs/${branch}/d/flowcontrol/`) {
-        return Promise.resolve({data: flowControlDocs})
+        return Promise.resolve({data: flowControlPolicyDocs})
       }
       if (path === `/conf/api/v2/configs/${branch}/d/ratelimits/`) {
         return Promise.resolve({data: rateLimitDocs})
@@ -426,7 +426,7 @@ describe('DocumentSearch.vue', () => {
     expect(isItemInFilteredDocs(profilingListDocs[0], 'globalfilters')).toBeTruthy()
     expect(isItemInFilteredDocs(profilingListDocs[1], 'globalfilters')).toBeTruthy()
     expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
-    expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+    expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
     expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
     expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
     expect(numberOfFilteredDocs()).toEqual(8)
@@ -549,7 +549,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'flow'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+      expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 
@@ -565,7 +565,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'c03dabe4b9ca'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+      expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 

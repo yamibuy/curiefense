@@ -7,14 +7,14 @@
             <div class="field">
               <label class="label is-small">
                 Name
-                <span class="has-text-grey is-pulled-right document-id" title="Flow control id">
+                <span class="has-text-grey is-pulled-right document-id" title="Flow control policy id">
                     {{ localDoc.id }}
                   </span>
               </label>
               <div class="control">
                 <input class="input is-small document-name"
-                       title="Flow control name"
-                       placeholder="Flow control name"
+                       title="Flow control policy name"
+                       placeholder="Flow control policy name"
                        @change="emitDocUpdate"
                        v-model="localDoc.name"/>
               </div>
@@ -35,8 +35,8 @@
               <div class="control suffix seconds-suffix">
                 <input class="input is-small document-ttl"
                        type="number"
-                       title="Flow control duration"
-                       placeholder="Flow control duration"
+                       title="Flow control policy duration"
+                       placeholder="Flow control policy duration"
                        @change="emitDocUpdate"
                        v-model.number="localDoc.ttl">
               </div>
@@ -339,12 +339,12 @@ import LimitOption, {OptionObject} from '@/components/LimitOption.vue'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput.vue'
 import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import Vue from 'vue'
-import {ArgsCookiesHeadersType, FlowControl, IncludeExcludeType, LimitOptionType, LimitRuleType} from '@/types'
+import {ArgsCookiesHeadersType, FlowControlPolicy, IncludeExcludeType, LimitOptionType, LimitRuleType} from '@/types'
 import {httpRequestMethods} from '@/types/const'
 import {Dictionary} from 'vue-router/types/router'
 
 export default Vue.extend({
-  name: 'FlowControl',
+  name: 'FlowControlPolicy',
 
   props: {
     selectedDoc: Object,
@@ -380,7 +380,7 @@ export default Vue.extend({
   },
 
   computed: {
-    localDoc(): FlowControl {
+    localDoc(): FlowControlPolicy {
       return _.cloneDeep(this.selectedDoc)
     },
 

@@ -1,4 +1,4 @@
-import FlowControlEditor from '@/doc-editors/FlowControlEditor.vue'
+import FlowControlPolicyEditor from '@/doc-editors/FlowControlPolicyEditor.vue'
 import LimitOption from '@/components/LimitOption.vue'
 import ResponseAction from '@/components/ResponseAction.vue'
 import TagAutocompleteInput from '@/components/TagAutocompleteInput.vue'
@@ -6,19 +6,19 @@ import {beforeEach, describe, expect, test, jest} from '@jest/globals'
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
 import axios from 'axios'
-import {FlowControl} from '@/types'
+import {FlowControlPolicy} from '@/types'
 
 jest.mock('axios')
 
-describe('FlowControlEditor.vue', () => {
-  let docs: FlowControl[]
+describe('FlowControlPolicyEditor.vue', () => {
+  let docs: FlowControlPolicy[]
   let wrapper: Wrapper<Vue>
   beforeEach(() => {
     docs = [
       {
         'exclude': ['devops', 'internal'],
         'include': ['china'],
-        'name': 'flow control',
+        'name': 'flow control policy',
         'key': [
           {
             'attrs': 'ip',
@@ -50,7 +50,7 @@ describe('FlowControlEditor.vue', () => {
           },
         ],
         'active': true,
-        'notes': 'New Flow Control Notes and Remarks',
+        'notes': 'New Flow Control Policy Notes and Remarks',
         'action': {
           'type': 'default',
         },
@@ -58,7 +58,7 @@ describe('FlowControlEditor.vue', () => {
         'id': 'c03dabe4b9ca',
       },
     ]
-    wrapper = shallowMount(FlowControlEditor, {
+    wrapper = shallowMount(FlowControlPolicyEditor, {
       propsData: {
         selectedDoc: docs[0],
       },
@@ -137,7 +137,7 @@ describe('FlowControlEditor.vue', () => {
 
     test('should handle key with no value', async () => {
       docs[0].key = [{'headers': null}]
-      wrapper = shallowMount(FlowControlEditor, {
+      wrapper = shallowMount(FlowControlPolicyEditor, {
         propsData: {
           selectedDoc: docs[0],
         },

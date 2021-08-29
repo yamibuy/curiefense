@@ -140,7 +140,7 @@ import WAFEditor from '@/doc-editors/WAFEditor.vue'
 import SecurityPoliciesEditor from '@/doc-editors/SecurityPoliciesEditor.vue'
 import RateLimitsEditor from '@/doc-editors/RateLimitsEditor.vue'
 import GlobalFilterListEditor from '@/doc-editors/GlobalFilterListEditor.vue'
-import FlowControlEditor from '@/doc-editors/FlowControlEditor.vue'
+import FlowControlPolicyEditor from '@/doc-editors/FlowControlPolicyEditor.vue'
 import RequestsUtils from '@/assets/RequestsUtils.ts'
 import Vue, {VueConstructor} from 'vue'
 import {Document, DocumentType, SecurityPolicyEntryMatch} from '@/types'
@@ -191,7 +191,7 @@ export default Vue.extend({
         fields: 'id, name, allow, allow_bot, deny_bot, bypass, deny, force_deny',
       },
       'flowcontrol': {
-        component: FlowControlEditor,
+        component: FlowControlPolicyEditor,
         title: titles['flowcontrol'],
         fields: 'id, name, notes, include, exclude',
       },
