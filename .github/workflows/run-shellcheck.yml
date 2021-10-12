@@ -14,4 +14,6 @@ jobs:
       - name: install shellcheck
         run: sudo apt install -y --no-install-recommends shellcheck
       - name: run shellcheck
-        run: shopt -s globstar; shellcheck **/*.sh
+        run: |
+          shopt -s globstar
+          shellcheck **/*.sh
