@@ -12,7 +12,8 @@ setup(
     install_requires=[
         "wheel",
         "google-crc32c==1.1.2",
-        "cloudstorage [amazon, google, local, minio]",
+        "minio==6.0.2",
+        "cloudstorage [amazon, google, local, minio]==0.10.1",
         "pydash==5.0.2",
     ],
     classifiers=[
