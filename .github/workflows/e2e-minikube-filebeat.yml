@@ -1,4 +1,4 @@
-name: Run e2e tests on minikube with logstash
+name: Run e2e tests on minikube with filebeat
 
 on:
   pull_request:
