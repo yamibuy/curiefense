@@ -27,7 +27,7 @@ if [ -n "$TESTING" ]; then
 else
     IMAGES=(confserver curielogger curieproxy-istio curieproxy-envoy \
         curieproxy-nginx curiefense-nginx-ingress curiesync curietasker grafana prometheus \
-        redis uiserver fluentd)
+        redis uiserver)
 fi
 
 if [ "$BUILD_RUST" = "yes" ]
