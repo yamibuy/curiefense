@@ -3,7 +3,7 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import axios from 'axios'
 import Vue from 'vue'
-import {ACLPolicy, BasicDocument, Branch, FlowControl, RateLimit, TagRule, URLMap, WAFPolicy} from '@/types'
+import {ACLProfile, BasicDocument, Branch, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, WAFPolicy} from '@/types'
 
 jest.useFakeTimers()
 jest.mock('axios')
@@ -12,17 +12,17 @@ describe('DocumentSearch.vue', () => {
   let wrapper: Wrapper<Vue>
   let mockRouter
   let gitData: Branch[]
-  let aclDocs: ACLPolicy[]
-  let profilingListDocs: TagRule[]
-  let urlMapsDocs: URLMap[]
-  let flowControlDocs: FlowControl[]
+  let aclDocs: ACLProfile[]
+  let profilingListDocs: GlobalFilter[]
+  let securityPoliciesDocs: SecurityPolicy[]
+  let flowControlPolicyDocs: FlowControlPolicy[]
   let rateLimitDocs: RateLimit[]
   let wafDocs: WAFPolicy[]
   beforeEach((done) => {
     gitData = [
       {
         'id': 'master',
-        'description': 'Update entry [__default__] of document [aclpolicies]',
+        'description': 'Update entry [__default__] of document [aclprofiles]',
         'date': '2020-11-10T15:49:17+02:00',
         'logs': [
           {
@@ -31,7 +31,7 @@ describe('DocumentSearch.vue', () => {
             'parents': [
               'fc47a6cd9d7f254dd97875a04b87165cc484e075',
             ],
-            'message': 'Update entry [__default__] of document [aclpolicies]',
+            'message': 'Update entry [__default__] of document [aclprofiles]',
             'email': 'curiefense@reblaze.com',
             'author': 'Curiefense API',
           },
@@ -41,7 +41,7 @@ describe('DocumentSearch.vue', () => {
             'parents': [
               '5aba4a5b9d6faea1896ee8965c7aa651f76af63c',
             ],
-            'message': 'Update entry [__default__] of document [aclpolicies]',
+            'message': 'Update entry [__default__] of document [aclprofiles]',
             'email': 'curiefense@reblaze.com',
             'author': 'Curiefense API',
           },
@@ -51,7 +51,7 @@ describe('DocumentSearch.vue', () => {
             'parents': [
               '277c5d7bd0e2eb4b9d2944f7eefdfadf37ba8581',
             ],
-            'message': 'Update entry [__default__] of document [aclpolicies]',
+            'message': 'Update entry [__default__] of document [aclprofiles]',
             'email': 'curiefense@reblaze.com',
             'author': 'Curiefense API',
           },
@@ -61,7 +61,7 @@ describe('DocumentSearch.vue', () => {
             'parents': [
               '878b47deeddac94625fe7c759786f2df885ec541',
             ],
-            'message': 'Update entry [__default__] of document [aclpolicies]',
+            'message': 'Update entry [__default__] of document [aclprofiles]',
             'email': 'curiefense@reblaze.com',
             'author': 'Curiefense API',
           },
@@ -71,7 +71,7 @@ describe('DocumentSearch.vue', () => {
             'parents': [
               '93c180513fe7edeaf1c0ca69a67aa2a11374da4f',
             ],
-            'message': 'Update entry [__default__] of document [aclpolicies]',
+            'message': 'Update entry [__default__] of document [aclprofiles]',
             'email': 'curiefense@reblaze.com',
             'author': 'Curiefense API',
           },
@@ -81,7 +81,7 @@ describe('DocumentSearch.vue', () => {
             'parents': [
               '1662043d2a18d6ad2c9c94d6f826593ff5506354',
             ],
-            'message': 'Update entry [__default__] of document [aclpolicies]',
+            'message': 'Update entry [__default__] of document [aclprofiles]',
             'email': 'curiefense@reblaze.com',
             'author': 'Curiefense API',
           },
@@ -142,7 +142,7 @@ describe('DocumentSearch.vue', () => {
           'google',
         ],
         'deny_bot': [],
-        'bypass': [
+        'passthrough': [
           'internal',
         ],
         'deny': [
@@ -161,7 +161,7 @@ describe('DocumentSearch.vue', () => {
           'yahoo',
         ],
         'deny_bot': [],
-        'bypass': [
+        'passthrough': [
           'devops',
         ],
         'deny': [
@@ -178,7 +178,7 @@ describe('DocumentSearch.vue', () => {
         'name': 'API Discovery',
         'source': 'self-managed',
         'mdate': '2020-05-23T00:04:41',
-        'notes': 'Default Tag API Requests',
+        'description': 'Default Tag API Requests',
         'active': true,
         'tags': ['api'],
         'action': {
@@ -230,7 +230,7 @@ describe('DocumentSearch.vue', () => {
         'name': 'devop internal demo',
         'source': 'self-managed',
         'mdate': '2020-05-23T00:04:41',
-        'notes': 'this is my own list',
+        'description': 'this is my own list',
         'active': false,
         'tags': ['internal', 'devops'],
         'action': {
@@ -246,7 +246,7 @@ describe('DocumentSearch.vue', () => {
         },
       },
     ]
-    urlMapsDocs = [
+    securityPoliciesDocs = [
       {
         'id': '__default__',
         'name': 'default entry',
@@ -282,13 +282,13 @@ describe('DocumentSearch.vue', () => {
         ],
       },
     ]
-    flowControlDocs = [
+    flowControlPolicyDocs = [
       {
         'active': true,
-        'notes': '',
+        'description': '',
         'exclude': [],
         'include': ['all'],
-        'name': 'flow control',
+        'name': 'flow control policy',
         'key': [
           {'headers': 'something'},
         ],
@@ -318,7 +318,7 @@ describe('DocumentSearch.vue', () => {
           'type': 'default',
           'params': {},
         },
-        'ttl': 60,
+        'timeframe': 60,
         'id': 'c03dabe4b9ca',
       },
     ]
@@ -327,11 +327,11 @@ describe('DocumentSearch.vue', () => {
         'id': 'f971e92459e2',
         'name': 'Rate Limit Example Rule 5/60',
         'description': '5 requests per minute',
-        'ttl': '60',
+        'timeframe': '60',
         'limit': '5',
         'action': {'type': 'default'},
-        'include': {'headers': {}, 'cookies': {}, 'args': {}, 'attrs': {}},
-        'exclude': {'headers': {}, 'cookies': {}, 'args': {}, 'attrs': {}},
+        'include': ['badpeople'],
+        'exclude': ['goodpeople'],
         'key': [{'attrs': 'ip'}],
         'pairwith': {'self': 'self'},
       },
@@ -353,26 +353,26 @@ describe('DocumentSearch.vue', () => {
       },
     ]
     jest.spyOn(axios, 'get').mockImplementation((path) => {
-      if (path === '/conf/api/v1/configs/') {
+      if (path === '/conf/api/v2/configs/') {
         return Promise.resolve({data: gitData})
       }
       const branch = (wrapper.vm as any).selectedBranch
-      if (path === `/conf/api/v1/configs/${branch}/d/aclpolicies/`) {
+      if (path === `/conf/api/v2/configs/${branch}/d/aclprofiles/`) {
         return Promise.resolve({data: aclDocs})
       }
-      if (path === `/conf/api/v1/configs/${branch}/d/tagrules/`) {
+      if (path === `/conf/api/v2/configs/${branch}/d/globalfilters/`) {
         return Promise.resolve({data: profilingListDocs})
       }
-      if (path === `/conf/api/v1/configs/${branch}/d/urlmaps/`) {
-        return Promise.resolve({data: urlMapsDocs})
+      if (path === `/conf/api/v2/configs/${branch}/d/securitypolicies/`) {
+        return Promise.resolve({data: securityPoliciesDocs})
       }
-      if (path === `/conf/api/v1/configs/${branch}/d/flowcontrol/`) {
-        return Promise.resolve({data: flowControlDocs})
+      if (path === `/conf/api/v2/configs/${branch}/d/flowcontrol/`) {
+        return Promise.resolve({data: flowControlPolicyDocs})
       }
-      if (path === `/conf/api/v1/configs/${branch}/d/ratelimits/`) {
+      if (path === `/conf/api/v2/configs/${branch}/d/ratelimits/`) {
         return Promise.resolve({data: rateLimitDocs})
       }
-      if (path === `/conf/api/v1/configs/${branch}/d/wafpolicies/`) {
+      if (path === `/conf/api/v2/configs/${branch}/d/wafpolicies/`) {
         return Promise.resolve({data: wafDocs})
       }
       return Promise.resolve({data: []})
@@ -421,12 +421,12 @@ describe('DocumentSearch.vue', () => {
   })
 
   test('should display all documents on startup', () => {
-    expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
-    expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
-    expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
-    expect(isItemInFilteredDocs(profilingListDocs[1], 'tagrules')).toBeTruthy()
-    expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
-    expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+    expect(isItemInFilteredDocs(aclDocs[0], 'aclprofiles')).toBeTruthy()
+    expect(isItemInFilteredDocs(aclDocs[1], 'aclprofiles')).toBeTruthy()
+    expect(isItemInFilteredDocs(profilingListDocs[0], 'globalfilters')).toBeTruthy()
+    expect(isItemInFilteredDocs(profilingListDocs[1], 'globalfilters')).toBeTruthy()
+    expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
+    expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
     expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
     expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
     expect(numberOfFilteredDocs()).toEqual(8)
@@ -439,7 +439,7 @@ describe('DocumentSearch.vue', () => {
     consoleOutput = []
     console.log = mockedLog
     jest.spyOn(axios, 'get').mockImplementation((path) => {
-      if (path === '/conf/api/v1/configs/') {
+      if (path === '/conf/api/v2/configs/') {
         return Promise.reject(new Error())
       }
       return Promise.resolve({data: {}})
@@ -457,14 +457,17 @@ describe('DocumentSearch.vue', () => {
     const wantedIDsACL = ['5828321c37e0', '__default__']
     const wantedIDsWAF = ['__default__']
     const wantedIDsRateLimit = ['f971e92459e2']
-    // switch filter type to url map
+    // switch filter type to security policy
     const searchTypeSelection = wrapper.find('.search-type-selection')
     searchTypeSelection.trigger('click')
     const options = searchTypeSelection.findAll('option')
     options.at(1).setSelected()
     await Vue.nextTick()
     const searchInput = wrapper.find('.search-input');
-    (searchInput.element as HTMLInputElement).value = 'url map'
+    // Using a partial name instead of 'security policy'
+    // The search is executing a RegEx which means 'securitypolicies' would not
+    // match 'security policies'
+    (searchInput.element as HTMLInputElement).value = 'security pol'
     searchInput.trigger('input')
     await Vue.nextTick()
 
@@ -472,9 +475,9 @@ describe('DocumentSearch.vue', () => {
     const connectionsCell = wrapper.find('.doc-connections-cell')
     const doc = (wrapper.vm as any).filteredDocs[0]
 
-    // check that url map exists without duplicated connections
-    expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
-    expect(connectionsCell.text()).toContain(`ACL Policies:${wantedIDsACL.join('')}`)
+    // check that security policy exists without duplicated connections
+    expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
+    expect(connectionsCell.text()).toContain(`ACL Profiles:${wantedIDsACL.join('')}`)
     expect(connectionsCell.text()).toContain(`WAF Policies:${wantedIDsWAF.join('')}`)
     expect(connectionsCell.text()).toContain(`Rate Limits:${wantedIDsRateLimit.join('')}`)
     expect(doc.connectedACL).toEqual(wantedIDsACL)
@@ -503,10 +506,10 @@ describe('DocumentSearch.vue', () => {
       options.at(0).setSelected()
       await Vue.nextTick()
 
-      expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
-      expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
-      expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
-      expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+      expect(isItemInFilteredDocs(aclDocs[0], 'aclprofiles')).toBeTruthy()
+      expect(isItemInFilteredDocs(aclDocs[1], 'aclprofiles')).toBeTruthy()
+      expect(isItemInFilteredDocs(profilingListDocs[0], 'globalfilters')).toBeTruthy()
+      expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
       expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
       expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(6)
@@ -524,10 +527,11 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'default'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
-      expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
-      expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
-      expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+
+      expect(isItemInFilteredDocs(aclDocs[0], 'aclprofiles')).toBeTruthy()
+      expect(isItemInFilteredDocs(aclDocs[1], 'aclprofiles')).toBeTruthy()
+      expect(isItemInFilteredDocs(profilingListDocs[0], 'globalfilters')).toBeTruthy()
+      expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
       expect(isItemInFilteredDocs(wafDocs[0], 'wafpolicies')).toBeTruthy()
       expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(6)
@@ -545,7 +549,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'flow'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+      expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 
@@ -561,7 +565,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'c03dabe4b9ca'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(flowControlDocs[0], 'flowcontrol')).toBeTruthy()
+      expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 
@@ -577,7 +581,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'default entry'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+      expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 
@@ -593,7 +597,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'default'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(profilingListDocs[0], 'tagrules')).toBeTruthy()
+      expect(isItemInFilteredDocs(profilingListDocs[0], 'globalfilters')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 
@@ -609,7 +613,7 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'china'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(aclDocs[0], 'aclpolicies')).toBeTruthy()
+      expect(isItemInFilteredDocs(aclDocs[0], 'aclprofiles')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(1)
     })
 
@@ -625,8 +629,8 @@ describe('DocumentSearch.vue', () => {
       (searchInput.element as HTMLInputElement).value = 'default'
       searchInput.trigger('input')
       await Vue.nextTick()
-      expect(isItemInFilteredDocs(aclDocs[1], 'aclpolicies')).toBeTruthy()
-      expect(isItemInFilteredDocs(urlMapsDocs[0], 'urlmaps')).toBeTruthy()
+      expect(isItemInFilteredDocs(aclDocs[1], 'aclprofiles')).toBeTruthy()
+      expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
       expect(isItemInFilteredDocs(rateLimitDocs[0], 'ratelimits')).toBeTruthy()
       expect(numberOfFilteredDocs()).toEqual(3)
     })
@@ -659,7 +663,7 @@ describe('DocumentSearch.vue', () => {
       const goToLinkButton = firstDataRow.find('.go-to-link-button')
       await goToLinkButton.trigger('click')
       expect(mockRouter.push).toHaveBeenCalledTimes(1)
-      expect(mockRouter.push).toHaveBeenCalledWith('/config/master/urlmaps/__default__')
+      expect(mockRouter.push).toHaveBeenCalledWith('/config/master/securitypolicies/__default__')
     })
   })
 })
