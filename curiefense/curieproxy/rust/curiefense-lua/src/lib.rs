@@ -2,6 +2,7 @@ mod lua;
 
 use crate::lua::Luagrasshopper;
 
+use curiefense::grasshopper::Grasshopper;
 use curiefense::interface::Tags;
 use curiefense::utils::RequestMeta;
 use mlua::prelude::*;
@@ -9,7 +10,7 @@ use std::collections::HashMap;
 
 use curiefense::content_filter_check_generic_request_map;
 use curiefense::inspect_generic_request_map;
-use curiefense::interface::{Decision, Grasshopper};
+use curiefense::interface::Decision;
 use curiefense::logs::Logs;
 use curiefense::utils::{InspectionResult, RawRequest};
 
@@ -39,24 +40,14 @@ fn lua_inspect_content_filter(
 ) -> LuaResult<(String, Option<String>)> {
     let (meta, headers, lua_body, str_ip, content_filter_id) = args;
 
-    let res = match lua_body {
-        None => inspect_content_filter(
-            "/cf-config/current/config",
-            meta,
-            headers,
-            None,
-            str_ip,
-            content_filter_id,
-        ),
-        Some(body) => inspect_content_filter(
-            "/cf-config/current/config",
-            meta,
-            headers,
-            Some(body.as_bytes()),
-            str_ip,
-            content_filter_id,
-        ),
-    };
+    let res = inspect_content_filter(
+        "/cf-config/current/config",
+        meta,
+        headers,
+        lua_body.as_ref().map(|s| s.as_bytes()),
+        str_ip,
+        content_filter_id,
+    );
 
     Ok(match res {
         Err(rr) => (
@@ -147,7 +138,7 @@ struct DummyGrasshopper {
     humanity: bool,
 }
 
-impl curiefense::interface::Grasshopper for DummyGrasshopper {
+impl Grasshopper for DummyGrasshopper {
     fn js_app(&self) -> Option<std::string::String> {
         None
     }
