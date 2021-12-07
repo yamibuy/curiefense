@@ -3,6 +3,7 @@ pub mod body;
 pub mod config;
 pub mod contentfilter;
 pub mod flow;
+pub mod grasshopper;
 pub mod interface;
 pub mod limit;
 pub mod logs;
@@ -10,9 +11,11 @@ pub mod maxmind;
 pub mod redis;
 pub mod requestfields;
 pub mod securitypolicy;
+pub mod simple_executor;
 pub mod tagging;
 pub mod utils;
 
+use grasshopper::{challenge_phase01, challenge_phase02, Grasshopper};
 use serde_json::json;
 
 use acl::{check_acl, AclDecision, AclResult, BotHuman};
@@ -20,10 +23,11 @@ use config::{with_config, HSDB};
 use contentfilter::{content_filter_check, masking};
 use flow::flow_check;
 use interface::Tags;
-use interface::{challenge_phase01, challenge_phase02, Action, ActionType, Decision, Grasshopper, SimpleDecision};
+use interface::{Action, ActionType, Decision, SimpleDecision};
 use limit::limit_check;
 use logs::Logs;
 use securitypolicy::match_securitypolicy;
+use simple_executor::{Executor, Progress, Task};
 use tagging::tag_request;
 use utils::{map_request, BodyDecodingResult, RawRequest, RequestInfo};
 
@@ -64,11 +68,41 @@ fn challenge_verified<GH: Grasshopper>(gh: &GH, reqinfo: &RequestInfo, logs: &mu
     false
 }
 
-// generic entry point when the request map has already been parsed
+/// # Safety
+///
+/// Steps a valid executor
+pub unsafe fn inspect_async_step(ptr: *mut Executor<Task<(Decision, Tags, Logs)>>) -> Progress<(Decision, Tags, Logs)> {
+    match ptr.as_ref() {
+        None => Progress::Error("Null ptr".to_string()),
+        Some(r) => r.step(),
+    }
+}
+
+/// # Safety
+///
+/// Frees the executor, should be run with the output of executor_init, and only once
+pub unsafe fn inspect_async_free(ptr: *mut Executor<(Decision, Tags, Logs)>) {
+    if ptr.is_null() {
+        return;
+    }
+    Box::from_raw(ptr);
+}
+
 pub fn inspect_generic_request_map<GH: Grasshopper>(
     configpath: &str,
     mgh: Option<GH>,
     raw: RawRequest,
+    itags: Tags,
+    logs: &mut Logs,
+) -> (Decision, Tags, RequestInfo) {
+    async_std::task::block_on(inspect_generic_request_map_async(configpath, mgh, raw, itags, logs))
+}
+
+// generic entry point when the request map has already been parsed
+pub async fn inspect_generic_request_map_async<GH: Grasshopper>(
+    configpath: &str,
+    mgh: Option<GH>,
+    raw: RawRequest<'_>,
     itags: Tags,
     logs: &mut Logs,
 ) -> (Decision, Tags, RequestInfo) {
@@ -182,7 +216,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         }
     }
 
-    match flow_check(logs, &flows, &reqinfo, &mut tags) {
+    match flow_check(logs, &flows, &reqinfo, &mut tags).await {
         Err(rr) => logs.error(rr),
         Ok(SimpleDecision::Pass) => {}
         Ok(SimpleDecision::Action(a, reason)) => {
@@ -200,7 +234,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 
     // limit checks
     let limit_check = limit_check(logs, &securitypolicy.name, &reqinfo, &securitypolicy.limits, &mut tags);
-    if let SimpleDecision::Action(action, reason) = limit_check {
+    if let SimpleDecision::Action(action, reason) = limit_check.await {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
             return (
@@ -266,11 +300,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             if is_human {
                 None
             } else {
-                match (reqinfo.headers.get("user-agent"), mgh) {
+                match (reqinfo.headers.get("user-agent"), &mgh) {
                     (Some(ua), Some(gh)) => {
                         logs.debug("ACL challenge detected: challenged");
                         return (
-                            challenge_phase01(&gh, ua, dtags),
+                            challenge_phase01(gh, ua, dtags),
                             tags,
                             masking(masking_seed, reqinfo, &securitypolicy.content_filter_profile),
                         );
