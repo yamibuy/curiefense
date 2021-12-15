@@ -12,13 +12,15 @@ declare module CuriefenseClient {
 
   // Document types helpers - START
 
+  type ContentFilterIgnoreType = 'rule' | 'group'
+
   type ContentFilterEntryMatch = {
     key: string
     reg: string
     restrict: boolean
     mask: boolean
     type: NamesRegexType
-    exclusions: { [key: string]: number }
+    exclusions: { [key: string]: ContentFilterIgnoreType }
   }
 
   type SecurityPolicyEntryMatch = {
@@ -70,7 +72,7 @@ declare module CuriefenseClient {
 
   type Document = BasicDocument & (ACLProfile | FlowControlPolicy | GlobalFilter | RateLimit | SecurityPolicy | ContentFilterProfile | ContentFilterRule)
 
-  type DocumentType = 'aclprofiles' | 'flowcontrol' | 'globalfilters' | 'ratelimits' | 'securitypolicies' | 'contentfilterprofiles' | 'contentfilterrules'
+  type DocumentType = 'aclprofiles' | 'flowcontrol' | 'globalfilters' | 'ratelimits' | 'securitypolicies' | 'contentfilterprofiles' | 'contentfilterrules' | 'contentfiltergroups'
 
   // Document types helpers - END
 
@@ -181,6 +183,13 @@ declare module CuriefenseClient {
     operand: string
     severity?: number
     subcategory?: string
+  }
+
+  type ContentFilterRuleGroup = {
+    id: string
+    name: string
+    description?: string
+    content_filter_rule_ids: ContentFilterRule['id'][]
   }
 
   // Document types - END

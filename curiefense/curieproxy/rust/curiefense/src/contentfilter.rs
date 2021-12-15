@@ -3,8 +3,7 @@ use libinjection::{sqli, xss};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 
-use crate::config::raw::ContentFilterRule;
-use crate::config::contentfilter::{Section, SectionIdx, ContentFilterEntryMatch, ContentFilterProfile, ContentFilterSection, ContentFilterRules};
+use crate::config::contentfilter::{Section, SectionIdx, ContentFilterEntryMatch, ContentFilterProfile, ContentFilterSection, ContentFilterRules, ContentFilterRule};
 use crate::interface::{Action, ActionType};
 use crate::requestfields::RequestField;
 use crate::utils::RequestInfo;
@@ -45,6 +44,13 @@ impl ContentFilterBlock {
                 .first()
                 .and_then(|e| {
                     e.ids.first().map(|sig| {
+                        let mut groups = Vec::new();
+                        for (group_id, group_name) in &sig.groups {
+                            groups.push(json!({
+                                "content_filter_group_id": group_id,
+                                "content_filter_group_name": group_name,
+                            }));
+                        }
                         json!({
                             "section": e.matched.section,
                             "name": e.matched.name,
@@ -56,6 +62,7 @@ impl ContentFilterBlock {
                             "sig_id": sig.id,
                             "sig_severity": sig.severity,
                             "sig_msg": sig.msg,
+                            "content_filter_groups": json!(groups),
                         })
                     })
                 })

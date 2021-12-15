@@ -1,5 +1,7 @@
-import {ACLProfile, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, ContentFilterProfile, ContentFilterRule} from '@/types'
-import {httpRequestMethods} from '@/types/const'
+import {
+  ACLProfile, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, ContentFilterProfile,
+  ContentFilterRule, ContentFilterRuleGroup, HttpRequestMethods,
+} from '@/types'
 
 const titles: { [key: string]: string } = {
   'admin': 'Admin',
@@ -46,6 +48,8 @@ const titles: { [key: string]: string } = {
   'globalfilters-singular': 'Global Filter',
   'flowcontrol': 'Flow Control Policies',
   'flowcontrol-singular': 'Flow Control Policy',
+  'contentfiltergroups': 'Content Filter Rules Groups',
+  'contentfiltergroups-singular': 'Content Filter Rules Group',
 }
 
 const limitOptionsTypes = {
@@ -69,7 +73,7 @@ function generateUUID2(): string {
 }
 
 const defaultFlowControlSequenceItem = {
-  'method': httpRequestMethods[0],
+  'method': 'GET' as HttpRequestMethods,
   'uri': '/',
   'cookies': {},
   'headers': {
@@ -204,7 +208,7 @@ const newDocEntryFactory: { [key: string]: Function } = {
         {...defaultFlowControlSequenceItem},
         {
           ...defaultFlowControlSequenceItem,
-          method: 'POST',
+          method: 'POST' as HttpRequestMethods,
         },
       ],
     }
@@ -218,6 +222,14 @@ const newDocEntryFactory: { [key: string]: Function } = {
     }
   },
 
+  contentfiltergroups(): ContentFilterRuleGroup {
+    return {
+      id: generateUUID2(),
+      name: 'New Content Filter Rule Group',
+      description: '',
+      content_filter_rule_ids: [],
+    }
+  },
 }
 
 export default {

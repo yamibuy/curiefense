@@ -101,6 +101,23 @@ m_contentfilterrule = api.model(
     },
 )
 
+# content filter group
+
+m_contentfiltergroup = api.model(
+    "Content Filter Group",
+    {
+        "id": fields.String(required=True),
+        "name": fields.String(required=True),
+        "description": fields.String(required=True),
+        "waf_rules_ids": fields.List(
+            fields.String(),
+            attribute="content_filter_rule_ids",
+            skip_none=True,
+        ),
+    },
+)
+
+
 # content filter profile
 
 m_contentfilterprofile = api.model(
@@ -180,11 +197,13 @@ models = {
     "ratelimits": m_limit,
     "urlmaps": m_urlmap,
     "wafrules": m_contentfilterrule,
+    "wafgroups": m_contentfiltergroup,
     "wafpolicies": m_contentfilterprofile,
     "aclpolicies": m_aclpolicy,
     "tagrules": m_tagrule,
     "flowcontrol": m_flowcontrol,
 }
+
 
 ### Other models
 
@@ -340,7 +359,7 @@ urlmaps_file_path = (base_path / "./json/url-maps.schema").resolve()
 with open(urlmaps_file_path) as json_file:
     urlmaps_schema = json.load(json_file)
 content_filter_profile_file_path = (
-    base_path / "./json/content-filter-policy.schema"
+    base_path / "./json/content-filter-profile.schema"
 ).resolve()
 with open(content_filter_profile_file_path) as json_file:
     content_filter_profile_schema = json.load(json_file)
@@ -355,6 +374,11 @@ content_filter_rule_file_path = (
 ).resolve()
 with open(content_filter_rule_file_path) as json_file:
     content_filter_rule_schema = json.load(json_file)
+content_filter_groups_file_path = (
+    base_path / "./json/content-filter-groups.schema"
+).resolve()
+with open(content_filter_groups_file_path) as json_file:
+    content_filter_groups_schema = json.load(json_file)
 
 schema_type_map = {
     "ratelimits": ratelimits_schema,
@@ -364,6 +388,7 @@ schema_type_map = {
     "tagrules": tagrules_schema,
     "flowcontrol": flowcontrol_schema,
     "wafrules": content_filter_rule_schema,
+    "wafgroups": content_filter_groups_schema,
 }
 
 ################
@@ -534,6 +559,9 @@ class DocumentResource(Resource):
         if document not in models:
             abort(404, "document does not exist")
         res = current_app.backend.documents_get(config, utils.vconvert(document, "v1"))
+        res = [
+            utils.vconfigconvert(document, confdoc, "backend", "v1") for confdoc in res
+        ]
         return marshal(res, models[document], skip_none=True)
 
     def post(self, config, document):
@@ -555,9 +583,11 @@ class DocumentResource(Resource):
         data = marshal(
             request.json, utils.model_invert_names(models[document]), skip_none=True
         )
+        res = utils.vconfigconvert(document, config, "v1", "backend")
         res = current_app.backend.documents_update(
             config, utils.vconvert(document, "v1"), data
         )
+        res = utils.vconfigconvert(document, config, "backend", "v1")
         return res
 
     def delete(self, config, document):
@@ -591,6 +621,7 @@ class DocumentVersionResource(Resource):
         res = current_app.backend.documents_get(
             config, utils.vconvert(document, "v1"), version
         )
+        res = utils.vconfigconvert(document, config, "backend", "v1")
         return marshal(res, models[document], skip_none=True)
 
 
@@ -598,9 +629,11 @@ class DocumentVersionResource(Resource):
 class DocumentRevertResource(Resource):
     def put(self, config, document, version):
         "Create a new version for a document from an old version"
-        return current_app.backend.documents_revert(
+        res = current_app.backend.documents_revert(
             config, utils.vconvert(document, "v1"), version
         )
+        res = utils.vconfigconvert(document, config, "backend", "v1")
+        return res
 
 
 ###############
@@ -639,6 +672,7 @@ class EntryResource(Resource):
         res = current_app.backend.entries_get(
             config, utils.vconvert(document, "v1"), entry
         )
+        res = utils.vconfigconvert(document, res, "backend", "v1")
         return marshal(res, models[document], skip_none=True)
 
     def put(self, config, document, entry):
@@ -650,6 +684,7 @@ class EntryResource(Resource):
             data = marshal(
                 request.json, utils.model_invert_names(models[document]), skip_none=True
             )
+            data = utils.vconfigconvert(document, data, "v1", "backend")
             res = current_app.backend.entries_update(
                 config, utils.vconvert(document, "v1"), entry, data
             )
@@ -681,11 +716,15 @@ class EntryEditResource(Resource):
         for edit in data:
             mapped = pydash.objects.set_({}, edit["path"], edit["value"])
             marshaled_map = marshal(mapped, models[document], skip_none=True)
+            marshaled_map = utils.vconfigconvert(
+                document, marshaled_map, "v1", "backend"
+            )
+            # fill converted_names_data back with edit models after applying version conversion
             utils.dict_to_path_value(
                 marshaled_map, starting_path_list=converted_names_data
             )
         res = current_app.backend.entries_edit(
-            config, utils.vconvert(document, "v1"), entry, data
+            config, utils.vconvert(document, "v1"), entry, converted_names_data
         )
         return res
 
