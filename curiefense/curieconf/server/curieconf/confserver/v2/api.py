@@ -3,17 +3,15 @@ import jsonschema
 # monkey patch to force RestPlus to use Draft3 validator to benefit from "any" json type
 jsonschema.Draft4Validator = jsonschema.Draft3Validator
 
-from flask import Blueprint, request, current_app, abort, make_response
-from flask_restx import Resource, Api, fields, marshal, reqparse
+from flask import request, current_app, abort, make_response
+from flask_restx import Resource, fields, marshal, reqparse
 from curieconf import utils
 from curieconf.utils import cloud
 import requests
 from jsonschema import validate
 from pathlib import Path
 import json
-
-api_bp = Blueprint("api_v2", __name__)
-api = Api(api_bp, version="2.0", title="Curiefense configuration API server v2.0")
+from .curie_models import *
 
 ns_configs = api.namespace("configs", description="Configurations")
 ns_db = api.namespace("db", description="Database")
@@ -134,22 +132,6 @@ m_contentfilterprofile = api.model(
     },
 )
 
-# aclprofile
-
-m_aclprofile = api.model(
-    "ACL Profile",
-    {
-        "id": fields.String(required=True, min_length=1, title="Id", description="Unique id"),
-        "name": fields.String(required=True, min_length=1, title="Name", description="Name of entity shown in UI"),
-        "allow": fields.List(fields.String(), unique=True, required=True),
-        "allow_bot": fields.List(fields.String(), unique=True, required=True),
-        "deny_bot": fields.List(fields.String(), unique=True, required=True),
-        "passthrough": fields.List(fields.String(), unique=True, required=True),
-        "deny": fields.List(fields.String(), unique=True, required=True),
-        "force_deny": fields.List(fields.String(), unique=True, required=True),
-    },
-    strict=True
-)
 
 # Global Filter
 
@@ -339,10 +321,6 @@ def validateJson(json_data, schema_type):
 
 
 base_path = Path(__file__).parent
-# base_path = "/etc/curiefense/json/"
-# acl_profile_file_path = (base_path / "./json/acl-profile.schema").resolve()
-# with open(acl_profile_file_path) as json_file:
-#     acl_profile_schema = json.load(json_file)
 ratelimits_file_path = (base_path / "./json/rate-limits.schema").resolve()
 with open(ratelimits_file_path) as json_file:
     ratelimits_schema = json.load(json_file)
