@@ -199,6 +199,9 @@ impl Config {
             }
         }
 
+        // order by decreasing matcher length, so that more specific rules are matched first
+        securitypolicies.sort_by(|a, b| b.matcher.as_str().len().cmp(&a.matcher.as_str().len()));
+
         let globalfilters = GlobalFilterSection::resolve(logs, rawglobalfilters);
 
         let flows = flow_resolve(logs, rawflows);

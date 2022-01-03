@@ -1,5 +1,37 @@
 [
     {
+        "match": "dummydomain.com",
+        "id": "dummydomain",
+        "name": "dummy domain policy",
+        "map": [
+            {
+                "match": "/",
+                "name": "default",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "__default__",
+                "content_filter_active": false,
+                "limit_ids": []
+            }
+        ]
+    },
+    {
+        "match": "specific.dummydomain.com",
+        "id": "specdummydomain",
+        "name": "more specific dummy domain policy",
+        "map": [
+            {
+                "match": "/",
+                "name": "default",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "__default__",
+                "content_filter_active": false,
+                "limit_ids": []
+            }
+        ]
+    },
+    {
         "match": "__default__",
         "id": "__default__",
         "name": "default entry",
