@@ -57,6 +57,7 @@ end
 -- test that two lists contain the same tags
 local function compare_tag_list(name, actual, expected)
   local m_actual = {}
+  local good = true
   for _, a in ipairs(actual) do
     if not startswith(a, "container:") then
       m_actual[a] = 1
@@ -64,11 +65,18 @@ local function compare_tag_list(name, actual, expected)
   end
   for _, e in ipairs(expected) do
     if not startswith(e, "container:") and not m_actual[e] then
-      error(name .. " - missing expected tag: " .. e)
+      good = false
+      print(name .. " - missing expected tag: " .. e)
     end
     m_actual[e] = nil
   end
-  local good = true
+  if not good then
+    print("Actual tags:")
+    for _, e in ipairs(actual) do
+      print("  " .. e)
+    end
+    error("^ missing tags in " .. name)
+  end
   for a, _ in pairs(m_actual) do
     print(a)
     good = false
