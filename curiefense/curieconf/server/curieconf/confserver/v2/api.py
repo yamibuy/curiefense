@@ -603,7 +603,7 @@ class EntriesResource(Resource):
             res = current_app.backend.entries_create(config, document, data)
             return res
         else:
-            abort(500, "schema mismatched because the {}".format(reason))
+            abort(500, "schema mismatched because of the following reason: {}".format(reason))
 
 
 @ns_configs.route("/<string:config>/d/<string:document>/e/<string:entry>/")
@@ -626,7 +626,7 @@ class EntryResource(Resource):
             res = current_app.backend.entries_update(config, document, entry, data)
             return res
         else:
-            abort(500, "schema mismatched because the {}".format(reason))
+            abort(500, "schema mismatched because of the following reason: {}".format(reason))
 
     def delete(self, config, document, entry):
         "Delete an entry from a document"
