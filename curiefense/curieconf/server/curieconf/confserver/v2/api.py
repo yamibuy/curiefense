@@ -132,7 +132,6 @@ m_contentfilterprofile = api.model(
     },
 )
 
-
 # Global Filter
 
 m_globalfilter = api.model(
@@ -314,7 +313,7 @@ def validateJson(json_data, schema_type):
         print(str(err))
         path = list(err.schema_path)
         err_msg = err.message
-        if path[0] == 'properties':
+        if path[0] == "properties":
             err_msg = "{} value: {}".format(path[1], err_msg)
         return False, err_msg
     return True, "Ok"
@@ -328,7 +327,7 @@ securitypolicies_file_path = (base_path / "./json/security-policies.schema").res
 with open(securitypolicies_file_path) as json_file:
     securitypolicies_schema = json.load(json_file)
 content_filter_profile_file_path = (
-        base_path / "./json/content-filter-profile.schema"
+    base_path / "./json/content-filter-profile.schema"
 ).resolve()
 with open(content_filter_profile_file_path) as json_file:
     content_filter_profile_schema = json.load(json_file)
@@ -339,12 +338,12 @@ flowcontrol_file_path = (base_path / "../json/flow-control.schema").resolve()
 with open(flowcontrol_file_path) as json_file:
     flowcontrol_schema = json.load(json_file)
 content_filter_rule_file_path = (
-        base_path / "./json/content-filter-rule.schema"
+    base_path / "./json/content-filter-rule.schema"
 ).resolve()
 with open(content_filter_rule_file_path) as json_file:
     content_filter_rule_schema = json.load(json_file)
 content_filter_groups_file_path = (
-        base_path / "./json/content-filter-groups.schema"
+    base_path / "./json/content-filter-groups.schema"
 ).resolve()
 with open(content_filter_groups_file_path) as json_file:
     content_filter_groups_schema = json.load(json_file)
