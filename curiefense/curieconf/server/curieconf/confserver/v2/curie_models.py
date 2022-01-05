@@ -1,15 +1,9 @@
-from flask_restx import Api, fields
-from flask import Blueprint
-
-api_bp = Blueprint("api_v2", __name__)
-api = Api(api_bp, version="2.0", title="Curiefense configuration API server v2.0")
+from flask_restx import fields
 
 # aclprofile
 
 tags_array = fields.List(fields.String(), unique=True, required=True)
-m_aclprofile = api.model(
-    "ACL Profile",
-    {
+aclprofile = {
         "id": fields.String(
             required=True, min_length=1, title="Id", description="Unique id"
         ),
@@ -25,6 +19,5 @@ m_aclprofile = api.model(
         "passthrough": tags_array,
         "deny": tags_array,
         "force_deny": tags_array,
-    },
-    strict=True
-)
+    }
+

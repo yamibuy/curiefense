@@ -3,8 +3,8 @@ import jsonschema
 # monkey patch to force RestPlus to use Draft3 validator to benefit from "any" json type
 jsonschema.Draft4Validator = jsonschema.Draft3Validator
 
-from flask import request, current_app, abort, make_response
-from flask_restx import Resource, fields, marshal, reqparse
+from flask import Blueprint, request, current_app, abort, make_response
+from flask_restx import Resource,Api, fields, marshal, reqparse
 from curieconf import utils
 from curieconf.utils import cloud
 import requests
@@ -12,6 +12,9 @@ from jsonschema import validate
 from pathlib import Path
 import json
 from .curie_models import *
+
+api_bp = Blueprint("api_v2", __name__)
+api = Api(api_bp, version="2.0", title="Curiefense configuration API server v2.0")
 
 ns_configs = api.namespace("configs", description="Configurations")
 ns_db = api.namespace("db", description="Database")
@@ -29,6 +32,8 @@ ns_tools = api.namespace("tools", description="Tools")
 class AnyType(fields.Raw):
     __schema_type__ = "any"
 
+
+m_aclprofile = api.model("ACL Profile", aclprofile, strict=True)
 
 # limit
 
