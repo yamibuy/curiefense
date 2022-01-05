@@ -4,7 +4,7 @@ import jsonschema
 jsonschema.Draft4Validator = jsonschema.Draft3Validator
 
 from flask import Blueprint, request, current_app, abort, make_response
-from flask_restx import Resource,Api, fields, marshal, reqparse
+from flask_restx import Resource, Api, fields, marshal, reqparse
 from curieconf import utils
 from curieconf.utils import cloud
 import requests
@@ -607,7 +607,10 @@ class EntriesResource(Resource):
             res = current_app.backend.entries_create(config, document, data)
             return res
         else:
-            abort(500, "schema mismatched because of the following reason: {}".format(reason))
+            abort(
+                500,
+                "schema mismatched because of the following reason: {}".format(reason)
+            )
 
 
 @ns_configs.route("/<string:config>/d/<string:document>/e/<string:entry>/")
