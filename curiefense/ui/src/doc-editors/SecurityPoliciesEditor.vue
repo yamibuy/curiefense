@@ -75,12 +75,12 @@
                 <td class="is-size-7 entry-content-filter"
                     :class="mapEntry.content_filter_active ? 'has-text-success' : 'has-text-danger'"
                     :title="mapEntry.content_filter_active ? 'Active mode' : 'Learning mode'">
-                  {{ contentFilterProfileName(mapEntry.content_filter_profile) ? contentFilterProfileName(mapEntry.content_filter_profile)[1] : '' }}
+                  {{ contentFilterProfileName(mapEntry.content_filter_profile) }}
                 </td>
                 <td class="is-size-7 entry-acl"
                     :class="mapEntry.acl_active ? 'has-text-success' : 'has-text-danger'"
                     :title="mapEntry.acl_active ? 'Active mode' : 'Learning mode'">
-                  {{ aclProfileName(mapEntry.acl_profile) ? aclProfileName(mapEntry.acl_profile)[1] : '' }}
+                  {{ aclProfileName(mapEntry.acl_profile) }}
                 </td>
                 <td class="is-size-7 entry-rate-limits-count"
                     v-if="existingRateLimitIDs(mapEntry)">
@@ -337,7 +337,7 @@ import _ from 'lodash'
 import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import RequestsUtils from '@/assets/RequestsUtils.ts'
 import Vue, {VueConstructor} from 'vue'
-import {ACLProfile, RateLimit, SecurityPolicy, SecurityPolicyEntryMatch, ContentFilterProfile} from '@/types'
+import {ACLProfile, ContentFilterProfile, RateLimit, SecurityPolicy, SecurityPolicyEntryMatch} from '@/types'
 import {AxiosResponse} from 'axios'
 import Utils from '@/assets/Utils'
 
@@ -407,44 +407,43 @@ export default (Vue as VueConstructor<Vue & {
       }
     },
 
-    isURLValid( url: string ) {
-      const URL_REGEX = /^[A-Za-z0-9]+[A-Za-z0-9%-._~:/?#[\]@!$&'()*+,;=]*$/g
-      return URL_REGEX.test( url )
+    isURLValid(url: string) {
+      const URL_REGEX = /^[A-Za-z0-9%-._~:/?#[\]@!$&'()*+,;=|]*$/g
+      return URL_REGEX.test(url)
     },
 
     isSelectedDomainMatchValid(): boolean {
       const newDomainMatch = this.localDoc.match?.trim()
       const isDomainMatchEmpty = newDomainMatch === ''
       const isDomainMatchDuplicate = this.domainNames.includes(
-        newDomainMatch,
+          newDomainMatch,
       ) ? this.initialDocDomainMatch !== newDomainMatch : false
-      const domainMatchContainsInvalidCharacters = !newDomainMatch.length || this.isURLValid( newDomainMatch )
-      return !isDomainMatchEmpty && !isDomainMatchDuplicate && domainMatchContainsInvalidCharacters
+      const domainMatchContainsInvalidCharacters = !this.isURLValid(newDomainMatch)
+      return !isDomainMatchEmpty && !isDomainMatchDuplicate && !domainMatchContainsInvalidCharacters
     },
 
     isSelectedMapEntryMatchValid(index: number): boolean {
       const newMapEntryMatch = this.localDoc.map[index] ? this.localDoc.map[index].match.trim() : ''
-      let isValid = newMapEntryMatch.startsWith( '/' )
-      if ( isValid ) {
-        const unslashedValue = newMapEntryMatch.substring(1)
-        const mapEntryMatchContainsInvalidCharacters = !unslashedValue.length || this.isURLValid( unslashedValue )
+      let isValid = newMapEntryMatch.startsWith('/')
+      if (isValid) {
         const isMapEntryMatchEmpty = newMapEntryMatch === ''
         const isMapEntryMatchDuplicate = this.entriesMatchNames.includes(
-          newMapEntryMatch,
+            newMapEntryMatch,
         ) ? this.initialMapEntryMatch !== newMapEntryMatch : false
-        isValid = !isMapEntryMatchEmpty && !isMapEntryMatchDuplicate && mapEntryMatchContainsInvalidCharacters
+        const mapEntryMatchContainsInvalidCharacters = !this.isURLValid(newMapEntryMatch.substring(1))
+        isValid = !isMapEntryMatchEmpty && !isMapEntryMatchDuplicate && !mapEntryMatchContainsInvalidCharacters
       }
       return isValid
     },
 
-    aclProfileName(id: string): string[] {
-      return _.find(this.aclProfileNames, (profile) => profile[0] === id)
+    aclProfileName(id: string): string {
+      const profile = _.find(this.aclProfileNames, (profile) => profile[0] === id)
+      return profile?.[1] || ''
     },
 
-    contentFilterProfileName(id: string): string[] {
-      return _.find(this.contentFilterProfileNames, (profile) => {
-        return profile[0] === id
-      })
+    contentFilterProfileName(id: string): string {
+      const profile = _.find(this.contentFilterProfileNames, (profile) => profile[0] === id)
+      return profile?.[1] || ''
     },
 
     newLimitRules(currentRateLimitIDs: string[]): RateLimit[] {
@@ -454,7 +453,7 @@ export default (Vue as VueConstructor<Vue & {
     },
 
     addRateLimitToEntry(mapEntry: SecurityPolicyEntryMatch, id: string) {
-      if ( id ) {
+      if (id) {
         mapEntry.limit_ids.push(id)
         this.limitNewEntryModeMapEntryId = null
         this.limitMapEntryId = null
