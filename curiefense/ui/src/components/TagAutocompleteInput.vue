@@ -88,6 +88,17 @@ export default Vue.extend({
     }
   },
 
+  watch: {
+    initialTag: {
+      handler(newVal) {
+        if (newVal !== this.tag) {
+          this.tag = newVal
+        }
+      },
+      immediate: true,
+    },
+  },
+
   computed: {
 
     currentTag(): string {
