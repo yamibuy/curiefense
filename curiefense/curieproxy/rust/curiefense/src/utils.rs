@@ -1,4 +1,6 @@
+use crate::maxmind::get_country;
 use itertools::Itertools;
+use maxminddb::geoip2::model;
 use serde_json::json;
 use std::collections::HashMap;
 use std::net::IpAddr;
@@ -9,7 +11,7 @@ use crate::body::parse_body;
 use crate::config::utils::{RequestSelector, RequestSelectorCondition};
 use crate::interface::{Decision, Tags};
 use crate::logs::Logs;
-use crate::maxmind::{get_asn, get_city, get_country};
+use crate::maxmind::{get_asn, get_city};
 use crate::requestfields::RequestField;
 use crate::utils::url::parse_urlencoded_params;
 
@@ -106,6 +108,8 @@ pub struct GeoIp {
     pub continent_code: Option<String>,
     pub asn: Option<u32>,
     pub company: Option<String>,
+    pub region: Option<String>,
+    pub subregion: Option<String>,
 }
 
 impl GeoIp {
@@ -150,6 +154,8 @@ impl GeoIp {
 
         out.insert("asn", json!(self.asn));
         out.insert("company", json!(self.company));
+        out.insert("region", json!(self.region));
+        out.insert("subregion", json!(self.subregion));
 
         out
     }
@@ -252,56 +258,86 @@ impl InspectionResult {
     }
 }
 
-pub fn find_geoip(ipstr: String) -> GeoIp {
-    let ip = ipstr.parse().ok();
-    fn cty_info(c: &maxminddb::geoip2::model::Country) -> (Option<bool>, Option<String>, Option<String>) {
-        (
-            c.is_in_european_union,
-            c.iso_code.as_ref().map(|s| s.to_lowercase()),
-            c.names.as_ref().and_then(|mp| mp.get("en")).map(|s| s.to_lowercase()),
-        )
-    }
-    fn cont_info(c: &maxminddb::geoip2::model::Continent) -> (Option<String>, Option<String>) {
-        (
-            c.names.as_ref().and_then(|mp| mp.get("en")).map(|s| s.to_lowercase()),
-            c.code.clone(),
-        )
-    }
-    let (mcountry_info, mcontinent_info) = match ip.and_then(|i| get_country(i).ok()) {
-        None => (None, None),
-        Some(cty) => (
-            cty.country.as_ref().map(cty_info),
-            cty.continent.as_ref().map(cont_info),
-        ),
-    };
-    let (city_name, location) = match ip.and_then(|i| get_city(i).ok()) {
-        None => (None, None),
-        Some(cty) => (
-            None,
-            cty.location
-                .as_ref() // no applicative functors :(
-                .and_then(|l| l.latitude.and_then(|lat| l.longitude.map(|lon| (lat, lon)))),
-        ),
-    };
-    let (asn, company) = match ip.and_then(|i| get_asn(i).ok()) {
-        None => (None, None),
-        Some(iasn) => (iasn.autonomous_system_number, iasn.autonomous_system_organization),
-    };
-    let (in_eu, country_iso, country_name) = mcountry_info.unwrap_or((None, None, None));
-    let (continent_name, continent_code) = mcontinent_info.unwrap_or((None, None));
-    GeoIp {
+pub fn find_geoip(logs: &mut Logs, ipstr: String) -> GeoIp {
+    let pip = ipstr.parse();
+    let mut geoip = GeoIp {
         ipstr,
-        ip,
-        location,
-        in_eu,
-        city_name,
-        country_iso,
-        country_name,
-        continent_name,
-        continent_code,
-        asn,
-        company,
+        ip: None,
+        location: None,
+        in_eu: None,
+        city_name: None,
+        country_iso: None,
+        country_name: None,
+        continent_name: None,
+        continent_code: None,
+        asn: None,
+        company: None,
+        region: None,
+        subregion: None,
+    };
+
+    let ip = match pip {
+        Ok(x) => x,
+        Err(rr) => {
+            logs.error(format!("When parsing ip {}", rr));
+            return geoip;
+        }
+    };
+
+    let get_name = |mmap: Option<&std::collections::BTreeMap<String, String>>| {
+        mmap.as_ref().and_then(|mp| mp.get("en")).map(|s| s.to_lowercase())
+    };
+
+    if let Ok(asninfo) = get_asn(ip) {
+        geoip.asn = asninfo.autonomous_system_number;
+        geoip.company = asninfo.autonomous_system_organization;
     }
+
+    let extract_continent = |g: &mut GeoIp, mcnt: Option<model::Continent>| {
+        if let Some(continent) = mcnt {
+            g.continent_code = continent.code.clone();
+            g.continent_name = get_name(continent.names.as_ref());
+        }
+    };
+
+    let extract_country = |g: &mut GeoIp, mcnt: Option<model::Country>| {
+        if let Some(country) = mcnt {
+            g.in_eu = country.is_in_european_union;
+            g.country_iso = country.iso_code.as_ref().map(|s| s.to_lowercase());
+            g.country_name = get_name(country.names.as_ref());
+        }
+    };
+
+    // first put country data in the geoip
+    if let Ok(cnty) = get_country(ip) {
+        extract_continent(&mut geoip, cnty.continent);
+        extract_country(&mut geoip, cnty.country);
+    }
+
+    // potentially overwrite some with the city data
+    if let Ok(cty) = get_city(ip) {
+        extract_continent(&mut geoip, cty.continent);
+        extract_country(&mut geoip, cty.country);
+        geoip.location = cty
+            .location
+            .as_ref()
+            .and_then(|l| l.latitude.and_then(|lat| l.longitude.map(|lon| (lat, lon))));
+        if let Some(subs) = cty.subdivisions {
+            match &subs[..] {
+                [] => (),
+                [region] => geoip.region = get_name(region.names.as_ref()),
+                [region, subregion] => {
+                    geoip.region = region.iso_code.clone();
+                    geoip.subregion = subregion.iso_code.clone();
+                }
+                _ => logs.error(format!("Too many subdivisions were reported for {}", ip)),
+            }
+        }
+        geoip.city_name = cty.city.as_ref().and_then(|c| get_name(c.names.as_ref()));
+    }
+
+    geoip.ip = Some(ip);
+    geoip
 }
 
 pub fn map_request(
@@ -314,7 +350,7 @@ pub fn map_request(
     logs.debug("map_request starts");
     let (headers, cookies) = map_headers(headers);
     logs.debug("headers mapped");
-    let geoip = find_geoip(ipstr);
+    let geoip = find_geoip(logs, ipstr);
     logs.debug("geoip computed");
     let qinfo = map_args(logs, &meta.path, headers.get_str("content-type"), mbody);
     logs.debug("args mapped");

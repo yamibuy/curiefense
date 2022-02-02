@@ -1,4 +1,6 @@
-use crate::config::globalfilter::{PairEntry, GlobalFilterEntry, GlobalFilterEntryE, GlobalFilterSSection, SingleEntry};
+use crate::config::globalfilter::{
+    GlobalFilterEntry, GlobalFilterEntryE, GlobalFilterSSection, PairEntry, SingleEntry,
+};
 use crate::config::raw::Relation;
 use crate::config::Config;
 use crate::interface::{SimpleActionT, SimpleDecision, Tags};
@@ -51,6 +53,20 @@ fn check_entry(rinfo: &RequestInfo, sub: &GlobalFilterEntry) -> bool {
             .rinfo
             .geoip
             .country_iso
+            .as_ref()
+            .map(|ccty| check_single(cty, ccty.to_lowercase().as_ref()))
+            .unwrap_or(false),
+        GlobalFilterEntryE::Region(cty) => rinfo
+            .rinfo
+            .geoip
+            .region
+            .as_ref()
+            .map(|ccty| check_single(cty, ccty.to_lowercase().as_ref()))
+            .unwrap_or(false),
+        GlobalFilterEntryE::SubRegion(cty) => rinfo
+            .rinfo
+            .geoip
+            .subregion
             .as_ref()
             .map(|ccty| check_single(cty, ccty.to_lowercase().as_ref()))
             .unwrap_or(false),

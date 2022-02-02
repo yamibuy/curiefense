@@ -92,6 +92,8 @@ fn gen_rinfo() -> RequestInfo {
                 continent_code: None,
                 asn: None,
                 company: None,
+                region: None,
+                subregion: None,
             },
             qinfo: QueryInfo {
                 qpath: "/non/matching/path".into(),
