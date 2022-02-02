@@ -85,7 +85,7 @@ pub fn flow_check(
             let mut cnx = crate::redis::redis_conn()?;
             for elem in elems.iter() {
                 logs.debug(format!("Testing flow control {} (step {})", elem.name, elem.step));
-                if !flow_match(reqinfo, &tags, elem) {
+                if !flow_match(reqinfo, tags, elem) {
                     continue;
                 }
                 logs.debug(format!("Checking flow control {} (step {})", elem.name, elem.step));

@@ -111,7 +111,7 @@ impl Config {
             };
             let mut olimits: Vec<Limit> = Vec::new();
             for lid in rawmap.limit_ids {
-                match from_map(&limits, &lid) {
+                match from_map(limits, &lid) {
                     Ok(lm) => olimits.push(lm),
                     Err(rr) => logs.error(format!("When resolving limits in rawmap {}, {}", rawmap.name, rr)),
                 }

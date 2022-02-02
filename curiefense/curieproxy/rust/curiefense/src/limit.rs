@@ -20,7 +20,7 @@ fn get_ban_key(key: &str) -> String {
 }
 
 fn is_banned(cnx: &mut redis::Connection, key: &str) -> bool {
-    let ban_key = get_ban_key(&key);
+    let ban_key = get_ban_key(key);
     let q: redis::RedisResult<Option<u32>> = redis::cmd("GET").arg(&ban_key).query(cnx);
     q.unwrap_or(None).is_some()
 }
@@ -157,7 +157,7 @@ pub fn limit_check(
                     // Only one action with highest limit larger than current
                     // counter will be applied, all the rest will be skipped.
                     if current_count > threshold.limit as i64 {
-                        return limit_react(logs, tags, &mut redis, limit, &threshold, key);
+                        return limit_react(logs, tags, &mut redis, limit, threshold, key);
                     }
                 }
             },

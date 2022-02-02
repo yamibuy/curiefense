@@ -1,4 +1,7 @@
-use crate::config::raw::{RawContentFilterEntryMatch, RawContentFilterProfile, RawContentFilterProperties, RawContentFilterRule, RawContentFilterGroup};
+use crate::config::raw::{
+    RawContentFilterEntryMatch, RawContentFilterGroup, RawContentFilterProfile, RawContentFilterProperties,
+    RawContentFilterRule,
+};
 use crate::logs::Logs;
 
 use hyperscan::prelude::{pattern, Builder, CompileFlags, Pattern, Patterns, VectoredDatabase};
@@ -132,40 +135,42 @@ pub struct ContentFilterGroup {
 }
 
 impl ContentFilterGroup {
-    pub fn resolve(
-        raws: Vec<RawContentFilterGroup>,
-    ) -> HashMap<String, ContentFilterGroup> {
-        raws.into_iter().map(|raw| (
-            raw.id.clone(),
-            ContentFilterGroup {
-                id: raw.id,
-                name: raw.name,
-                description: raw.description,
-                content_filter_rule_ids: match raw.content_filter_rule_ids {
-                    Some(p) => p.into_iter()
-                        .collect(),
-                    None => HashSet::new(),
-                },
-            },
-        )).collect()
+    pub fn resolve(raws: Vec<RawContentFilterGroup>) -> HashMap<String, ContentFilterGroup> {
+        raws.into_iter()
+            .map(|raw| {
+                (
+                    raw.id.clone(),
+                    ContentFilterGroup {
+                        id: raw.id,
+                        name: raw.name,
+                        description: raw.description,
+                        content_filter_rule_ids: match raw.content_filter_rule_ids {
+                            Some(p) => p.into_iter().collect(),
+                            None => HashSet::new(),
+                        },
+                    },
+                )
+            })
+            .collect()
     }
 }
 
 fn mk_entry_match(
     em: RawContentFilterEntryMatch,
-    content_filter_groups: &HashMap<String, ContentFilterGroup>
+    content_filter_groups: &HashMap<String, ContentFilterGroup>,
 ) -> anyhow::Result<(String, ContentFilterEntryMatch)> {
     Ok((
         em.key,
         ContentFilterEntryMatch {
             restrict: em.restrict,
-            exclusions: em.exclusions.unwrap_or_else(|| HashMap::new())
+            exclusions: em
+                .exclusions
+                .unwrap_or_default()
                 .into_iter()
                 .map(|(k, v)| {
                     if v == "rule" {
                         [k].iter().cloned().collect::<HashSet<String>>()
-                    }
-                    else {
+                    } else {
                         match content_filter_groups.get(&k) {
                             Some(p) => p.content_filter_rule_ids.clone(),
                             None => HashSet::new(),
@@ -181,15 +186,14 @@ fn mk_entry_match(
 
 fn mk_section(
     props: RawContentFilterProperties,
-    max_length: usize, max_count: usize,
-    content_filter_groups: &HashMap<String, ContentFilterGroup>
+    max_length: usize,
+    max_count: usize,
+    content_filter_groups: &HashMap<String, ContentFilterGroup>,
 ) -> anyhow::Result<ContentFilterSection> {
     let mnames: anyhow::Result<HashMap<String, ContentFilterEntryMatch>> = props
         .names
         .into_iter()
-        .map(|e| {
-            mk_entry_match(e, content_filter_groups)
-        })
+        .map(|e| mk_entry_match(e, content_filter_groups))
         .collect();
     let mregex: anyhow::Result<Vec<(Regex, ContentFilterEntryMatch)>> = props
         .regex
@@ -210,7 +214,7 @@ fn mk_section(
 
 fn convert_entry(
     entry: RawContentFilterProfile,
-    content_filter_groups: &HashMap<String, ContentFilterGroup>
+    content_filter_groups: &HashMap<String, ContentFilterGroup>,
 ) -> anyhow::Result<(String, ContentFilterProfile)> {
     Ok((
         entry.id.clone(),
@@ -219,12 +223,24 @@ fn convert_entry(
             name: entry.name,
             ignore_alphanum: entry.ignore_alphanum,
             sections: Section {
-                headers: mk_section(entry.headers, entry.max_header_length, entry.max_headers_count,
-                    content_filter_groups)?,
-                cookies: mk_section(entry.cookies, entry.max_cookie_length, entry.max_cookies_count,
-                    content_filter_groups)?,
-                args: mk_section(entry.args, entry.max_arg_length, entry.max_args_count,
-                    content_filter_groups)?,
+                headers: mk_section(
+                    entry.headers,
+                    entry.max_header_length,
+                    entry.max_headers_count,
+                    content_filter_groups,
+                )?,
+                cookies: mk_section(
+                    entry.cookies,
+                    entry.max_cookie_length,
+                    entry.max_cookies_count,
+                    content_filter_groups,
+                )?,
+                args: mk_section(
+                    entry.args,
+                    entry.max_arg_length,
+                    entry.max_args_count,
+                    content_filter_groups,
+                )?,
             },
         },
     ))
@@ -234,7 +250,7 @@ impl ContentFilterProfile {
     pub fn resolve(
         logs: &mut Logs,
         raw: Vec<RawContentFilterProfile>,
-        content_filter_groups: &HashMap<String, ContentFilterGroup>
+        content_filter_groups: &HashMap<String, ContentFilterGroup>,
     ) -> HashMap<String, ContentFilterProfile> {
         let mut out = HashMap::new();
         for rp in raw {
@@ -272,16 +288,20 @@ fn convert_rule(entry: &ContentFilterRule) -> anyhow::Result<Pattern> {
 
 pub fn resolve_rules(
     raws: Vec<RawContentFilterRule>,
-    content_filter_groups: &HashMap<String, ContentFilterGroup>
+    content_filter_groups: &HashMap<String, ContentFilterGroup>,
 ) -> anyhow::Result<ContentFilterRules> {
     let mut rule_id_groups: HashMap<String, HashMap<String, String>> = HashMap::new();
-    for (_, cfg) in content_filter_groups {
+    for cfg in content_filter_groups.values() {
         for rule_id in cfg.content_filter_rule_ids.iter() {
-            rule_id_groups.entry(rule_id.to_string()).or_default().insert(cfg.id.clone(), cfg.name.clone());
+            rule_id_groups
+                .entry(rule_id.to_string())
+                .or_default()
+                .insert(cfg.id.clone(), cfg.name.clone());
         }
     }
-    let rules: Vec<ContentFilterRule> = raws.into_iter().map(|raw| (
-        ContentFilterRule {
+    let rules: Vec<ContentFilterRule> = raws
+        .into_iter()
+        .map(|raw| ContentFilterRule {
             id: raw.id.clone(),
             name: raw.name,
             msg: raw.msg,
@@ -294,8 +314,8 @@ pub fn resolve_rules(
                 Some(groups) => groups,
                 None => HashMap::new(),
             },
-        }
-    )).collect();
+        })
+        .collect();
     let patterns: anyhow::Result<Vec<Pattern>> = rules.iter().map(convert_rule).collect();
     let ptrns: Patterns = Patterns::from_iter(patterns?);
     Ok(ContentFilterRules {

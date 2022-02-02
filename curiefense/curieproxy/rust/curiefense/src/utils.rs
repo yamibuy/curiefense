@@ -57,7 +57,7 @@ fn parse_query_params(query: &str) -> RequestField {
 /// returns the hashmap of arguments
 fn map_args(logs: &mut Logs, path: &str, mcontent_type: Option<&str>, mbody: Option<&[u8]>) -> QueryInfo {
     // this is necessary to do this in this convoluted way so at not to borrow attrs
-    let uri = urlencoding::decode(&path).ok();
+    let uri = urlencoding::decode(path).ok();
     let (qpath, query, mut args) = match path.splitn(2, '?').collect_tuple() {
         Some((qpath, query)) => (qpath.to_string(), query.to_string(), parse_query_params(query)),
         None => (path.to_string(), String::new(), RequestField::default()),

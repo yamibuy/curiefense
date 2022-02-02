@@ -1,6 +1,7 @@
 pub mod acl;
 pub mod body;
 pub mod config;
+pub mod contentfilter;
 pub mod flow;
 pub mod interface;
 pub mod limit;
@@ -8,25 +9,23 @@ pub mod logs;
 pub mod maxmind;
 pub mod redis;
 pub mod requestfields;
-pub mod session;
-pub mod tagging;
 pub mod securitypolicy;
+pub mod tagging;
 pub mod utils;
-pub mod contentfilter;
 
 use interface::Tags;
 use serde_json::json;
 
 use acl::{check_acl, AclDecision, AclResult, BotHuman};
 use config::{with_config, HSDB};
+use contentfilter::content_filter_check;
 use flow::flow_check;
 use interface::{challenge_phase01, challenge_phase02, Action, ActionType, Decision, Grasshopper, SimpleDecision};
 use limit::limit_check;
 use logs::Logs;
-use tagging::tag_request;
 use securitypolicy::match_securitypolicy;
+use tagging::tag_request;
 use utils::RequestInfo;
-use contentfilter::content_filter_check;
 
 fn acl_block(blocking: bool, code: i32, tags: &[String]) -> Decision {
     Decision::Action(Action {
@@ -82,7 +81,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 
     // without grasshopper, default to being human
     let is_human = if let Some(gh) = &mgh {
-        challenge_verified(gh, &reqinfo, logs)
+        challenge_verified(gh, reqinfo, logs)
     } else {
         false
     };
@@ -99,9 +98,9 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     // there is a lot of copying taking place, to minimize the lock time
     // this decision should be backed with benchmarks
     let ((nm, securitypolicy), (ntags, globalfilter_dec), flows) = match with_config(configpath, logs, |slogs, cfg| {
-        let msecuritypolicy = match_securitypolicy(&reqinfo, cfg, slogs).map(|(nm, um)| (nm, um.clone()));
+        let msecuritypolicy = match_securitypolicy(reqinfo, cfg, slogs).map(|(nm, um)| (nm, um.clone()));
         let nflows = cfg.flows.clone();
-        let ntags = tag_request(is_human, &cfg, &reqinfo);
+        let ntags = tag_request(is_human, cfg, reqinfo);
         (msecuritypolicy, ntags, nflows)
     }) {
         Some((Some(stuff), itags, iflows)) => (stuff, itags, iflows),
@@ -143,7 +142,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         }
     }
 
-    match flow_check(logs, &flows, &reqinfo, &mut tags) {
+    match flow_check(logs, &flows, reqinfo, &mut tags) {
         Err(rr) => logs.error(rr),
         Ok(SimpleDecision::Pass) => {}
         // TODO, check for monitor
@@ -157,7 +156,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     logs.debug("flow checks done");
 
     // limit checks
-    let limit_check = limit_check(logs, &securitypolicy.name, &reqinfo, &securitypolicy.limits, &mut tags);
+    let limit_check = limit_check(logs, &securitypolicy.name, reqinfo, &securitypolicy.limits, &mut tags);
     if let SimpleDecision::Action(action, reason) = limit_check {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
@@ -230,7 +229,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 
     // otherwise, run content_filter_check
     let content_filter_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(&reqinfo, &securitypolicy.content_filter_profile, rd),
+        Ok(rd) => content_filter_check(reqinfo, &securitypolicy.content_filter_profile, rd),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())
@@ -266,7 +265,9 @@ pub fn content_filter_check_generic_request_map(
     logs: &mut Logs,
 ) -> Decision {
     logs.debug("Content Filter inspection starts");
-    let content_filter_profile = match with_config(configpath, logs, |_slogs, cfg| cfg.content_filter_profiles.get(content_filter_id).cloned()) {
+    let content_filter_profile = match with_config(configpath, logs, |_slogs, cfg| {
+        cfg.content_filter_profiles.get(content_filter_id).cloned()
+    }) {
         Some(Some(prof)) => prof,
         _ => {
             logs.error("Content Filter profile not found");
@@ -275,7 +276,7 @@ pub fn content_filter_check_generic_request_map(
     };
 
     let content_filter_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(&reqinfo, &content_filter_profile, rd),
+        Ok(rd) => content_filter_check(reqinfo, &content_filter_profile, rd),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())
