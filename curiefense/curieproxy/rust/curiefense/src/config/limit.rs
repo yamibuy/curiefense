@@ -66,7 +66,10 @@ impl Limit {
             Limit {
                 id: rawlimit.id,
                 name: rawlimit.name,
-                timeframe: rawlimit.timeframe.parse().with_context(|| "when converting the timeframe")?,
+                timeframe: rawlimit
+                    .timeframe
+                    .parse()
+                    .with_context(|| "when converting the timeframe")?,
                 include: rawlimit.include.into_iter().collect(),
                 exclude: rawlimit.exclude.into_iter().collect(),
                 thresholds,
@@ -92,9 +95,7 @@ impl Limit {
 
 /// order limits in descending order, so that highest comes first
 pub fn limit_order(a: &LimitThreshold, b: &LimitThreshold) -> Ordering {
-    match (a.limit, b.limit) {
-        (x, y) => y.cmp(&x), // invert order
-    }
+    b.limit.cmp(&a.limit)
 }
 
 #[cfg(test)]
@@ -106,7 +107,7 @@ mod tests {
         fn mklimit(name: &str, v: u64) -> LimitThreshold {
             LimitThreshold {
                 limit: v,
-                action: SimpleAction::from_reason(format!("{}", name)),
+                action: SimpleAction::from_reason(name.to_string()),
             }
         }
         let l1 = mklimit("l1", 0);

@@ -1,7 +1,6 @@
 package.path = package.path .. ";lua/?.lua"
 local curiefense = require "curiefense"
 
-local sfmt = string.format
 local cjson = require "cjson"
 local json_safe = require "cjson.safe"
 local json_decode = json_safe.decode
@@ -44,20 +43,6 @@ local function load_json_file(path)
     local data = read_file(path)
     if data then
         return json_decode(data)
-    end
-end
-
-local _, err = curiefense.init_config()
-if err then
-    local failure = false
-    for _, r in ipairs(err) do
-        if not ends_with(r, "CFGLOAD") then
-          print(sfmt("curiefense.init_config failed: '%s'", r))
-          failure = true
-        end
-    end
-    if failure then
-      error("Configuration loading failed")
     end
 end
 

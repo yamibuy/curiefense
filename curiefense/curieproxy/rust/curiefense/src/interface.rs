@@ -112,7 +112,7 @@ impl Tags {
     }
 
     pub fn from_slice(slice: &[String]) -> Self {
-        Tags(slice.iter().map(|s| tagify(&s)).collect())
+        Tags(slice.iter().map(|s| tagify(s)).collect())
     }
 
     pub fn contains(&self, s: &str) -> bool {
@@ -230,7 +230,7 @@ impl SimpleAction {
                     .unwrap_or(3600),
             ),
             RawActionType::RequestHeader => {
-                SimpleActionT::RequestHeader(rawaction.params.headers.clone().unwrap_or_else(HashMap::default))
+                SimpleActionT::RequestHeader(rawaction.params.headers.clone().unwrap_or_default())
             }
             RawActionType::Response => SimpleActionT::Response(
                 rawaction

@@ -118,7 +118,7 @@ fn close_xml_element(
             }
             if idx == 0 {
                 // empty XML element, save it with an empty string
-                let path = xml_path(&stack) + openname.as_str() + "1";
+                let path = xml_path(stack) + openname.as_str() + "1";
                 args.add(path, String::new());
             }
             Ok(())
