@@ -63,6 +63,8 @@ pub enum GlobalFilterEntryType {
     Uri,
     Asn,
     Country,
+    Region,
+    SubRegion,
     Method,
     Ip,
     Company,

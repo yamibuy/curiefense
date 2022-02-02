@@ -62,6 +62,8 @@ pub enum GlobalFilterEntryE {
     Query(SingleEntry),
     Uri(SingleEntry),
     Country(SingleEntry),
+    Region(SingleEntry),
+    SubRegion(SingleEntry),
     Method(SingleEntry),
     Asn(u32),
     Company(SingleEntry),
@@ -289,6 +291,8 @@ impl GlobalFilterSection {
                 GlobalFilterEntryType::Query => single_re(logs, GlobalFilterEntryE::Query, val),
                 GlobalFilterEntryType::Uri => single_re(logs, GlobalFilterEntryE::Uri, val),
                 GlobalFilterEntryType::Country => single_re(logs, GlobalFilterEntryE::Country, val),
+                GlobalFilterEntryType::Region => single_re(logs, GlobalFilterEntryE::Region, val),
+                GlobalFilterEntryType::SubRegion => single_re(logs, GlobalFilterEntryE::SubRegion, val),
                 GlobalFilterEntryType::Method => single_re(logs, GlobalFilterEntryE::Method, val),
                 GlobalFilterEntryType::Asn => single(|rawasn| Ok(GlobalFilterEntryE::Asn(rawasn.parse()?)), val),
                 GlobalFilterEntryType::Company => single_re(logs, GlobalFilterEntryE::Company, val),
@@ -318,8 +322,12 @@ impl GlobalFilterSection {
                 .into_iter()
                 .map(|ss| convert_subsection(logs, ss))
                 .collect();
-            let subsections: Vec<GlobalFilterSSection> = rsubsections
-                .with_context(|| format!("global filter configuration error in section id={}, name={}", sid, sname))?;
+            let subsections: Vec<GlobalFilterSSection> = rsubsections.with_context(|| {
+                format!(
+                    "global filter configuration error in section id={}, name={}",
+                    sid, sname
+                )
+            })?;
             let action = match &s.action {
                 Some(ma) => Some(SimpleAction::resolve(ma).with_context(|| "when resolving the action entry")?),
                 None => None,

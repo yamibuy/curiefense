@@ -1,7 +1,7 @@
+use curiefense::config::contentfilter::ContentFilterProfile;
 use curiefense::config::hostmap::*;
 use curiefense::config::raw::AclProfile;
 use curiefense::config::utils::Matching;
-use curiefense::config::contentfilter::ContentFilterProfile;
 use curiefense::config::Config;
 use curiefense::logs::Logs;
 use curiefense::requestfields::RequestField;
@@ -92,6 +92,8 @@ fn gen_rinfo() -> RequestInfo {
                 continent_code: None,
                 asn: None,
                 company: None,
+                region: None,
+                subregion: None,
             },
             qinfo: QueryInfo {
                 qpath: "/non/matching/path".into(),

@@ -1,0 +1,30 @@
+[
+  {
+    "response": {
+      "tags": [
+        "securitypolicy-entry:default",
+        "contentfilterid:--default--",
+        "sante",
+        "all",
+        "aclname:default-acl",
+        "aclid:--default--",
+        "securitypolicy:default-entry",
+        "contentfiltername:default-contentfilter",
+        "bot",
+        "parisien",
+        "francilien",
+        "ip:82-64-131-193",
+        "geo:france",
+        "asn:12322"
+      ],
+      "action": "pass"
+    },
+    "name": "test region tagging",
+    "headers": {
+      "x-forwarded-for": "82.64.131.193",
+      ":path": "\/parisien",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  }
+]

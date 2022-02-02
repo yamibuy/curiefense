@@ -524,5 +524,63 @@
             }
          ]
       }
+   },
+   {
+      "id": "region_match",
+      "name": "region match",
+      "source": "self-managed",
+      "mdate": "2021-07-01T09:50:58.505Z",
+      "description": "Region match",
+      "active": true,
+      "action": {
+         "type": "monitor"
+      },
+      "tags": [
+         "francilien"
+      ],
+      "rule": {
+         "relation": "OR",
+         "sections": [
+            {
+               "relation": "OR",
+               "entries": [
+                  [
+                     "region",
+                     "idf",
+                     ""
+                  ]
+               ]
+            }
+         ]
+      }
+   },
+   {
+      "id": "subregion_match",
+      "name": "subregion match",
+      "source": "self-managed",
+      "mdate": "2021-07-01T09:50:58.505Z",
+      "description": "Subregion match",
+      "active": true,
+      "action": {
+         "type": "monitor"
+      },
+      "tags": [
+         "parisien"
+      ],
+      "rule": {
+         "relation": "OR",
+         "sections": [
+            {
+               "relation": "OR",
+               "entries": [
+                  [
+                     "subregion",
+                     "75",
+                     ""
+                  ]
+               ]
+            }
+         ]
+      }
    }
 ]
