@@ -18,7 +18,7 @@ pub fn match_securitypolicy<'a>(
     let hostmap: &HostMap = cfg
         .securitypolicies
         .iter()
-        .find(|e| e.matcher.is_match(host))
+        .find(|e| e.matches(host))
         .map(|m| &m.inner)
         .or_else(|| cfg.default.as_ref())?;
     logs.debug(format!("Selected hostmap {}", hostmap.name));
@@ -26,7 +26,7 @@ pub fn match_securitypolicy<'a>(
     let securitypolicy: &SecurityPolicy = match hostmap
         .entries
         .iter()
-        .find(|e| e.matcher.is_match(path))
+        .find(|e| e.matches(path))
         .map(|m| &m.inner)
         .or_else(|| hostmap.default.as_ref())
     {

@@ -315,6 +315,15 @@
                 "limit_ids": []
             },
             {
+                "match": "/invertedre",
+                "name": "invertedre",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "invertedre",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "/",
                 "name": "default",
                 "acl_profile": "__default__",
