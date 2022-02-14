@@ -224,7 +224,7 @@ fn section_check(
         // logic for checking an entry
         let mut check_entry = |name_entry: &ContentFilterEntryMatch| {
             let matched = if let Some(re) = &name_entry.reg {
-                re.is_match(value)
+                re.matches(value)
             } else {
                 false
             };

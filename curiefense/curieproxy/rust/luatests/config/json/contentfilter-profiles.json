@@ -1034,5 +1034,37 @@
             "regex": []
         },
         "masking_seed": "CHANGEME"
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "id": "invertedre",
+        "name": "inverted regex",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 512,
+        "args": {
+            "regex": [
+                {
+                    "exclusions": [],
+                    "key": "test",
+                    "mask": false,
+                    "reg": "!id",
+                    "restrict": true
+                }
+            ],
+            "names": []
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        }
     }
 ]

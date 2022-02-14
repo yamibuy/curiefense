@@ -2,6 +2,7 @@ use crate::config::raw::{
     ContentFilterGroup, ContentFilterRule, RawContentFilterEntryMatch, RawContentFilterProfile,
     RawContentFilterProperties,
 };
+use crate::config::utils::Matching;
 use crate::logs::Logs;
 
 use hyperscan::prelude::{pattern, Builder, CompileFlags, Pattern, Patterns, VectoredDatabase};
@@ -92,7 +93,7 @@ pub struct ContentFilterSection {
 
 #[derive(Debug, Clone)]
 pub struct ContentFilterEntryMatch {
-    pub reg: Option<Regex>,
+    pub reg: Option<Matching<String>>,
     pub restrict: bool,
     pub mask: bool,
     pub exclusions: HashSet<String>,
@@ -163,7 +164,7 @@ fn mk_entry_match(em: RawContentFilterEntryMatch) -> anyhow::Result<(String, Con
             if s.is_empty() {
                 None
             } else {
-                Some(Regex::new(&s)?)
+                Some(Matching::from_str(&s, s.clone())?)
             }
         }
     };

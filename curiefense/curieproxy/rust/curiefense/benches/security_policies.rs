@@ -7,20 +7,22 @@ use curiefense::logs::Logs;
 use curiefense::securitypolicy::match_securitypolicy;
 
 use criterion::*;
-use regex::Regex;
 use std::collections::HashSet;
 
 fn gen_bogus_config(sz: usize) -> Config {
     let mut def = Config::empty();
     def.securitypolicies = (0..sz)
-        .map(|i| Matching {
-            matcher: Regex::new(&format!("^dummyhost_{}$", i)).unwrap(),
-            inner: HostMap {
-                id: format!("abcd{}", i),
-                name: format!("Dummy hostmap {}", i),
-                entries: Vec::new(),
-                default: None,
-            },
+        .map(|i| {
+            Matching::from_str(
+                &format!("^dummyhost_{}$", i),
+                HostMap {
+                    id: format!("abcd{}", i),
+                    name: format!("Dummy hostmap {}", i),
+                    entries: Vec::new(),
+                    default: None,
+                },
+            )
+            .unwrap()
         })
         .collect();
 
@@ -36,16 +38,18 @@ fn gen_bogus_config(sz: usize) -> Config {
     };
 
     let dummy_entries: Vec<Matching<SecurityPolicy>> = (0..sz)
-        .map(|i| Matching {
-            matcher: Regex::new(&format!("/dummy/url/{}", i)).unwrap(),
-            inner: SecurityPolicy {
-                name: format!("Dummy securitypolicy {}", i),
-                acl_active: false,
-                acl_profile: acl_profile.clone(),
-                content_filter_active: false,
-                content_filter_profile: ContentFilterProfile::default_from_seed("seed"),
-                limits: Vec::new(),
-            },
+        .map(|i| {
+            Matching::from_str(
+                &format!("/dummy/url/{}", i),
+                SecurityPolicy {
+                    name: format!("Dummy securitypolicy {}", i),
+                    acl_active: false,
+                    acl_profile: acl_profile.clone(),
+                    content_filter_active: false,
+                    content_filter_profile: ContentFilterProfile::default_from_seed("seed"),
+                    limits: Vec::new(),
+                },
+            ).unwrap()
         })
         .collect();
 
