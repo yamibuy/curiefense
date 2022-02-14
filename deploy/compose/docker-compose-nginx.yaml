@@ -17,8 +17,8 @@ services:
         aliases:
           - curieproxy
     ports:
-      - "30081:80"
-      - "30444:443"
+      - "30082:30082"
+      - "30083:30083"
       - "8001:8001"
     secrets:
       - curieproxysslcrt
