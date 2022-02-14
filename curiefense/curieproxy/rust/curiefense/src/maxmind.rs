@@ -14,7 +14,8 @@ lazy_static! {
     static ref COUNTRY: Result<Reader<Vec<u8>>, maxminddb::MaxMindDBError> =
         Reader::open_readfile("/config/current/config/maxmind/GeoLite2-Country.mmdb");
     static ref CITY: Result<Reader<Vec<u8>>, maxminddb::MaxMindDBError> =
-        Reader::open_readfile("/config/current/config/maxmind/GeoLite2-City.mmdb");
+        Reader::open_readfile("/config/current/config/maxmind/GeoIP2-City.mmdb").or_else(|_|
+        Reader::open_readfile("/config/current/config/maxmind/GeoLite2-City.mmdb"));
 }
 
 /// Retrieves the english name of the country associated with this IP
