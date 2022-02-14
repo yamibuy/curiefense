@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum RequestSelector {
@@ -102,6 +103,32 @@ pub fn decode_request_selector_condition(
 
 #[derive(Debug, Clone)]
 pub struct Matching<A> {
-    pub matcher: Regex,
+    negated: bool,
+    matcher: Regex,
     pub inner: A,
+}
+
+impl<A> Matching<A> {
+    pub fn from_str(s: &str, inner: A) -> Result<Matching<A>, regex::Error> {
+        Ok(match s.strip_prefix('!') {
+            None => Matching {
+                negated: false,
+                matcher: Regex::from_str(s)?,
+                inner,
+            },
+            Some(r) => Matching {
+                negated: true,
+                matcher: Regex::from_str(r)?,
+                inner,
+            },
+        })
+    }
+
+    pub fn matches(&self, s: &str) -> bool {
+        self.matcher.is_match(s) ^ self.negated
+    }
+
+    pub fn matcher_len(&self) -> usize {
+        self.matcher.as_str().len()
+    }
 }

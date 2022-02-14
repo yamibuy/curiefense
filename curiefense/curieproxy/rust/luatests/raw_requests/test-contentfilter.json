@@ -1537,5 +1537,63 @@
       ":method": "GET",
       ":authority": "localhost:30081"
     }
+  },
+  {
+    "response": {
+      "tags": [
+        "securitypolicy:default-entry",
+        "aclname:default-acl",
+        "contentfilterid:invertedre",
+        "contentfiltername:inverted-regex",
+        "all",
+        "sante",
+        "container:1e219d8ed6b4",
+        "geo:united-states",
+        "aclid:--default--",
+        "securitypolicy-entry:invertedre",
+        "ip:13-129-64-253",
+        "bot",
+        "asn:nil"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "inverted re block",
+    "headers": {
+      "x-forwarded-for": "13.129.64.253",
+      "regex-norestrict": "invalid",
+      ":path": "\/invertedre?test=id",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "securitypolicy:default-entry",
+        "aclname:default-acl",
+        "contentfilterid:invertedre",
+        "contentfiltername:inverted-regex",
+        "all",
+        "sante",
+        "container:1e219d8ed6b4",
+        "geo:united-states",
+        "aclid:--default--",
+        "securitypolicy-entry:invertedre",
+        "ip:13-129-64-253",
+        "bot",
+        "asn:nil"
+      ],
+      "action": "pass"
+    },
+    "name": "inverted re pass",
+    "headers": {
+      "x-forwarded-for": "13.129.64.253",
+      "regex-norestrict": "invalid",
+      ":path": "\/invertedre?test=ix",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
   }
 ]

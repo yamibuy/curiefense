@@ -8,7 +8,6 @@ pub mod utils;
 
 use crate::config::limit::Limit;
 use lazy_static::lazy_static;
-use regex::Regex;
 use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
@@ -136,19 +135,16 @@ impl Config {
                 }
                 default = Some(securitypolicy);
             } else {
-                match Regex::new(&rawmap.match_) {
+                match Matching::from_str(&rawmap.match_, securitypolicy) {
                     Err(rr) => logs.warning(format!(
                         "Invalid regex {} in entry {}: {}",
                         &rawmap.match_, &mapname, rr
                     )),
-                    Ok(matcher) => entries.push(Matching {
-                        matcher,
-                        inner: securitypolicy,
-                    }),
-                };
+                    Ok(matcher) => entries.push(matcher),
+                }
             }
         }
-        entries.sort_by_key(|x: &Matching<SecurityPolicy>| usize::MAX - x.matcher.as_str().len());
+        entries.sort_by_key(|x: &Matching<SecurityPolicy>| usize::MAX - x.matcher_len());
         (entries, default)
     }
 
@@ -196,18 +192,15 @@ impl Config {
                 }
                 default = Some(hostmap);
             } else {
-                match Regex::new(&rawmap.match_) {
+                match Matching::from_str(&rawmap.match_, hostmap) {
                     Err(rr) => logs.error(format!("Invalid regex {} in entry {}: {}", &rawmap.match_, mapname, rr)),
-                    Ok(matcher) => securitypolicies.push(Matching {
-                        matcher,
-                        inner: hostmap,
-                    }),
+                    Ok(matcher) => securitypolicies.push(matcher),
                 }
             }
         }
 
         // order by decreasing matcher length, so that more specific rules are matched first
-        securitypolicies.sort_by(|a, b| b.matcher.as_str().len().cmp(&a.matcher.as_str().len()));
+        securitypolicies.sort_by(|a, b| b.matcher_len().cmp(&a.matcher_len()));
 
         let globalfilters = GlobalFilterSection::resolve(logs, rawglobalfilters);
 
