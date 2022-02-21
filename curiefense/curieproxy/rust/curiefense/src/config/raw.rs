@@ -100,7 +100,7 @@ impl<'de> Deserialize<'de> for RawGlobalFilterSSectionEntry {
                 let tp = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
                 let vl = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(1, &self))?;
                 // comment might not be present
-                let comment = seq.next_element()?;
+                let comment = seq.next_element().ok().flatten();
 
                 Ok(RawGlobalFilterSSectionEntry { tp, vl, comment })
             }
