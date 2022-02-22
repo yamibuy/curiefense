@@ -233,7 +233,7 @@ m_version_log = api.model(
     "Version log",
     {
         "version": fields.String(),
-        "date": fields.DateTime(dt_format=u"iso8601"),
+        "date": fields.DateTime(dt_format="iso8601"),
         "*": fields.Wildcard(fields.Raw()),
     },
 )
