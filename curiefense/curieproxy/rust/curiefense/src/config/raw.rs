@@ -275,6 +275,7 @@ pub struct RawContentFilterEntryMatch {
     pub key: String,
     pub reg: Option<String>,
     pub restrict: bool,
+    pub mask: Option<bool>,
     pub exclusions: Option<HashMap<String, String>>,
 }
 

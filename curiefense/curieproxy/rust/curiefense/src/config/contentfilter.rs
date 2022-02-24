@@ -69,6 +69,7 @@ pub struct ContentFilterSection {
 pub struct ContentFilterEntryMatch {
     pub reg: Option<Regex>,
     pub restrict: bool,
+    pub mask: bool,
     pub exclusions: HashSet<String>,
 }
 
@@ -163,6 +164,7 @@ fn mk_entry_match(
         em.key,
         ContentFilterEntryMatch {
             restrict: em.restrict,
+            mask: em.mask.unwrap_or(false),
             exclusions: em
                 .exclusions
                 .unwrap_or_default()

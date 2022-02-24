@@ -149,13 +149,14 @@ fn inspect_request<GH: Grasshopper>(
 
     let reqinfo = map_request(&mut logs, ip, headers, rmeta, mbody)?;
 
-    let (dec, tags) = inspect_generic_request_map(configpath, grasshopper, &reqinfo, Tags::default(), &mut logs);
+    let (dec, tags, masked_rinfo) = inspect_generic_request_map(configpath, grasshopper, reqinfo, Tags::default(), &mut logs);
+
     Ok(InspectionResult {
         decision: dec,
         tags: Some(tags),
         logs,
         err: None,
-        rinfo: Some(reqinfo),
+        rinfo: Some(masked_rinfo),
     })
 }
 
