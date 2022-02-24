@@ -197,6 +197,53 @@
         }
     },
     {
+        "id": "masking",
+        "name": "masking tests",
+        "ignore_alphanum": true,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 512,
+        "args": {
+            "regex": [
+                {
+                    "key": "secret",
+                    "reg": null,
+                    "restrict": false,
+                    "mask": true,
+                    "exclusions": {}
+                }
+            ],
+            "names": []
+        },
+        "headers": {
+            "regex": [
+                {
+                    "key": "secret",
+                    "reg": null,
+                    "restrict": false,
+                    "mask": true,
+                    "exclusions": {}
+                }
+            ],
+            "names": []
+        },
+        "cookies": {
+            "regex": [
+                {
+                    "key": "secret",
+                    "reg": null,
+                    "restrict": false,
+                    "mask": true,
+                    "exclusions": {}
+                }
+            ],
+            "names": []
+        }
+    },
+    {
         "id": "rr",
         "name": "rr",
         "ignore_alphanum": true,
