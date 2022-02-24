@@ -20,6 +20,12 @@ local redisport = os.getenv("REDIS_PORT") or 6379
 
 local lfs = require 'lfs'
 
+local function show_logs(logs)
+  for _, log in ipairs(logs) do
+      print(log["elapsed_micros"] .. "µs " .. log["message"])
+  end
+end
+
 local function ends_with(str, ending)
   return ending == "" or str:sub(-#ending) == ending
 end
@@ -233,7 +239,15 @@ local function run_inspect_waf(raw_request_map)
     return response
 end
 
--- testing waf only filtering
+local test_request = '{ "headers": { ":authority": "localhost:30081", ":method": "GET", ":path": "/dqsqsdqsdcqsd", "user-agent": "dummy", "x-forwarded-for": "12.13.14.15" }, "name": "test block by ip tagging", "response": { "action": "custom_response", "block_mode": true, "status": 503, "tags": [ "all", "geo:united-states", "ip:12-13-14-15", "sante", "securitypolicy-entry:default", "contentfiltername:default-contentfilter", "securitypolicy:default-entry", "aclname:default-acl", "aclid:--default--", "asn:7018", "tagbyip", "contentfilterid:--default--", "bot" ] } }'
+
+print("***  first request logs, check for configuration problems here ***")
+local response = run_inspect_request(json_decode(test_request))
+show_logs(cjson.decode(response)["logs"])
+print("*** done ***")
+print("")
+
+-- testing content filter only filtering
 local function test_waf(request_path)
   print("Testing " .. request_path)
   local raw_request_maps = load_json_file(request_path)

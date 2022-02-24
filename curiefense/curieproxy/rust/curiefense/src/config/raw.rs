@@ -268,7 +268,8 @@ pub struct RawWafEntryMatch {
     pub key: String,
     pub reg: Option<String>,
     pub restrict: bool,
-    pub exclusions: Option<HashMap<String, u64>>,
+    pub mask: Option<bool>,
+    pub exclusions: Option<HashMap<String, serde_json::Value>>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

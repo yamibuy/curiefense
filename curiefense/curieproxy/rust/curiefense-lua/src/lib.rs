@@ -154,13 +154,15 @@ fn inspect_request<GH: Grasshopper>(
 
     let reqinfo = map_request(&mut logs, ip, headers, rmeta, mbody)?;
 
-    let (dec, tags) = inspect_generic_request_map(configpath, grasshopper, &reqinfo, Tags::default(), &mut logs);
+    let (dec, tags, masked_rinfo) =
+        inspect_generic_request_map(configpath, grasshopper, reqinfo, Tags::default(), &mut logs);
+
     Ok(InspectionResult {
         decision: dec,
         tags: Some(tags),
         logs,
         err: None,
-        rinfo: Some(reqinfo),
+        rinfo: Some(masked_rinfo),
     })
 }
 
@@ -188,10 +190,9 @@ pub fn inspect_request_map(_lua: &Lua, args: (String, Option<LuaTable>)) -> LuaR
         }
     };
     let mut logs = Logs::default();
-
     let (rinfo, itags) = jmap.into_request_info(&mut logs);
-
-    let (res, tags) = inspect_generic_request_map("/config/current/config", grasshopper, &rinfo, itags, &mut logs);
+    let (res, tags, masked_rinfo) =
+        inspect_generic_request_map("/config/current/config", grasshopper, rinfo, itags, &mut logs);
     let updated_request_map = match update_tags(jvalue, tags) {
         Ok(v) => v,
         Err(rr) => {
