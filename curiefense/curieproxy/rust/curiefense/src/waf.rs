@@ -317,21 +317,32 @@ fn hyperscan(
     })
 }
 
-fn mask_section(sec: &mut RequestField, section: &WafSection) {
+fn mask_section(sec: &mut RequestField, section: &WafSection) -> bool {
+    let mut out = false;
     for (name, value) in sec.iter_mut() {
         if section.names.get(name).map(|e| e.mask).unwrap_or(false)
             || section.regex.iter().any(|(re, v)| v.mask && re.is_match(name))
         {
             *value = "*MASKED*".to_string();
+            out = true;
         }
     }
+    out
 }
 
 pub fn masking(req: RequestInfo, profile: &WafProfile) -> RequestInfo {
     let mut ri = req;
     mask_section(&mut ri.headers, profile.sections.get(SectionIdx::Headers));
-    mask_section(&mut ri.cookies, profile.sections.get(SectionIdx::Cookies));
-    mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
+    let cookies_masked = mask_section(&mut ri.cookies, profile.sections.get(SectionIdx::Cookies));
+    if cookies_masked {
+        ri.headers.0.insert("cookie".into(), "*REDACTED*".into());
+    }
+
+    let arg_masked = mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
+    if arg_masked {
+        ri.rinfo.qinfo.query = "*MASKED*".into();
+        ri.rinfo.qinfo.uri = Some("*MASKED*".into());
+    }
     ri
 }
 

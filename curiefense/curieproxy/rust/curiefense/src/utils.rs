@@ -38,7 +38,7 @@ pub fn map_headers(rawheaders: HashMap<String, String>) -> (RequestField, Reques
     let mut headers = RequestField::default();
     for (k, v) in rawheaders {
         let lk = k.to_lowercase();
-        if k == "cookie" {
+        if k.to_lowercase() == "cookie" {
             cookie_map(&mut cookies, &v);
         } else {
             headers.add(lk, v);

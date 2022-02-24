@@ -168,6 +168,15 @@
                 ]
             },
             {
+                "match": "/masking",
+                "name": "masking",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "waf_profile": "masking",
+                "waf_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "/",
                 "name": "default",
                 "acl_profile": "__default__",
