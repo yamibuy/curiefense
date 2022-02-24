@@ -202,6 +202,15 @@
                 ]
             },
             {
+                "match": "/masking",
+                "name": "masking",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "masking",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "/",
                 "name": "default",
                 "acl_profile": "__default__",

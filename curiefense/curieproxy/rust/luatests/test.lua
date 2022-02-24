@@ -144,6 +144,19 @@ local function test_raw_request(request_path)
   end
 end
 
+local function test_masking(request_path)
+  print("Testing " .. request_path)
+  local raw_request_maps = load_json_file(request_path)
+  for _, raw_request_map in pairs(raw_request_maps) do
+    local secret = raw_request_map["secret"]
+    local response = run_inspect_request(raw_request_map)
+    local p = string.find(response, secret)
+    if p ~= nil then
+      error("Could find secret in response: " .. response)
+    end
+  end
+end
+
 -- remove all keys from redis
 local function clean_redis()
     local conn = redis.connect(redishost, redisport)
@@ -288,6 +301,12 @@ local function test_content_filter(request_path)
       end
       error("mismatch in " .. raw_request_map.name)
     end
+  end
+end
+
+for file in lfs.dir[[luatests/masking]] do
+  if ends_with(file, ".json") then
+    test_masking("luatests/masking/" .. file)
   end
 end
 

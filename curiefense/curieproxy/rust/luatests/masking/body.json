@@ -1,0 +1,14 @@
+[
+  {
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/masking",
+      "user-agent": "dummy",
+      "x-forwarded-for": "12.13.14.15"
+    },
+    "body": "secret=SECRETSECRET",
+    "name": "url argument masking",
+    "secret": "SECRETSECRET"
+  }
+]
