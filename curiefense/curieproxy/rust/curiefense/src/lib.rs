@@ -18,7 +18,7 @@ use serde_json::json;
 
 use acl::{check_acl, AclDecision, AclResult, BotHuman};
 use config::{with_config, HSDB};
-use contentfilter::content_filter_check;
+use contentfilter::{content_filter_check, masking};
 use flow::flow_check;
 use interface::{challenge_phase01, challenge_phase02, Action, ActionType, Decision, Grasshopper, SimpleDecision};
 use limit::limit_check;
@@ -68,10 +68,10 @@ fn challenge_verified<GH: Grasshopper>(gh: &GH, reqinfo: &RequestInfo, logs: &mu
 pub fn inspect_generic_request_map<GH: Grasshopper>(
     configpath: &str,
     mgh: Option<GH>,
-    reqinfo: &RequestInfo,
+    reqinfo: RequestInfo,
     itags: Tags,
     logs: &mut Logs,
-) -> (Decision, Tags) {
+) -> (Decision, Tags, RequestInfo) {
     let mut tags = itags;
 
     // insert the all tag here, to make sure it is always present, even in the presence of early errors
@@ -81,7 +81,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 
     // without grasshopper, default to being human
     let is_human = if let Some(gh) = &mgh {
-        challenge_verified(gh, reqinfo, logs)
+        challenge_verified(gh, &reqinfo, logs)
     } else {
         false
     };
@@ -98,19 +98,19 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     // there is a lot of copying taking place, to minimize the lock time
     // this decision should be backed with benchmarks
     let ((nm, securitypolicy), (ntags, globalfilter_dec), flows) = match with_config(configpath, logs, |slogs, cfg| {
-        let msecuritypolicy = match_securitypolicy(reqinfo, cfg, slogs).map(|(nm, um)| (nm, um.clone()));
+        let msecuritypolicy = match_securitypolicy(&reqinfo, cfg, slogs).map(|(nm, um)| (nm, um.clone()));
         let nflows = cfg.flows.clone();
-        let ntags = tag_request(is_human, cfg, reqinfo);
+        let ntags = tag_request(is_human, cfg, &reqinfo);
         (msecuritypolicy, ntags, nflows)
     }) {
         Some((Some(stuff), itags, iflows)) => (stuff, itags, iflows),
         Some((None, _, _)) => {
             logs.debug("Could not find a matching securitypolicy");
-            return (Decision::Pass, tags);
+            return (Decision::Pass, tags, reqinfo);
         }
         None => {
             logs.debug("Something went wrong during request tagging");
-            return (Decision::Pass, tags);
+            return (Decision::Pass, tags, reqinfo);
         }
     };
     logs.debug("request tagged");
@@ -131,7 +131,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             .and_then(|uri| challenge_phase02(gh, uri, &reqinfo.headers))
     }) {
         // TODO, check for monitor
-        return (dec, tags);
+        return (dec, tags, masking(reqinfo, &securitypolicy.content_filter_profile));
     }
     logs.debug("challenge phase2 ignored");
 
@@ -139,29 +139,29 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         logs.debug(format!("Global filter decision {:?}", reason));
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
-            return (decision, tags);
+            return (decision, tags, masking(reqinfo, &securitypolicy.content_filter_profile));
         }
     }
 
-    match flow_check(logs, &flows, reqinfo, &mut tags) {
+    match flow_check(logs, &flows, &reqinfo, &mut tags) {
         Err(rr) => logs.error(rr),
         Ok(SimpleDecision::Pass) => {}
         // TODO, check for monitor
         Ok(SimpleDecision::Action(a, reason)) => {
             let decision = a.to_decision(is_human, &mgh, &reqinfo.headers, reason);
             if decision.is_final() {
-                return (decision, tags);
+                return (decision, tags, masking(reqinfo, &securitypolicy.content_filter_profile));
             }
         }
     }
     logs.debug("flow checks done");
 
     // limit checks
-    let limit_check = limit_check(logs, &securitypolicy.name, reqinfo, &securitypolicy.limits, &mut tags);
+    let limit_check = limit_check(logs, &securitypolicy.name, &reqinfo, &securitypolicy.limits, &mut tags);
     if let SimpleDecision::Action(action, reason) = limit_check {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
-            return (decision, tags);
+            return (decision, tags, masking(reqinfo, &securitypolicy.content_filter_profile));
         }
     }
     logs.debug(format!("limit checks done ({} limits)", securitypolicy.limits.len()));
@@ -173,7 +173,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         AclResult::Passthrough(dec) => {
             if dec.allowed {
                 logs.debug("ACL passthrough detected");
-                return (Decision::Pass, tags);
+                return (
+                    Decision::Pass,
+                    tags,
+                    masking(reqinfo, &securitypolicy.content_filter_profile),
+                );
             } else {
                 logs.debug("ACL force block detected");
                 Some((0, dec.tags))
@@ -204,7 +208,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
                 match (reqinfo.headers.get("user-agent"), mgh) {
                     (Some(ua), Some(gh)) => {
                         logs.debug("ACL challenge detected: challenged");
-                        return (challenge_phase01(&gh, ua, dtags), tags);
+                        return (
+                            challenge_phase01(&gh, ua, dtags),
+                            tags,
+                            masking(reqinfo, &securitypolicy.content_filter_profile),
+                        );
                     }
                     (gua, ggh) => {
                         logs.debug(format!(
@@ -224,13 +232,17 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     // if the acl is active, and we had a block result, immediately block
     if securitypolicy.acl_active {
         if let Some((cde, tgs)) = blockcode {
-            return (acl_block(true, cde, &tgs), tags);
+            return (
+                acl_block(true, cde, &tgs),
+                tags,
+                masking(reqinfo, &securitypolicy.content_filter_profile),
+            );
         }
     }
 
     // otherwise, run content_filter_check
     let content_filter_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(reqinfo, &securitypolicy.content_filter_profile, rd),
+        Ok(rd) => content_filter_check(&reqinfo, &securitypolicy.content_filter_profile, rd),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())
@@ -255,6 +267,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             }
         },
         tags,
+        masking(reqinfo, &securitypolicy.content_filter_profile),
     )
 }
 
