@@ -223,6 +223,97 @@ describe('SecurityPoliciesEditor.vue', () => {
     jest.clearAllMocks()
   })
 
+  test('should update initial domain match if selectedDoc updates from a state without match', async (done) => {
+    const wantedMatch = 'www.example.com'
+    const basicDataPolicy = {
+      'id': '__default__',
+      'name': 'default entry',
+    }
+    const fullPolicy = {
+      ...basicDataPolicy,
+      'match': wantedMatch,
+      'map': [
+        {
+          'name': 'default',
+          'match': '/',
+          'acl_profile': '__default__',
+          'acl_active': false,
+          'content_filter_profile': '__default__',
+          'content_filter_active': false,
+          'limit_ids': ['f971e92459e2'],
+        },
+        {
+          'name': 'entry name',
+          'match': '/login',
+          'acl_profile': '5828321c37e0',
+          'acl_active': false,
+          'content_filter_profile': '009e846e819e',
+          'content_filter_active': false,
+          'limit_ids': ['365757ec0689'],
+        },
+      ],
+    }
+    wrapper = shallowMount(SecurityPoliciesEditor, {
+      propsData: {
+        selectedDoc: basicDataPolicy,
+        selectedBranch: 'master',
+      },
+    })
+    wrapper.setProps({selectedDoc: fullPolicy})
+    await Vue.nextTick()
+    // allow all requests to finish
+    setImmediate(() => {
+      expect((wrapper.vm as any).initialDocDomainMatch).toBe(wantedMatch)
+      done()
+    })
+  })
+
+  test('should not update initial domain match if selectedDoc updates from a state with empty match', async (done) => {
+    const wantedMatch = ''
+    const basicDataPolicy = {
+      'id': '__default__',
+      'name': 'default entry',
+      'match': '',
+    }
+    const fullPolicy = {
+      ...basicDataPolicy,
+      'match': 'www.example.com',
+      'map': [
+        {
+          'name': 'default',
+          'match': '/',
+          'acl_profile': '__default__',
+          'acl_active': false,
+          'content_filter_profile': '__default__',
+          'content_filter_active': false,
+          'limit_ids': ['f971e92459e2'],
+        },
+        {
+          'name': 'entry name',
+          'match': '/login',
+          'acl_profile': '5828321c37e0',
+          'acl_active': false,
+          'content_filter_profile': '009e846e819e',
+          'content_filter_active': false,
+          'limit_ids': ['365757ec0689'],
+        },
+      ],
+    }
+    wrapper = shallowMount(SecurityPoliciesEditor, {
+      propsData: {
+        selectedDoc: basicDataPolicy,
+        selectedBranch: 'master',
+      },
+    })
+    wrapper.setProps({selectedDoc: fullPolicy})
+    await Vue.nextTick()
+    // allow all requests to finish
+    setImmediate(() => {
+      expect((wrapper.vm as any).initialDocDomainMatch).toBe(wantedMatch)
+      done()
+    })
+  })
+
   test('should not send new requests to API if document data updates but document ID does not', async () => {
     // 4 requests - ACL Profiles, Content Filter Profiles, Rate Limits, Security Policies
     expect(axiosGetSpy).toHaveBeenCalledTimes(4)

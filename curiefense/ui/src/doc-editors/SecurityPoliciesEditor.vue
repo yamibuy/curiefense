@@ -583,7 +583,7 @@ export default (Vue as VueConstructor<Vue & {
   watch: {
     selectedDoc: {
       handler: function(val, oldVal) {
-        if (!val || !oldVal || val.id !== oldVal.id) {
+        if (!val || !oldVal || _.isUndefined(oldVal.match) || val.id !== oldVal.id) {
           this.securityPoliciesDomainMatches()
           this.initialDocDomainMatch = val.match
         }
