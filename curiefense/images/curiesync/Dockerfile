@@ -7,6 +7,7 @@ RUN ln -s /run/secrets/s3cfg/s3cfg /root/.s3cfg
 RUN apt-get update && \
     apt-get -yq --no-install-recommends install \
 	dumb-init python3-pip python3-setuptools python3-wheel python3-magic \
+	build-essential libssl-dev libffi-dev libpython3-dev \
 	python3-xattr python3-netifaces && \
 	apt-get autoremove --purge -y && \
 	rm -rf /var/lib/apt/lists/*
