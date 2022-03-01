@@ -192,7 +192,7 @@ pub fn inspect_request_map(_lua: &Lua, args: (String, Option<LuaTable>)) -> LuaR
     let mut logs = Logs::default();
     let (rinfo, itags) = jmap.into_request_info(&mut logs);
     let (res, tags, masked_rinfo) =
-        inspect_generic_request_map("/config/current/config", grasshopper, rinfo, itags, &mut logs);
+        inspect_generic_request_map("/cf-config/current/config", grasshopper, rinfo, itags, &mut logs);
     let updated_request_map = match update_tags(jvalue, tags) {
         Ok(v) => v,
         Err(rr) => {
