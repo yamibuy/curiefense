@@ -3,13 +3,13 @@
     "response": {
       "tags": [
         "securitypolicy-entry:default",
-        "contentfilterid:--default--",
+        "wafid:--default--",
         "sante",
         "all",
         "aclname:default-acl",
         "aclid:--default--",
         "securitypolicy:default-entry",
-        "contentfiltername:default-contentfilter",
+        "wafname:default-waf",
         "bot",
         "parisien",
         "francilien",

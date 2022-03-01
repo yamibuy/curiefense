@@ -187,9 +187,10 @@ pub fn inspect_request_map(_lua: &Lua, args: (String, Option<LuaTable>)) -> LuaR
             return Ok(Decision::Pass.to_json_raw(jvalue, logs));
         }
     };
-    let (rinfo, itags) = jmap.into_request_info();
-
     let mut logs = Logs::default();
+
+    let (rinfo, itags) = jmap.into_request_info(&mut logs);
+
     let (res, tags) = inspect_generic_request_map("/config/current/config", grasshopper, &rinfo, itags, &mut logs);
     let updated_request_map = match update_tags(jvalue, tags) {
         Ok(v) => v,
