@@ -66,6 +66,7 @@ pub struct WafSection {
 pub struct WafEntryMatch {
     pub reg: Option<Regex>,
     pub restrict: bool,
+    pub mask: bool,
     pub exclusions: HashSet<String>,
 }
 
@@ -128,6 +129,7 @@ fn mk_entry_match(em: RawWafEntryMatch) -> anyhow::Result<(String, WafEntryMatch
         em.key,
         WafEntryMatch {
             restrict: em.restrict,
+            mask: em.mask.unwrap_or(false),
             exclusions: em
                 .exclusions
                 .into_iter()

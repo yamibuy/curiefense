@@ -122,7 +122,16 @@ impl Default for Omitted {
     }
 }
 
-/// Runs the WAF part of curiefense
+fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
+    use SectionIdx::*;
+    match idx {
+        Headers => &rinfo.headers,
+        Cookies => &rinfo.cookies,
+        Args => &rinfo.rinfo.qinfo.args,
+    }
+}
+
+/// Runs the Content Filter part of curiefense
 pub fn waf_check(
     rinfo: &RequestInfo,
     profile: &WafProfile,
@@ -131,18 +140,12 @@ pub fn waf_check(
     use SectionIdx::*;
     let mut omit = Default::default();
 
-    let getsection = |idx| match idx {
-        Headers => &rinfo.headers,
-        Cookies => &rinfo.cookies,
-        Args => &rinfo.rinfo.qinfo.args,
-    };
-
     // check section profiles
     for idx in &[Headers, Cookies, Args] {
         section_check(
             *idx,
             profile.sections.get(*idx),
-            getsection(*idx),
+            get_section(*idx, rinfo),
             profile.ignore_alphanum,
             &mut omit,
         )?;
@@ -152,7 +155,7 @@ pub fn waf_check(
 
     // run libinjection on non-whitelisted sections
     for idx in &[Headers, Cookies, Args] {
-        injection_check(*idx, getsection(*idx), &omit, &mut hca_keys)?;
+        injection_check(*idx, get_section(*idx, rinfo), &omit, &mut hca_keys)?;
     }
 
     // finally, hyperscan check
@@ -312,4 +315,134 @@ fn hyperscan(
     } else {
         Some(WafBlock::Policies(matches))
     })
+}
+
+fn mask_section(sec: &mut RequestField, section: &WafSection) -> bool {
+    let mut out = false;
+    for (name, value) in sec.iter_mut() {
+        if section.names.get(name).map(|e| e.mask).unwrap_or(false)
+            || section.regex.iter().any(|(re, v)| v.mask && re.is_match(name))
+        {
+            *value = "*MASKED*".to_string();
+            out = true;
+        }
+    }
+    out
+}
+
+pub fn masking(req: RequestInfo, profile: &WafProfile) -> RequestInfo {
+    let mut ri = req;
+    mask_section(&mut ri.headers, profile.sections.get(SectionIdx::Headers));
+    let cookies_masked = mask_section(&mut ri.cookies, profile.sections.get(SectionIdx::Cookies));
+    if cookies_masked {
+        ri.headers.0.insert("cookie".into(), "*REDACTED*".into());
+    }
+
+    let arg_masked = mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
+    if arg_masked {
+        ri.rinfo.qinfo.query = "*MASKED*".into();
+        ri.rinfo.qinfo.uri = Some("*MASKED*".into());
+    }
+    ri
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::utils::{map_request, RequestMeta};
+    use crate::Logs;
+
+    fn test_request_info() -> RequestInfo {
+        let meta = RequestMeta {
+            authority: Some("myhost".to_string()),
+            method: "GET".to_string(),
+            path: "/foo?arg1=avalue1&arg2=avalue2".to_string(),
+            extra: HashMap::default(),
+        };
+        let mut logs = Logs::default();
+        let headers = [("h1", "value1"), ("h2", "value2")]
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+        map_request(&mut logs, "1.2.3.4".into(), headers, meta, None).unwrap()
+    }
+
+    #[test]
+    fn no_masking() {
+        let rinfo = test_request_info();
+        let profile = WafProfile::default();
+        let masked = masking(rinfo.clone(), &profile);
+        assert_eq!(rinfo.headers, masked.headers);
+        assert_eq!(rinfo.cookies, masked.cookies);
+        assert_eq!(rinfo.rinfo.qinfo.args, masked.rinfo.qinfo.args);
+    }
+
+    fn maskentry() -> WafEntryMatch {
+        WafEntryMatch {
+            restrict: false,
+            mask: true,
+            exclusions: HashSet::default(),
+            reg: None,
+        }
+    }
+
+    #[test]
+    fn masking_all_args_re() {
+        let rinfo = test_request_info();
+        let mut profile = WafProfile::default();
+        let asection = profile.sections.at(SectionIdx::Args);
+        asection.regex = vec![(regex::Regex::new(".").unwrap(), maskentry())];
+        let masked = masking(rinfo.clone(), &profile);
+        assert_eq!(rinfo.headers, masked.headers);
+        assert_eq!(rinfo.cookies, masked.cookies);
+        assert_eq!(
+            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            masked.rinfo.qinfo.args
+        );
+    }
+
+    #[test]
+    fn masking_re_arg1() {
+        let rinfo = test_request_info();
+        let mut profile = WafProfile::default();
+        let asection = profile.sections.at(SectionIdx::Args);
+        asection.regex = vec![(regex::Regex::new("1").unwrap(), maskentry())];
+        let masked = masking(rinfo.clone(), &profile);
+        assert_eq!(rinfo.headers, masked.headers);
+        assert_eq!(rinfo.cookies, masked.cookies);
+        assert_eq!(
+            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            masked.rinfo.qinfo.args
+        );
+    }
+
+    #[test]
+    fn masking_named_arg1() {
+        let rinfo = test_request_info();
+        let mut profile = WafProfile::default();
+        let asection = profile.sections.at(SectionIdx::Args);
+        asection.names = ["arg1"].iter().map(|k| (k.to_string(), maskentry())).collect();
+        let masked = masking(rinfo.clone(), &profile);
+        assert_eq!(rinfo.headers, masked.headers);
+        assert_eq!(rinfo.cookies, masked.cookies);
+        assert_eq!(
+            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            masked.rinfo.qinfo.args
+        );
+    }
+
+    #[test]
+    fn masking_all_args_names() {
+        let rinfo = test_request_info();
+        let mut profile = WafProfile::default();
+        let asection = profile.sections.at(SectionIdx::Args);
+        asection.names = ["arg1", "arg2"].iter().map(|k| (k.to_string(), maskentry())).collect();
+        let masked = masking(rinfo.clone(), &profile);
+        assert_eq!(rinfo.headers, masked.headers);
+        assert_eq!(rinfo.cookies, masked.cookies);
+        assert_eq!(
+            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            masked.rinfo.qinfo.args
+        );
+    }
 }

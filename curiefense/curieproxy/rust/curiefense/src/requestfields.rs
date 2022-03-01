@@ -56,6 +56,15 @@ impl RequestField {
     pub fn iter(&self) -> hash_map::Iter<'_, String, String> {
         self.0.iter()
     }
+
+    pub fn iter_mut(&mut self) -> hash_map::IterMut<'_, String, String> {
+        self.0.iter_mut()
+    }
+
+    #[cfg(test)]
+    pub fn raw_create(content: &[(&str, &str)]) -> Self {
+        RequestField(content.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())
+    }
 }
 
 impl FromIterator<(String, String)> for RequestField {

@@ -26,7 +26,7 @@ use logs::Logs;
 use tagging::tag_request;
 use securitypolicy::match_securitypolicy;
 use utils::RequestInfo;
-use waf::waf_check;
+use waf::{waf_check, masking};
 
 fn acl_block(blocking: bool, code: i32, tags: &[String]) -> Decision {
     Decision::Action(Action {
@@ -69,10 +69,10 @@ fn challenge_verified<GH: Grasshopper>(gh: &GH, reqinfo: &RequestInfo, logs: &mu
 pub fn inspect_generic_request_map<GH: Grasshopper>(
     configpath: &str,
     mgh: Option<GH>,
-    reqinfo: &RequestInfo,
+    reqinfo: RequestInfo,
     itags: Tags,
     logs: &mut Logs,
-) -> (Decision, Tags) {
+) -> (Decision, Tags, RequestInfo) {
     let mut tags = itags;
 
     // insert the all tag here, to make sure it is always present, even in the presence of early errors
@@ -107,11 +107,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         Some((Some(stuff), itags, iflows)) => (stuff, itags, iflows),
         Some((None, _, _)) => {
             logs.debug("Could not find a matching securitypolicy");
-            return (Decision::Pass, tags);
+            return (Decision::Pass, tags, reqinfo);
         }
         None => {
             logs.debug("Something went wrong during request tagging");
-            return (Decision::Pass, tags);
+            return (Decision::Pass, tags, reqinfo);
         }
     };
     logs.debug("request tagged");
@@ -132,14 +132,14 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             .and_then(|uri| challenge_phase02(gh, uri, &reqinfo.headers))
     }) {
         // TODO, check for monitor
-        return (dec, tags);
+        return (dec, tags, masking(reqinfo, &securitypolicy.waf_profile));
     }
     logs.debug("challenge phase2 ignored");
 
     if let SimpleDecision::Action(action, reason) = globalfilter_dec {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
-            return (decision, tags);
+            return (decision, tags, masking(reqinfo, &securitypolicy.waf_profile));
         }
     }
 
@@ -150,7 +150,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         Ok(SimpleDecision::Action(a, reason)) => {
             let decision = a.to_decision(is_human, &mgh, &reqinfo.headers, reason);
             if decision.is_final() {
-                return (decision, tags);
+                return (decision, tags, masking(reqinfo, &securitypolicy.waf_profile));
             }
         }
     }
@@ -161,7 +161,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     if let SimpleDecision::Action(action, reason) = limit_check {
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
-            return (decision, tags);
+            return (decision, tags, masking(reqinfo, &securitypolicy.waf_profile));
         }
     }
     logs.debug(format!("limit checks done ({} limits)", securitypolicy.limits.len()));
@@ -173,7 +173,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         AclResult::Passthrough(dec) => {
             if dec.allowed {
                 logs.debug("ACL passthrough detected");
-                return (Decision::Pass, tags);
+                return (
+                    Decision::Pass,
+                    tags,
+                    masking(reqinfo, &securitypolicy.waf_profile),
+                );
             } else {
                 logs.debug("ACL force block detected");
                 Some((0, dec.tags))
@@ -204,7 +208,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
                 match (reqinfo.headers.get("user-agent"), mgh) {
                     (Some(ua), Some(gh)) => {
                         logs.debug("ACL challenge detected: challenged");
-                        return (challenge_phase01(&gh, ua, dtags), tags);
+                        return (
+                            challenge_phase01(&gh, ua, dtags),
+                            tags,
+                            masking(reqinfo, &securitypolicy.waf_profile),
+                        );
                     }
                     (gua, ggh) => {
                         logs.debug(format!(
@@ -224,7 +232,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     // if the acl is active, and we had a block result, immediately block
     if securitypolicy.acl_active {
         if let Some((cde, tgs)) = blockcode {
-            return (acl_block(true, cde, &tgs), tags);
+            return (
+                acl_block(true, cde, &tgs),
+                tags,
+                masking(reqinfo, &securitypolicy.waf_profile),
+            );
         }
     }
 
@@ -255,6 +267,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             }
         },
         tags,
+        masking(reqinfo, &securitypolicy.waf_profile),
     )
 }
 

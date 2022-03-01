@@ -111,7 +111,7 @@ mod tests {
         let mut lvec = vec![l3, l2, l1, l4];
         lvec.sort_unstable_by(limit_order);
         let names: Vec<String> = lvec.into_iter().map(|l| l.action.reason).collect();
-        let expected: Vec<String> = ["l2", "l3", "l4", "l1"].iter().map(|x| x.to_string()).collect();
+        let expected: Vec<String> = ["limit l2", "limit l3", "limit l4", "limit l1"].iter().map(|x| x.to_string()).collect();
         assert_eq!(names, expected);
     }
 }

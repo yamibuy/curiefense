@@ -48,7 +48,7 @@ struct JAttrs {
 }
 
 impl JRequestMap {
-    pub fn into_request_info(self) -> (RequestInfo, Tags) {
+    pub fn into_request_info(self, logs: &mut Logs) -> (RequestInfo, Tags) {
         let host: String = self
             .headers
             .get("host")
@@ -57,7 +57,7 @@ impl JRequestMap {
             .unwrap_or_else(|| "unknown".to_string());
 
         // TODO, get geoip data from the encoded request, not from the ip
-        let geoip = find_geoip(self.attrs.ip);
+        let geoip = find_geoip(logs, self.attrs.ip);
         let meta = RequestMeta {
             authority: self.attrs.authority,
             method: self.attrs.method,
@@ -144,7 +144,8 @@ pub fn update_tags(rawjson: serde_json::Value, tags: Tags) -> anyhow::Result<ser
 pub fn session_init(encoded_request_map: &str) -> anyhow::Result<String> {
     let jvalue: serde_json::Value = serde_json::from_str(encoded_request_map)?;
     let jmap: JRequestMap = serde_json::from_value(jvalue.clone())?;
-    let (rinfo, tags) = jmap.into_request_info();
+    let mut logs = Logs::default();
+    let (rinfo, tags) = jmap.into_request_info(&mut logs);
 
     let uuid = Uuid::new_v4();
 
