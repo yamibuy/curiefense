@@ -1,7 +1,7 @@
 pub mod flow;
+pub mod globalfilter;
 pub mod hostmap;
 pub mod limit;
-pub mod globalfilter;
 pub mod raw;
 pub mod utils;
 pub mod waf;
@@ -16,10 +16,10 @@ use std::time::SystemTime;
 
 use crate::logs::Logs;
 use flow::{flow_resolve, FlowElement, SequenceKey};
+use globalfilter::GlobalFilterSection;
 use hostmap::{HostMap, SecurityPolicy};
 use limit::{limit_order, Limit};
-use globalfilter::GlobalFilterSection;
-use raw::{AclProfile, RawFlowEntry, RawHostMap, RawLimit, RawGlobalFilterSection, RawSecurityPolicy, RawWafProfile};
+use raw::{AclProfile, RawFlowEntry, RawGlobalFilterSection, RawHostMap, RawLimit, RawSecurityPolicy, RawWafProfile};
 use utils::Matching;
 use waf::{resolve_signatures, WafProfile, WafSignatures};
 
@@ -137,7 +137,10 @@ impl Config {
                         "Invalid regex {} in entry {}: {}",
                         &rawmap.match_, &mapname, rr
                     )),
-                    Ok(matcher) => entries.push(Matching { matcher, inner: securitypolicy }),
+                    Ok(matcher) => entries.push(Matching {
+                        matcher,
+                        inner: securitypolicy,
+                    }),
                 };
             }
         }
@@ -165,7 +168,8 @@ impl Config {
 
         // build the entries while looking for the default entry
         for rawmap in rawmaps {
-            let (entries, default_entry) = Config::resolve_security_policies(logs, rawmap.map, &limits, &acls, &waf_profiles);
+            let (entries, default_entry) =
+                Config::resolve_security_policies(logs, rawmap.map, &limits, &acls, &waf_profiles);
             if default_entry.is_none() {
                 logs.warning(format!(
                     "HostMap entry '{}', id '{}' does not have a default entry",

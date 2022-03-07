@@ -30,7 +30,7 @@ pub struct WafMatch {
 
 #[derive(Debug, Clone)]
 pub enum WafBlock {
-    TooManyEntries(SectionIdx),
+    TooManyEntries(usize, usize, SectionIdx),
     EntryTooLarge(SectionIdx, String),
     Mismatch(WafMatched),
     SqlInjection(WafMatched, String), // fingerprint
@@ -60,10 +60,12 @@ impl WafBlock {
                     })
                 })
                 .unwrap_or(Value::Null),
-            WafBlock::TooManyEntries(idx) => json!({
+            WafBlock::TooManyEntries(expected, actual, idx) => json!({
                 "section": idx,
                 "initiator": "waf",
-                "value": "Too many entries"
+                "value": "Too many entries",
+                "expected": expected,
+                "actual": actual
             }),
             WafBlock::EntryTooLarge(idx, nm) => json!({
                 "section": idx,
@@ -128,6 +130,7 @@ fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
         Headers => &rinfo.headers,
         Cookies => &rinfo.cookies,
         Args => &rinfo.rinfo.qinfo.args,
+        Path => &rinfo.rinfo.qinfo.path_as_map,
     }
 }
 
@@ -141,7 +144,7 @@ pub fn waf_check(
     let mut omit = Default::default();
 
     // check section profiles
-    for idx in &[Headers, Cookies, Args] {
+    for idx in &[Path, Headers, Cookies, Args] {
         section_check(
             *idx,
             profile.sections.get(*idx),
@@ -154,7 +157,7 @@ pub fn waf_check(
     let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
 
     // run libinjection on non-whitelisted sections
-    for idx in &[Headers, Cookies, Args] {
+    for idx in &[Path, Headers, Cookies, Args] {
         injection_check(*idx, get_section(*idx, rinfo), &omit, &mut hca_keys)?;
     }
 
@@ -177,12 +180,13 @@ fn section_check(
     ignore_alphanum: bool,
     omit: &mut Omitted,
 ) -> Result<(), WafBlock> {
-    if params.len() > section.max_count {
-        return Err(WafBlock::TooManyEntries(idx));
+    if idx != SectionIdx::Path && params.len() > section.max_count {
+        return Err(WafBlock::TooManyEntries(section.max_count, params.len(), idx));
     }
 
     for (name, value) in params.iter() {
-        if value.len() > section.max_length {
+        // skip decoded parameters for length checks
+        if !name.ends_with(":decoded") && value.len() > section.max_length {
             return Err(WafBlock::EntryTooLarge(idx, name.clone()));
         }
 
@@ -335,13 +339,19 @@ pub fn masking(req: RequestInfo, profile: &WafProfile) -> RequestInfo {
     mask_section(&mut ri.headers, profile.sections.get(SectionIdx::Headers));
     let cookies_masked = mask_section(&mut ri.cookies, profile.sections.get(SectionIdx::Cookies));
     if cookies_masked {
-        ri.headers.0.insert("cookie".into(), "*REDACTED*".into());
+        ri.headers.fields.insert("cookie".into(), "*REDACTED*".into());
     }
 
     let arg_masked = mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
     if arg_masked {
         ri.rinfo.qinfo.query = "*MASKED*".into();
-        ri.rinfo.qinfo.uri = Some("*MASKED*".into());
+        ri.rinfo.qinfo.uri = "*MASKED*".into();
+    }
+    let path_masked = mask_section(&mut ri.rinfo.qinfo.path_as_map, profile.sections.get(SectionIdx::Path));
+    if path_masked {
+        ri.rinfo.qinfo.qpath = "*MASKED*".into();
+        ri.rinfo.qinfo.query = "*MASKED*".into();
+        ri.rinfo.qinfo.uri = "*MASKED*".into();
     }
     ri
 }
@@ -364,7 +374,7 @@ mod test {
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
-        map_request(&mut logs, "1.2.3.4".into(), headers, meta, None).unwrap()
+        map_request(&mut logs, &[], "1.2.3.4".into(), headers, meta, None).unwrap()
     }
 
     #[test]
@@ -396,7 +406,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
             masked.rinfo.qinfo.args
         );
     }
@@ -411,7 +421,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
             masked.rinfo.qinfo.args
         );
     }
@@ -426,7 +436,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
             masked.rinfo.qinfo.args
         );
     }
@@ -441,7 +451,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
             masked.rinfo.qinfo.args
         );
     }

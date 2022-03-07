@@ -29,6 +29,7 @@ libinjection = "0.2"
 uuid = { version = "0.8", features = ["serde", "v4"] }
 multipart = "0.17.1"
 xmlparser = "0.13.3"
+nom = "6.2.1"
 
 # iptools dependencies
 rand = "0.8.3"
@@ -41,6 +42,11 @@ features = ["full"]
 
 [dev-dependencies]
 criterion = "0.3"
+
+[[bench]]
+name = "requestfields"
+path = "benches/requestfields.rs"
+harness = false
 
 [[bench]]
 name = "body_parse"

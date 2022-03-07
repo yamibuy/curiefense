@@ -8,9 +8,8 @@ pub mod logs;
 pub mod maxmind;
 pub mod redis;
 pub mod requestfields;
-pub mod session;
-pub mod tagging;
 pub mod securitypolicy;
+pub mod tagging;
 pub mod utils;
 pub mod waf;
 
@@ -23,10 +22,10 @@ use flow::flow_check;
 use interface::{challenge_phase01, challenge_phase02, Action, ActionType, Decision, Grasshopper, SimpleDecision};
 use limit::limit_check;
 use logs::Logs;
-use tagging::tag_request;
 use securitypolicy::match_securitypolicy;
+use tagging::tag_request;
 use utils::RequestInfo;
-use waf::{waf_check, masking};
+use waf::{masking, waf_check};
 
 fn acl_block(blocking: bool, code: i32, tags: &[String]) -> Decision {
     Decision::Action(Action {
@@ -123,14 +122,10 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     tags.insert_qualified("wafid", &securitypolicy.waf_profile.id);
     tags.insert_qualified("wafname", &securitypolicy.waf_profile.name);
 
-    if let Some(dec) = mgh.as_ref().and_then(|gh| {
-        reqinfo
-            .rinfo
-            .qinfo
-            .uri
-            .as_ref()
-            .and_then(|uri| challenge_phase02(gh, uri, &reqinfo.headers))
-    }) {
+    if let Some(dec) = mgh
+        .as_ref()
+        .and_then(|gh| challenge_phase02(gh, &reqinfo.rinfo.qinfo.uri, &reqinfo.headers))
+    {
         // TODO, check for monitor
         return (dec, tags, masking(reqinfo, &securitypolicy.waf_profile));
     }
@@ -173,11 +168,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
         AclResult::Passthrough(dec) => {
             if dec.allowed {
                 logs.debug("ACL passthrough detected");
-                return (
-                    Decision::Pass,
-                    tags,
-                    masking(reqinfo, &securitypolicy.waf_profile),
-                );
+                return (Decision::Pass, tags, masking(reqinfo, &securitypolicy.waf_profile));
             } else {
                 logs.debug("ACL force block detected");
                 Some((0, dec.tags))
