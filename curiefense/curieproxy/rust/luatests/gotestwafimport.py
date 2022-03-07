@@ -30,7 +30,7 @@ def default_query(name: str) -> Any:
             ":method": "GET",
             ":authority": "localhost:30081",
         },
-        "verbose": False
+        "verbose": False,
     }
 
 
@@ -48,7 +48,12 @@ for root, _, files in os.walk(target):
                     elif encoder == "URL":
                         epayload = quote_plus(payload)
                     elif encoder == "Base64Flat":
-                        epayload = base64.encodebytes(payload.encode(encoding="utf-8")).decode(encoding="utf-8").rstrip("\n=")
+                        epayload = (
+                            base64.encodebytes(payload.encode(encoding="utf-8"))
+                            .decode(encoding="utf-8")
+                            .replace("\n", "")
+                            .rstrip("=")
+                        )
                     else:
                         print("Unsupported encoding for %s: %s" % (data["type"], encoder), file=sys.stderr)
                         continue
