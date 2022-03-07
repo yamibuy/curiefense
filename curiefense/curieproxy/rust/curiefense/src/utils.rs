@@ -85,11 +85,17 @@ fn map_args(
         }
     }
 
+    let mut path_as_map = RequestField::singleton(dec, "path".to_string(), qpath.clone());
+    for (i, p) in qpath.split('/').enumerate() {
+        path_as_map.add(format!("part{}", i), p.to_string());
+    }
+
     QueryInfo {
         qpath,
         query,
         uri,
         args,
+        path_as_map,
     }
 }
 
@@ -103,6 +109,7 @@ pub struct QueryInfo {
     /// URL decoded path, if decoding worked
     pub uri: String,
     pub args: RequestField,
+    pub path_as_map: RequestField,
 }
 
 #[derive(Debug, Clone)]
@@ -241,6 +248,7 @@ impl RequestInfo {
             "headers": self.headers.fields,
             "cookies": self.cookies.fields,
             "args": self.rinfo.qinfo.args.fields,
+            "path": self.rinfo.qinfo.path_as_map.fields,
             "attrs": attrs,
             "tags": tags,
             "geo": geo

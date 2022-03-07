@@ -128,6 +128,7 @@ fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
         Headers => &rinfo.headers,
         Cookies => &rinfo.cookies,
         Args => &rinfo.rinfo.qinfo.args,
+        Path => &rinfo.rinfo.qinfo.path_as_map,
     }
 }
 
@@ -141,7 +142,7 @@ pub fn waf_check(
     let mut omit = Default::default();
 
     // check section profiles
-    for idx in &[Headers, Cookies, Args] {
+    for idx in &[Path, Headers, Cookies, Args] {
         section_check(
             *idx,
             profile.sections.get(*idx),
@@ -154,7 +155,7 @@ pub fn waf_check(
     let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
 
     // run libinjection on non-whitelisted sections
-    for idx in &[Headers, Cookies, Args] {
+    for idx in &[Path, Headers, Cookies, Args] {
         injection_check(*idx, get_section(*idx, rinfo), &omit, &mut hca_keys)?;
     }
 
@@ -341,6 +342,12 @@ pub fn masking(req: RequestInfo, profile: &WafProfile) -> RequestInfo {
 
     let arg_masked = mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
     if arg_masked {
+        ri.rinfo.qinfo.query = "*MASKED*".into();
+        ri.rinfo.qinfo.uri = "*MASKED*".into();
+    }
+    let path_masked = mask_section(&mut ri.rinfo.qinfo.path_as_map, profile.sections.get(SectionIdx::Path));
+    if path_masked {
+        ri.rinfo.qinfo.qpath = "*MASKED*".into();
         ri.rinfo.qinfo.query = "*MASKED*".into();
         ri.rinfo.qinfo.uri = "*MASKED*".into();
     }

@@ -13,6 +13,7 @@ pub struct Section<A> {
     pub headers: A,
     pub cookies: A,
     pub args: A,
+    pub path: A,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -67,6 +68,12 @@ impl Default for WafProfile {
                     names: HashMap::new(),
                     regex: Vec::new(),
                 },
+                path: WafSection {
+                    max_count: 42,
+                    max_length: 2048,
+                    names: HashMap::new(),
+                    regex: Vec::new(),
+                },
             },
             decoding: Transformation::DEFAULTPOLICY.to_vec(),
         }
@@ -95,6 +102,7 @@ pub enum SectionIdx {
     Headers,
     Cookies,
     Args,
+    Path,
 }
 
 impl<A> Section<A> {
@@ -103,6 +111,7 @@ impl<A> Section<A> {
             SectionIdx::Headers => &self.headers,
             SectionIdx::Cookies => &self.cookies,
             SectionIdx::Args => &self.args,
+            SectionIdx::Path => &self.path,
         }
     }
 
@@ -111,6 +120,7 @@ impl<A> Section<A> {
             SectionIdx::Headers => &mut self.headers,
             SectionIdx::Cookies => &mut self.cookies,
             SectionIdx::Args => &mut self.args,
+            SectionIdx::Path => &mut self.path,
         }
     }
 }
@@ -124,6 +134,7 @@ where
             headers: Default::default(),
             cookies: Default::default(),
             args: Default::default(),
+            path: Default::default(),
         }
     }
 }
@@ -190,6 +201,7 @@ fn convert_entry(entry: RawWafProfile) -> anyhow::Result<(String, WafProfile)> {
                 headers: mk_section(entry.headers, entry.max_header_length, entry.max_headers_count)?,
                 cookies: mk_section(entry.cookies, entry.max_cookie_length, entry.max_cookies_count)?,
                 args: mk_section(entry.args, entry.max_arg_length, entry.max_args_count)?,
+                path: mk_section(entry.path, entry.max_arg_length, entry.max_args_count)?,
             },
             decoding: vec![
                 Transformation::Base64Decode,

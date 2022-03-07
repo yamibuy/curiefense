@@ -255,12 +255,23 @@ pub struct RawWafProfile {
     pub args: RawWafProperties,
     pub headers: RawWafProperties,
     pub cookies: RawWafProperties,
+    #[serde(default)]
+    pub path: RawWafProperties,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RawWafProperties {
     pub names: Vec<RawWafEntryMatch>,
     pub regex: Vec<RawWafEntryMatch>,
+}
+
+impl Default for RawWafProperties {
+    fn default() -> Self {
+        RawWafProperties {
+            names: Vec::default(),
+            regex: Vec::default(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
