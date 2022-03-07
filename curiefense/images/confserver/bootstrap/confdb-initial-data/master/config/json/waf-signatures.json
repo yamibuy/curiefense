@@ -1330,5 +1330,16 @@
     "risk": 4,
     "severity": 4,
     "subcategory": "IMAP"
+  },
+  {
+    "category": "GraphQL injection",
+    "certainity": 4,
+    "id": "800013",
+    "msg": "GraphQl injection",
+    "name": "800013",
+    "operand": "\\{\\s*__schema\\s*\\{.*[Tt]ype",
+    "risk": 4,
+    "severity": 4,
+    "subcategory": "?"
   }
 ]
