@@ -48,13 +48,12 @@ for root, _, files in os.walk(target):
                     elif encoder == "URL":
                         epayload = quote_plus(payload)
                     elif encoder == "Base64Flat":
-                        epayload = base64.encodebytes(payload.encode(encoding="utf-8")).decode(encoding="utf-8")
+                        epayload = base64.encodebytes(payload.encode(encoding="utf-8")).decode(encoding="utf-8").rstrip("\n=")
                     else:
                         print("Unsupported encoding for %s: %s" % (data["type"], encoder), file=sys.stderr)
                         continue
                     for placeholder in data["placeholder"]:
                         q = default_query("%s %d/%s/%s" % (f, pid, encoder, placeholder))
-                        if ""
                         if placeholder == "URLParam":
                             q["headers"][":path"] = "/test?param=" + epayload
                         elif placeholder == "URLPath":

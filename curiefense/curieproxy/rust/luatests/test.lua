@@ -146,7 +146,7 @@ local function test_raw_request(request_path)
 end
 
 -- with stats
-local function test_raw_request_stats(request_path, verbose)
+local function test_raw_request_stats(request_path, pverbose)
   print("Testing " .. request_path)
   local total = 0
   local ok = 0
@@ -154,6 +154,11 @@ local function test_raw_request_stats(request_path, verbose)
   for _, raw_request_map in pairs(raw_request_maps) do
 
     total = total + 1
+
+    local verbose = pverbose
+    if raw_request_map["verbose"] ~= nil then
+      verbose = raw_request_map["verbose"]
+    end
 
     local response = run_inspect_request(raw_request_map)
     local r = cjson.decode(response)
