@@ -30,7 +30,7 @@ pub struct WafMatch {
 
 #[derive(Debug, Clone)]
 pub enum WafBlock {
-    TooManyEntries(SectionIdx),
+    TooManyEntries(usize, usize, SectionIdx),
     EntryTooLarge(SectionIdx, String),
     Mismatch(WafMatched),
     SqlInjection(WafMatched, String), // fingerprint
@@ -60,10 +60,12 @@ impl WafBlock {
                     })
                 })
                 .unwrap_or(Value::Null),
-            WafBlock::TooManyEntries(idx) => json!({
+            WafBlock::TooManyEntries(expected, actual, idx) => json!({
                 "section": idx,
                 "initiator": "waf",
-                "value": "Too many entries"
+                "value": "Too many entries",
+                "expected": expected,
+                "actual": actual
             }),
             WafBlock::EntryTooLarge(idx, nm) => json!({
                 "section": idx,
@@ -178,8 +180,8 @@ fn section_check(
     ignore_alphanum: bool,
     omit: &mut Omitted,
 ) -> Result<(), WafBlock> {
-    if params.len() > section.max_count {
-        return Err(WafBlock::TooManyEntries(idx));
+    if idx != SectionIdx::Path && params.len() > section.max_count {
+        return Err(WafBlock::TooManyEntries(section.max_count, params.len(), idx));
     }
 
     for (name, value) in params.iter() {
