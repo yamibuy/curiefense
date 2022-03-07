@@ -46,20 +46,6 @@ local function load_json_file(path)
     end
 end
 
-local _, err = curiefense.init_config()
-if err then
-    local failure = false
-    for _, r in ipairs(err) do
-        if not ends_with(r, "CFGLOAD") then
-          print(sfmt("curiefense.init_config failed: '%s'", r))
-          failure = true
-        end
-    end
-    if failure then
-      error("Configuration loading failed")
-    end
-end
-
 -- test that two lists contain the same tags
 local function compare_tag_list(name, actual, expected)
   local m_actual = {}
@@ -81,15 +67,17 @@ local function compare_tag_list(name, actual, expected)
     for _, e in ipairs(actual) do
       print("  " .. e)
     end
-    error("^ missing tags in " .. name)
+    print("^ missing tags in " .. name)
+    return false
   end
   for a, _ in pairs(m_actual) do
     print(a)
     good = false
   end
   if not good then
-    error("^ extra tags in " .. name)
+    print("^ extra tags in " .. name)
   end
+  return good
 end
 
 local function run_inspect_request(raw_request_map)
@@ -124,8 +112,7 @@ local function test_raw_request(request_path)
     local response = run_inspect_request(raw_request_map)
     local r = cjson.decode(response)
 
-    compare_tag_list(raw_request_map.name, r.request_map.tags, raw_request_map.response.tags)
-    local good = true
+    local good = compare_tag_list(raw_request_map.name, r.request_map.tags, raw_request_map.response.tags)
     if r.action ~= raw_request_map.response.action then
       print("Expected action " .. cjson.encode(raw_request_map.response.action) ..
         ", but got " .. cjson.encode(r.action))
@@ -148,6 +135,7 @@ local function test_raw_request(request_path)
       for _, log in ipairs(r.logs) do
           print(log["elapsed_micros"] .. "µs " .. log["message"])
       end
+      print(response)
       error("mismatch in " .. raw_request_map.name)
     end
   end
@@ -301,6 +289,7 @@ local function test_waf(request_path)
       for _, log in ipairs(r.logs) do
           print(log["elapsed_micros"] .. "µs " .. log["message"])
       end
+      print(response)
       error("mismatch in " .. raw_request_map.name)
     end
   end

@@ -5,15 +5,16 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::net::IpAddr;
 
-pub mod url;
+pub mod decoders;
 
 use crate::body::parse_body;
 use crate::config::utils::{RequestSelector, RequestSelectorCondition};
+use crate::config::waf::Transformation;
 use crate::interface::{Decision, Tags};
 use crate::logs::Logs;
 use crate::maxmind::{get_asn, get_city};
 use crate::requestfields::RequestField;
-use crate::utils::url::parse_urlencoded_params;
+use crate::utils::decoders::{parse_urlencoded_params, urldecode_str, DecodingResult};
 
 pub fn cookie_map(cookies: &mut RequestField, cookie: &str) {
     // tries to split the cookie around "="
@@ -33,15 +34,15 @@ pub fn cookie_map(cookies: &mut RequestField, cookie: &str) {
 /// * extract cookies
 ///
 /// Returns (headers, cookies)
-pub fn map_headers(rawheaders: HashMap<String, String>) -> (RequestField, RequestField) {
-    let mut cookies = RequestField::default();
-    let mut headers = RequestField::default();
+pub fn map_headers(dec: &[Transformation], rawheaders: &HashMap<String, String>) -> (RequestField, RequestField) {
+    let mut cookies = RequestField::new(dec);
+    let mut headers = RequestField::new(dec);
     for (k, v) in rawheaders {
         let lk = k.to_lowercase();
         if k.to_lowercase() == "cookie" {
             cookie_map(&mut cookies, &v);
         } else {
-            headers.add(lk, v);
+            headers.add(lk, v.clone());
         }
     }
 
@@ -49,20 +50,29 @@ pub fn map_headers(rawheaders: HashMap<String, String>) -> (RequestField, Reques
 }
 
 /// parses query parameters, such as
-fn parse_query_params(query: &str) -> RequestField {
-    let mut rf = RequestField::default();
+fn parse_query_params(dec: &[Transformation], query: &str) -> RequestField {
+    let mut rf = RequestField::new(dec);
     parse_urlencoded_params(&mut rf, query);
     rf
 }
 
 /// parses the request uri, storing the path and query parts (if possible)
 /// returns the hashmap of arguments
-fn map_args(logs: &mut Logs, path: &str, mcontent_type: Option<&str>, mbody: Option<&[u8]>) -> QueryInfo {
+fn map_args(
+    logs: &mut Logs,
+    dec: &[Transformation],
+    path: &str,
+    mcontent_type: Option<&str>,
+    mbody: Option<&[u8]>,
+) -> QueryInfo {
     // this is necessary to do this in this convoluted way so at not to borrow attrs
-    let uri = urlencoding::decode(&path).ok();
+    let uri = match urldecode_str(path) {
+        DecodingResult::NoChange => path.to_string(),
+        DecodingResult::Changed(nuri) => nuri,
+    };
     let (qpath, query, mut args) = match path.splitn(2, '?').collect_tuple() {
-        Some((qpath, query)) => (qpath.to_string(), query.to_string(), parse_query_params(query)),
-        None => (path.to_string(), String::new(), RequestField::default()),
+        Some((qpath, query)) => (qpath.to_string(), query.to_string(), parse_query_params(dec, query)),
+        None => (path.to_string(), String::new(), RequestField::new(dec)),
     };
 
     if let Some(body) = mbody {
@@ -91,7 +101,7 @@ pub struct QueryInfo {
     /// the "query" portion of the raw query path
     pub query: String,
     /// URL decoded path, if decoding worked
-    pub uri: Option<String>,
+    pub uri: String,
     pub args: RequestField,
 }
 
@@ -209,7 +219,7 @@ impl RequestInfo {
         });
         let geo = self.rinfo.geoip.to_json();
         let mut attrs: HashMap<String, Option<String>> = [
-            ("uri", self.rinfo.qinfo.uri),
+            ("uri", Some(self.rinfo.qinfo.uri)),
             ("path", Some(self.rinfo.qinfo.qpath)),
             ("query", Some(self.rinfo.qinfo.query)),
             ("ip", Some(self.rinfo.geoip.ipstr)),
@@ -228,9 +238,9 @@ impl RequestInfo {
                 .map(|(k, v)| (k.clone(), Some(v.clone()))),
         );
         serde_json::json!({
-            "headers": self.headers,
-            "cookies": self.cookies,
-            "args": self.rinfo.qinfo.args,
+            "headers": self.headers.fields,
+            "cookies": self.cookies.fields,
+            "args": self.rinfo.qinfo.args.fields,
             "attrs": attrs,
             "tags": tags,
             "geo": geo
@@ -342,17 +352,18 @@ pub fn find_geoip(logs: &mut Logs, ipstr: String) -> GeoIp {
 
 pub fn map_request(
     logs: &mut Logs,
+    dec: &[Transformation],
     ipstr: String,
     headers: HashMap<String, String>,
     meta: RequestMeta,
     mbody: Option<&[u8]>,
 ) -> Result<RequestInfo, String> {
     logs.debug("map_request starts");
-    let (headers, cookies) = map_headers(headers);
+    let (headers, cookies) = map_headers(dec, &headers);
     logs.debug("headers mapped");
     let geoip = find_geoip(logs, ipstr);
     logs.debug("geoip computed");
-    let qinfo = map_args(logs, &meta.path, headers.get_str("content-type"), mbody);
+    let qinfo = map_args(logs, dec, &meta.path, headers.get_str("content-type"), mbody);
     logs.debug("args mapped");
 
     let host = match meta.authority.as_ref().or_else(|| headers.get("host")) {
@@ -391,7 +402,7 @@ fn selector<'a>(reqinfo: &'a RequestInfo, sel: &RequestSelector) -> Option<Selec
         RequestSelector::Header(k) => reqinfo.headers.get(k).map(Selected::Str),
         RequestSelector::Cookie(k) => reqinfo.cookies.get(k).map(Selected::Str),
         RequestSelector::Ip => Some(&reqinfo.rinfo.geoip.ipstr).map(Selected::Str),
-        RequestSelector::Uri => reqinfo.rinfo.qinfo.uri.as_ref().map(Selected::Str),
+        RequestSelector::Uri => Some(Selected::Str(&reqinfo.rinfo.qinfo.uri)),
         RequestSelector::Path => Some(&reqinfo.rinfo.qinfo.qpath).map(Selected::Str),
         RequestSelector::Query => Some(&reqinfo.rinfo.qinfo.query).map(Selected::Str),
         RequestSelector::Method => Some(&reqinfo.rinfo.meta.method).map(Selected::Str),
@@ -429,35 +440,42 @@ mod tests {
         let mut logs = Logs::default();
         let qinfo = map_args(
             &mut logs,
+            &[Transformation::Base64Decode],
             "/a/b/%20c?xa%20=12&bbbb=12%28&cccc&b64=YXJndW1lbnQ%3D",
             None,
             None,
         );
 
         assert_eq!(qinfo.qpath, "/a/b/%20c");
-        assert_eq!(
-            qinfo.uri,
-            Some("/a/b/ c?xa =12&bbbb=12(&cccc&b64=YXJndW1lbnQ=".to_string())
-        );
+        assert_eq!(qinfo.uri, "/a/b/ c?xa =12&bbbb=12(&cccc&b64=YXJndW1lbnQ=");
         assert_eq!(qinfo.query, "xa%20=12&bbbb=12%28&cccc&b64=YXJndW1lbnQ%3D");
 
-        let expected_args: RequestField = [("xa ", "12"), ("bbbb", "12("), ("cccc", ""), ("b64", "YXJndW1lbnQ=")]
+        let expected_args: RequestField = RequestField::from_iterator(
+            &[],
+            [
+                ("xa ", "12"),
+                ("bbbb", "12("),
+                ("cccc", ""),
+                ("b64", "YXJndW1lbnQ="),
+                ("b64:decoded", "argument"),
+                ("xa :decoded", "�"),
+            ]
             .iter()
-            .map(|(k, v)| (k.to_string(), v.to_string()))
-            .collect();
-        assert_eq!(qinfo.args.get("b64_base64").map(|s| s.as_str()), Some("argument"));
-        assert_eq!(qinfo.args, expected_args);
+            .map(|(k, v)| (k.to_string(), v.to_string())),
+        );
+        assert_eq!(qinfo.args.get("b64:decoded").map(|s| s.as_str()), Some("argument"));
+        assert_eq!(qinfo.args.fields, expected_args.fields);
     }
 
     #[test]
     fn test_map_args_simple() {
         let mut logs = Logs::default();
-        let qinfo = map_args(&mut logs, "/a/b", None, None);
+        let qinfo = map_args(&mut logs, &[], "/a/b", None, None);
 
         assert_eq!(qinfo.qpath, "/a/b");
-        assert_eq!(qinfo.uri, Some("/a/b".to_string()));
+        assert_eq!(qinfo.uri, "/a/b");
         assert_eq!(qinfo.query, "");
 
-        assert_eq!(qinfo.args, RequestField::default());
+        assert_eq!(qinfo.args, RequestField::new(&[]));
     }
 }

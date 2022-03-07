@@ -5,16 +5,14 @@ use crate::lua::Luagrasshopper;
 
 use anyhow::anyhow;
 use curiefense::interface::Tags;
-use curiefense::session::update_tags;
-use curiefense::session::JRequestMap;
 use curiefense::utils::RequestMeta;
 use mlua::prelude::*;
 use std::collections::HashMap;
 
+use curiefense::config::waf::Transformation;
 use curiefense::inspect_generic_request_map;
 use curiefense::interface::{Decision, Grasshopper};
 use curiefense::logs::Logs;
-use curiefense::session;
 use curiefense::utils::{map_request, InspectionResult};
 use curiefense::waf_check_generic_request_map;
 
@@ -78,7 +76,7 @@ fn inspect_waf(
     logs.debug("Inspection init");
     let rmeta: RequestMeta = RequestMeta::from_map(meta)?;
 
-    let reqinfo = map_request(&mut logs, ip, headers, rmeta, mbody)?;
+    let reqinfo = map_request(&mut logs, &Transformation::DEFAULTPOLICY, ip, headers, rmeta, mbody)?;
 
     let dec = waf_check_generic_request_map(configpath, &reqinfo, &waf_id, &mut logs);
     Ok(InspectionResult {
@@ -152,7 +150,7 @@ fn inspect_request<GH: Grasshopper>(
     logs.debug("Inspection init");
     let rmeta: RequestMeta = RequestMeta::from_map(meta)?;
 
-    let reqinfo = map_request(&mut logs, ip, headers, rmeta, mbody)?;
+    let reqinfo = map_request(&mut logs, &Transformation::DEFAULTPOLICY, ip, headers, rmeta, mbody)?;
 
     let (dec, tags, masked_rinfo) =
         inspect_generic_request_map(configpath, grasshopper, reqinfo, Tags::default(), &mut logs);
@@ -164,43 +162,6 @@ fn inspect_request<GH: Grasshopper>(
         err: None,
         rinfo: Some(masked_rinfo),
     })
-}
-
-/// Lua entry point, parameters are
-///  * a JSON-encoded request_map
-///  * the grasshopper lua module
-pub fn inspect_request_map(_lua: &Lua, args: (String, Option<LuaTable>)) -> LuaResult<String> {
-    let (encoded_request_map, lua_grasshopper) = args;
-    let grasshopper = lua_grasshopper.map(Luagrasshopper);
-
-    let jvalue: serde_json::Value = match serde_json::from_str(&encoded_request_map) {
-        Ok(v) => v,
-        Err(rr) => {
-            let mut logs = Logs::default();
-            logs.error(format!("Could not decode the request map: {}", rr));
-            return Ok(Decision::Pass.to_json_raw(serde_json::Value::Null, logs));
-        }
-    };
-    let jmap: JRequestMap = match serde_json::from_value(jvalue.clone()) {
-        Ok(v) => v,
-        Err(rr) => {
-            let mut logs = Logs::default();
-            logs.error(format!("Could not decode the request map: {}", rr));
-            return Ok(Decision::Pass.to_json_raw(jvalue, logs));
-        }
-    };
-    let mut logs = Logs::default();
-    let (rinfo, itags) = jmap.into_request_info(&mut logs);
-    let (res, tags, masked_rinfo) =
-        inspect_generic_request_map("/cf-config/current/config", grasshopper, rinfo, itags, &mut logs);
-    let updated_request_map = match update_tags(jvalue, tags) {
-        Ok(v) => v,
-        Err(rr) => {
-            logs.error(rr);
-            serde_json::Value::Null
-        }
-    };
-    Ok(res.to_json_raw(updated_request_map, logs))
 }
 
 /// wraps a result into a go-like pair
@@ -262,16 +223,6 @@ where
     })
 }
 
-/// runs the underlying string using, Decision returning, function, catching mlua errors
-fn wrap_session_decision<F>(lua: &Lua, session_id: LuaValue, f: F) -> LuaResult<(Option<String>, Option<String>)>
-where
-    F: FnOnce(&str) -> anyhow::Result<Decision>,
-{
-    lua_result(with_str(lua, session_id, |s| {
-        f(s).and_then(|r| session::session_serialize_request_map(s).map(|v| r.to_json_raw(v, Logs::default())))
-    }))
-}
-
 #[mlua::lua_module]
 fn curiefense(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
@@ -281,73 +232,12 @@ fn curiefense(lua: &Lua) -> LuaResult<LuaTable> {
     // waf inspection
     exports.set("inspect_waf", lua.create_function(lua_inspect_waf)?)?;
 
-    // session functions
-    exports.set(
-        "init_config",
-        lua.create_function(|_: &Lua, _: ()| Ok(session::init_config()))?,
-    )?;
-    exports.set(
-        "session_init",
-        lua.create_function(|lua: &Lua, encoded_request_map: LuaValue| {
-            wrap_session(lua, encoded_request_map, session::session_init)
-        })?,
-    )?;
-    exports.set(
-        "session_clean",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session(lua, session_id, |s| session::clean_session(s).map(|()| true))
-        })?,
-    )?;
-    exports.set(
-        "session_serialize_request_map",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_json(lua, session_id, |_, uuid| session::session_serialize_request_map(uuid))
-        })?,
-    )?;
-    exports.set(
-        "session_match_securitypolicy",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_json(lua, session_id, |_, uuid| session::session_match_securitypolicy(uuid))
-        })?,
-    )?;
-    exports.set(
-        "session_tag_request",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_json(lua, session_id, |_, uuid| session::session_tag_request(uuid))
-        })?,
-    )?;
-    exports.set(
-        "session_limit_check",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_decision(lua, session_id, session::session_limit_check)
-        })?,
-    )?;
-    exports.set(
-        "session_acl_check",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_json(lua, session_id, |_, uuid| session::session_acl_check(uuid))
-        })?,
-    )?;
-    exports.set(
-        "session_waf_check",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_decision(lua, session_id, session::session_waf_check)
-        })?,
-    )?;
-    exports.set(
-        "session_flow_check",
-        lua.create_function(|lua: &Lua, session_id: LuaValue| {
-            wrap_session_decision(lua, session_id, session::session_flow_check)
-        })?,
-    )?;
-
     // iptools exports
     exports.set("new_ip_set", lua.create_function(iptools::new_ip_set)?)?;
     exports.set("new_sig_set", lua.create_function(iptools::new_sig_set)?)?;
     exports.set("new_geoipdb", lua.create_function(iptools::new_geoipdb)?)?;
     exports.set("modhash", lua.create_function(iptools::modhash)?)?;
     exports.set("iptonum", lua.create_function(iptools::iptonum)?)?;
-    exports.set("decodeurl", lua.create_function(iptools::decodeurl)?)?;
     exports.set("encodeurl", lua.create_function(iptools::encodeurl)?)?;
     exports.set("test_regex", lua.create_function(iptools::test_regex)?)?;
 

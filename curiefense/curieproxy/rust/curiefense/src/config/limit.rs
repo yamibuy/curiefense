@@ -54,7 +54,10 @@ impl Limit {
                 id: rawlimit.id,
                 name: rawlimit.name,
                 limit: rawlimit.limit.parse().with_context(|| "when converting the limit")?,
-                timeframe: rawlimit.timeframe.parse().with_context(|| "when converting the timeframe")?,
+                timeframe: rawlimit
+                    .timeframe
+                    .parse()
+                    .with_context(|| "when converting the timeframe")?,
                 action: SimpleAction::resolve(&rawlimit.action).with_context(|| "when resolving the action entry")?,
                 include: rawlimit.include.into_iter().collect(),
                 exclude: rawlimit.exclude.into_iter().collect(),
@@ -111,7 +114,10 @@ mod tests {
         let mut lvec = vec![l3, l2, l1, l4];
         lvec.sort_unstable_by(limit_order);
         let names: Vec<String> = lvec.into_iter().map(|l| l.action.reason).collect();
-        let expected: Vec<String> = ["limit l2", "limit l3", "limit l4", "limit l1"].iter().map(|x| x.to_string()).collect();
+        let expected: Vec<String> = ["limit l2", "limit l3", "limit l4", "limit l1"]
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
         assert_eq!(names, expected);
     }
 }

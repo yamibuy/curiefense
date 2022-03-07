@@ -15,6 +15,23 @@ pub struct Section<A> {
     pub args: A,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Transformation {
+    Base64Decode,
+    HtmlEntitiesDecode,
+    UnicodeDecode,
+    UrlDecode,
+}
+
+impl Transformation {
+    pub const DEFAULTPOLICY: [Transformation; 4] = [
+        Transformation::Base64Decode,
+        Transformation::HtmlEntitiesDecode,
+        Transformation::UnicodeDecode,
+        Transformation::UrlDecode,
+    ];
+}
+
 // TODO: undefined data structures
 #[derive(Debug, Clone)]
 pub struct WafProfile {
@@ -22,6 +39,7 @@ pub struct WafProfile {
     pub name: String,
     pub ignore_alphanum: bool,
     pub sections: Section<WafSection>,
+    pub decoding: Vec<Transformation>,
 }
 
 impl Default for WafProfile {
@@ -50,6 +68,7 @@ impl Default for WafProfile {
                     regex: Vec::new(),
                 },
             },
+            decoding: Transformation::DEFAULTPOLICY.to_vec(),
         }
     }
 }
@@ -172,6 +191,12 @@ fn convert_entry(entry: RawWafProfile) -> anyhow::Result<(String, WafProfile)> {
                 cookies: mk_section(entry.cookies, entry.max_cookie_length, entry.max_cookies_count)?,
                 args: mk_section(entry.args, entry.max_arg_length, entry.max_args_count)?,
             },
+            decoding: vec![
+                Transformation::Base64Decode,
+                Transformation::UrlDecode,
+                Transformation::HtmlEntitiesDecode,
+                Transformation::UnicodeDecode,
+            ],
         },
     ))
 }

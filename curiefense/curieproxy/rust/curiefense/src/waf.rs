@@ -182,7 +182,8 @@ fn section_check(
     }
 
     for (name, value) in params.iter() {
-        if value.len() > section.max_length {
+        // skip decoded parameters for length checks
+        if !name.ends_with(":decoded") && value.len() > section.max_length {
             return Err(WafBlock::EntryTooLarge(idx, name.clone()));
         }
 
@@ -335,13 +336,13 @@ pub fn masking(req: RequestInfo, profile: &WafProfile) -> RequestInfo {
     mask_section(&mut ri.headers, profile.sections.get(SectionIdx::Headers));
     let cookies_masked = mask_section(&mut ri.cookies, profile.sections.get(SectionIdx::Cookies));
     if cookies_masked {
-        ri.headers.0.insert("cookie".into(), "*REDACTED*".into());
+        ri.headers.fields.insert("cookie".into(), "*REDACTED*".into());
     }
 
     let arg_masked = mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
     if arg_masked {
         ri.rinfo.qinfo.query = "*MASKED*".into();
-        ri.rinfo.qinfo.uri = Some("*MASKED*".into());
+        ri.rinfo.qinfo.uri = "*MASKED*".into();
     }
     ri
 }
@@ -364,7 +365,7 @@ mod test {
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
-        map_request(&mut logs, "1.2.3.4".into(), headers, meta, None).unwrap()
+        map_request(&mut logs, &[], "1.2.3.4".into(), headers, meta, None).unwrap()
     }
 
     #[test]
@@ -396,7 +397,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
             masked.rinfo.qinfo.args
         );
     }
@@ -411,7 +412,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
             masked.rinfo.qinfo.args
         );
     }
@@ -426,7 +427,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
             masked.rinfo.qinfo.args
         );
     }
@@ -441,7 +442,7 @@ mod test {
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            RequestField::raw_create(&[], &[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
             masked.rinfo.qinfo.args
         );
     }
