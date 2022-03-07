@@ -10275,7 +10275,7 @@
     "response": {
       "action": "pass"
     },
-    "verbose": false
+    "verbose": true
   },
   {
     "body": "foo=1&bar=john+or@var.es",
