@@ -216,8 +216,10 @@ fn section_check(
         };
 
         // check name rules
-        for entry in section.names.get(name).iter() {
+        if let Some(entry) = section.names.get(name) {
             check_entry(entry)?;
+            // exact matches prevent regex matches from being checked!
+            continue;
         }
 
         // // check regex rules
