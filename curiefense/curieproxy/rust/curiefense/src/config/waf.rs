@@ -155,6 +155,17 @@ impl WafSignatures {
 }
 
 fn mk_entry_match(em: RawWafEntryMatch) -> anyhow::Result<(String, WafEntryMatch)> {
+    let reg = match em.reg {
+        None => None,
+        Some(s) => {
+            // an empty string means that there is no regex set
+            if s.is_empty() {
+                None
+            } else {
+                Some(Regex::new(&s)?)
+            }
+        }
+    };
     Ok((
         em.key,
         WafEntryMatch {
@@ -166,7 +177,7 @@ fn mk_entry_match(em: RawWafEntryMatch) -> anyhow::Result<(String, WafEntryMatch
                 .map(|mp| mp.into_iter().map(|(a, _)| a))
                 .flatten()
                 .collect(),
-            reg: em.reg.map(|s| Regex::new(&s)).transpose()?, // lol not Haskell
+            reg,
         },
     ))
 }
