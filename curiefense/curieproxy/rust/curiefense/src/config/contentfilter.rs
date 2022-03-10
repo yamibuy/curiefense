@@ -162,13 +162,24 @@ impl ContentFilterRules {
 }
 
 fn mk_entry_match(em: RawContentFilterEntryMatch) -> anyhow::Result<(String, ContentFilterEntryMatch)> {
+    let reg = match em.reg {
+        None => None,
+        Some(s) => {
+            if s.is_empty() {
+                None
+            } else {
+                Some(Regex::new(&s)?)
+            }
+        }
+    };
+
     Ok((
         em.key,
         ContentFilterEntryMatch {
             restrict: em.restrict,
             mask: em.mask.unwrap_or(false),
             exclusions: em.exclusions.into_iter().collect::<HashSet<_>>(),
-            reg: em.reg.map(|s| Regex::new(&s)).transpose()?, // lol not Haskell
+            reg
         },
     ))
 }

@@ -92,7 +92,10 @@
             "names": [],
             "regex": []
         },
-        "active": ["sqli","waf"]
+        "active": [
+            "sqli",
+            "waf"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -196,7 +199,9 @@
             "names": [],
             "regex": []
         },
-        "active": ["waf"]
+        "active": [
+            "waf"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -234,7 +239,9 @@
             "names": [],
             "regex": []
         },
-        "active": ["waf"]
+        "active": [
+            "waf"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -272,7 +279,9 @@
             "names": [],
             "regex": []
         },
-        "active": ["waf"]
+        "active": [
+            "waf"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -310,7 +319,9 @@
             "names": [],
             "regex": []
         },
-        "active": ["waf"]
+        "active": [
+            "waf"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -348,7 +359,9 @@
             "names": [],
             "regex": []
         },
-        "active": ["waf"]
+        "active": [
+            "waf"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -425,7 +438,10 @@
             "names": [],
             "regex": []
         },
-        "active": ["libinjection", "sqli"]
+        "active": [
+            "libinjection",
+            "sqli"
+        ]
     },
     {
         "masking_seed": "CHANGEME",
@@ -682,6 +698,41 @@
             "names": [],
             "regex": []
         }
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "id": "maskall",
+        "name": "mask all arguments",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 3,
+        "args": {
+            "names": [],
+            "regex": [
+                {
+                    "key": ".*",
+                    "reg": null,
+                    "restrict": false,
+                    "mask": true,
+                    "exclusions": []
+                }
+            ]
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        },
+        "active": [
+            "libinjection"
+        ]
     },
     {
         "masking_seed": "CHANGEME",

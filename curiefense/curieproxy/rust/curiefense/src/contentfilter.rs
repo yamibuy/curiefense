@@ -88,6 +88,7 @@ impl ContentFilterBlock {
     }
 }
 
+#[derive(Debug)]
 struct Omitted {
     entries: Section<HashSet<String>>,
     exclusions: Section<HashMap<String, HashSet<String>>>,
