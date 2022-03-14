@@ -337,19 +337,12 @@ pub struct RawContentFilterEntryMatch {
     pub reg: Option<String>,
     pub restrict: bool,
     pub mask: Option<bool>,
-    pub exclusions: Option<HashMap<String, String>>,
+    #[serde(default)]
+    pub exclusions: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct RawContentFilterGroup {
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub content_filter_rule_ids: Option<Vec<String>>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct RawContentFilterRule {
+pub struct ContentFilterRule {
     pub id: String,
     pub name: String,
     pub operand: String,
