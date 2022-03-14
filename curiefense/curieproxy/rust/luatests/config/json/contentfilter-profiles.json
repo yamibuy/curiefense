@@ -7,9 +7,9 @@
             "names": [],
             "regex": [
                 {
-                    "exclusions": {
-                        "libinjection": "rule"
-                    },
+                    "exclusions": [
+                        "libinjection"
+                    ],
                     "key": ".",
                     "mask": false,
                     "reg": null,
@@ -55,56 +55,9 @@
             "names": [],
             "regex": [
                 {
-                    "exclusions": {
-                        "100001": "group"
-                    },
-                    "key": ".",
-                    "mask": false,
-                    "reg": null,
-                    "restrict": false
-                }
-            ]
-        },
-        "cookies": {
-            "max_count": 42,
-            "max_length": 1024,
-            "min_risk": 1,
-            "names": [],
-            "regex": []
-        },
-        "decoding": {
-            "base64": true
-        },
-        "headers": {
-            "max_count": 42,
-            "max_length": 1024,
-            "min_risk": 1,
-            "names": [],
-            "regex": []
-        },
-        "id": "omitted_group",
-        "ignore_alphanum": false,
-        "name": "omit group id 100001",
-        "path": {
-            "max_count": 42,
-            "max_length": 2048,
-            "min_risk": 1,
-            "names": [],
-            "regex": []
-        }
-    },
-    {
-        "masking_seed": "CHANGEME",
-        "args": {
-            "max_count": 512,
-            "max_length": 1024,
-            "min_risk": 1,
-            "names": [],
-            "regex": [
-                {
-                    "exclusions": {
-                        "100016": "rule"
-                    },
+                    "exclusions": [
+                        "100016"
+                    ],
                     "key": ".",
                     "mask": false,
                     "reg": null,
@@ -148,28 +101,28 @@
             "min_risk": 1,
             "names": [
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "a",
                     "mask": false,
                     "reg": "^[A-Z]+",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "b",
                     "mask": false,
                     "reg": "^[A-Z]+",
                     "restrict": true
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "c",
                     "mask": true,
                     "reg": "^[A-Z]+",
                     "restrict": true
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "d",
                     "mask": true,
                     "reg": "^[A-Z]+",
@@ -522,7 +475,7 @@
                     "reg": null,
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "names": [
@@ -531,7 +484,7 @@
                     "reg": "\\d+",
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         },
@@ -542,7 +495,7 @@
                     "reg": null,
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "names": [
@@ -551,7 +504,7 @@
                     "reg": "\\d+",
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         },
@@ -562,7 +515,7 @@
                     "reg": null,
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "names": [
@@ -571,7 +524,7 @@
                     "reg": "\\d+",
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         },
@@ -582,7 +535,7 @@
                     "reg": null,
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "names": [
@@ -591,7 +544,7 @@
                     "reg": "\\d+",
                     "restrict": false,
                     "mask": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         }
@@ -636,15 +589,15 @@
             "min_risk": 1,
             "names": [
                 {
-                    "exclusions": {
-                        "100140": "rule"
-                    },
+                    "exclusions": [
+                        "100140"
+                    ],
                     "key": "name-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "name-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true
@@ -652,15 +605,15 @@
             ],
             "regex": [
                 {
-                    "exclusions": {
-                        "100140": "rule"
-                    },
+                    "exclusions": [
+                        "100140"
+                    ],
                     "key": "reg[e]x{1}-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "reg[e]x{1}-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true
@@ -673,15 +626,15 @@
             "min_risk": 1,
             "names": [
                 {
-                    "exclusions": {
-                        "100140": "rule"
-                    },
+                    "exclusions": [
+                        "100140"
+                    ],
                     "key": "name-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "name-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true
@@ -689,15 +642,15 @@
             ],
             "regex": [
                 {
-                    "exclusions": {
-                        "100140": "rule"
-                    },
+                    "exclusions": [
+                        "100140"
+                    ],
                     "key": "reg[e]x{1}-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "reg[e]x{1}-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true
@@ -713,15 +666,15 @@
             "min_risk": 1,
             "names": [
                 {
-                    "exclusions": {
-                        "100140": "rule"
-                    },
+                    "exclusions": [
+                        "100140"
+                    ],
                     "key": "name-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "name-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true
@@ -729,15 +682,15 @@
             ],
             "regex": [
                 {
-                    "exclusions": {
-                        "100140": "rule"
-                    },
+                    "exclusions": [
+                        "100140"
+                    ],
                     "key": "reg[e]x{1}-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false
                 },
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": "reg[e]x{1}-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true
@@ -766,15 +719,15 @@
                     "key": "name-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false,
-                    "exclusions": {
-                        "100140": "rule"
-                    }
+                    "exclusions": [
+                        "100140"
+                    ]
                 },
                 {
                     "key": "name-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "regex": [
@@ -782,15 +735,15 @@
                     "key": "reg[e]x{1}-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false,
-                    "exclusions": {
-                        "100140": "rule"
-                    }
+                    "exclusions": [
+                        "100140"
+                    ]
                 },
                 {
                     "key": "reg[e]x{1}-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         },
@@ -800,15 +753,15 @@
                     "key": "name-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false,
-                    "exclusions": {
-                        "100140": "rule"
-                    }
+                    "exclusions": [
+                        "100140"
+                    ]
                 },
                 {
                     "key": "name-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "regex": [
@@ -816,15 +769,15 @@
                     "key": "reg[e]x{1}-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false,
-                    "exclusions": {
-                        "100140": "rule"
-                    }
+                    "exclusions": [
+                        "100140"
+                    ]
                 },
                 {
                     "key": "reg[e]x{1}-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         },
@@ -834,15 +787,15 @@
                     "key": "name-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false,
-                    "exclusions": {
-                        "100140": "rule"
-                    }
+                    "exclusions": [
+                        "100140"
+                    ]
                 },
                 {
                     "key": "name-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ],
             "regex": [
@@ -850,15 +803,15 @@
                     "key": "reg[e]x{1}-norestrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": false,
-                    "exclusions": {
-                        "100140": "rule"
-                    }
+                    "exclusions": [
+                        "100140"
+                    ]
                 },
                 {
                     "key": "reg[e]x{1}-restrict",
                     "reg": "[v]+[a]{1}l?u*e",
                     "restrict": true,
-                    "exclusions": {}
+                    "exclusions": []
                 }
             ]
         }
@@ -878,7 +831,7 @@
             ],
             "regex": [
                 {
-                    "exclusions": {},
+                    "exclusions": [],
                     "key": ".*",
                     "mask": false,
                     "reg": "^[A-Z]+",

@@ -16,13 +16,12 @@ use std::sync::RwLock;
 use std::time::SystemTime;
 
 use crate::logs::Logs;
-use contentfilter::{resolve_rules, ContentFilterGroup, ContentFilterProfile, ContentFilterRules};
+use contentfilter::{resolve_rules, ContentFilterProfile, ContentFilterRules};
 use flow::{flow_resolve, FlowElement, SequenceKey};
 use globalfilter::GlobalFilterSection;
 use hostmap::{HostMap, SecurityPolicy};
 use raw::{
-    AclProfile, RawContentFilterGroup, RawContentFilterProfile, RawFlowEntry, RawGlobalFilterSection, RawHostMap,
-    RawLimit, RawSecurityPolicy,
+    AclProfile, RawContentFilterProfile, RawFlowEntry, RawGlobalFilterSection, RawHostMap, RawLimit, RawSecurityPolicy,
 };
 use utils::Matching;
 
@@ -75,7 +74,6 @@ pub struct Config {
     pub container_name: Option<String>,
     pub flows: HashMap<SequenceKey, Vec<FlowElement>>,
     pub content_filter_profiles: HashMap<String, ContentFilterProfile>,
-    pub content_filter_groups: HashMap<String, ContentFilterGroup>,
 }
 
 fn from_map<V: Clone>(mp: &HashMap<String, V>, k: &str) -> Result<V, String> {
@@ -113,7 +111,7 @@ impl Config {
                             "Unknown Content Filter profile {}",
                             &rawmap.content_filter_profile
                         ));
-                        continue
+                        continue;
                     }
                 };
             let mut olimits: Vec<Limit> = Vec::new();
@@ -162,7 +160,6 @@ impl Config {
         rawglobalfilters: Vec<RawGlobalFilterSection>,
         rawacls: Vec<AclProfile>,
         rawcontentfilterprofiles: Vec<RawContentFilterProfile>,
-        rawcontentfiltergroups: Vec<RawContentFilterGroup>,
         container_name: Option<String>,
         rawflows: Vec<RawFlowEntry>,
     ) -> Config {
@@ -170,9 +167,7 @@ impl Config {
         let mut securitypolicies: Vec<Matching<HostMap>> = Vec::new();
 
         let limits = Limit::resolve(logs, rawlimits);
-        let content_filter_groups = ContentFilterGroup::resolve(rawcontentfiltergroups);
-        let content_filter_profiles =
-            ContentFilterProfile::resolve(logs, rawcontentfilterprofiles, &content_filter_groups);
+        let content_filter_profiles = ContentFilterProfile::resolve(logs, rawcontentfilterprofiles);
         let acls = rawacls.into_iter().map(|a| (a.id.clone(), a)).collect();
 
         // build the entries while looking for the default entry
@@ -226,7 +221,6 @@ impl Config {
             container_name,
             flows,
             content_filter_profiles,
-            content_filter_groups,
         }
     }
 
@@ -280,7 +274,6 @@ impl Config {
         let limits = Config::load_config_file(logs, &bjson, "limits.json");
         let acls = Config::load_config_file(logs, &bjson, "acl-profiles.json");
         let contentfilterprofiles = Config::load_config_file(logs, &bjson, "contentfilter-profiles.json");
-        let contentfiltergroups = Config::load_config_file(logs, &bjson, "contentfilter-groups.json");
         let contentfilterrules = Config::load_config_file(logs, &bjson, "contentfilter-rules.json");
         let flows = Config::load_config_file(logs, &bjson, "flow-control.json");
 
@@ -296,11 +289,10 @@ impl Config {
             globalfilters,
             acls,
             contentfilterprofiles,
-            contentfiltergroups,
             container_name,
             flows,
         );
-        let hsdb = resolve_rules(contentfilterrules, &config.content_filter_groups).unwrap_or_else(|rr| {
+        let hsdb = resolve_rules(contentfilterrules).unwrap_or_else(|rr| {
             logs.error(rr);
             ContentFilterRules::empty()
         });
@@ -316,7 +308,6 @@ impl Config {
             container_name: None,
             flows: HashMap::new(),
             content_filter_profiles: HashMap::new(),
-            content_filter_groups: HashMap::new(),
         }
     }
 }
