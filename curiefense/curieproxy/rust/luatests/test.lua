@@ -390,7 +390,8 @@ local function test_content_filter(request_path)
       for _, log in ipairs(r.logs) do
           print(log["elapsed_micros"] .. "µs " .. log["message"])
       end
-      error("mismatch in " .. raw_request_map.name)
+      print(response)
+      error("mismatch in " .. raw_request_map.name .. " profile: " .. raw_request_map.content_filter_id)
     end
   end
 end

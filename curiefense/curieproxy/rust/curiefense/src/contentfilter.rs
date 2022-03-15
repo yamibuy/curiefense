@@ -1,6 +1,6 @@
 use hyperscan::Matching;
 use libinjection::{sqli, xss};
-use serde_json::{json, Value};
+use serde_json::json;
 use std::collections::{HashMap, HashSet};
 
 use crate::config::contentfilter::{
@@ -8,7 +8,7 @@ use crate::config::contentfilter::{
 };
 use crate::config::raw::ContentFilterRule;
 use crate::config::utils::XDataSource;
-use crate::interface::{Action, ActionType};
+use crate::interface::{Action, ActionType, Tags};
 use crate::requestfields::RequestField;
 use crate::utils::RequestInfo;
 use crate::Logs;
@@ -37,33 +37,23 @@ pub enum ContentFilterBlock {
     TooManyEntries(SectionIdx),
     EntryTooLarge(SectionIdx, String),
     Mismatch(ContentFilterMatched),
-    SqlInjection(ContentFilterMatched, String), // fingerprint
-    Xss(ContentFilterMatched),
-    Policies(Vec<ContentFilterMatch>),
+    Block(HashSet<String>),
+    Monitor(HashSet<String>),
 }
 
 impl ContentFilterBlock {
     pub fn to_action(&self) -> Action {
         let reason = match self {
-            ContentFilterBlock::Policies(ids) => ids
-                .first()
-                .and_then(|e| {
-                    e.ids.first().map(|sig| {
-                        json!({
-                            "section": e.matched.section,
-                            "name": e.matched.name,
-                            "value": e.matched.value,
-                            "initiator": "content_filter",
-                            "sig_category": sig.category,
-                            "sig_subcategory": sig.subcategory,
-                            "sig_operand": sig.operand,
-                            "sig_id": sig.id,
-                            "sig_risk": sig.risk,
-                            "sig_msg": sig.msg,
-                        })
-                    })
-                })
-                .unwrap_or(Value::Null),
+            ContentFilterBlock::Block(ids) => json!({
+                "initiator": "content_filter",
+                "tags": ids,
+                "name": "block"
+            }),
+            ContentFilterBlock::Monitor(ids) => json!({
+                "initiator": "content_filter",
+                "tags": ids,
+                "name": "monitor"
+            }),
             ContentFilterBlock::TooManyEntries(idx) => json!({
                 "section": idx,
                 "initiator": "content_filter",
@@ -75,21 +65,6 @@ impl ContentFilterBlock {
                 "initiator": "content_filter",
                 "value": "Entry too large"
             }),
-            ContentFilterBlock::SqlInjection(wmatch, fp) => json!({
-                "section": wmatch.section,
-                "name": wmatch.name,
-                "initiator": "content_filter",
-                "value": "SQLi",
-                "matched": wmatch.value,
-                "fingerprint": fp
-            }),
-            ContentFilterBlock::Xss(wmatch) => json!({
-                "section": wmatch.section,
-                "name": wmatch.name,
-                "initiator": "content_filter",
-                "value": "XSS",
-                "matched": wmatch.value
-            }),
             ContentFilterBlock::Mismatch(wmatch) => json!({
                 "section": wmatch.section,
                 "name": wmatch.name,
@@ -98,10 +73,11 @@ impl ContentFilterBlock {
                 "msg": "Mismatch"
             }),
         };
+        let block_mode = !matches!(self, ContentFilterBlock::Monitor(_));
 
         Action {
             atype: ActionType::Block,
-            block_mode: true,
+            block_mode,
             ban: false,
             status: 403,
             headers: None,
@@ -139,6 +115,7 @@ fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
 /// Runs the Content Filter part of curiefense
 pub fn content_filter_check(
     logs: &mut Logs,
+    tags: &mut Tags,
     rinfo: &RequestInfo,
     profile: &ContentFilterProfile,
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
@@ -146,9 +123,15 @@ pub fn content_filter_check(
     use SectionIdx::*;
     let mut omit = Default::default();
 
+    // directly exit if omitted profile
+    if tags.has_intersection(&profile.ignore) {
+        return Ok(());
+    }
+
     // check section profiles
     for idx in &[Path, Headers, Cookies, Args] {
         section_check(
+            tags,
             *idx,
             profile.sections.get(*idx),
             get_section(*idx, rinfo),
@@ -159,25 +142,44 @@ pub fn content_filter_check(
 
     let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
 
-    // run libinjection on non-whitelisted sections
-    for idx in &[Path, Headers, Cookies, Args] {
-        // note that there is no risk check with injection, every match triggers a block.
-        injection_check(*idx, get_section(*idx, rinfo), &omit, &mut hca_keys)?;
+    // if libinjection is globally ignored, ignore these tests
+    if !profile.ignore.contains("libinjection") {
+        // run libinjection on non-whitelisted sections
+        for idx in &[Path, Headers, Cookies, Args] {
+            // note that there is no risk check with injection, every match triggers a block.
+            injection_check(tags, *idx, get_section(*idx, rinfo), &omit, &mut hca_keys);
+        }
     }
 
     // finally, hyperscan check
-    match hyperscan(logs, hca_keys, hsdb, &omit.exclusions, &profile.sections) {
-        Err(rr) => {
-            logs.error(format!("Hyperscan failed {}", rr));
-            Ok(())
-        }
-        Ok(None) => Ok(()),
-        Ok(Some(block)) => Err(block),
+    if let Err(rr) = hyperscan(
+        logs,
+        tags,
+        hca_keys,
+        hsdb,
+        &profile.ignore,
+        &omit.exclusions,
+        &profile.sections,
+    ) {
+        logs.error(rr)
     }
+
+    let active = tags.intersect(&profile.active);
+    if !active.is_empty() {
+        return Err(ContentFilterBlock::Block(active));
+    }
+
+    let report = tags.intersect(&profile.report);
+    if !report.is_empty() {
+        return Err(ContentFilterBlock::Monitor(report));
+    }
+
+    Ok(())
 }
 
 /// checks a section (headers, args, cookies) against the policy
 fn section_check(
+    tags: &Tags,
     idx: SectionIdx,
     section: &ContentFilterSection,
     params: &RequestField,
@@ -215,10 +217,11 @@ fn section_check(
                     name.to_string(),
                     value.to_string(),
                 )));
+            } else if tags.has_intersection(&name_entry.exclusions) {
+                omit.entries.at(idx).insert(name.to_string());
             } else if !name_entry.exclusions.is_empty() {
-                omit.exclusions
-                    .at(idx)
-                    .insert(name.to_string(), name_entry.exclusions.clone());
+                let entry = omit.exclusions.at(idx).entry(name.to_string()).or_default();
+                entry.extend(name_entry.exclusions.iter().cloned());
             }
             Ok(())
         };
@@ -244,11 +247,12 @@ fn section_check(
 }
 
 fn injection_check(
+    tags: &mut Tags,
     idx: SectionIdx,
     params: &RequestField,
     omit: &Omitted,
     hca_keys: &mut HashMap<String, (SectionIdx, String)>,
-) -> Result<(), ContentFilterBlock> {
+) {
     for (name, value) in params.iter() {
         if !omit.entries.get(idx).contains(name) {
             if !omit
@@ -258,21 +262,16 @@ fn injection_check(
                 .map(|st| st.contains("libinjection"))
                 .unwrap_or(false)
             {
-                if let Some((b, fp)) = sqli(value) {
+                if let Some((b, _)) = sqli(value) {
                     if b {
-                        return Err(ContentFilterBlock::SqlInjection(
-                            ContentFilterMatched::new(idx, name.to_string(), value.to_string()),
-                            fp,
-                        ));
+                        tags.insert("libinjection-sqli");
+                        tags.insert("libinjection");
                     }
                 }
                 if let Some(b) = xss(value) {
                     if b {
-                        return Err(ContentFilterBlock::Xss(ContentFilterMatched::new(
-                            idx,
-                            name.to_string(),
-                            value.to_string(),
-                        )));
+                        tags.insert("libinjection-xss");
+                        tags.insert("libinjection");
                     }
                 }
             }
@@ -280,17 +279,17 @@ fn injection_check(
             hca_keys.insert(value.to_string(), (idx, name.to_string()));
         }
     }
-
-    Ok(())
 }
 
 fn hyperscan(
     logs: &mut Logs,
+    tags: &mut Tags,
     hca_keys: HashMap<String, (SectionIdx, String)>,
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
+    global_ignore: &HashSet<String>,
     exclusions: &Section<HashMap<String, HashSet<String>>>,
     sections: &Section<ContentFilterSection>,
-) -> anyhow::Result<Option<ContentFilterBlock>> {
+) -> anyhow::Result<()> {
     let sigs = match &*hsdb {
         None => return Err(anyhow::anyhow!("Hyperscan database not loaded")),
         Some(x) => x,
@@ -303,41 +302,40 @@ fn hyperscan(
         Matching::Continue
     })?;
     if !found {
-        return Ok(None);
+        return Ok(());
     }
-
-    let mut matches = Vec::new();
 
     // something matched! but what?
     for (k, (sid, name)) in hca_keys {
-        let mut ids = Vec::new();
         sigs.db.scan(&[k.as_bytes()], &scratch, |id, _, _, _| {
             // TODO this is really ugly, the string hashmap should be converted into a numeric id, or it should be a string in the first place?
             match sigs.ids.get(id as usize) {
                 None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
+                    let sigid = format!("sig-id-{}", sig.id);
                     if sig.risk >= sections.get(sid).min_risk
-                        && exclusions.get(sid).get(&name).map(|ex| ex.contains(&sig.id)) != Some(true)
+                        && exclusions
+                            .get(sid)
+                            .get(&name)
+                            .map(|ex| ex.contains(&sigid) || tags.has_intersection(ex))
+                            != Some(true)
+                        && !global_ignore.contains(&sigid)
                     {
-                        ids.push(sig.clone());
+                        tags.insert(&sigid);
+                        tags.insert(&format!("sig-risk-{}", sig.risk));
+                        tags.insert(&format!("sig-category-{}", sig.category));
+                        tags.insert(&format!("sig-subcategory-{}", sig.subcategory));
+                        for t in &sig.tags {
+                            tags.insert(t);
+                        }
                     }
                 }
             }
             Matching::Continue
         })?;
-        if !ids.is_empty() {
-            matches.push(ContentFilterMatch {
-                matched: ContentFilterMatched::new(sid, name, k),
-                ids,
-            })
-        }
     }
-    Ok(if matches.is_empty() {
-        None
-    } else {
-        Some(ContentFilterBlock::Policies(matches))
-    })
+    Ok(())
 }
 
 fn mask_section(masking_seed: &[u8], sec: &mut RequestField, section: &ContentFilterSection) -> HashSet<XDataSource> {
