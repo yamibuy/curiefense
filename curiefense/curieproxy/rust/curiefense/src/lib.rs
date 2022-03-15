@@ -278,7 +278,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
 
     // otherwise, run content_filter_check
     let content_filter_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(logs, &reqinfo, &securitypolicy.content_filter_profile, rd),
+        Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &securitypolicy.content_filter_profile, rd),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())
@@ -313,7 +313,8 @@ pub fn content_filter_check_generic_request_map(
     raw: &RawRequest,
     content_filter_id: &str,
     logs: &mut Logs,
-) -> (Decision, RequestInfo) {
+) -> (Decision, RequestInfo, Tags) {
+    let mut tags = Tags::default();
     logs.debug("Content Filter inspection starts");
     let waf_profile = match with_config(configpath, logs, |_slogs, cfg| {
         cfg.content_filter_profiles.get(content_filter_id).cloned()
@@ -321,14 +322,14 @@ pub fn content_filter_check_generic_request_map(
         Some(Some(prof)) => prof,
         _ => {
             logs.error("Content Filter profile not found");
-            return (Decision::Pass, map_request(logs, &[], raw));
+            return (Decision::Pass, map_request(logs, &[], raw), tags);
         }
     };
 
     let reqinfo = map_request(logs, &waf_profile.decoding, raw);
 
     let waf_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(logs, &reqinfo, &waf_profile, rd),
+        Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &waf_profile, rd),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())
@@ -342,5 +343,6 @@ pub fn content_filter_check_generic_request_map(
             Err(wb) => Decision::Action(wb.to_action()),
         },
         reqinfo,
+        tags,
     )
 }

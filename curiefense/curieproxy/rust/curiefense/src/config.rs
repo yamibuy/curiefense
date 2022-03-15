@@ -275,6 +275,7 @@ impl Config {
         let acls = Config::load_config_file(logs, &bjson, "acl-profiles.json");
         let contentfilterprofiles = Config::load_config_file(logs, &bjson, "contentfilter-profiles.json");
         let contentfilterrules = Config::load_config_file(logs, &bjson, "contentfilter-rules.json");
+        let contentfiltergroups = Config::load_config_file(logs, &bjson, "contentfilter-groups.json");
         let flows = Config::load_config_file(logs, &bjson, "flow-control.json");
 
         let container_name = std::fs::read_to_string("/etc/hostname")
@@ -292,7 +293,7 @@ impl Config {
             container_name,
             flows,
         );
-        let hsdb = resolve_rules(contentfilterrules).unwrap_or_else(|rr| {
+        let hsdb = resolve_rules(contentfilterrules, contentfiltergroups).unwrap_or_else(|rr| {
             logs.error(rr);
             ContentFilterRules::empty()
         });
