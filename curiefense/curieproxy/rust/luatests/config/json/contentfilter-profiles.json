@@ -56,7 +56,7 @@
             "regex": [
                 {
                     "exclusions": [
-                        "100016"
+                        "sig-id-100016"
                     ],
                     "key": ".",
                     "mask": false,
@@ -91,7 +91,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["sqli","waf"]
     },
     {
         "masking_seed": "CHANGEME",
@@ -194,7 +195,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["waf"]
     },
     {
         "masking_seed": "CHANGEME",
@@ -231,7 +233,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["waf"]
     },
     {
         "masking_seed": "CHANGEME",
@@ -268,7 +271,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["waf"]
     },
     {
         "masking_seed": "CHANGEME",
@@ -305,7 +309,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["waf"]
     },
     {
         "masking_seed": "CHANGEME",
@@ -342,7 +347,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["waf"]
     },
     {
         "masking_seed": "CHANGEME",
@@ -418,7 +424,8 @@
             "min_risk": 1,
             "names": [],
             "regex": []
-        }
+        },
+        "active": ["libinjection", "sqli"]
     },
     {
         "masking_seed": "CHANGEME",

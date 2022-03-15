@@ -258,6 +258,12 @@ pub struct RawContentFilterProfile {
     #[serde(default)]
     pub path: RawContentFilterProperties,
     pub decoding: Option<ContentFilterDecoding>,
+    #[serde(default)]
+    pub active: Vec<String>,
+    #[serde(default)]
+    pub ignore: Vec<String>,
+    #[serde(default)]
+    pub report: Vec<String>,
     pub masking_seed: String,
 }
 
@@ -350,6 +356,14 @@ pub struct ContentFilterRule {
     pub risk: u8,
     pub category: String,
     pub subcategory: String,
+    #[serde(default)]
+    pub tags: HashSet<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ContentFilterGroup {
+    pub tags: Vec<String>,
+    pub signatures: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

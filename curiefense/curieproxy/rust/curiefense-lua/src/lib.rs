@@ -80,11 +80,11 @@ fn inspect_content_filter(
         mbody,
     };
 
-    let (dec, reqinfo) = content_filter_check_generic_request_map(configpath, &raw, &content_filter_id, &mut logs);
+    let (dec, reqinfo, tags) = content_filter_check_generic_request_map(configpath, &raw, &content_filter_id, &mut logs);
 
     Ok(InspectionResult {
         decision: dec,
-        tags: None,
+        tags: Some(tags),
         logs,
         err: None,
         rinfo: Some(reqinfo),
