@@ -1,5 +1,6 @@
 use crate::config::raw::{
-    ContentFilterRule, RawContentFilterEntryMatch, RawContentFilterProfile, RawContentFilterProperties,
+    ContentFilterGroup, ContentFilterRule, RawContentFilterEntryMatch, RawContentFilterProfile,
+    RawContentFilterProperties,
 };
 use crate::logs::Logs;
 
@@ -23,6 +24,9 @@ pub struct Section<A> {
 pub struct ContentFilterProfile {
     pub id: String,
     pub name: String,
+    pub active: HashSet<String>,
+    pub ignore: HashSet<String>,
+    pub report: HashSet<String>,
     pub ignore_alphanum: bool,
     pub sections: Section<ContentFilterSection>,
     pub decoding: Vec<Transformation>,
@@ -75,6 +79,9 @@ impl ContentFilterProfile {
             },
             decoding: Vec::default(),
             masking_seed: seed.as_bytes().to_vec(),
+            active: HashSet::default(),
+            ignore: HashSet::default(),
+            report: HashSet::default(),
         }
     }
 }
@@ -217,6 +224,9 @@ fn convert_entry(entry: RawContentFilterProfile) -> anyhow::Result<(String, Cont
             },
             decoding,
             masking_seed: entry.masking_seed.as_bytes().to_vec(),
+            active: entry.active.into_iter().collect(),
+            ignore: entry.ignore.into_iter().collect(),
+            report: entry.report.into_iter().collect(),
         },
     ))
 }
@@ -244,11 +254,34 @@ fn convert_rule(entry: &ContentFilterRule) -> anyhow::Result<Pattern> {
     )
 }
 
-pub fn resolve_rules(raws: Vec<ContentFilterRule>) -> anyhow::Result<ContentFilterRules> {
+pub fn resolve_rules(
+    raws: Vec<ContentFilterRule>,
+    groups: Vec<ContentFilterGroup>,
+) -> anyhow::Result<ContentFilterRules> {
     let patterns: anyhow::Result<Vec<Pattern>> = raws.iter().map(convert_rule).collect();
     let ptrns: Patterns = Patterns::from_iter(patterns?);
+
+    let mut groupmap: HashMap<String, HashSet<String>> = HashMap::new();
+    for group in groups {
+        for sig in group.signatures {
+            let entry = groupmap.entry(sig).or_default();
+            entry.extend(group.tags.iter().cloned());
+        }
+    }
+
+    // extend the rule tags with the group tags
+    let ids = raws
+        .into_iter()
+        .map(|mut r| {
+            if let Some(tgs) = groupmap.get(&r.id) {
+                r.tags.extend(tgs.iter().cloned())
+            }
+            r
+        })
+        .collect();
+
     Ok(ContentFilterRules {
         db: ptrns.build::<Vectored>()?,
-        ids: raws,
+        ids,
     })
 }
