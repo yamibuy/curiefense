@@ -151,8 +151,10 @@ pub fn content_filter_check(
         }
     }
 
+    let kept = profile.active.union(&profile.report).cloned().collect::<HashSet<_>>();
+
     // finally, hyperscan check
-    if let Err(rr) = hyperscan(logs, tags, hca_keys, hsdb, &profile.ignore, &omit.exclusions) {
+    if let Err(rr) = hyperscan(logs, tags, hca_keys, hsdb, &kept, &profile.ignore, &omit.exclusions) {
         logs.error(rr)
     }
 
@@ -280,6 +282,7 @@ fn hyperscan(
     tags: &mut Tags,
     hca_keys: HashMap<String, (SectionIdx, String)>,
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
+    global_kept: &HashSet<String>,
     global_ignore: &HashSet<String>,
     exclusions: &Section<HashMap<String, HashSet<String>>>,
 ) -> anyhow::Result<()> {
@@ -306,20 +309,20 @@ fn hyperscan(
                 None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
-                    let new_tags = [
-                        format!("sig-id-{}", sig.id),
-                        format!("sig-risk-{}", sig.risk),
-                        format!("sig-category-{}", sig.category),
-                        format!("sig-subcategory-{}", sig.subcategory),
-                    ];
-                    let globally_ignored = |e| global_ignore.contains(e);
-                    if exclusions
-                        .get(sid)
-                        .get(&name)
-                        .map(|ex| tags.has_intersection(ex) || new_tags.iter().any(|y| ex.contains(y)))
-                        != Some(true)
-                        && !new_tags.iter().any(globally_ignored)
-                        && !sig.tags.iter().any(globally_ignored)
+                    let mut new_tags = HashSet::new();
+                    new_tags.insert(format!("sig-id-{}", sig.id));
+                    new_tags.insert(format!("sig-risk-{}", sig.risk));
+                    new_tags.insert(format!("sig-category-{}", sig.category));
+                    new_tags.insert(format!("sig-subcategory-{}", sig.subcategory));
+                    new_tags.extend(sig.tags.iter().cloned());
+
+                    if new_tags.intersection(global_kept).next().is_some()
+                        && exclusions
+                            .get(sid)
+                            .get(&name)
+                            .map(|ex| tags.has_intersection(ex) || new_tags.intersection(ex).next().is_some())
+                            != Some(true)
+                        && new_tags.intersection(global_ignore).next().is_none()
                     {
                         for t in &new_tags {
                             tags.insert(t);
