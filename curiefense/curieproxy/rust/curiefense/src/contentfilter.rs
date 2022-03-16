@@ -152,15 +152,7 @@ pub fn content_filter_check(
     }
 
     // finally, hyperscan check
-    if let Err(rr) = hyperscan(
-        logs,
-        tags,
-        hca_keys,
-        hsdb,
-        &profile.ignore,
-        &omit.exclusions,
-        &profile.sections,
-    ) {
+    if let Err(rr) = hyperscan(logs, tags, hca_keys, hsdb, &profile.ignore, &omit.exclusions) {
         logs.error(rr)
     }
 
@@ -290,7 +282,6 @@ fn hyperscan(
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
     global_ignore: &HashSet<String>,
     exclusions: &Section<HashMap<String, HashSet<String>>>,
-    sections: &Section<ContentFilterSection>,
 ) -> anyhow::Result<()> {
     let sigs = match &*hsdb {
         None => return Err(anyhow::anyhow!("Hyperscan database not loaded")),
@@ -315,28 +306,26 @@ fn hyperscan(
                 None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
-                    let sigid = format!("sig-id-{}", sig.id);
-                    if sig.risk >= sections.get(sid).min_risk
-                        && exclusions
-                            .get(sid)
-                            .get(&name)
-                            .map(|ex| ex.contains(&sigid) || tags.has_intersection(ex))
-                            != Some(true)
+                    let new_tags = [
+                        format!("sig-id-{}", sig.id),
+                        format!("sig-risk-{}", sig.risk),
+                        format!("sig-category-{}", sig.category),
+                        format!("sig-subcategory-{}", sig.subcategory),
+                    ];
+                    let globally_ignored = |e| global_ignore.contains(e);
+                    if exclusions
+                        .get(sid)
+                        .get(&name)
+                        .map(|ex| tags.has_intersection(ex) || new_tags.iter().any(|y| ex.contains(y)))
+                        != Some(true)
+                        && !new_tags.iter().any(globally_ignored)
+                        && !sig.tags.iter().any(globally_ignored)
                     {
-                        let new_tags = [
-                            sigid,
-                            format!("sig-risk-{}", sig.risk),
-                            format!("sig-category-{}", sig.category),
-                            format!("sig-subcategory-{}", sig.subcategory),
-                        ];
-                        let globally_ignored = |e| global_ignore.contains(e);
-                        if !new_tags.iter().any(globally_ignored) && !sig.tags.iter().any(globally_ignored) {
-                            for t in &new_tags {
-                                tags.insert(t);
-                            }
-                            for t in &sig.tags {
-                                tags.insert(t);
-                            }
+                        for t in &new_tags {
+                            tags.insert(t);
+                        }
+                        for t in &sig.tags {
+                            tags.insert(t);
                         }
                     }
                 }
