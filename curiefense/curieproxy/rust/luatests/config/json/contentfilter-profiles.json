@@ -715,7 +715,7 @@
             "regex": [
                 {
                     "key": ".*",
-                    "reg": null,
+                    "reg": "DQ",
                     "restrict": false,
                     "mask": true,
                     "exclusions": []
