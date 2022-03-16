@@ -53,28 +53,24 @@ impl ContentFilterProfile {
                     max_length: 1024,
                     names: HashMap::new(),
                     regex: Vec::new(),
-                    min_risk: 1,
                 },
                 args: ContentFilterSection {
                     max_count: 512,
                     max_length: 1024,
                     names: HashMap::new(),
                     regex: Vec::new(),
-                    min_risk: 1,
                 },
                 cookies: ContentFilterSection {
                     max_count: 42,
                     max_length: 1024,
                     names: HashMap::new(),
                     regex: Vec::new(),
-                    min_risk: 1,
                 },
                 path: ContentFilterSection {
                     max_count: 42,
                     max_length: 1024,
                     names: HashMap::new(),
                     regex: Vec::new(),
-                    min_risk: 1,
                 },
             },
             decoding: Vec::default(),
@@ -92,7 +88,6 @@ pub struct ContentFilterSection {
     pub max_length: usize,
     pub names: HashMap<String, ContentFilterEntryMatch>,
     pub regex: Vec<(Regex, ContentFilterEntryMatch)>,
-    pub min_risk: u8,
 }
 
 #[derive(Debug, Clone)]
@@ -179,7 +174,7 @@ fn mk_entry_match(em: RawContentFilterEntryMatch) -> anyhow::Result<(String, Con
             restrict: em.restrict,
             mask: em.mask.unwrap_or(false),
             exclusions: em.exclusions.into_iter().collect::<HashSet<_>>(),
-            reg
+            reg,
         },
     ))
 }
@@ -201,7 +196,6 @@ fn mk_section(props: RawContentFilterProperties) -> anyhow::Result<ContentFilter
         max_length: props.max_length.0,
         names: mnames?,
         regex: mregex?,
-        min_risk: props.min_risk.0,
     })
 }
 

@@ -274,11 +274,6 @@ pub struct MaxCount(pub usize);
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MaxLength(pub usize);
 
-impl Default for MinRisk {
-    fn default() -> Self {
-        MinRisk(1)
-    }
-}
 impl Default for MaxCount {
     fn default() -> Self {
         MaxCount(42)
@@ -295,8 +290,6 @@ pub struct RawContentFilterProperties {
     pub names: Vec<RawContentFilterEntryMatch>,
     pub regex: Vec<RawContentFilterEntryMatch>,
     #[serde(default)]
-    pub min_risk: MinRisk,
-    #[serde(default)]
     pub max_count: MaxCount,
     #[serde(default)]
     pub max_length: MaxLength,
@@ -307,7 +300,6 @@ impl Default for RawContentFilterProperties {
         RawContentFilterProperties {
             names: Vec::default(),
             regex: Vec::default(),
-            min_risk: MinRisk::default(),
             max_count: MaxCount::default(),
             max_length: MaxLength::default(),
         }
