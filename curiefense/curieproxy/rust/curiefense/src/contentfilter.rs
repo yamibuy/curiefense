@@ -339,18 +339,13 @@ fn hyperscan(
 }
 
 fn mask_section(masking_seed: &[u8], sec: &mut RequestField, section: &ContentFilterSection) -> HashSet<XDataSource> {
-    let match_value = |e: &ContentFilterEntryMatch, v: &str| e.reg.as_ref().map(|re| re.is_match(v)).unwrap_or(true);
-
     let to_mask: Vec<String> = sec
         .iter()
-        .filter(|&(name, value)| {
+        .filter(|&(name, _)| {
             if let Some(e) = section.names.get(name) {
-                e.mask && match_value(e, value)
+                e.mask
             } else {
-                section
-                    .regex
-                    .iter()
-                    .any(|(re, e)| e.mask && re.is_match(name) && match_value(e, value))
+                section.regex.iter().any(|(re, e)| e.mask && re.is_match(name))
             }
         })
         .map(|(name, _)| name.to_string())
@@ -360,7 +355,6 @@ fn mask_section(masking_seed: &[u8], sec: &mut RequestField, section: &ContentFi
 
 pub fn masking(masking_seed: &[u8], req: RequestInfo, profile: &ContentFilterProfile) -> RequestInfo {
     let mut ri = req;
-    mask_section(masking_seed, &mut ri.headers, profile.sections.get(SectionIdx::Headers));
     let mut to_mask = HashSet::new();
 
     to_mask.extend(mask_section(
@@ -380,8 +374,8 @@ pub fn masking(masking_seed: &[u8], req: RequestInfo, profile: &ContentFilterPro
     ));
     to_mask.extend(mask_section(
         masking_seed,
-        &mut ri.rinfo.qinfo.path_as_map,
-        profile.sections.get(SectionIdx::Path),
+        &mut ri.headers,
+        profile.sections.get(SectionIdx::Headers),
     ));
     for x in to_mask {
         match x {
