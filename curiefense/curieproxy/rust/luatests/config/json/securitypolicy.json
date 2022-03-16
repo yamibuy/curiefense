@@ -283,6 +283,24 @@
                 "limit_ids": []
             },
             {
+                "match": "^/content-filter/ignoresqli",
+                "name": "content filter ignore sqli",
+                "acl_profile": "__default__",
+                "content_filter_profile": "ignoresqli",
+                "acl_active": true,
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
+                "match": "^/content-filter/ignorerl5",
+                "name": "content filter ignore risk level 5",
+                "acl_profile": "__default__",
+                "content_filter_profile": "ignorerl5",
+                "acl_active": true,
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "/",
                 "name": "default",
                 "acl_profile": "__default__",

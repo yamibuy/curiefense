@@ -166,6 +166,8 @@ pub fn content_filter_check(
     }
 
     let active = tags.intersect(&profile.active);
+    logs.info(format!("profile.active {:?}", profile.active));
+    logs.info(format!("active {:?}", active));
     if !active.is_empty() {
         return Err(ContentFilterBlock::Block(active));
     }
@@ -321,14 +323,21 @@ fn hyperscan(
                             .get(&name)
                             .map(|ex| ex.contains(&sigid) || tags.has_intersection(ex))
                             != Some(true)
-                        && !global_ignore.contains(&sigid)
                     {
-                        tags.insert(&sigid);
-                        tags.insert(&format!("sig-risk-{}", sig.risk));
-                        tags.insert(&format!("sig-category-{}", sig.category));
-                        tags.insert(&format!("sig-subcategory-{}", sig.subcategory));
-                        for t in &sig.tags {
-                            tags.insert(t);
+                        let new_tags = [
+                            sigid,
+                            format!("sig-risk-{}", sig.risk),
+                            format!("sig-category-{}", sig.category),
+                            format!("sig-subcategory-{}", sig.subcategory),
+                        ];
+                        let globally_ignored = |e| global_ignore.contains(e);
+                        if !new_tags.iter().any(globally_ignored) && !sig.tags.iter().any(globally_ignored) {
+                            for t in &new_tags {
+                                tags.insert(t);
+                            }
+                            for t in &sig.tags {
+                                tags.insert(t);
+                            }
                         }
                     }
                 }

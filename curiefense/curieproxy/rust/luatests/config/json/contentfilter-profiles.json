@@ -419,6 +419,94 @@
             "regex": []
         },
         "decoding": {
+            "base64": false
+        },
+        "headers": {
+            "max_count": 42,
+            "max_length": 1024,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "id": "ignorerl5",
+        "ignore_alphanum": true,
+        "name": "ignore risk level 5",
+        "path": {
+            "max_count": 42,
+            "max_length": 2048,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "active": [
+            "libinjection",
+            "waf"
+        ],
+        "ignore": [
+            "sig-risk-5"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "args": {
+            "max_count": 512,
+            "max_length": 1024,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "max_count": 42,
+            "max_length": 1024,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "decoding": {
+            "base64": false
+        },
+        "headers": {
+            "max_count": 42,
+            "max_length": 1024,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "id": "ignoresqli",
+        "ignore_alphanum": true,
+        "name": "ignore sqli",
+        "path": {
+            "max_count": 42,
+            "max_length": 2048,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "active": [
+            "libinjection",
+            "waf"
+        ],
+        "ignore": [
+            "sqli"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "args": {
+            "max_count": 512,
+            "max_length": 1024,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "max_count": 42,
+            "max_length": 1024,
+            "min_risk": 1,
+            "names": [],
+            "regex": []
+        },
+        "decoding": {
             "base64": true
         },
         "headers": {
