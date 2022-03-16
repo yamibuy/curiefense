@@ -717,6 +717,41 @@
     },
     {
         "masking_seed": "CHANGEME",
+        "id": "maskall",
+        "name": "mask all arguments",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 3,
+        "args": {
+            "names": [],
+            "regex": [
+                {
+                    "key": ".*",
+                    "reg": "DQ",
+                    "restrict": false,
+                    "mask": true,
+                    "exclusions": []
+                }
+            ]
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        },
+        "active": [
+            "libinjection"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
         "id": "rre",
         "name": "rre",
         "ignore_alphanum": false,
