@@ -310,10 +310,10 @@ fn hyperscan(
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
                     let mut new_tags = HashSet::new();
-                    new_tags.insert(format!("sig-id-{}", sig.id));
-                    new_tags.insert(format!("sig-risk-{}", sig.risk));
-                    new_tags.insert(format!("sig-category-{}", sig.category));
-                    new_tags.insert(format!("sig-subcategory-{}", sig.subcategory));
+                    new_tags.insert(format!("rule-id-{}", sig.id));
+                    new_tags.insert(format!("rule-risk-{}", sig.risk));
+                    new_tags.insert(format!("rule-category-{}", sig.category));
+                    new_tags.insert(format!("rule-subcategory-{}", sig.subcategory));
                     new_tags.extend(sig.tags.iter().cloned());
 
                     if new_tags.intersection(global_kept).next().is_some()
