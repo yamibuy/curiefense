@@ -55,10 +55,15 @@ for root, _, files in os.walk(target):
                             .rstrip("=")
                         )
                     else:
-                        print("Unsupported encoding for %s: %s" % (data["type"], encoder), file=sys.stderr)
+                        print(
+                            "Unsupported encoding for %s: %s" % (data["type"], encoder),
+                            file=sys.stderr,
+                        )
                         continue
                     for placeholder in data["placeholder"]:
-                        q = default_query("%s %d/%s/%s" % (f, pid, encoder, placeholder))
+                        q = default_query(
+                            "%s %d/%s/%s" % (f, pid, encoder, placeholder)
+                        )
                         if placeholder == "URLParam":
                             q["headers"][":path"] = "/test?param=" + epayload
                         elif placeholder == "URLPath":
@@ -70,10 +75,14 @@ for root, _, files in os.walk(target):
                             q["headers"]["content-type"] = "application/json"
                             q["body"] = payload
                         elif placeholder == "HTMLForm":
-                            q["headers"]["content-type"] = "application/x-www-form-urlencoded"
+                            q["headers"][
+                                "content-type"
+                            ] = "application/x-www-form-urlencoded"
                             q["body"] = "foo=1&bar=" + payload
                         elif placeholder == "HTMLMultipartForm":
-                            q["headers"]["content-type"] = "multipart/form-data; boundary=AaB03x"
+                            q["headers"][
+                                "content-type"
+                            ] = "multipart/form-data; boundary=AaB03x"
                             q["body"] = (
                                 """--AaB03x\r\nContent-Disposition: form-data; name="submit-name"\r\n\r\n%s\r\n--AaB03x--"""
                                 % payload
@@ -81,7 +90,11 @@ for root, _, files in os.walk(target):
                         elif placeholder == "Header":
                             q["headers"]["myheader"] = epayload
                         else:
-                            print("Unsupported placeholder for %s: %s" % (fullname, placeholder), file=sys.stderr)
+                            print(
+                                "Unsupported placeholder for %s: %s"
+                                % (fullname, placeholder),
+                                file=sys.stderr,
+                            )
                             continue
                         if fp:
                             q["response"] = {"action": "pass"}
