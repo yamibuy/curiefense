@@ -51,7 +51,7 @@
             "regex": [
                 {
                     "exclusions": [
-                        "sig-id-100016"
+                        "rule-id-100016"
                     ],
                     "key": ".",
                     "mask": false,
@@ -236,9 +236,9 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3"
                     ]
                 }
             ]
@@ -255,9 +255,9 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3"
                     ]
                 }
             ]
@@ -277,9 +277,9 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3"
                     ]
                 }
             ]
@@ -309,10 +309,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3",
-                        "sig-risk-4"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3",
+                        "rule-risk-4"
                     ]
                 }
             ]
@@ -329,10 +329,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3",
-                        "sig-risk-4"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3",
+                        "rule-risk-4"
                     ]
                 }
             ]
@@ -352,10 +352,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3",
-                        "sig-risk-4"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3",
+                        "rule-risk-4"
                     ]
                 }
             ]
@@ -385,8 +385,8 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2"
+                        "rule-risk-1",
+                        "rule-risk-2"
                     ]
                 }
             ]
@@ -403,10 +403,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "sig-risk-1",
-                        "sig-risk-2",
-                        "sig-risk-3",
-                        "sig-risk-4"
+                        "rule-risk-1",
+                        "rule-risk-2",
+                        "rule-risk-3",
+                        "rule-risk-4"
                     ]
                 }
             ]
@@ -503,7 +503,7 @@
             "waf"
         ],
         "ignore": [
-            "sig-risk-5"
+            "rule-risk-5"
         ]
     },
     {
