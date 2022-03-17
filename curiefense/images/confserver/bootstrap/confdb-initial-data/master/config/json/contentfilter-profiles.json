@@ -34,6 +34,9 @@
         "decoding": {
             "base64": true
         },
-        "masking_seed": "CHANGEME"
+        "masking_seed": "CHANGEME",
+        "active": [],
+        "report": [],
+        "ignore": []
     }
 ]
