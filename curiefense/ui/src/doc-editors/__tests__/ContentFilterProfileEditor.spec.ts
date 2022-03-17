@@ -76,6 +76,7 @@ describe('ContentFilterProfileEditor.vue', () => {
         'notes': '',
         'category': 'sqli',
         'subcategory': 'statement injection',
+        'tags': [],
       },
       {
         'id': '100001',
@@ -86,6 +87,7 @@ describe('ContentFilterProfileEditor.vue', () => {
         'notes': '',
         'operand': '\\s(and|or)\\s+["\']\\w+["\']\\s+.*between\\s.*["\']\\w+["\']\\s+and\\s+["\']\\w+.*',
         'msg': 'SQLi Attempt (Conditional Operator Detected)',
+        'tags': [],
       },
       {
         'id': '100002',
@@ -96,6 +98,7 @@ describe('ContentFilterProfileEditor.vue', () => {
         'notes': '',
         'operand': '\\W(\\s*)?(and|or)\\s.*(\'|").+(\'|")(\\s+)?(=|>|<|>=|<=).*(\'|").+',
         'msg': 'SQLi Attempt (Conditional Operator Detected)',
+        'tags': [],
       },
     ]
     contentFilterGroupsDocs = [
