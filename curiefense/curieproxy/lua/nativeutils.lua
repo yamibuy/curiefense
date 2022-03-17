@@ -113,9 +113,9 @@ function nativeutils.envoy_custom_response(request_map, action_params)
 
     local response = {
         [ "status" ] = "503",
-        [ "headers"] = { ["x-curiefense"] = "response" },
+        [ "headers"] = { [":status"] = "503" },
         [ "reason" ] = { initiator = "undefined", reason = "undefined"},
-        [ "content"] = "curiefense - request denied"
+        [ "content"] = "request denied"
     }
 
     -- override defaults

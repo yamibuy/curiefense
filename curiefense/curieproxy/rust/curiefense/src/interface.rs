@@ -234,7 +234,7 @@ impl std::default::Default for Action {
             status: 503,
             headers: None,
             reason: serde_json::value::Value::Null,
-            content: "curiefense - request denied".to_string(),
+            content: "request denied".to_string(),
             extra_tags: None,
         }
     }
