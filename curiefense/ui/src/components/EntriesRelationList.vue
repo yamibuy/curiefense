@@ -99,7 +99,7 @@
                              placeholder="Name"
                              @input="validateRegex( `${newEntryCategory}${sectionIndex}`, $event.target.value )"
                              v-model="newEntryItem.firstAttr"/>
-                      <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
+                      <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-font"></i></span>
                     </div>
                     <textarea v-else
                               title="Entries"

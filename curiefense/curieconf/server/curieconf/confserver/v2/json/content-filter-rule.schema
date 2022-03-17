@@ -33,6 +33,12 @@
             "title": "Risk Level",
             "description": "Risk level of this rule, between 1 (lowest risk) and 5 (highest risk)"
         },
+        "tags": {
+            "title": "Tags List",
+            "description": "List of tags to apply",
+            "type": "array",
+            "items": { "type": "string" }
+        },
         "msg": {
             "type": "string",
             "title": "Message",

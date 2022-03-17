@@ -33,6 +33,16 @@
                   </div>
                 </div>
                 <div class="field">
+                  <label class="label is-small">Tags</label>
+                  <div class="control">
+                    <input class="input is-small document-tags"
+                           title="Tags"
+                           placeholder="Tags"
+                           v-model="selectedDocTags"
+                           @change="emitDocUpdate()"/>
+                  </div>
+                </div>
+                <div class="field">
                   <label class="label is-small">Category</label>
                   <div class="control">
                     <input class="input is-small document-category"
@@ -116,6 +126,21 @@ export default Vue.extend({
   computed: {
     localDoc(): ContentFilterRule {
       return _.cloneDeep(this.selectedDoc)
+    },
+
+    selectedDocTags: {
+      get: function(): string {
+        if (this.localDoc.tags && this.localDoc.tags.length > 0) {
+          return this.localDoc.tags.join(' ')
+        }
+        return ''
+      },
+      set: function(tags: string): void {
+        this.localDoc.tags = tags.length > 0 ? _.map(tags.split(' '), (tag) => {
+          return tag.trim()
+        }) : []
+        this.emitDocUpdate()
+      },
     },
   },
   data() {
