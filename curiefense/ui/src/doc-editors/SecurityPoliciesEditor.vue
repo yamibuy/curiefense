@@ -126,7 +126,7 @@
                                        type="text"
                                        @input="emitDocUpdate();
                                                validateInput($event, isSelectedMapEntryMatchValid(mapIndex))"
-                                       title="A unique matching regex value, not overlapping other Security Policy definitions"
+                                       title="matchingDomainTitle"
                                        placeholder="Matching domain(s) regex"
                                        required
                                        :disabled="localDoc.id === '__default__' && initialMapEntryMatch === '/'"
@@ -372,6 +372,9 @@ export default (Vue as VueConstructor<Vue & {
       initialDocDomainMatch: '',
       initialMapEntryMatch: '',
       upstreams: [],
+
+      // titles
+      matchingDomainTitle: 'A unique matching regex value, not overlapping other Security Policy definitions',
     }
   },
 
