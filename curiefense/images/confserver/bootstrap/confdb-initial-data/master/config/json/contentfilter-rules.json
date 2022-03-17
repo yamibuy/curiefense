@@ -1763,7 +1763,7 @@
     "id": "600145",
     "name": "600145",
     "msg": "system resource",
-    "operand": "rfi?..",
+    "operand": "rfi\\?\\.\\.",
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
