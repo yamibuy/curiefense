@@ -101,6 +101,8 @@ m_contentfilterrule = api.model(
         "certainity": fields.Integer(required=True),
         "category": fields.String(required=True),
         "subcategory": fields.String(required=True),
+        "risk": fields.Integer(required=True),
+        "tags": fields.List(fields.String()),
     },
 )
 

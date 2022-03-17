@@ -22,6 +22,19 @@
                            v-model="localDoc.name"/>
                   </div>
                 </div>
+                <div class="field">
+                  <label class="label is-small">
+                    Masking Seed
+                  </label>
+                  <div class="control">
+                    <input class="input is-small document-masking-seed"
+                           title="Masking seed"
+                           placeholder="Masking seed"
+                           type="password"
+                           @change="emitDocUpdate"
+                           v-model="localDoc.masking_seed"/>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -136,6 +149,59 @@
                   characters, will be ignored.</p>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="columns px-3 py-3 mx-0 my-0">
+          <div class="column is-4" v-for="operation in operations" :key="operation">
+            <p class="title is-7 is-uppercase">{{ titles[operation] }}</p>
+            <hr class="bar" :class="`bar-${operation}`"/>
+            <table class="table is-narrow is-fullwidth">
+              <tbody>
+              <tr v-for="(tag, idx) in localDoc[operation]" :key="idx">
+                <td class="tag-cell"
+                    :class=" { 'has-text-danger': duplicateTags[tag] }"
+                    :title="tagMessage(tag)">
+                  {{ tag }}
+                </td>
+                <td class="is-size-7 width-20px">
+                  <a title="remove entry"
+                     tabindex="0"
+                     class="is-small has-text-grey remove-entry-button"
+                     @click="removeTag(operation, idx)"
+                     @keypress.space.prevent
+                     @keypress.space="removeTag(operation, idx)"
+                     @keypress.enter="removeTag(operation, idx)">
+                    &ndash;
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <autocomplete-input
+                      v-if="addNewColName === operation"
+                      input-type="input"
+                      selection-type="single"
+                      title="Tag"
+                      :minimum-value-length="2"
+                      :clear-input-after-selection="true"
+                      :auto-focus="true"
+                      @keydown.esc="cancelAddNewTag"
+                      @value-submitted="addTag(operation, $event)"/>
+                </td>
+                <td class="is-size-7 width-20px">
+                  <a title="add new entry"
+                     tabindex="0"
+                     class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
+                     @click="openTagInput(operation)"
+                     @keypress.space.prevent
+                     @keypress.space="openTagInput(operation)"
+                     @keypress.enter="openTagInput(operation)">
+                    +
+                  </a>
+                </td>
+              </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         <div class="tile is-ancestor px-3 py-3 mx-0 my-0">
@@ -471,12 +537,15 @@ import {
   ContentFilterProfile,
   ContentFilterProfileSection,
   ContentFilterProfileSectionType,
+  ContentFilterProfileTagLists,
   ContentFilterRule,
   ContentFilterRuleGroup,
   NamesRegexType,
 } from '@/types'
 import AutocompleteInput, {AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
 import RequestsUtils from '@/assets/RequestsUtils'
+import {Dictionary} from 'vue-router/types/router'
+import Utils from '@/assets/Utils'
 
 export default Vue.extend({
   name: 'ContentFilterEditor',
@@ -504,6 +573,8 @@ export default Vue.extend({
       max_length: 0,
     }
     return {
+      operations: ['active', 'report', 'ignore'] as ContentFilterProfileTagLists[],
+      addNewColName: null,
       tab: 'args' as ArgsCookiesHeadersType,
       newContentFilterLine: null as ArgsCookiesHeadersType,
       newEntry: defaultNewEntry,
@@ -523,6 +594,15 @@ export default Vue.extend({
   computed: {
     localDoc(): ContentFilterProfile {
       return _.cloneDeep(this.selectedDoc)
+    },
+
+    duplicateTags(): Dictionary<string> {
+      const doc = this.localDoc
+      const allTags = _.concat(doc['active'], doc['report'], doc['ignore'])
+      const dupTags = _.filter(allTags, (val, i, iteratee) => _.includes(iteratee, val, i + 1))
+      const result = _.fromPairs(_.zip(dupTags, dupTags))
+      this.$emit('form-invalid', !!_.size(result))
+      return result
     },
   },
 
@@ -631,6 +711,34 @@ export default Vue.extend({
       this.localDoc[section] = _.cloneDeep(this.defaultContentFilterProfileSection)
       this.emitDocUpdate()
     },
+
+    openTagInput(section: ContentFilterProfileTagLists) {
+      this.addNewColName = section
+    },
+
+    cancelAddNewTag() {
+      this.addNewColName = null
+    },
+
+    addTag(section: ContentFilterProfileTagLists, entry: string) {
+      entry = Utils.removeExtraWhitespaces(entry).trim()
+      this.localDoc[section].push(entry)
+      this.emitDocUpdate()
+    },
+
+    removeTag(section: ContentFilterProfileTagLists, index: number) {
+      this.localDoc[section].splice(index, 1)
+      this.addNewColName = null
+      this.emitDocUpdate()
+    },
+
+    tagMessage(tag: string) {
+      let message = ''
+      if (this.duplicateTags[tag]) {
+        message = `[${tag}] is duplicated`
+      }
+      return message
+    },
   },
 
   created() {
@@ -655,8 +763,34 @@ export default Vue.extend({
 })
 </script>
 
-<style>
+<style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/initial-variables.sass';
+@import 'node_modules/bulma/sass/utilities/functions.sass';
+@import 'node_modules/bulma/sass/utilities/derived-variables.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
 .dropdown .dropdown-menu {
   width: auto;
+}
+
+.bar {
+  margin: 1rem 0 0.5rem;
+}
+
+.bar-active {
+  @extend .has-background-grey-light;
+}
+
+.bar-report {
+  @extend .has-background-grey-light;
+}
+
+.bar-ignore {
+  @extend .has-background-grey-light;
+}
+
+::v-deep .tag-input {
+  font-size: 0.58rem;
 }
 </style>

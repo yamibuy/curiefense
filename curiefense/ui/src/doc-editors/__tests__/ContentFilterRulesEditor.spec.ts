@@ -17,6 +17,7 @@ describe('ContentFilterRulesEditor.vue', () => {
       'notes': 'SQL injection',
       'category': 'sqli',
       'subcategory': 'statement injection',
+      'tags': [],
     }]
     wrapper = shallowMount(ContentFilterRulesEditor, {
       propsData: {

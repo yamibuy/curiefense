@@ -8,12 +8,12 @@
                 :title="title"
                 :placeholder="title"
                 class="autocomplete-input textarea is-small"
-                @keydown.enter="selectTextareaValue"
-                @keydown.space.prevent
-                @keydown.down="focusNextSuggestion"
-                @keydown.up="focusPreviousSuggestion"
-                @keydown.esc="closeDropdown"
-                @keydown.delete.prevent="onTextareaDelete"
+                @keyup.enter="selectTextareaValue"
+                @keyup.space.prevent
+                @keyup.down="focusNextSuggestion"
+                @keyup.up="focusPreviousSuggestion"
+                @keyup.esc="closeDropdown"
+                @keyup.delete.prevent="onTextareaDelete"
                 @input="onInput"
                 @blur="inputBlurred"
                 @focus="onTextareaFocus"
@@ -27,11 +27,11 @@
              class="autocomplete-input input is-small"
              aria-haspopup="true"
              aria-controls="dropdown-menu"
-             @keydown.enter="selectValue"
-             @keydown.space="selectValue"
-             @keydown.down="focusNextSuggestion"
-             @keydown.up="focusPreviousSuggestion"
-             @keydown.esc="closeDropdown"
+             @keyup.enter="selectValue"
+             @keyup.space="selectValue"
+             @keyup.down="focusNextSuggestion"
+             @keyup.up="focusPreviousSuggestion"
+             @keyup.esc="closeDropdown"
              @input="openDropdown(); valueChanged()"
              @blur="inputBlurred"
              ref="autocompleteInput" />
@@ -308,7 +308,7 @@ export default (Vue as VueConstructor<Vue & {
     },
 
     inputBlurred() {
-      // We would like to cancel and skip the selection if one of the following occoured:
+      // We would like to cancel and skip the selection if one of the following occurred:
       // * The blur is due to a suggestion click
       // * The component is destroyed before we finish selecting
       this.inputBlurredTimeout = setTimeout(() => {
