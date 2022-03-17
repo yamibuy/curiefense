@@ -13,21 +13,19 @@ pub mod securitypolicy;
 pub mod tagging;
 pub mod utils;
 
-use crate::utils::map_request;
-use crate::utils::RawRequest;
-use interface::Tags;
 use serde_json::json;
 
 use acl::{check_acl, AclDecision, AclResult, BotHuman};
 use config::{with_config, HSDB};
 use contentfilter::{content_filter_check, masking};
 use flow::flow_check;
+use interface::Tags;
 use interface::{challenge_phase01, challenge_phase02, Action, ActionType, Decision, Grasshopper, SimpleDecision};
 use limit::limit_check;
 use logs::Logs;
 use securitypolicy::match_securitypolicy;
 use tagging::tag_request;
-use utils::RequestInfo;
+use utils::{map_request, BodyDecodingResult, RawRequest, RequestInfo};
 
 fn acl_block(blocking: bool, code: i32, tags: &[String]) -> Decision {
     Decision::Action(Action {
@@ -91,7 +89,12 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
                 match_securitypolicy(&raw.get_host(), &raw.meta.path, cfg, slogs).map(|(nm, um)| (nm, um.clone()));
             match mmapinfo {
                 Some((nm, secpolicy)) => {
-                    let reqinfo = map_request(slogs, &secpolicy.content_filter_profile.decoding, &raw);
+                    let reqinfo = map_request(
+                        slogs,
+                        &secpolicy.content_filter_profile.decoding,
+                        &secpolicy.content_filter_profile.content_type,
+                        &raw,
+                    );
                     let nflows = cfg.flows.clone();
 
                     // without grasshopper, default to being human
@@ -113,11 +116,11 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             Some(Some(x)) => x,
             Some(None) => {
                 logs.debug("Something went wrong during request tagging");
-                return (Decision::Pass, tags, map_request(logs, &[], &raw));
+                return (Decision::Pass, tags, map_request(logs, &[], &[], &raw));
             }
             None => {
                 logs.debug("Something went wrong during security policy searching");
-                return (Decision::Pass, tags, map_request(logs, &[], &raw));
+                return (Decision::Pass, tags, map_request(logs, &[], &[], &raw));
             }
         };
     let masking_seed = &securitypolicy.content_filter_profile.masking_seed;
@@ -130,6 +133,30 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
     tags.insert_qualified("aclname", &securitypolicy.acl_profile.name);
     tags.insert_qualified("contentfilterid", &securitypolicy.content_filter_profile.id);
     tags.insert_qualified("contentfiltername", &securitypolicy.content_filter_profile.name);
+
+    if !securitypolicy.content_filter_profile.content_type.is_empty()
+        && reqinfo.rinfo.qinfo.body_decoding != BodyDecodingResult::ProperlyDecoded
+    {
+        let error: &str = if let BodyDecodingResult::DecodingFailed(rr) = &reqinfo.rinfo.qinfo.body_decoding {
+            rr
+        } else {
+            "Expected a body, but there were none"
+        };
+        // we expect the body to be properly decoded
+        let action = Action {
+            reason: json!({
+                "initiator": "body_decoding",
+                "error": error
+            }),
+            status: 403,
+            ..Action::default()
+        };
+        return (
+            Decision::Action(action),
+            tags,
+            masking(masking_seed, reqinfo, &securitypolicy.content_filter_profile),
+        );
+    }
 
     if let Some(dec) = mgh
         .as_ref()
@@ -322,11 +349,11 @@ pub fn content_filter_check_generic_request_map(
         Some(Some(prof)) => prof,
         _ => {
             logs.error("Content Filter profile not found");
-            return (Decision::Pass, map_request(logs, &[], raw), tags);
+            return (Decision::Pass, map_request(logs, &[], &[], raw), tags);
         }
     };
 
-    let reqinfo = map_request(logs, &waf_profile.decoding, raw);
+    let reqinfo = map_request(logs, &waf_profile.decoding, &[], raw);
 
     let waf_result = match HSDB.read() {
         Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &waf_profile, rd),
