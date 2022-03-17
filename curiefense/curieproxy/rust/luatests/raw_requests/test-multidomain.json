@@ -14,8 +14,10 @@
         "aclid:--default--",
         "geo:united-states",
         "bot",
-        "libinjection",
-        "libinjection-xss",
+        "cf-rule-category-libinjection",
+        "cf-rule-subcategory-xss",
+        "cf-rule-risk-4",
+        "cf-rule-id-libinjection-xss",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -48,11 +50,11 @@
         "bot",
         "sqli",
         "waf",
-        "rule-id-100016",
+        "cf-rule-id-100016",
         "aclname:default-acl",
-        "rule-risk-5",
-        "rule-category-sqli",
-        "rule-subcategory-built-in-function-invocation"
+        "cf-rule-risk-5",
+        "cf-rule-category-sqli",
+        "cf-rule-subcategory-built-in-function-invocation"
       ],
       "action": "custom_response",
       "block_mode": false,
