@@ -48,11 +48,11 @@
         "bot",
         "sqli",
         "waf",
-        "sig-id-100016",
+        "rule-id-100016",
         "aclname:default-acl",
-        "sig-risk-5",
-        "sig-category-sqli",
-        "sig-subcategory-built-in-function-invocation"
+        "rule-risk-5",
+        "rule-category-sqli",
+        "rule-subcategory-built-in-function-invocation"
       ],
       "action": "custom_response",
       "block_mode": false,
