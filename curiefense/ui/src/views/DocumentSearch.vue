@@ -104,8 +104,8 @@
             <td class="is-size-7 width-50px">
               <p class="control has-text-centered" v-if="rowOverIndex === index">
                 <button class="button is-small go-to-link-button"
-                   @click="goToDocument(doc)"
-                   title="Go to document">
+                        @click="goToDocument(doc)"
+                        title="Go to document">
                     <span class="icon is-small">
                       <i class="fas fa-link"></i>
                     </span>
@@ -427,7 +427,8 @@ export default Vue.extend({
         // add map id to referenced acl
         this.referencedACL[map.acl_profile].push(doc.id)
         // initialize array if needed
-        if (!this.referencedContentFilter[map.content_filter_profile] || this.referencedContentFilter[map.content_filter_profile].length === 0) {
+        if (!this.referencedContentFilter[map.content_filter_profile] ||
+            this.referencedContentFilter[map.content_filter_profile].length === 0) {
           this.referencedContentFilter[map.content_filter_profile] = []
         }
         // add map id to referenced content filter
