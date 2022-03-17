@@ -41,6 +41,20 @@ pub enum ContentFilterBlock {
     Monitor(HashSet<String>),
 }
 
+static LIBINJECTION_SQLI_TAGS: [&str; 4] = [
+    "cf-rule-id-libinjection-sqli",
+    "cf-rule-category-libinjection",
+    "cf-rule-subcategory-sqli",
+    "cf-rule-risk-4",
+];
+
+static LIBINJECTION_XSS_TAGS: [&str; 4] = [
+    "cf-rule-id-libinjection-xss",
+    "cf-rule-category-libinjection",
+    "cf-rule-subcategory-xss",
+    "cf-rule-risk-4",
+];
+
 impl ContentFilterBlock {
     pub fn to_action(&self) -> Action {
         let reason = match self {
@@ -141,13 +155,23 @@ pub fn content_filter_check(
     }
 
     let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
+    let test_xss = !LIBINJECTION_XSS_TAGS.iter().any(|t| profile.ignore.contains(*t));
+    let test_sqli = !LIBINJECTION_SQLI_TAGS.iter().any(|t| profile.ignore.contains(*t));
 
     // if libinjection is globally ignored, ignore these tests
-    if !profile.ignore.contains("libinjection") {
+    if test_xss || test_sqli {
         // run libinjection on non-whitelisted sections
         for idx in &[Path, Headers, Cookies, Args] {
             // note that there is no risk check with injection, every match triggers a block.
-            injection_check(tags, *idx, get_section(*idx, rinfo), &omit, &mut hca_keys);
+            injection_check(
+                tags,
+                *idx,
+                get_section(*idx, rinfo),
+                &omit,
+                &mut hca_keys,
+                test_xss,
+                test_sqli,
+            );
         }
     }
 
@@ -159,8 +183,6 @@ pub fn content_filter_check(
     }
 
     let active = tags.intersect(&profile.active);
-    logs.info(format!("profile.active {:?}", profile.active));
-    logs.info(format!("active {:?}", active));
     if !active.is_empty() {
         return Err(ContentFilterBlock::Block(active));
     }
@@ -248,26 +270,37 @@ fn injection_check(
     params: &RequestField,
     omit: &Omitted,
     hca_keys: &mut HashMap<String, (SectionIdx, String)>,
+    test_xss: bool,
+    test_sqli: bool,
 ) {
     for (name, value) in params.iter() {
         if !omit.entries.get(idx).contains(name) {
-            if !omit
-                .exclusions
-                .get(idx)
-                .get(name)
-                .map(|st| st.contains("libinjection"))
-                .unwrap_or(false)
-            {
+            let omit_tags = omit.exclusions.get(idx).get(name);
+            let rtest_xss = test_xss
+                && !omit_tags
+                    .map(|tgs| LIBINJECTION_XSS_TAGS.iter().any(|t| tgs.contains(*t)))
+                    .unwrap_or(false);
+            let rtest_sqli = test_sqli
+                && !omit_tags
+                    .map(|tgs| LIBINJECTION_SQLI_TAGS.iter().any(|t| tgs.contains(*t)))
+                    .unwrap_or(false);
+            if rtest_sqli {
                 if let Some((b, _)) = sqli(value) {
                     if b {
-                        tags.insert("libinjection-sqli");
-                        tags.insert("libinjection");
+                        tags.insert("cf-rule-id-libinjection-sqli");
+                        tags.insert("cf-rule-category-libinjection");
+                        tags.insert("cf-rule-subcategory-sqli");
+                        tags.insert("cf-rule-risk-4");
                     }
                 }
+            }
+            if rtest_xss {
                 if let Some(b) = xss(value) {
                     if b {
-                        tags.insert("libinjection-xss");
-                        tags.insert("libinjection");
+                        tags.insert("cf-rule-id-libinjection-xss");
+                        tags.insert("cf-rule-category-libinjection");
+                        tags.insert("cf-rule-subcategory-xss");
+                        tags.insert("cf-rule-risk-4");
                     }
                 }
             }
@@ -310,24 +343,21 @@ fn hyperscan(
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
                     let mut new_tags = HashSet::new();
-                    new_tags.insert(format!("rule-id-{}", sig.id));
-                    new_tags.insert(format!("rule-risk-{}", sig.risk));
-                    new_tags.insert(format!("rule-category-{}", sig.category));
-                    new_tags.insert(format!("rule-subcategory-{}", sig.subcategory));
+                    new_tags.insert(format!("cf-rule-id-{}", sig.id));
+                    new_tags.insert(format!("cf-rule-risk-{}", sig.risk));
+                    new_tags.insert(format!("cf-rule-category-{}", sig.category));
+                    new_tags.insert(format!("cf-rule-subcategory-{}", sig.subcategory));
                     new_tags.extend(sig.tags.iter().cloned());
 
                     if new_tags.intersection(global_kept).next().is_some()
                         && exclusions
                             .get(sid)
                             .get(&name)
-                            .map(|ex| tags.has_intersection(ex) || new_tags.intersection(ex).next().is_some())
+                            .map(|ex| new_tags.intersection(ex).next().is_some())
                             != Some(true)
                         && new_tags.intersection(global_ignore).next().is_none()
                     {
                         for t in &new_tags {
-                            tags.insert(t);
-                        }
-                        for t in &sig.tags {
                             tags.insert(t);
                         }
                     }
