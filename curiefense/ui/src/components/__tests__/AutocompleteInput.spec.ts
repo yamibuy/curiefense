@@ -144,7 +144,7 @@ describe('AutocompleteInput.vue', () => {
     input.setValue('value')
     input.trigger('input')
     wrapper.setData({focusedSuggestionIndex: 2})
-    input.trigger('keydown.enter')
+    input.trigger('keyup.enter')
     await Vue.nextTick()
     expect((input.element as HTMLInputElement).value).toEqual('')
   })
@@ -257,28 +257,28 @@ describe('AutocompleteInput.vue', () => {
     })
 
     test('should focus on next item when down arrow is pressed', async () => {
-      input.trigger('keydown.down')
+      input.trigger('keyup.down')
       await Vue.nextTick()
       expect(dropdownItems.at(0).element.classList.contains('is-active')).toBeTruthy()
     })
 
     test('should focus on previous item when up arrow is pressed', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.up')
+      input.trigger('keyup.up')
       await Vue.nextTick()
       expect(dropdownItems.at(1).element.classList.contains('is-active')).toBeTruthy()
     })
 
     test('should not focus on next item when down arrow is pressed if focused on last element', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.down')
+      input.trigger('keyup.down')
       await Vue.nextTick()
       expect(dropdownItems.at(2).element.classList.contains('is-active')).toBeTruthy()
     })
 
     test('should not focus on any item when up arrow is pressed if focused on input', async () => {
       wrapper.setData({focusedSuggestionIndex: -1})
-      input.trigger('keydown.up')
+      input.trigger('keyup.up')
       await Vue.nextTick()
       expect(dropdownItems.at(0).element.classList.contains('is-active')).toBeFalsy()
       expect(dropdownItems.at(1).element.classList.contains('is-active')).toBeFalsy()
@@ -287,7 +287,7 @@ describe('AutocompleteInput.vue', () => {
 
     test('should select focused suggestion when enter is pressed', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect((input.element as HTMLInputElement).value).toEqual('test-value-2')
     })
@@ -296,21 +296,21 @@ describe('AutocompleteInput.vue', () => {
       wrapper.setData({focusedSuggestionIndex: -1})
       input.setValue('test-value-1')
       input.trigger('input')
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect((input.element as HTMLInputElement).value).toEqual('test-value-1')
     })
 
     test('should emit selected value when enter is pressed', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       expect(wrapper.emitted('value-submitted')).toBeTruthy()
       expect(wrapper.emitted('value-submitted')[0]).toEqual(['test-value-2'])
     })
 
     test('should select focused suggestion when space is pressed', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.space')
+      input.trigger('keyup.space')
       await Vue.nextTick()
       expect((input.element as HTMLInputElement).value).toEqual('test-value-2')
     })
@@ -319,7 +319,7 @@ describe('AutocompleteInput.vue', () => {
       wrapper.setData({focusedSuggestionIndex: -1})
       input.setValue('test-value-1')
       input.trigger('input')
-      input.trigger('keydown.space')
+      input.trigger('keyup.space')
       await Vue.nextTick()
       expect((input.element as HTMLInputElement).value).toEqual('test-value-1')
     })
@@ -329,7 +329,7 @@ describe('AutocompleteInput.vue', () => {
       await Vue.nextTick()
       input.setValue('test-value-1')
       input.trigger('input')
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect(wrapper.emitted('value-submitted')).toBeTruthy()
     })
@@ -339,7 +339,7 @@ describe('AutocompleteInput.vue', () => {
       await Vue.nextTick()
       input.setValue('')
       input.trigger('input')
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect(wrapper.emitted('value-submitted')).toBeFalsy()
     })
@@ -349,7 +349,7 @@ describe('AutocompleteInput.vue', () => {
       await Vue.nextTick()
       input.setValue('t')
       input.trigger('input')
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect(wrapper.emitted('value-submitted')).toBeFalsy()
     })
@@ -363,7 +363,7 @@ describe('AutocompleteInput.vue', () => {
       await Vue.nextTick()
       input.setValue('')
       input.trigger('input')
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect(toastOutput.length).toEqual(0)
       jest.clearAllMocks()
@@ -384,7 +384,7 @@ describe('AutocompleteInput.vue', () => {
       await Vue.nextTick()
       input.setValue(selectedValue)
       input.trigger('input')
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect(toastOutput[0].message).toContain(failureMessage)
       expect(toastOutput[0].type).toContain(failureMessageClass)
@@ -393,7 +393,7 @@ describe('AutocompleteInput.vue', () => {
 
     test('should emit selected value when space is pressed', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.space')
+      input.trigger('keyup.space')
       expect(wrapper.emitted('value-submitted')).toBeTruthy()
       expect(wrapper.emitted('value-submitted')[0]).toEqual(['test-value-2'])
     })
@@ -406,7 +406,7 @@ describe('AutocompleteInput.vue', () => {
       (input.element as HTMLInputElement).value = 'test:CHECK-CASE_01'
       input.trigger('input')
       await Vue.nextTick()
-      input.trigger('keydown.space')
+      input.trigger('keyup.space')
       expect(wrapper.emitted('value-submitted')).toBeTruthy()
       expect(wrapper.emitted('value-submitted')[0]).toEqual(['test:check-case-01'])
     })
@@ -424,7 +424,7 @@ describe('AutocompleteInput.vue', () => {
     })
 
     test('should have dropdown hidden when esc is pressed', async () => {
-      input.trigger('keydown.esc')
+      input.trigger('keyup.esc')
       await Vue.nextTick()
       expect(wrapper.find('.dropdown').element.classList.contains('is-active')).toBeFalsy()
     })
@@ -455,14 +455,14 @@ describe('AutocompleteInput.vue', () => {
 
     test('should only change last word in input when selecting value with enter', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.enter')
+      input.trigger('keyup.enter')
       await Vue.nextTick()
       expect((input.element as HTMLInputElement).value).toEqual('devops test-value-2')
     })
 
     test('should only change last word in input when selecting value with space', async () => {
       wrapper.setData({focusedSuggestionIndex: 2})
-      input.trigger('keydown.space')
+      input.trigger('keyup.space')
       await Vue.nextTick()
       expect((input.element as HTMLInputElement).value).toEqual('devops test-value-2')
     })
@@ -563,17 +563,17 @@ describe('AutocompleteInput.vue', () => {
 
     test('should not add more than 1 new line when enter pressed', async () => {
       const textarea = wrapper.find('.autocomplete-input')
-      textarea.trigger('keydown.enter')
+      textarea.trigger('keyup.enter')
       await Vue.nextTick()
       expect(wrapper.emitted('value-submitted')).toBeTruthy()
       const event = {key: 'Enter', preventDefault: jest.fn()}
       const spy = jest.spyOn(event, 'preventDefault')
       textarea.setValue('1000\n')
-      textarea.trigger('keydown.enter', event)
+      textarea.trigger('keyup.enter', event)
       await Vue.nextTick()
       expect(spy).toHaveBeenCalled()
       textarea.setValue('')
-      textarea.trigger('keydown.enter', event)
+      textarea.trigger('keyup.enter', event)
       await Vue.nextTick()
       expect(spy).toHaveBeenCalled()
     })
@@ -594,7 +594,7 @@ describe('AutocompleteInput.vue', () => {
 
     test('should delete whole last line when delete pressed', async () => {
       const textarea = wrapper.find('.autocomplete-input')
-      textarea.trigger('keydown.delete')
+      textarea.trigger('keyup.delete')
       await Vue.nextTick()
       expect(wrapper.emitted('value-submitted')).toBeTruthy()
       expect(wrapper.emitted('value-submitted')[0]).toEqual(['1002\n1003'])
