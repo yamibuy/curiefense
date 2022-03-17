@@ -1472,6 +1472,7 @@ describe('DocumentEditor.vue', () => {
       expect(deleteSpy).not.toHaveBeenCalled()
     })
 
+    // eslint-disable-next-line max-len
     test('should not be able to delete an Content Filter Profile document if it is referenced by a security policy', async () => {
       // switch to Content Filter Profiles
       const docTypeSelection = wrapper.find('.doc-type-selection')

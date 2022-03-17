@@ -541,7 +541,8 @@ export default Vue.extend({
 
     openNewSecurityPolicyConnection() {
       this.newSecurityPolicyConnectionOpened = true
-      this.newSecurityPolicyConnectionData.map = this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
+      this.newSecurityPolicyConnectionData.map =
+          this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
       this.newSecurityPolicyConnectionData.entryIndex = 0
     },
 
@@ -606,7 +607,8 @@ export default Vue.extend({
       }).then((response: AxiosResponse<SecurityPolicy[]>) => {
         this.securityPolicies = _.sortBy(response.data)
         this.getConnectedSecurityPoliciesEntries()
-        this.newSecurityPolicyConnectionData.map = this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
+        this.newSecurityPolicyConnectionData.map =
+            this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
       })
     },
 
