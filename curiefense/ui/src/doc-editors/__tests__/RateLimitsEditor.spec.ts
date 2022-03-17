@@ -550,6 +550,7 @@ describe('RateLimitsEditor.vue', () => {
 
     test('should send request to change Security Policy when new connection is added', async () => {
       const putSpy = jest.spyOn(axios, 'put').mockImplementation(() => Promise.resolve())
+      // eslint-disable-next-line max-len
       const wantedUrl = `/conf/api/v2/configs/${(wrapper.vm as any).selectedBranch}/d/securitypolicies/e/${securityPoliciesDocs[1].id}/`
       const wantedDoc = JSON.parse(JSON.stringify(securityPoliciesDocs[1]))
       wantedDoc.map[1].limit_ids.push(rateLimitsDocs[0].id)
@@ -569,6 +570,7 @@ describe('RateLimitsEditor.vue', () => {
 
     test('should send request to change Security Policy when removing connection was confirmed', async () => {
       const putSpy = jest.spyOn(axios, 'put').mockImplementation(() => Promise.resolve())
+      // eslint-disable-next-line max-len
       const wantedUrl = `/conf/api/v2/configs/${(wrapper.vm as any).selectedBranch}/d/securitypolicies/e/${securityPoliciesDocs[0].id}/`
       const wantedDoc = JSON.parse(JSON.stringify(securityPoliciesDocs[0]))
       wantedDoc.map[0].limit_ids = []
