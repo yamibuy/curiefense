@@ -301,6 +301,42 @@
                 "limit_ids": []
             },
             {
+                "match": "/content-filter/expect/json",
+                "name": "expectjson",
+                "acl_profile": "FROMTAGS",
+                "acl_active": true,
+                "content_filter_profile": "expectjson",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
+                "match": "/content-filter/expect/xml",
+                "name": "expectxml",
+                "acl_profile": "FROMTAGS",
+                "acl_active": true,
+                "content_filter_profile": "expectxml",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
+                "match": "/content-filter/expect/xmljson",
+                "name": "expectxmljson",
+                "acl_profile": "FROMTAGS",
+                "acl_active": true,
+                "content_filter_profile": "expectxmljson",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
+                "match": "/content-filter/expect/all",
+                "name": "expectall",
+                "acl_profile": "FROMTAGS",
+                "acl_active": true,
+                "content_filter_profile": "expectall",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "/invertedre",
                 "name": "invertedre",
                 "acl_profile": "__default__",

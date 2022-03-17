@@ -248,6 +248,24 @@ impl AclProfile {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum ContentType {
+    MultipartForm, // multipart/form-data
+    UrlEncoded,    // application/x-www-form-urlencoded
+    Json,
+    Xml,
+}
+
+impl ContentType {
+    pub const VALUES: [ContentType; 4] = [
+        ContentType::Json,
+        ContentType::MultipartForm,
+        ContentType::UrlEncoded,
+        ContentType::Xml,
+    ];
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RawContentFilterProfile {
     pub id: String,
     pub name: String,
@@ -265,6 +283,8 @@ pub struct RawContentFilterProfile {
     #[serde(default)]
     pub report: Vec<String>,
     pub masking_seed: String,
+    #[serde(default)]
+    pub content_type: Vec<ContentType>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

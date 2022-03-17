@@ -446,7 +446,7 @@ mod test {
             headers,
             meta,
         };
-        map_request(&mut logs, &[], &raw_request)
+        map_request(&mut logs, &[], &[], &raw_request)
     }
 
     #[test]

@@ -58,6 +58,14 @@
                   [
                      "args",
                      [
+                        "deny1",
+                        "deny"
+                     ],
+                     "deny"
+                  ],
+                  [
+                     "args",
+                     [
                         "deny:decoded",
                         "deny"
                      ],

@@ -1,5 +1,3 @@
-use crate::config::contentfilter::Transformation;
-use crate::maxmind::get_country;
 use itertools::Itertools;
 use maxminddb::geoip2::model;
 use serde_json::json;
@@ -10,10 +8,12 @@ use std::net::IpAddr;
 pub mod decoders;
 
 use crate::body::parse_body;
+use crate::config::contentfilter::Transformation;
+use crate::config::raw::ContentType;
 use crate::config::utils::{DataSource, RequestSelector, RequestSelectorCondition, XDataSource};
 use crate::interface::{Decision, Tags};
 use crate::logs::Logs;
-use crate::maxmind::{get_asn, get_city};
+use crate::maxmind::{get_asn, get_city, get_country};
 use crate::requestfields::RequestField;
 use crate::utils::decoders::{parse_urlencoded_params, urldecode_str, DecodingResult};
 
@@ -57,6 +57,13 @@ fn parse_query_params(dec: &[Transformation], query: &str) -> RequestField {
     rf
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BodyDecodingResult {
+    NoBody,
+    ProperlyDecoded,
+    DecodingFailed(String),
+}
+
 /// parses the request uri, storing the path and query parts (if possible)
 /// returns the hashmap of arguments
 fn map_args(
@@ -64,6 +71,7 @@ fn map_args(
     dec: &[Transformation],
     path: &str,
     mcontent_type: Option<&str>,
+    accepted_types: &[ContentType],
     mbody: Option<&[u8]>,
 ) -> QueryInfo {
     // this is necessary to do this in this convoluted way so at not to borrow attrs
@@ -76,19 +84,22 @@ fn map_args(
         None => (path.to_string(), String::new(), RequestField::new(dec)),
     };
 
-    if let Some(body) = mbody {
-        if let Err(rr) = parse_body(logs, &mut args, mcontent_type, body) {
+    let body_decoding = if let Some(body) = mbody {
+        if let Err(rr) = parse_body(logs, &mut args, mcontent_type, accepted_types, body) {
             // if the body could not be parsed, store it in an argument, as if it was text
-            logs.error(rr);
             args.add(
                 "RAW_BODY".to_string(),
                 DataSource::Root,
                 String::from_utf8_lossy(body).to_string(),
             );
+            BodyDecodingResult::DecodingFailed(rr)
         } else {
-            logs.debug("body parsed");
+            BodyDecodingResult::ProperlyDecoded
         }
-    }
+    } else {
+        BodyDecodingResult::NoBody
+    };
+    logs.debug("body parsed");
     let mut path_as_map =
         RequestField::singleton(dec, "path".to_string(), DataSource::X(XDataSource::Uri), qpath.clone());
     for (i, p) in qpath.split('/').enumerate() {
@@ -101,6 +112,7 @@ fn map_args(
         uri,
         args,
         path_as_map,
+        body_decoding,
     }
 }
 
@@ -115,6 +127,7 @@ pub struct QueryInfo {
     pub uri: String,
     pub args: RequestField,
     pub path_as_map: RequestField,
+    pub body_decoding: BodyDecodingResult,
 }
 
 #[derive(Debug, Clone)]
@@ -242,13 +255,7 @@ impl RequestInfo {
         .iter()
         .map(|(k, v)| (k.to_string(), v.clone()))
         .collect();
-        attrs.extend(
-            self.rinfo
-                .meta
-                .extra
-                .into_iter()
-                .map(|(k, v)| (k, Some(v))),
-        );
+        attrs.extend(self.rinfo.meta.extra.into_iter().map(|(k, v)| (k, Some(v))));
         serde_json::json!({
             "headers": self.headers.to_json(),
             "cookies": self.cookies.to_json(),
@@ -379,7 +386,12 @@ impl<'a> RawRequest<'a> {
     }
 }
 
-pub fn map_request(logs: &mut Logs, dec: &[Transformation], raw: &RawRequest) -> RequestInfo {
+pub fn map_request(
+    logs: &mut Logs,
+    dec: &[Transformation],
+    accepted_types: &[ContentType],
+    raw: &RawRequest,
+) -> RequestInfo {
     let host = raw.get_host();
 
     logs.debug("map_request starts");
@@ -387,7 +399,14 @@ pub fn map_request(logs: &mut Logs, dec: &[Transformation], raw: &RawRequest) ->
     logs.debug("headers mapped");
     let geoip = find_geoip(logs, raw.ipstr.clone());
     logs.debug("geoip computed");
-    let qinfo = map_args(logs, dec, &raw.meta.path, headers.get_str("content-type"), raw.mbody);
+    let qinfo = map_args(
+        logs,
+        dec,
+        &raw.meta.path,
+        headers.get_str("content-type"),
+        accepted_types,
+        raw.mbody,
+    );
     logs.debug("args mapped");
 
     let rinfo = RInfo {
@@ -473,6 +492,7 @@ mod tests {
             &[Transformation::Base64Decode],
             "/a/b/%20c?xa%20=12&bbbb=12%28&cccc&b64=YXJndW1lbnQ%3D",
             None,
+            &[],
             None,
         );
 
@@ -500,7 +520,7 @@ mod tests {
     #[test]
     fn test_map_args_simple() {
         let mut logs = Logs::default();
-        let qinfo = map_args(&mut logs, &[], "/a/b", None, None);
+        let qinfo = map_args(&mut logs, &[], "/a/b", None, &[], None);
 
         assert_eq!(qinfo.qpath, "/a/b");
         assert_eq!(qinfo.uri, "/a/b");
