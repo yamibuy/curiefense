@@ -71,6 +71,8 @@ declare module CuriefenseClient {
 
   type ACLProfileFilter = 'allow' | 'allow_bot' | 'deny_bot' | 'passthrough' | 'force_deny' | 'deny'
 
+  type ContentFilterProfileTagLists = 'active' | 'report' | 'ignore'
+
   type IncludeExcludeType = 'include' | 'exclude'
 
   type Relation = 'OR' | 'AND'
@@ -193,6 +195,7 @@ declare module CuriefenseClient {
     msg: string
     category: string
     subcategory: string
+    tags: string[]
   }
 
   type ContentFilterRuleGroup = {

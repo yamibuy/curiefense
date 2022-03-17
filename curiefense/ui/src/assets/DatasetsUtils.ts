@@ -58,6 +58,9 @@ const titles: { [key: string]: string } = {
   'flowcontrol-singular': 'Flow Control Policy',
   'contentfiltergroups': 'Content Filter Rules Groups',
   'contentfiltergroups-singular': 'Content Filter Rules Group',
+  'active': 'Active',
+  'report': 'Report',
+  'ignore': 'Ignore',
 }
 
 const limitOptionsTypes = {
@@ -251,6 +254,7 @@ const newDocEntryFactory: { [key: string]: Function } = {
       'operand': '',
       'category': '',
       'subcategory': '',
+      'tags': [],
     }
   },
 
