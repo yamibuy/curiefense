@@ -1,5 +1,5 @@
 use crate::config::raw::{
-    ContentFilterGroup, ContentFilterRule, RawContentFilterEntryMatch, RawContentFilterProfile,
+    ContentFilterGroup, ContentFilterRule, ContentType, RawContentFilterEntryMatch, RawContentFilterProfile,
     RawContentFilterProperties,
 };
 use crate::config::utils::Matching;
@@ -32,6 +32,7 @@ pub struct ContentFilterProfile {
     pub sections: Section<ContentFilterSection>,
     pub decoding: Vec<Transformation>,
     pub masking_seed: Vec<u8>,
+    pub content_type: Vec<ContentType>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -79,6 +80,7 @@ impl ContentFilterProfile {
             active: HashSet::default(),
             ignore: HashSet::default(),
             report: HashSet::default(),
+            content_type: Vec::new(),
         }
     }
 }
@@ -233,6 +235,7 @@ fn convert_entry(entry: RawContentFilterProfile) -> anyhow::Result<(String, Cont
             active: entry.active.into_iter().collect(),
             ignore: entry.ignore.into_iter().collect(),
             report: entry.report.into_iter().collect(),
+            content_type: entry.content_type,
         },
     ))
 }

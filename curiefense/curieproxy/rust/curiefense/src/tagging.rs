@@ -168,6 +168,7 @@ mod tests {
         map_request(
             &mut logs,
             &[],
+            &[],
             &RawRequest {
                 ipstr: "52.78.12.56".to_string(),
                 headers,

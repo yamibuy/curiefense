@@ -1066,5 +1066,117 @@
             "names": [],
             "regex": []
         }
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "id": "expectjson",
+        "name": "expect json",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 512,
+        "args": {
+            "regex": [],
+            "names": []
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        },
+        "content_type": [
+            "json"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "id": "expectxml",
+        "name": "expect xml",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 512,
+        "args": {
+            "regex": [],
+            "names": []
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        },
+        "content_type": [
+            "xml"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "id": "expectxmljson",
+        "name": "expect xml + json",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 512,
+        "args": {
+            "regex": [],
+            "names": []
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        },
+        "content_type": [
+            "xml",
+            "json"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "id": "expectall",
+        "name": "expect all",
+        "ignore_alphanum": false,
+        "max_header_length": 1024,
+        "max_cookie_length": 1024,
+        "max_arg_length": 1024,
+        "max_headers_count": 42,
+        "max_cookies_count": 42,
+        "max_args_count": 512,
+        "args": {
+            "regex": [],
+            "names": []
+        },
+        "headers": {
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "names": [],
+            "regex": []
+        },
+        "content_type": [
+            "xml",
+            "json",
+            "multipart_form",
+            "url_encoded"
+        ]
     }
 ]
