@@ -275,7 +275,8 @@ pub struct RawContentFilterProfile {
     pub cookies: RawContentFilterProperties,
     #[serde(default)]
     pub path: RawContentFilterProperties,
-    pub decoding: Option<ContentFilterDecoding>,
+    #[serde(default)]
+    pub decoding: ContentFilterDecoding,
     #[serde(default)]
     pub active: Vec<String>,
     #[serde(default)]
@@ -341,8 +342,8 @@ pub struct ContentFilterDecoding {
 impl Default for ContentFilterDecoding {
     fn default() -> Self {
         ContentFilterDecoding {
-            base64: false,
-            dual: false,
+            base64: true,
+            dual: true,
             html: false,
             unicode: false,
         }
