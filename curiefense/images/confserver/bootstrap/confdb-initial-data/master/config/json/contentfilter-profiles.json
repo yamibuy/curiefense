@@ -35,7 +35,7 @@
             "base64": true
         },
         "masking_seed": "CHANGEME",
-        "active": ["cf-rule-risk-5", "cf-rule-risk-4", "cf-rule-risk-3"],
+        "active": ["cf-rule-risk:5", "cf-rule-risk:4", "cf-rule-risk:3"],
         "report": [],
         "ignore": []
     }
