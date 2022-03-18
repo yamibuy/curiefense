@@ -42,17 +42,17 @@ pub enum ContentFilterBlock {
 }
 
 static LIBINJECTION_SQLI_TAGS: [&str; 4] = [
-    "cf-rule-id-libinjection-sqli",
-    "cf-rule-category-libinjection",
-    "cf-rule-subcategory-sqli",
-    "cf-rule-risk-4",
+    "cf-rule-id:libinjection-sqli",
+    "cf-rule-category:libinjection",
+    "cf-rule-subcategory:sqli",
+    "cf-rule-risk:4",
 ];
 
 static LIBINJECTION_XSS_TAGS: [&str; 4] = [
-    "cf-rule-id-libinjection-xss",
-    "cf-rule-category-libinjection",
-    "cf-rule-subcategory-xss",
-    "cf-rule-risk-4",
+    "cf-rule-id:libinjection-xss",
+    "cf-rule-category:libinjection",
+    "cf-rule-subcategory:xss",
+    "cf-rule-risk:4",
 ];
 
 impl ContentFilterBlock {
@@ -287,20 +287,20 @@ fn injection_check(
             if rtest_sqli {
                 if let Some((b, _)) = sqli(value) {
                     if b {
-                        tags.insert("cf-rule-id-libinjection-sqli");
-                        tags.insert("cf-rule-category-libinjection");
-                        tags.insert("cf-rule-subcategory-sqli");
-                        tags.insert("cf-rule-risk-4");
+                        tags.insert_qualified("cf-rule-id", "libinjection-sqli");
+                        tags.insert_qualified("cf-rule-category", "libinjection");
+                        tags.insert_qualified("cf-rule-subcategory", "sqli");
+                        tags.insert_qualified("cf-rule-risk", "4");
                     }
                 }
             }
             if rtest_xss {
                 if let Some(b) = xss(value) {
                     if b {
-                        tags.insert("cf-rule-id-libinjection-xss");
-                        tags.insert("cf-rule-category-libinjection");
-                        tags.insert("cf-rule-subcategory-xss");
-                        tags.insert("cf-rule-risk-4");
+                        tags.insert_qualified("cf-rule-id", "libinjection-xss");
+                        tags.insert_qualified("cf-rule-category", "libinjection");
+                        tags.insert_qualified("cf-rule-subcategory", "xss");
+                        tags.insert_qualified("cf-rule-risk", "4");
                     }
                 }
             }
@@ -343,10 +343,10 @@ fn hyperscan(
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
                     let mut new_tags = Tags::default();
-                    new_tags.insert(&format!("cf-rule-id-{}", sig.id));
-                    new_tags.insert(&format!("cf-rule-risk-{}", sig.risk));
-                    new_tags.insert(&format!("cf-rule-category-{}", sig.category));
-                    new_tags.insert(&format!("cf-rule-subcategory-{}", sig.subcategory));
+                    new_tags.insert_qualified("cf-rule-id", &sig.id);
+                    new_tags.insert_qualified("cf-rule-risk", &format!("{}", sig.risk));
+                    new_tags.insert_qualified("cf-rule-category", &sig.category);
+                    new_tags.insert_qualified("cf-rule-subcategory", &sig.subcategory);
                     for t in &sig.tags {
                         new_tags.insert(t);
                     }
