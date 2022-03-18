@@ -342,24 +342,20 @@ fn hyperscan(
                 None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
-                    let mut new_tags = HashSet::new();
-                    new_tags.insert(format!("cf-rule-id-{}", sig.id));
-                    new_tags.insert(format!("cf-rule-risk-{}", sig.risk));
-                    new_tags.insert(format!("cf-rule-category-{}", sig.category));
-                    new_tags.insert(format!("cf-rule-subcategory-{}", sig.subcategory));
-                    new_tags.extend(sig.tags.iter().cloned());
+                    let mut new_tags = Tags::default();
+                    new_tags.insert(&format!("cf-rule-id-{}", sig.id));
+                    new_tags.insert(&format!("cf-rule-risk-{}", sig.risk));
+                    new_tags.insert(&format!("cf-rule-category-{}", sig.category));
+                    new_tags.insert(&format!("cf-rule-subcategory-{}", sig.subcategory));
+                    for t in &sig.tags {
+                        new_tags.insert(t);
+                    }
 
-                    if new_tags.intersection(global_kept).next().is_some()
-                        && exclusions
-                            .get(sid)
-                            .get(&name)
-                            .map(|ex| new_tags.intersection(ex).next().is_some())
-                            != Some(true)
-                        && new_tags.intersection(global_ignore).next().is_none()
+                    if new_tags.has_intersection(global_kept)
+                        && exclusions.get(sid).get(&name).map(|ex| new_tags.has_intersection(ex)) != Some(true)
+                        && !new_tags.has_intersection(global_ignore)
                     {
-                        for t in &new_tags {
-                            tags.insert(t);
-                        }
+                        tags.extend(new_tags);
                     }
                 }
             }
