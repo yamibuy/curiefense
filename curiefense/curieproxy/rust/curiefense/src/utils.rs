@@ -103,7 +103,12 @@ fn map_args(
     let mut path_as_map =
         RequestField::singleton(dec, "path".to_string(), DataSource::X(XDataSource::Uri), qpath.clone());
     for (i, p) in qpath.split('/').enumerate() {
-        path_as_map.add(format!("part{}", i), DataSource::X(XDataSource::Uri), p.to_string());
+        if !p.is_empty() {
+            path_as_map.add(format!("part{}", i), DataSource::X(XDataSource::Uri), p.to_string());
+            if let DecodingResult::Changed(n) = urldecode_str(p) {
+                path_as_map.add(format!("part{}:urldecoded", i), DataSource::X(XDataSource::Uri), n);
+            }
+        }
     }
 
     QueryInfo {
