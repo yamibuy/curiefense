@@ -454,7 +454,7 @@
     "id": "200041",
     "name": "200041",
     "msg": "XSS Attempt (Inline Javascript Injection)",
-    "operand": ".*\\W(function|alert|prompt|eval)\\W?.*\\(.*\\).*",
+    "operand": "(\\W|^)(function|alert|prompt|eval)\\W?.*\\(.*\\)",
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
@@ -597,7 +597,7 @@
     "id": "200137",
     "name": "200137",
     "msg": "XSS",
-    "operand": "document.cookie",
+    "operand": "document(\\??.|\\[['\"])cookie",
     "risk": 5,
     "category": "xss",
     "subcategory": "generic",
@@ -663,7 +663,7 @@
     "id": "300151",
     "name": "300151",
     "msg": "OSCI (OS Command Injection) Attempt",
-    "operand": "(&&|\\|\\||;|`)\\s*?(arch|ash|awk|base64|basename|bash|bc|bsh|bunzip2|cat|chcon|chgrp|chmod|chown|chroot|cjpeg|cksum|clear|comm|configure|cp|cpio|csh|csplit|curl|cut|date|dc|dd|df|diff|diff3|dig|dir|dircolors|dirname|djpeg|dmesg|dnsdomainname|doexec|domainname|dos2unix|du|dumpkeys|echo|ed|egrep|eject|elinks|env|ex|expand|expr|ext|factor|false|fdisk|fgrep|find|finger|fixps|fmt|fold|free|gawk|grep|groups|gtar|gunzip|gzip|halt|hdparm|head|hell|history|hostid|hostname|httpd|id|identify|ifconfig|igawk|install|ipcalc|join|kbd_mode|kill|last|lastlog|link|links|ln|loadkeys|locate|login|logname|look|ls|lsmod|lynx|mac2unix|mail|man|manweb|md5sum|mdu|mkdir|mkfifo|mkfs|mknod|mktemp|more|mount|mt|mtr|mv|namei|nano|nc|ncftp|nedit-nc|netstat|nice|nisdomainname|nl|nohup|nslookup|od|paste|pathchk|pdf2dsc|pdf2ps|pdfinfo|pdftotext|perl|pgawk|pico|pine|ping|ping6|pinky|pr|printenv|printf|ps|ps2ascii|ps2epsi|ps2frag|ps2pdf|ps2pdf12|ps2pdf13|ps2pdf14|ps2pdfwr|ps2pk|ps2ps|psbook|ptx|pwd|quota|readelf|readlink|reboot|red|rename|resize|rm|rmdir|rpm|runcon|rundig|rvi|sed|seq|gid|serial|uid|setfont|sfdisk|sftp|sh|sha1sum|sha224sum|sha256sum|sha384sum|sha512sum|shred|shuf|sleep|slocate|sort|split|ssh|stat|stty|stty cooked|stty raw|su|sum|switchdesk|sync|tac|tail|tar|tcsh|tee|telnet|test|time|timeout|tr|tracepath|tracepath6|traceroute|traceroute6|tree|true|truncate|tsort|tty|umask|umount|uname|unexpand|unicode_start|unicode_stop|uniq|unlink|ungid|unuid|untar|unzip|updatedb|uptime|useradd|users|usleep|vdir|viwc|wget|is|whereis|which|who|whoami|whois|xinit|xpdf|xrandr|yes|ypdomainname|zcat|zip|zipinfo)(\\s|;|&|`|#|$)",
+    "operand": "(&&|\\|\\||;|`)\\s*?(arch|ash|awk|base64|basename|bash|bc|bsh|bunzip2|cat|chcon|chgrp|chmod|chown|chroot|cjpeg|cksum|clear|comm|configure|cp|cpio|csh|csplit|curl|cut|date|dc|dd|df|diff|diff3|dig|dir|dircolors|dirname|djpeg|dmesg|dnsdomainname|doexec|domainname|dos2unix|du|dumpkeys|echo|ed|egrep|eject|elinks|env|ex|expand|expr|ext|factor|false|fdisk|fgrep|find|finger|fixps|fmt|fold|free|gawk|grep|groups|gtar|gunzip|gzip|halt|hdparm|head|hell|history|hostid|hostname|httpd|id|identify|ifconfig|igawk|install|ipcalc|join|kbd_mode|kill|last|lastlog|link|links|ln|loadkeys|locate|login|logname|look|ls|lsmod|lynx|mac2unix|mail|man|manweb|md5sum|mdu|mkdir|mkfifo|mkfs|mknod|mktemp|mount|mt|mtr|mv|namei|nano|nc|ncftp|nedit-nc|netstat|nice|nisdomainname|nl|nohup|nslookup|od|paste|pathchk|pdf2dsc|pdf2ps|pdfinfo|pdftotext|perl|pgawk|pico|pine|ping|ping6|pinky|pr|printenv|printf|ps|ps2ascii|ps2epsi|ps2frag|ps2pdf|ps2pdf12|ps2pdf13|ps2pdf14|ps2pdfwr|ps2pk|ps2ps|psbook|ptx|pwd|quota|readelf|readlink|reboot|red|rename|resize|rm|rmdir|rpm|runcon|rundig|rvi|sed|seq|gid|serial|uid|setfont|sfdisk|sftp|sh|sha1sum|sha224sum|sha256sum|sha384sum|sha512sum|shred|shuf|sleep|slocate|sort|split|ssh|stat|stty|stty cooked|stty raw|su|sum|switchdesk|sync|tac|tail|tar|tcsh|tee|telnet|test|time|timeout|tr|tracepath|tracepath6|traceroute|traceroute6|tree|true|truncate|tsort|tty|umask|umount|uname|unexpand|unicode_start|unicode_stop|uniq|unlink|ungid|unuid|untar|unzip|updatedb|uptime|useradd|users|usleep|vdir|viwc|wget|is|whereis|which|who|whoami|whois|xinit|xpdf|xrandr|yes|ypdomainname|zcat|zip|zipinfo)(\\s|;|&|`|#|$)",
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
@@ -763,7 +763,7 @@
     "name": "300009",
     "category": "osci",
     "msg": "Shell injection",
-    "operand": "\\|\\s*/bin/",
+    "operand": "[|&]\\s*(/bin/|sleep|timeout)",
     "risk": 4,
     "subcategory": "generic",
     "notes": "",
@@ -1412,7 +1412,7 @@
     "name": "500002",
     "category": "systemresource",
     "msg": "Path Traversal I (Windows)",
-    "operand": "\\\\\\\\0*::\\d+\\\\.\\$\\\\",
+    "operand": "\\\\\\\\(0*::\\d+|localhost)\\\\.\\$\\\\",
     "risk": 4,
     "subcategory": "inI",
     "notes": "",
@@ -1923,5 +1923,81 @@
     "subcategory": "generic",
     "notes": "",
     "tags": []
+  },
+  {
+    "id": "920008",
+    "name": "920008",
+    "category": "ssti",
+    "msg": "Server-Side Template Injection",
+    "operand": "template\\.utility\\.Execute",
+    "risk": 4,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+
+  {
+    "id": "9X0001",
+    "category": "ASP.NET",
+    "msg": "ASP.NET injection",
+    "name": "ASP.NET code injection",
+    "operand": "response\\.write\\s*\\(",
+    "risk": 4,
+    "subcategory": "asp",
+    "tags": []
+  },
+  {
+    "id": "9X0002",
+    "category": "Environment variables",
+    "msg": "",
+    "name": "Windows environment variables",
+    "operand": "%(ALLUSERSPROFILE|APPDATA|COMPUTERNAME|COMSPEC|HOMEDRIVE|HOMEPATH|PATH|PATHEXT|PROGRAMFILES|PROMPT|SYSTEMDRIVE|SYSTEMROOT|TEMP|USERNAME|USERPROFILE|WINDIR|ERRORLEVEL|RANDOM|CommonProgramFiles|LOCALAPPDATA|ProgramData|Public)%",
+    "risk": 4,
+    "subcategory": "windows",
+    "tags": []
+  },
+  {
+    "id": "30015X",
+    "name": "30015X",
+    "msg": "OSCI (OS Command Injection) Attempt - reverse",
+    "operand": "(hsab|hs|hsz)/nib.*\\|\\s*rev",
+    "risk": 5,
+    "category": "osci",
+    "subcategory": "osci",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "30015Y",
+    "name": "30015Y",
+    "msg": "OSCI (OS Command Injection) Attempt - getent",
+    "operand": "[;|]\\s*getent[+\\s]+(group|gshadow|shadow|hosts|passwd)",
+    "risk": 5,
+    "category": "osci",
+    "subcategory": "osci",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "9X0002",
+    "category": "",
+    "msg": "",
+    "name": "header injection",
+    "operand": "\\n([Ss][Ee][Tt]-[Cc][Oo][Oo][Kk][Ii][Ee]|[Tt][Rr][Aa][Nn][Ss][Ff][Ee][Rr]-[Ee][Nn][Cc][Oo][Dd][Ii][Nn][Gg])",
+    "risk": 4,
+    "subcategory": "na",
+    "tags": []
+  },
+  {
+    "id": "9X00XX",
+    "name": "9X00XX",
+    "category": "nosqli",
+    "msg": "NoSQL filter bypass",
+    "operand": "db\\.[a-z.]+\\.insert\\(\\s*\\{.*:.*\\}\\s*\\)",
+    "risk": 4,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
   }
+
 ]
