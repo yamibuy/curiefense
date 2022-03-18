@@ -37,6 +37,15 @@
         "name": "default entry",
         "map": [
             {
+                "match": "^/content-filter/reportpriority",
+                "name": "reportpriority",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "reportpriority",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "^/direct",
                 "name": "direct association",
                 "acl_profile": "FROMTAGS",

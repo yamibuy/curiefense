@@ -325,7 +325,7 @@ pub fn inspect_generic_request_map<GH: Grasshopper>(
             }
             Err(wb) => {
                 let mut action = wb.to_action();
-                action.block_mode = securitypolicy.content_filter_active;
+                action.block_mode &= securitypolicy.content_filter_active;
                 Decision::Action(action)
             }
         },
