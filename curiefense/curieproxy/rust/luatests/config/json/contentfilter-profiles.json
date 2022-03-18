@@ -32,13 +32,13 @@
             "regex": []
         },
         "ignore": [
-            "cf-rule-id-100010"
+            "cf-rule-id:100010"
         ],
         "report": [
-            "cf-rule-id-100017"
+            "cf-rule-id:100017"
         ],
         "active": [
-            "cf-rule-id-100016"
+            "cf-rule-id:100016"
         ]
     },
     {
@@ -49,7 +49,7 @@
             "regex": [
                 {
                     "exclusions": [
-                        "cf-rule-category-libinjection"
+                        "cf-rule-category:libinjection"
                     ],
                     "key": ".",
                     "mask": false,
@@ -93,7 +93,7 @@
             "regex": [
                 {
                     "exclusions": [
-                        "cf-rule-id-100016"
+                        "cf-rule-id:100016"
                     ],
                     "key": ".",
                     "mask": false,
@@ -278,9 +278,9 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3"
                     ]
                 }
             ]
@@ -297,9 +297,9 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3"
                     ]
                 }
             ]
@@ -319,9 +319,9 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3"
                     ]
                 }
             ]
@@ -351,10 +351,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3",
-                        "cf-rule-risk-4"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3",
+                        "cf-rule-risk:4"
                     ]
                 }
             ]
@@ -371,10 +371,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3",
-                        "cf-rule-risk-4"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3",
+                        "cf-rule-risk:4"
                     ]
                 }
             ]
@@ -394,10 +394,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3",
-                        "cf-rule-risk-4"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3",
+                        "cf-rule-risk:4"
                     ]
                 }
             ]
@@ -427,8 +427,8 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2"
                     ]
                 }
             ]
@@ -445,10 +445,10 @@
                     "restrict": false,
                     "mask": false,
                     "exclusions": [
-                        "cf-rule-risk-1",
-                        "cf-rule-risk-2",
-                        "cf-rule-risk-3",
-                        "cf-rule-risk-4"
+                        "cf-rule-risk:1",
+                        "cf-rule-risk:2",
+                        "cf-rule-risk:3",
+                        "cf-rule-risk:4"
                     ]
                 }
             ]
@@ -541,11 +541,11 @@
             "regex": []
         },
         "active": [
-            "cf-rule-category-libinjection",
+            "cf-rule-category:libinjection",
             "waf"
         ],
         "ignore": [
-            "cf-rule-risk-5"
+            "cf-rule-risk:5"
         ]
     },
     {
@@ -581,7 +581,7 @@
             "regex": []
         },
         "active": [
-            "cf-rule-category-libinjection",
+            "cf-rule-category:libinjection",
             "waf"
         ],
         "ignore": [
@@ -621,7 +621,7 @@
             "regex": []
         },
         "active": [
-            "cf-rule-category-libinjection",
+            "cf-rule-category:libinjection",
             "sqli"
         ]
     },
@@ -937,7 +937,7 @@
             "regex": []
         },
         "active": [
-            "cf-rule-category-libinjection"
+            "cf-rule-category:libinjection"
         ]
     },
     {
