@@ -46,6 +46,15 @@
                 "limit_ids": []
             },
             {
+                "match": "^/content-filter/individualvscategory",
+                "name": "individualvscategory",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "individualvscategory",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "^/direct",
                 "name": "direct association",
                 "acl_profile": "FROMTAGS",

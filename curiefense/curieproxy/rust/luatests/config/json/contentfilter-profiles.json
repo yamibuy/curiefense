@@ -42,6 +42,51 @@
         ]
     },
     {
+        "masking_seed": "CHANGEME",
+        "args": {
+            "max_count": 512,
+            "max_length": 1024,
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "max_count": 42,
+            "max_length": 1024,
+            "names": [],
+            "regex": []
+        },
+        "decoding": {
+            "base64": true
+        },
+        "headers": {
+            "max_count": 42,
+            "max_length": 1024,
+            "names": [],
+            "regex": []
+        },
+        "id": "individualvscategory",
+        "ignore_alphanum": false,
+        "name": "individual vs category checks",
+        "path": {
+            "max_count": 42,
+            "max_length": 2048,
+            "names": [],
+            "regex": []
+        },
+        "ignore": [
+            "cf-rule-id:sqlirl5"
+        ],
+        "report": [
+            "cf-rule-id:genericrl5",
+            "cf-rule-risk:3"
+        ],
+        "active": [
+            "cf-rule-id:sqlirl3",
+            "cf-rule-risk:5",
+            "cf-rule-risk:4"
+        ]
+    },
+    {
         "args": {
             "max_count": 512,
             "max_length": 1024,
