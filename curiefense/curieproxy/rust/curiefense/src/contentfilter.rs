@@ -178,9 +178,30 @@ pub fn content_filter_check(
 
     let kept = profile.active.union(&profile.report).cloned().collect::<HashSet<_>>();
 
+    let mut specific_tags = Tags::default();
     // finally, hyperscan check
-    if let Err(rr) = hyperscan(logs, tags, hca_keys, hsdb, &kept, &profile.ignore, &omit.exclusions) {
+    if let Err(rr) = hyperscan(
+        logs,
+        tags,
+        &mut specific_tags,
+        hca_keys,
+        hsdb,
+        &kept,
+        &profile.ignore,
+        &omit.exclusions,
+    ) {
         logs.error(rr)
+    }
+
+    let sactive = specific_tags.intersect(&profile.active);
+    let sreport = specific_tags.intersect(&profile.report);
+    tags.extend(specific_tags);
+
+    if !sactive.is_empty() {
+        return Err(ContentFilterBlock::Block(sactive));
+    }
+    if !sreport.is_empty() {
+        return Err(ContentFilterBlock::Monitor(sreport));
     }
 
     let active = tags.intersect(&profile.active);
@@ -311,9 +332,11 @@ fn injection_check(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn hyperscan(
     logs: &mut Logs,
     tags: &mut Tags,
+    specific_tags: &mut Tags,
     hca_keys: HashMap<String, (SectionIdx, String)>,
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
     global_kept: &HashSet<String>,
@@ -331,6 +354,8 @@ fn hyperscan(
         found = true;
         Matching::Continue
     })?;
+    logs.info(format!("found: {}", found));
+
     if !found {
         return Ok(());
     }
@@ -343,8 +368,13 @@ fn hyperscan(
                 None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
                     logs.debug(format!("signature matched {:?}", sig));
+
+                    // new specific tags are singleton hashsets, but we use the Tags structure to make sure
+                    // they are properly converted
+                    let mut new_specific_tags = Tags::default();
+                    new_specific_tags.insert_qualified("cf-rule-id", &sig.id);
+
                     let mut new_tags = Tags::default();
-                    new_tags.insert_qualified("cf-rule-id", &sig.id);
                     new_tags.insert_qualified("cf-rule-risk", &format!("{}", sig.risk));
                     new_tags.insert_qualified("cf-rule-category", &sig.category);
                     new_tags.insert_qualified("cf-rule-subcategory", &sig.subcategory);
@@ -352,11 +382,17 @@ fn hyperscan(
                         new_tags.insert(t);
                     }
 
-                    if new_tags.has_intersection(global_kept)
-                        && exclusions.get(sid).get(&name).map(|ex| new_tags.has_intersection(ex)) != Some(true)
+                    if (new_tags.has_intersection(global_kept) || new_specific_tags.has_intersection(global_kept))
+                        && exclusions
+                            .get(sid)
+                            .get(&name)
+                            .map(|ex| new_tags.has_intersection(ex) || new_specific_tags.has_intersection(ex))
+                            != Some(true)
                         && !new_tags.has_intersection(global_ignore)
+                        && !new_specific_tags.has_intersection(global_ignore)
                     {
                         tags.extend(new_tags);
+                        specific_tags.extend(new_specific_tags);
                     }
                 }
             }
