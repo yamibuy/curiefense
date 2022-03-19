@@ -418,6 +418,17 @@
     "tags": []
   },
   {
+    "id": "200003",
+    "name": "200003",
+    "category": "xss",
+    "msg": "CRLF injection",
+    "operand": "(%0d%0a|%3f%0d|%0a%0d|%25%30%4[14]|%25%30%4[14]%25%30%4[14]|%25%0a%0a)[-A-Za-z0-9]+:",
+    "risk": 4,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+  {
     "id": "200038",
     "name": "200038",
     "msg": "XSS Attempt (Closing Tags)",
@@ -649,11 +660,22 @@
     "tags": []
   },
   {
-    "id": "200003",
-    "name": "200003",
-    "category": "xss",
-    "msg": "CRLF injection",
-    "operand": "(%0d%0a|%3f%0d|%0a%0d|%25%30%4[14]|%25%30%4[14]%25%30%4[14]|%25%0a%0a)[-A-Za-z0-9]+:",
+    "id": "300008",
+    "name": "300008",
+    "category": "osci",
+    "msg": "Shell injection",
+    "operand": "\\$\\{\\s*IFS\\s*\\}",
+    "risk": 4,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "300009",
+    "name": "300009",
+    "category": "osci",
+    "msg": "Shell injection",
+    "operand": "[|&]\\s*(/bin/|sleep|timeout)",
     "risk": 4,
     "subcategory": "generic",
     "notes": "",
@@ -748,28 +770,6 @@
     "tags": []
   },
   {
-    "id": "300008",
-    "name": "300008",
-    "category": "osci",
-    "msg": "Shell injection",
-    "operand": "\\$\\{\\s*IFS\\s*\\}",
-    "risk": 4,
-    "subcategory": "generic",
-    "notes": "",
-    "tags": []
-  },
-  {
-    "id": "300009",
-    "name": "300009",
-    "category": "osci",
-    "msg": "Shell injection",
-    "operand": "[|&]\\s*(/bin/|sleep|timeout)",
-    "risk": 4,
-    "subcategory": "generic",
-    "notes": "",
-    "tags": []
-  },
-  {
     "id": "400051",
     "name": "400051",
     "msg": "RFI/LFI/OSCI",
@@ -832,6 +832,28 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "500001",
+    "name": "500001",
+    "category": "systemresource",
+    "msg": "Path Traversal I (Unix)",
+    "operand": "file://0*::\\d+/",
+    "risk": 4,
+    "subcategory": "unixI",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "500002",
+    "name": "500002",
+    "category": "systemresource",
+    "msg": "Path Traversal I (Windows)",
+    "operand": "\\\\\\\\(0*::\\d+|localhost)\\\\.\\$\\\\",
+    "risk": 4,
+    "subcategory": "inI",
     "notes": "",
     "tags": []
   },
@@ -1397,24 +1419,34 @@
     "tags": []
   },
   {
-    "id": "500001",
-    "name": "500001",
-    "category": "systemresource",
-    "msg": "Path Traversal I (Unix)",
-    "operand": "file://0*::\\d+/",
+    "id": "500110",
+    "name": "500110",
+    "category": "Environment variables",
+    "msg": "Windows environment variables",
+    "operand": "%(ALLUSERSPROFILE|APPDATA|COMPUTERNAME|COMSPEC|HOMEDRIVE|HOMEPATH|PATH|PATHEXT|PROGRAMFILES|PROMPT|SYSTEMDRIVE|SYSTEMROOT|TEMP|USERNAME|USERPROFILE|WINDIR|ERRORLEVEL|RANDOM|CommonProgramFiles|LOCALAPPDATA|ProgramData|Public)%",
     "risk": 4,
-    "subcategory": "unixI",
+    "subcategory": "windows",
+    "tags": []
+  },
+  {
+    "id": "500111",
+    "name": "500111",
+    "msg": "OSCI (OS Command Injection) Attempt - reverse",
+    "operand": "(hsab|hs|hsz)/nib.*\\|\\s*rev",
+    "risk": 5,
+    "category": "osci",
+    "subcategory": "osci",
     "notes": "",
     "tags": []
   },
   {
-    "id": "500002",
-    "name": "500002",
-    "category": "systemresource",
-    "msg": "Path Traversal I (Windows)",
-    "operand": "\\\\\\\\(0*::\\d+|localhost)\\\\.\\$\\\\",
-    "risk": 4,
-    "subcategory": "inI",
+    "id": "500112",
+    "name": "500112",
+    "msg": "OSCI (OS Command Injection) Attempt - getent",
+    "operand": "[;|]\\s*getent[+\\s]+(group|gshadow|shadow|hosts|passwd)",
+    "risk": 5,
+    "category": "osci",
+    "subcategory": "osci",
     "notes": "",
     "tags": []
   },
@@ -1892,6 +1924,17 @@
     "tags": []
   },
   {
+    "id": "910001",
+    "name": "910001",
+    "category": "nosqli",
+    "msg": "NoSQL filter bypass",
+    "operand": "db\\.[a-z.]+\\.insert\\(\\s*\\{.*:.*\\}\\s*\\)",
+    "risk": 4,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+  {
     "id": "920005",
     "name": "920005",
     "category": "ssti",
@@ -1935,69 +1978,24 @@
     "notes": "",
     "tags": []
   },
-
   {
-    "id": "9X0001",
-    "category": "ASP.NET",
+    "id": "920009",
+    "name": "920009",
+    "category": "asp.net",
     "msg": "ASP.NET injection",
-    "name": "ASP.NET code injection",
     "operand": "response\\.write\\s*\\(",
     "risk": 4,
     "subcategory": "asp",
     "tags": []
   },
   {
-    "id": "9X0002",
-    "category": "Environment variables",
-    "msg": "",
-    "name": "Windows environment variables",
-    "operand": "%(ALLUSERSPROFILE|APPDATA|COMPUTERNAME|COMSPEC|HOMEDRIVE|HOMEPATH|PATH|PATHEXT|PROGRAMFILES|PROMPT|SYSTEMDRIVE|SYSTEMROOT|TEMP|USERNAME|USERPROFILE|WINDIR|ERRORLEVEL|RANDOM|CommonProgramFiles|LOCALAPPDATA|ProgramData|Public)%",
-    "risk": 4,
-    "subcategory": "windows",
-    "tags": []
-  },
-  {
-    "id": "30015X",
-    "name": "30015X",
-    "msg": "OSCI (OS Command Injection) Attempt - reverse",
-    "operand": "(hsab|hs|hsz)/nib.*\\|\\s*rev",
-    "risk": 5,
-    "category": "osci",
-    "subcategory": "osci",
-    "notes": "",
-    "tags": []
-  },
-  {
-    "id": "30015Y",
-    "name": "30015Y",
-    "msg": "OSCI (OS Command Injection) Attempt - getent",
-    "operand": "[;|]\\s*getent[+\\s]+(group|gshadow|shadow|hosts|passwd)",
-    "risk": 5,
-    "category": "osci",
-    "subcategory": "osci",
-    "notes": "",
-    "tags": []
-  },
-  {
-    "id": "9X0002",
-    "category": "",
-    "msg": "",
-    "name": "header injection",
+    "id": "920010",
+    "msg": "header injection",
+    "name": "920010",
     "operand": "\\n([Ss][Ee][Tt]-[Cc][Oo][Oo][Kk][Ii][Ee]|[Tt][Rr][Aa][Nn][Ss][Ff][Ee][Rr]-[Ee][Nn][Cc][Oo][Dd][Ii][Nn][Gg])",
     "risk": 4,
-    "subcategory": "na",
-    "tags": []
-  },
-  {
-    "id": "9X00XX",
-    "name": "9X00XX",
-    "category": "nosqli",
-    "msg": "NoSQL filter bypass",
-    "operand": "db\\.[a-z.]+\\.insert\\(\\s*\\{.*:.*\\}\\s*\\)",
-    "risk": 4,
-    "subcategory": "generic",
-    "notes": "",
+    "category": "xss",
+    "subcategory": "xss",
     "tags": []
   }
-
 ]
