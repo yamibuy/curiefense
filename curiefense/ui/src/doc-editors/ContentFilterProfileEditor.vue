@@ -71,7 +71,7 @@
                                    @change="emitDocUpdate"
                                    class="checkbox-input decoding-dual-active"
                                    v-model="localDoc.decoding.dual">
-                            dual
+                            URL
                           </label>
                         </div>
                       </div>
