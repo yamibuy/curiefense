@@ -1,4 +1,5 @@
 use hyperscan::Matching;
+use lazy_static::lazy_static;
 use libinjection::{sqli, xss};
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
@@ -12,6 +13,27 @@ use crate::interface::{Action, ActionType, Tags};
 use crate::requestfields::RequestField;
 use crate::utils::RequestInfo;
 use crate::Logs;
+
+lazy_static! {
+    pub static ref LIBINJECTION_SQLI_TAGS: HashSet<String> = [
+        "cf-rule-id:libinjection-sqli",
+        "cf-rule-category:libinjection",
+        "cf-rule-subcategory:libinjection-sqli",
+        "cf-rule-risk:libinjection",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+    pub static ref LIBINJECTION_XSS_TAGS: HashSet<String> = [
+        "cf-rule-id:libinjection-xss",
+        "cf-rule-category:libinjection",
+        "cf-rule-subcategory:libinjection-xss",
+        "cf-rule-risk:libinjection",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+}
 
 #[derive(Debug, Clone)]
 pub struct ContentFilterMatched {
@@ -40,20 +62,6 @@ pub enum ContentFilterBlock {
     Block(HashSet<String>),
     Monitor(HashSet<String>),
 }
-
-static LIBINJECTION_SQLI_TAGS: [&str; 4] = [
-    "cf-rule-id:libinjection-sqli",
-    "cf-rule-category:libinjection",
-    "cf-rule-subcategory:libinjection-sqli",
-    "cf-rule-risk:libinjection",
-];
-
-static LIBINJECTION_XSS_TAGS: [&str; 4] = [
-    "cf-rule-id:libinjection-xss",
-    "cf-rule-category:libinjection",
-    "cf-rule-subcategory:libinjection-xss",
-    "cf-rule-risk:libinjection",
-];
 
 impl ContentFilterBlock {
     pub fn to_action(&self) -> Action {
@@ -156,28 +164,29 @@ pub fn content_filter_check(
         )?;
     }
 
-    let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
-    let test_xss = !LIBINJECTION_XSS_TAGS.iter().any(|t| profile.ignore.contains(*t));
-    let test_sqli = !LIBINJECTION_SQLI_TAGS.iter().any(|t| profile.ignore.contains(*t));
+    let kept = profile.active.union(&profile.report).cloned().collect::<HashSet<_>>();
+    let test_xss = LIBINJECTION_XSS_TAGS.intersection(&profile.ignore).next().is_none()
+        && LIBINJECTION_XSS_TAGS.intersection(&kept).next().is_some();
+    let test_sqli = LIBINJECTION_SQLI_TAGS.intersection(&profile.ignore).next().is_none()
+        && LIBINJECTION_SQLI_TAGS.intersection(&kept).next().is_some();
 
-    // if libinjection is globally ignored, ignore these tests
-    if test_xss || test_sqli {
-        // run libinjection on non-whitelisted sections
-        for idx in &[Path, Headers, Cookies, Args] {
-            // note that there is no risk check with injection, every match triggers a block.
-            injection_check(
-                tags,
-                *idx,
-                get_section(*idx, rinfo),
-                &omit,
-                &mut hca_keys,
-                test_xss,
-                test_sqli,
-            );
-        }
+    let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
+
+    // run libinjection on non-whitelisted sections, and populate the hca_keys table
+    for idx in &[Path, Headers, Cookies, Args] {
+        // note that there is no risk check with injection, every match triggers a block.
+        injection_check(
+            tags,
+            *idx,
+            get_section(*idx, rinfo),
+            &omit,
+            &mut hca_keys,
+            test_xss,
+            test_sqli,
+        );
     }
 
-    let kept = profile.active.union(&profile.report).cloned().collect::<HashSet<_>>();
+    logs.info(format!("TO TEST: {:?}", hca_keys));
 
     let mut specific_tags = Tags::default();
     // finally, hyperscan check
@@ -287,6 +296,9 @@ fn section_check(
     Ok(())
 }
 
+
+/// TODO: This also populates the hca_keys map
+/// this is stupid and needs to be changed
 fn injection_check(
     tags: &mut Tags,
     idx: SectionIdx,
@@ -301,11 +313,11 @@ fn injection_check(
             let omit_tags = omit.exclusions.get(idx).get(name);
             let rtest_xss = test_xss
                 && !omit_tags
-                    .map(|tgs| LIBINJECTION_XSS_TAGS.iter().any(|t| tgs.contains(*t)))
+                    .map(|tgs| LIBINJECTION_XSS_TAGS.intersection(tgs).next().is_some())
                     .unwrap_or(false);
             let rtest_sqli = test_sqli
                 && !omit_tags
-                    .map(|tgs| LIBINJECTION_SQLI_TAGS.iter().any(|t| tgs.contains(*t)))
+                    .map(|tgs| LIBINJECTION_SQLI_TAGS.intersection(tgs).next().is_some())
                     .unwrap_or(false);
             if rtest_sqli {
                 if let Some((b, _)) = sqli(value) {
