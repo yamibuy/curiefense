@@ -44,7 +44,8 @@
            :class="{'is-active': isSuggestionFocused(index)}"
            @mousedown="suggestionClick(index)"
            :key="index"
-           class="dropdown-item">
+           :title="suggestion.value"
+           class="dropdown-item ellipsis">
           <span v-if="suggestion.prefix" v-html="suggestion.prefix"></span>
           {{ suggestion.value }}
         </a>
@@ -114,6 +115,10 @@ export default (Vue as VueConstructor<Vue & {
 
   watch: {
     initialValue(newVal) {
+      if (this.skipNextWatchUpdate) {
+        this.skipNextWatchUpdate = false
+        return
+      }
       const newValFiltered = this.filterFunction ? this.filterFunction(newVal) : newVal
       if (this.autocompleteValue !== newVal) {
         this.autocompleteValue = newValFiltered
@@ -143,6 +148,7 @@ export default (Vue as VueConstructor<Vue & {
       focusedSuggestionIndex: -1,
       inputBlurredTimeout: null,
       divider: this.inputType === 'textarea' ? '\n' : ' ',
+      skipNextWatchUpdate: false,
     }
   },
 
@@ -225,6 +231,7 @@ export default (Vue as VueConstructor<Vue & {
       if (this.inputType === 'textarea') {
         this.autocompleteValue = `${this.autocompleteValue.trim()}${this.divider}`
       }
+      this.skipNextWatchUpdate = true
     },
 
     moveCursorToEnd(event: KeyboardEvent) {
