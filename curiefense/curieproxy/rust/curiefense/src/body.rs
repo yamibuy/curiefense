@@ -141,6 +141,36 @@ fn xml_increment_last(stack: &mut Vec<(String, u64)>) -> u64 {
     0
 }
 
+fn xml_external_id(args: &mut RequestField, stack: &[(String, u64)], name: &str, me: Option<ExternalId>) {
+    match me {
+        Some(ExternalId::System(spn)) => {
+            let path = xml_path(stack) + "entity/" + name;
+            args.add(path, DataSource::FromBody, "SYSTEM ".to_string() + spn.as_str());
+            let path_raw = xml_path(stack) + "entity_raw/" + name;
+            args.add(
+                path_raw,
+                DataSource::FromBody,
+                "<!DOCTYPE ".to_string() + name + " SYSTEM \"" + spn.as_str() + "\"",
+            );
+        }
+        Some(ExternalId::Public(spn1, spn2)) => {
+            let path = xml_path(stack) + "entity/" + name;
+            args.add(
+                path,
+                DataSource::FromBody,
+                "PUBLIC ".to_string() + spn1.as_str() + " " + spn2.as_str(),
+            );
+            let path_raw = xml_path(stack) + "entity_raw/" + name;
+            args.add(
+                path_raw,
+                DataSource::FromBody,
+                "<!DOCTYPE ".to_string() + name + " PUBLIC \"" + spn1.as_str() + "\" \"" + spn2.as_str() + "\"",
+            );
+        }
+        None => (),
+    }
+}
+
 /// Parses the XML body by iterating on the token stream
 ///
 /// This checks the following errors, in addition to the what the lexer gets:
@@ -155,25 +185,16 @@ fn xml_body(args: &mut RequestField, body: &[u8]) -> Result<(), String> {
             Token::ProcessingInstruction { .. } => (),
             Token::Comment { .. } => (),
             Token::Declaration { .. } => (),
-            Token::DtdStart { .. } => (),
+            Token::DtdStart { external_id, name, .. } => xml_external_id(args, &stack, name.as_str(), external_id),
             Token::DtdEnd { .. } => (),
-            Token::EmptyDtd { .. } => (),
+            Token::EmptyDtd { external_id, name, .. } => xml_external_id(args, &stack, name.as_str(), external_id),
             Token::EntityDeclaration { name, definition, .. } => match definition {
                 EntityDefinition::EntityValue(span) => args.add(
                     "_XMLENTITY_VALUE_".to_string() + name.as_str(),
                     DataSource::FromBody,
                     span.to_string(),
                 ),
-                EntityDefinition::ExternalId(ExternalId::System(span)) => args.add(
-                    "_XMLENTITY_SYSTEMID_".to_string() + name.as_str(),
-                    DataSource::FromBody,
-                    span.to_string(),
-                ),
-                EntityDefinition::ExternalId(ExternalId::Public(p1, p2)) => args.add(
-                    "_XMLENTITY_PUBLICID_".to_string() + name.as_str(),
-                    DataSource::FromBody,
-                    p1.to_string() + "/" + p2.as_str(),
-                ),
+                EntityDefinition::ExternalId(eid) => xml_external_id(args, &stack, "entity", Some(eid)),
             },
             Token::ElementStart { local, .. } => {
                 // increment element index for the current element
@@ -528,7 +549,11 @@ mod tests {
         test_parse(
             Some("application/xml"),
             br#"<!DOCTYPE foo [ <!ENTITY ext SYSTEM "http://website.com" > ]><a>xx</a>"#,
-            &[("a1", "xx"), ("_XMLENTITY_SYSTEMID_ext", "http://website.com")],
+            &[
+                ("a1", "xx"),
+                ("entity_raw/entity", "<!DOCTYPE entity SYSTEM \"http://website.com\""),
+                ("entity/entity", "SYSTEM http://website.com"),
+            ],
         );
     }
 
