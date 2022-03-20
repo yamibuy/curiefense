@@ -37,6 +37,15 @@
         "name": "default entry",
         "map": [
             {
+                "match": "^/content-filter/rl45report3",
+                "name": "rl45report3",
+                "acl_profile": "__default__",
+                "acl_active": false,
+                "content_filter_profile": "rl45report3",
+                "content_filter_active": true,
+                "limit_ids": []
+            },
+            {
                 "match": "^/content-filter/reportpriority",
                 "name": "reportpriority",
                 "acl_profile": "__default__",

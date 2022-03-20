@@ -118,5 +118,33 @@
       ":method": "GET",
       ":authority": "localhost:30081"
     }
+  },
+  {
+    "response": {
+      "tags": [
+        "asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "contentfilterid:rl45report3",
+        "contentfiltername:rl45report3",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "securitypolicy-entry:rl45report3",
+        "aclid:--default--",
+        "geo:united-states",
+        "bot",
+        "aclname:default-acl"
+      ],
+      "action": "pass"
+    },
+    "name": "libinjection not enabled",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/rl45report3?a=1&b=%3Cscript%3Edocument.body.innerHTML=",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
   }
 ]
