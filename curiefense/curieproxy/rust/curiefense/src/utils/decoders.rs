@@ -157,7 +157,10 @@ fn base64dec_all(input: &str) -> Result<Vec<u8>, &str> {
 /// decodes an url encoded string into a string, which can contain REPLACEMENT CHARACTER on decoding failure
 pub fn base64dec_all_str(input: &str) -> Result<String, &str> {
     match base64dec_all(input) {
-        Ok(d) => Ok(String::from_utf8_lossy(&d).into_owned()),
+        Ok(d) => match String::from_utf8(d) {
+            Err(_) => Err("invalid utf8"),
+            Ok(x) => Ok(x),
+        },
         Err(e) => Err(e),
     }
 }

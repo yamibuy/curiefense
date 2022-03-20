@@ -86,6 +86,7 @@ fn map_args(
 
     let body_decoding = if let Some(body) = mbody {
         if let Err(rr) = parse_body(logs, &mut args, mcontent_type, accepted_types, body) {
+            logs.debug(format!("Body parsing failed: {}", rr));
             // if the body could not be parsed, store it in an argument, as if it was text
             args.add(
                 "RAW_BODY".to_string(),
@@ -513,7 +514,6 @@ mod tests {
                 ("cccc", DataSource::X(XDataSource::Uri), ""),
                 ("b64", DataSource::X(XDataSource::Uri), "YXJndW1lbnQ="),
                 ("b64:decoded", DataSource::DecodedFrom("b64".into()), "argument"),
-                ("xa :decoded", DataSource::DecodedFrom("xa ".into()), "�"),
             ]
             .iter()
             .map(|(k, ds, v)| (k.to_string(), ds.clone(), v.to_string())),
