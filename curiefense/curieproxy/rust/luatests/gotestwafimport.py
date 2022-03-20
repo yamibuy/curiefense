@@ -74,6 +74,9 @@ for root, _, files in os.walk(target):
                         elif placeholder == "JSONBody":
                             q["headers"]["content-type"] = "application/json"
                             q["body"] = payload
+                        elif placeholder == "XMLBody":
+                            q["headers"]["content-type"] = "text/xml"
+                            q["body"] = payload
                         elif placeholder == "HTMLForm":
                             q["headers"][
                                 "content-type"
