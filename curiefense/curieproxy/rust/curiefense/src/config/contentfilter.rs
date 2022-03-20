@@ -75,7 +75,7 @@ impl ContentFilterProfile {
                     regex: Vec::new(),
                 },
             },
-            decoding: vec![Transformation::UrlDecode, Transformation::Base64Decode],
+            decoding: vec![Transformation::Base64Decode, Transformation::UrlDecode],
             masking_seed: seed.as_bytes().to_vec(),
             active: HashSet::default(),
             ignore: HashSet::default(),
@@ -205,11 +205,11 @@ fn mk_section(props: RawContentFilterProperties) -> anyhow::Result<ContentFilter
 fn convert_entry(entry: RawContentFilterProfile) -> anyhow::Result<(String, ContentFilterProfile)> {
     let mut decoding = Vec::new();
     // default order
-    if entry.decoding.dual {
-        decoding.push(Transformation::UrlDecode)
-    }
     if entry.decoding.base64 {
         decoding.push(Transformation::Base64Decode)
+    }
+    if entry.decoding.dual {
+        decoding.push(Transformation::UrlDecode)
     }
     if entry.decoding.html {
         decoding.push(Transformation::HtmlEntitiesDecode)
