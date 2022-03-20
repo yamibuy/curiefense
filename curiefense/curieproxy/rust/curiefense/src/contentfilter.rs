@@ -313,7 +313,7 @@ fn injection_check(
                         tags.insert_qualified("cf-rule-id", "libinjection-sqli");
                         tags.insert_qualified("cf-rule-category", "libinjection");
                         tags.insert_qualified("cf-rule-subcategory", "sqli");
-                        tags.insert_qualified("cf-rule-risk", "3");
+                        tags.insert_qualified("cf-rule-risk", "libinjection");
                     }
                 }
             }
@@ -323,7 +323,7 @@ fn injection_check(
                         tags.insert_qualified("cf-rule-id", "libinjection-xss");
                         tags.insert_qualified("cf-rule-category", "libinjection");
                         tags.insert_qualified("cf-rule-subcategory", "xss");
-                        tags.insert_qualified("cf-rule-risk", "3");
+                        tags.insert_qualified("cf-rule-risk", "libinjection");
                     }
                 }
             }
