@@ -22,6 +22,47 @@
             "names": [],
             "regex": []
         },
+        "id": "rl45report3",
+        "ignore_alphanum": true,
+        "name": "rl45report3",
+        "path": {
+            "max_count": 42,
+            "max_length": 2048,
+            "names": [],
+            "regex": []
+        },
+        "ignore": [],
+        "report": [
+            "cf-rule-risk:3"
+        ],
+        "active": [
+            "cf-rule-risk:5",
+            "cf-rule-risk:4"
+        ]
+    },
+    {
+        "masking_seed": "CHANGEME",
+        "args": {
+            "max_count": 512,
+            "max_length": 1024,
+            "names": [],
+            "regex": []
+        },
+        "cookies": {
+            "max_count": 42,
+            "max_length": 1024,
+            "names": [],
+            "regex": []
+        },
+        "decoding": {
+            "base64": true
+        },
+        "headers": {
+            "max_count": 42,
+            "max_length": 1024,
+            "names": [],
+            "regex": []
+        },
         "id": "reportpriority",
         "ignore_alphanum": true,
         "name": "report and active and ignore",
