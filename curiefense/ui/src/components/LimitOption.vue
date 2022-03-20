@@ -31,7 +31,7 @@
                  title="Name"
                  v-model="selectedName"
                  class="input is-small option-name-input">
-          <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
+          <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-font"></i></span>
         </div>
         <div class="control select is-small is-fullwidth" v-if="selectedType === 'attrs'">
           <div class="select is-fullwidth">
