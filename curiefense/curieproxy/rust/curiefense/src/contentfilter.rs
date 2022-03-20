@@ -44,14 +44,14 @@ pub enum ContentFilterBlock {
 static LIBINJECTION_SQLI_TAGS: [&str; 4] = [
     "cf-rule-id:libinjection-sqli",
     "cf-rule-category:libinjection",
-    "cf-rule-subcategory:sqli",
+    "cf-rule-subcategory:libinjection-sqli",
     "cf-rule-risk:libinjection",
 ];
 
 static LIBINJECTION_XSS_TAGS: [&str; 4] = [
     "cf-rule-id:libinjection-xss",
     "cf-rule-category:libinjection",
-    "cf-rule-subcategory:xss",
+    "cf-rule-subcategory:libinjection-xss",
     "cf-rule-risk:libinjection",
 ];
 
@@ -311,7 +311,7 @@ fn injection_check(
                     if b {
                         tags.insert_qualified("cf-rule-id", "libinjection-sqli");
                         tags.insert_qualified("cf-rule-category", "libinjection");
-                        tags.insert_qualified("cf-rule-subcategory", "sqli");
+                        tags.insert_qualified("cf-rule-subcategory", "libinjection-sqli");
                         tags.insert_qualified("cf-rule-risk", "libinjection");
                     }
                 }
@@ -321,7 +321,7 @@ fn injection_check(
                     if b {
                         tags.insert_qualified("cf-rule-id", "libinjection-xss");
                         tags.insert_qualified("cf-rule-category", "libinjection");
-                        tags.insert_qualified("cf-rule-subcategory", "xss");
+                        tags.insert_qualified("cf-rule-subcategory", "libinjection-xss");
                         tags.insert_qualified("cf-rule-risk", "libinjection");
                     }
                 }
