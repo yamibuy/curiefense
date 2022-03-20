@@ -15,7 +15,7 @@
         "geo:united-states",
         "bot",
         "cf-rule-category:libinjection",
-        "cf-rule-subcategory:xss",
+        "cf-rule-subcategory:libinjection-xss",
         "cf-rule-risk:libinjection",
         "cf-rule-id:libinjection-xss",
         "aclname:default-acl"
