@@ -27,9 +27,6 @@
             "max_count": 42,
             "max_length": 1024
         },
-        "decoding": {
-            "base64": true
-        },
         "masking_seed": "CHANGEME",
         "active": ["cf-rule-risk:5", "cf-rule-risk:4", "cf-rule-risk:3", "cf-rule-subcategory:libinjection-xss"],
         "report": [],
