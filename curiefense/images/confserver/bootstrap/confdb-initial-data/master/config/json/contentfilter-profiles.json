@@ -35,8 +35,8 @@
             "base64": true
         },
         "masking_seed": "CHANGEME",
-        "active": ["cf-rule-risk:5", "cf-rule-risk:4"],
-        "report": ["cf-rule-risk:3"],
+        "active": ["cf-rule-risk:5", "cf-rule-risk:4", "cf-rule-risk:3", "cf-rule-subcategory:libinjection-xss"],
+        "report": [],
         "ignore": [],
         "decoding": {
           "base64": true,
