@@ -30,28 +30,24 @@ describe('ContentFilterProfileEditor.vue', () => {
       'headers': {
         'names': [],
         'regex': [],
-        'min_risk': 4,
         'max_count': 42,
         'max_length': 1024,
       },
       'cookies': {
         'names': [],
         'regex': [],
-        'min_risk': 4,
         'max_count': 42,
         'max_length': 1024,
       },
       'args': {
         'names': [],
         'regex': [],
-        'min_risk': 4,
         'max_count': 512,
         'max_length': 1024,
       },
       'path': {
         'names': [],
         'regex': [],
-        'min_risk': 4,
         'max_count': 42,
         'max_length': 1024,
       },
@@ -62,6 +58,7 @@ describe('ContentFilterProfileEditor.vue', () => {
         unicode: false,
       },
       'masking_seed': '',
+      'content_type': [],
       'active': [],
       'report': [],
       'ignore': [],
@@ -187,21 +184,6 @@ describe('ContentFilterProfileEditor.vue', () => {
       expect(element.value).toEqual(docs[0].args.max_count.toString())
     })
 
-    test('should have correct min headers risk in input', () => {
-      const element = wrapper.find('.min-headers-risk-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].headers.min_risk.toString())
-    })
-
-    test('should have correct min cookies risk in input', () => {
-      const element = wrapper.find('.min-cookies-risk-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].cookies.min_risk.toString())
-    })
-
-    test('should have correct min args risk in input', () => {
-      const element = wrapper.find('.min-args-risk-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].args.min_risk.toString())
-    })
-
     test('should have correct ignore alphanumeric boolean in checkbox input', () => {
       const element = wrapper.find('.ignore-alphanumeric-input').element as HTMLInputElement
       expect(element.checked).toEqual(docs[0].ignore_alphanum)
@@ -226,6 +208,7 @@ describe('ContentFilterProfileEditor.vue', () => {
             unicode: false,
           },
           'masking_seed': '',
+          'content_type': [],
           'active': [],
           'report': [],
           'ignore': [],
@@ -233,7 +216,6 @@ describe('ContentFilterProfileEditor.vue', () => {
         defaultSectionsValue = {
           names: [] as ContentFilterEntryMatch[],
           regex: [] as ContentFilterEntryMatch[],
-          min_risk: 0,
           max_count: 0,
           max_length: 0,
         }
@@ -276,28 +258,24 @@ describe('ContentFilterProfileEditor.vue', () => {
           'headers': {
             'names': [],
             'regex': [],
-            'min_risk': 4,
             'max_count': 42,
             'max_length': 1024,
           },
           'cookies': {
             'names': [],
             'regex': [],
-            'min_risk': 4,
             'max_count': 42,
             'max_length': 1024,
           },
           'args': {
             'names': [],
             'regex': [],
-            'min_risk': 4,
             'max_count': 512,
             'max_length': 1024,
           },
           'path': {
             'names': [],
             'regex': [],
-            'min_risk': 4,
             'max_count': 42,
             'max_length': 1024,
           },
@@ -308,6 +286,7 @@ describe('ContentFilterProfileEditor.vue', () => {
             unicode: false,
           },
           'masking_seed': '',
+          'content_type': [],
           'active': [],
           'report': [],
           'ignore': [],

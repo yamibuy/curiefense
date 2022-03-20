@@ -150,8 +150,9 @@
                     <tbody>
                     <tr v-for="(tag, tagIndex) in localDoc[filter]"
                         :key="tagIndex">
-                      <td class="tag-cell"
-                          :class=" duplicateTags[tag] ? 'has-text-danger' : '' ">
+                      <td class="tag-cell ellipsis"
+                          :class=" duplicateTags[tag] ? 'has-text-danger' : '' "
+                          :title="tag">
                         {{ tag }}
                       </td>
                       <td class="is-size-7 width-20px">
