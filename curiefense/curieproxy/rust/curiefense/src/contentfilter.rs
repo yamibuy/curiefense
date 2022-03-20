@@ -45,14 +45,14 @@ static LIBINJECTION_SQLI_TAGS: [&str; 4] = [
     "cf-rule-id:libinjection-sqli",
     "cf-rule-category:libinjection",
     "cf-rule-subcategory:sqli",
-    "cf-rule-risk:4",
+    "cf-rule-risk:libinjection",
 ];
 
 static LIBINJECTION_XSS_TAGS: [&str; 4] = [
     "cf-rule-id:libinjection-xss",
     "cf-rule-category:libinjection",
     "cf-rule-subcategory:xss",
-    "cf-rule-risk:4",
+    "cf-rule-risk:libinjection",
 ];
 
 impl ContentFilterBlock {
