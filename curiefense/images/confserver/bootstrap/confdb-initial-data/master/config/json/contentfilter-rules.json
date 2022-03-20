@@ -682,6 +682,17 @@
     "tags": []
   },
   {
+    "id": "300010",
+    "name": "300010",
+    "category": "osci",
+    "msg": "Shell injection (recon)",
+    "operand": "set\\s*/a\\s*\\d+\\s*[*+-/]\\s*\\d+",
+    "risk": 4,
+    "subcategory": "windows",
+    "notes": "",
+    "tags": []
+  },
+  {
     "id": "300151",
     "name": "300151",
     "msg": "OSCI (OS Command Injection) Attempt",
@@ -1996,6 +2007,50 @@
     "risk": 4,
     "category": "xss",
     "subcategory": "xss",
+    "tags": []
+  },
+  {
+    "id": "920011",
+    "name": "920011",
+    "category": "ssti",
+    "msg": "Server-Side Template Injection",
+    "operand": "'\\s*\\+\\s*#{.*}\\s*\\+\\s*'",
+    "risk": 5,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "920012",
+    "name": "920012",
+    "category": "ssti",
+    "msg": "Server-Side Template Injection (recon)",
+    "operand": "{{\\s*\\d+\\s*[*+-/]\\s*\\d+\\s*}}",
+    "risk": 4,
+    "subcategory": "generic",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "920013",
+    "name": "920013",
+    "category": "deserialization",
+    "msg": "YAML deserialization",
+    "operand": "!!python/object/new:",
+    "risk": 4,
+    "subcategory": "python",
+    "notes": "",
+    "tags": []
+  },
+  {
+    "id": "920014",
+    "name": "920014",
+    "category": "XXE",
+    "msg": "XXE signature",
+    "operand": "<!(entity|doctype)\\s+[^\\s]+\\s+system",
+    "risk": 4,
+    "subcategory": "xxe",
+    "notes": "",
     "tags": []
   }
 ]
