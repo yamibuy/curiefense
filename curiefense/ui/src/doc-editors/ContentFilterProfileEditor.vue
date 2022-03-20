@@ -4,7 +4,7 @@
       <div class="card-content">
         <div class="media">
           <div class="media-content">
-            <div class="columns">
+            <div class="columns columns-divided">
               <div class="column is-4">
                 <div class="field">
                   <label class="label is-small">
@@ -33,6 +33,69 @@
                            type="password"
                            @change="emitDocUpdate"
                            v-model="localDoc.masking_seed"/>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label is-small">
+                    Content Type
+                  </label>
+                  <div class="control">
+                    <input class="input is-small document-masking-seed"
+                           title="Content type"
+                           placeholder="Comma separated content types"
+                           @change="emitDocUpdate"
+                           v-model="commaSeparatedContentType"/>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label is-small">
+                    Decoding
+                  </label>
+                  <div class="control">
+                    <div class="columns">
+                      <div class="column is-6">
+                        <div class="decoding-option-wrapper mb-3">
+                          <label class="checkbox is-size-7">
+                            <input type="checkbox"
+                                   @change="emitDocUpdate"
+                                   class="checkbox-input decoding-base64-active"
+                                   v-model="localDoc.decoding.base64">
+                            base64
+                          </label>
+                        </div>
+                        <div class="decoding-option-wrapper">
+                          <label class="checkbox is-size-7">
+                            <input type="checkbox"
+                                   @change="emitDocUpdate"
+                                   class="checkbox-input decoding-dual-active"
+                                   v-model="localDoc.decoding.dual">
+                            dual
+                          </label>
+                        </div>
+                      </div>
+                      <div class="column is-6">
+                        <div class="decoding-option-wrapper mb-3">
+                          <label class="checkbox is-size-7">
+                            <input type="checkbox"
+                                   @change="emitDocUpdate"
+                                   class="checkbox-input decoding-html-active"
+                                   v-model="localDoc.decoding.html">
+                            html
+                          </label>
+                        </div>
+                        <div class="decoding-option-wrapper">
+                          <label class="checkbox is-size-7">
+                            <input type="checkbox"
+                                   @change="emitDocUpdate"
+                                   class="checkbox-input decoding-unicode-active"
+                                   v-model="localDoc.decoding.unicode">
+                            unicode
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -105,33 +168,6 @@
                          v-model.number="localDoc.args.max_count"/>
                 </td>
               </tr>
-              <tr>
-                <td>Min Risk Level</td>
-                <td>
-                  <input required
-                         class="input is-small min-headers-risk-input"
-                         type="number"
-                         @change="emitDocUpdate"
-                         title="Min headers risk"
-                         v-model.number="localDoc.headers.min_risk"/>
-                </td>
-                <td>
-                  <input required
-                         class="input is-small min-cookies-risk-input"
-                         type="number"
-                         @change="emitDocUpdate"
-                         title="Min cookies risk"
-                         v-model.number="localDoc.cookies.min_risk"/>
-                </td>
-                <td>
-                  <input required
-                         class="input is-small min-args-risk-input"
-                         type="number"
-                         @change="emitDocUpdate"
-                         title="Min arguments risk"
-                         v-model.number="localDoc.args.min_risk"/>
-                </td>
-              </tr>
               </tbody>
             </table>
           </div>
@@ -158,9 +194,9 @@
             <table class="table is-narrow is-fullwidth">
               <tbody>
               <tr v-for="(tag, idx) in localDoc[operation]" :key="idx">
-                <td class="tag-cell"
+                <td class="tag-cell ellipsis"
                     :class=" { 'has-text-danger': duplicateTags[tag] }"
-                    :title="tagMessage(tag)">
+                    :title="tagMessage(tag) || tag">
                   {{ tag }}
                 </td>
                 <td class="is-size-7 width-20px">
@@ -568,9 +604,14 @@ export default Vue.extend({
     const defaultContentFilterProfileSection: ContentFilterProfileSection = {
       names: [] as ContentFilterEntryMatch[],
       regex: [] as ContentFilterEntryMatch[],
-      min_risk: 0,
       max_count: 0,
       max_length: 0,
+    }
+    const defaultContentFilterProfileDecoding: ContentFilterProfile['decoding'] = {
+      base64: true,
+      dual: false,
+      html: false,
+      unicode: false,
     }
     return {
       operations: ['active', 'report', 'ignore'] as ContentFilterProfileTagLists[],
@@ -581,6 +622,7 @@ export default Vue.extend({
       titles: DatasetsUtils.titles,
       defaultNewEntry: defaultNewEntry,
       defaultContentFilterProfileSection: defaultContentFilterProfileSection,
+      defaultContentFilterProfileDecoding: defaultContentFilterProfileDecoding,
       contentFilterSuggestions: [] as AutocompleteSuggestion[],
       contentFilter: {
         group: [] as ContentFilterRuleGroup[],
@@ -603,6 +645,15 @@ export default Vue.extend({
       const result = _.fromPairs(_.zip(dupTags, dupTags))
       this.$emit('form-invalid', !!_.size(result))
       return result
+    },
+
+    commaSeparatedContentType: {
+      get(): string {
+        return this.localDoc.content_type?.join(', ') || ''
+      },
+      set(val: string): void {
+        this.localDoc.content_type = val.trim().split(/[, ]+/)
+      },
     },
   },
 
@@ -712,6 +763,11 @@ export default Vue.extend({
       this.emitDocUpdate()
     },
 
+    normalizeDocDecoding() {
+      this.localDoc.decoding = _.cloneDeep(this.defaultContentFilterProfileDecoding)
+      this.emitDocUpdate()
+    },
+
     openTagInput(section: ContentFilterProfileTagLists) {
       this.addNewColName = section
     },
@@ -755,6 +811,9 @@ export default Vue.extend({
             this.normalizeDocSections(sections[i])
           }
         }
+        if (!value['decoding']) {
+          this.normalizeDocDecoding()
+        }
       },
       immediate: true,
       deep: true,
@@ -793,4 +852,11 @@ export default Vue.extend({
 ::v-deep .tag-input {
   font-size: 0.58rem;
 }
+
+.decoding-option-wrapper {
+  .checkbox-input {
+    vertical-align: text-bottom;
+  }
+}
+
 </style>
