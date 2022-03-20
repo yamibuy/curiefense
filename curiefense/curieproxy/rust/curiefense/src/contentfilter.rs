@@ -140,6 +140,7 @@ pub fn content_filter_check(
 
     // directly exit if omitted profile
     if tags.has_intersection(&profile.ignore) {
+        logs.debug("content filter bypass because of global ignore");
         return Ok(());
     }
 
@@ -348,13 +349,14 @@ fn hyperscan(
         Some(x) => x,
     };
     let scratch = sigs.db.alloc_scratch()?;
-    let to_scan = hca_keys.keys().map(|s| s.as_bytes());
+    // TODO: use `intersperse` when this stabilizes
+    let to_scan = hca_keys.keys().cloned().collect::<Vec<_>>().join("\n");
     let mut found = false;
-    sigs.db.scan(to_scan, &scratch, |_, _, _, _| {
+    sigs.db.scan(&[to_scan], &scratch, |_, _, _, _| {
         found = true;
         Matching::Continue
     })?;
-    logs.info(format!("found: {}", found));
+    logs.debug(format!("matching content filter signatures: {}", found));
 
     if !found {
         return Ok(());
