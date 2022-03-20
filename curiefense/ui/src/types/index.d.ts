@@ -26,7 +26,6 @@ declare module CuriefenseClient {
   type ContentFilterProfileSection = {
     names: ContentFilterEntryMatch[],
     regex: ContentFilterEntryMatch[],
-    min_risk: number,
     max_count: number,
     max_length: number
   }
@@ -126,6 +125,7 @@ declare module CuriefenseClient {
       unicode: boolean
     },
     masking_seed: string,
+    content_type: string[],
     active: string[],
     report: string[],
     ignore: string[]

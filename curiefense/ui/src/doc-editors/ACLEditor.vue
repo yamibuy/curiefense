@@ -34,9 +34,9 @@
             <table class="table is-narrow is-fullwidth">
               <tbody>
               <tr v-for="(tag, idx) in localDoc[operation]" :key="idx">
-                <td class="tag-cell"
+                <td class="tag-cell ellipsis"
                     :class=" { 'has-text-danger': duplicateTags[tag], 'tag-crossed': allPrior(operation) }"
-                    :title="tagMessage(tag, operation)">
+                    :title="tagMessage(tag, operation) || tag">
                   {{ tag }}
                 </td>
                 <td class="is-size-7 width-20px">

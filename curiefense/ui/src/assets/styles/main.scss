@@ -212,3 +212,9 @@ $color-light: hsl(0, 0%, 96%);
 .button.is-light:focus {
   border-color: #3273dc;
 }
+
+/* Other */
+
+.tag-cell {
+  max-width: 0;
+}
