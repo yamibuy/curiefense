@@ -92,7 +92,7 @@
             "description": "List of content types",
             "type": "array",
             "items": { "type": "string" }
-        }
+        },
         "active": { "$ref": "#/definitions/tags_array" },
         "report": { "$ref": "#/definitions/tags_array" },
         "ignore": { "$ref": "#/definitions/tags_array" }
