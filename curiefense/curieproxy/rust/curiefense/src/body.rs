@@ -283,6 +283,8 @@ pub fn parse_body(
         }
     }
 
+    logs.debug("content-type based body parsing failed");
+
     // content-type not found
     if accepted_types.is_empty() {
         // we had no particular expection, so blindly try json, and urlencoded
