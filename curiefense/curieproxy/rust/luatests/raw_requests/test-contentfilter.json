@@ -16,7 +16,7 @@
         "bot",
         "cf-rule-category:libinjection",
         "cf-rule-subcategory:xss",
-        "cf-rule-risk:4",
+        "cf-rule-risk:3",
         "cf-rule-id:libinjection-xss",
         "aclname:default-acl"
       ],
