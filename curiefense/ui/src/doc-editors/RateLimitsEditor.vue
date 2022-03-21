@@ -96,8 +96,8 @@
                       </label>
                       <input class="input is-small document-limit"
                             type="text"
-                            title="A number of requests"
-                            placeholder="A number of requests"
+                            title="Number of events"
+                            placeholder="Number of events"
                             @change="emitDocUpdate"
                             v-model="threshold.limit">
                     </div>
