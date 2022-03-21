@@ -2,6 +2,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "asn:396507",
@@ -31,6 +33,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "asn:396507",
@@ -60,6 +64,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
@@ -89,6 +95,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
@@ -118,6 +126,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",

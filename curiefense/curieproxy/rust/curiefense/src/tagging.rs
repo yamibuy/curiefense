@@ -94,6 +94,8 @@ pub fn tag_request(is_human: bool, cfg: &Config, rinfo: &RequestInfo) -> (Tags, 
     }
     tags.insert_qualified("ip", &rinfo.rinfo.geoip.ipstr);
     tags.insert_qualified("geo", rinfo.rinfo.geoip.country_name.as_deref().unwrap_or("nil"));
+    tags.insert_qualified("region", rinfo.rinfo.geoip.region.as_deref().unwrap_or("nil"));
+    tags.insert_qualified("subregion", rinfo.rinfo.geoip.subregion.as_deref().unwrap_or("nil"));
     match rinfo.rinfo.geoip.asn {
         None => {
             tags.insert_qualified("asn", "nil");
