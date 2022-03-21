@@ -41,11 +41,10 @@
                 "restrict": { "type": "boolean" },
                 "mask": { "type": "boolean" },
                 "exclusions": {
-                    "type": ["object", "null"],
-                    "additionalProperties": {
-                        "type": "string",
-                        "enum": ["rule", "group"]
-                    }
+                    "title": "Excluded Tags",
+                    "description": "List of excluded Content Filter tags",
+                    "type": "array",
+                    "items": { "type": "string" }
                 }
             }
         }
