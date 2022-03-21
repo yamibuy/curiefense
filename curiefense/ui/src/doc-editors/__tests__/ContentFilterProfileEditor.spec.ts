@@ -306,14 +306,14 @@ describe('ContentFilterProfileEditor.vue', () => {
   test('should unpack exclusions correctly from model for view', async () => {
     const unpackedExclusions = 'cf-rule-id:100000 cf-risk:5'
     const packedExclusions = ['cf-rule-id:100000', 'cf-risk:5']
-    const actualUnpackedExclusions = (wrapper.vm as any).unpackExclusions(packedExclusions)
+    const actualUnpackedExclusions = (wrapper.vm as any).exclusionsToString(packedExclusions)
     expect(actualUnpackedExclusions).toEqual(unpackedExclusions)
   })
 
   test('should unpack empty exclusions correctly from model for view', async () => {
     const unpackedExclusions = ''
     const packedExclusions: ContentFilterEntryMatch['exclusions'] = []
-    const actualUnpackedExclusions = (wrapper.vm as any).unpackExclusions(packedExclusions)
+    const actualUnpackedExclusions = (wrapper.vm as any).exclusionsToString(packedExclusions)
     expect(actualUnpackedExclusions).toEqual(unpackedExclusions)
   })
 
