@@ -272,11 +272,11 @@ export default Vue.extend({
       branches: 0,
 
       componentsMap: {
-        'aclprofiles': {component: ACLEditor},
-        'flowcontrol': {component: FlowControlPolicyEditor},
         'globalfilters': {component: GlobalFilterListEditor},
-        'ratelimits': {component: RateLimitsEditor},
+        'flowcontrol': {component: FlowControlPolicyEditor},
         'securitypolicies': {component: SecurityPoliciesEditor},
+        'ratelimits': {component: RateLimitsEditor},
+        'aclprofiles': {component: ACLEditor},
         'contentfilterprofiles': {component: ContentFilterEditor},
         'contentfilterrules': {component: ContentFilterRulesEditor},
       },

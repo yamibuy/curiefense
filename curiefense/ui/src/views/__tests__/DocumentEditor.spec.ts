@@ -955,7 +955,7 @@ describe('DocumentEditor.vue', () => {
       // allow all requests to finish
       setImmediate(() => {
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(2)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         done()
       })
     })
@@ -985,7 +985,7 @@ describe('DocumentEditor.vue', () => {
         const branchSelection = wrapper.find('.branch-selection')
         expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(4)
         const docSelection = wrapper.find('.doc-selection')
         expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
         done()
@@ -1003,7 +1003,7 @@ describe('DocumentEditor.vue', () => {
         const branchSelection = wrapper.find('.branch-selection')
         expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(4)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(2)
         const docSelection = wrapper.find('.doc-selection')
         expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         done()
@@ -1021,7 +1021,7 @@ describe('DocumentEditor.vue', () => {
         const branchSelection = wrapper.find('.branch-selection')
         expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(4)
         const docSelection = wrapper.find('.doc-selection')
         expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         done()
@@ -1316,7 +1316,7 @@ describe('DocumentEditor.vue', () => {
       const docTypeSelection = wrapper.find('.doc-type-selection')
       docTypeSelection.trigger('click')
       const docTypeOptions = docTypeSelection.findAll('option')
-      docTypeOptions.at(2).setSelected()
+      docTypeOptions.at(0).setSelected()
       // allow all requests to finish
       setImmediate(() => {
         // switch to a different document
@@ -1383,7 +1383,7 @@ describe('DocumentEditor.vue', () => {
       const docTypeSelection = wrapper.find('.doc-type-selection')
       docTypeSelection.trigger('click')
       const options = docTypeSelection.findAll('option')
-      options.at(4).setSelected()
+      options.at(2).setSelected()
       // allow all requests to finish
       setImmediate(async () => {
         const originalDoc = (wrapper.vm as any).selectedDoc

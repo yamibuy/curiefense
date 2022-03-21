@@ -312,7 +312,7 @@
                               <button title="Delete this profile"
                                       class="button is-small is-pulled-right is-danger is-light remove-entry-button"
                                       @click="removeMapEntry(mapIndex)"
-                                      v-if="localDoc.id !== '__default__' || initialMapEntryMatch !== '/'">
+                                      v-if="isRemoveEntryEnabled">
                                 Delete
                               </button>
                             </div>
@@ -389,6 +389,11 @@ export default (Vue as VueConstructor<Vue & {
       const isCurrentEntryMatchValid = this.mapEntryIndex === -1 ||
           this.isSelectedMapEntryMatchValid(this.mapEntryIndex)
       return !isDomainMatchValid || !isCurrentEntryMatchValid
+    },
+
+    isRemoveEntryEnabled(): boolean {
+      const isDefaultPath = (this.localDoc.id === '__default__' && this.initialMapEntryMatch === '/')
+      return this.localDoc.map.length > 1 && !isDefaultPath
     },
   },
 
