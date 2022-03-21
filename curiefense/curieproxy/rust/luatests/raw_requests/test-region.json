@@ -2,6 +2,8 @@
   {
     "response": {
       "tags": [
+        "region:idf",
+        "subregion:75",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "sante",

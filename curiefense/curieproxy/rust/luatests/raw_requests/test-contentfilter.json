@@ -2,6 +2,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -36,6 +38,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy:default-entry",
         "securitypolicy-entry:default",
         "ip:23-129-64-253",
@@ -73,6 +77,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
         "asn:396507",
@@ -109,6 +115,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "aclid:--default--",
         "ip:23-129-64-253",
         "container:1e219d8ed6b4",
@@ -146,6 +154,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
         "all",
@@ -174,6 +184,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
         "aclid:--default--",
@@ -211,6 +223,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
         "all",
@@ -247,6 +261,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
         "asn:nil",
@@ -283,6 +299,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
@@ -321,6 +339,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
@@ -359,6 +379,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy:default-entry",
         "sante",
         "aclname:default-acl",
@@ -395,6 +417,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "container:1e219d8ed6b4",
         "all",
         "securitypolicy:default-entry",
@@ -423,6 +447,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "aclid:--default--",
         "securitypolicy-entry:content-filter-omit-tests",
         "contentfiltername:omit-id-100016",
@@ -459,6 +485,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "container:1e219d8ed6b4",
         "asn:nil",
         "securitypolicy-entry:content-filter-noinjection-tests",
@@ -487,6 +515,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "aclid:--default--",
         "contentfiltername:args-checkes",
@@ -516,6 +546,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
         "all",
@@ -543,6 +575,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "all",
         "securitypolicy:default-entry",
         "aclname:default-acl",
@@ -570,6 +604,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "aclid:--default--",
         "container:1e219d8ed6b4",
         "contentfiltername:args-checkes",
@@ -597,6 +633,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "aclid:--default--",
@@ -624,6 +662,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "aclid:--default--",
         "asn:nil",
         "sante",
@@ -651,6 +691,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "sante",
         "geo:united-states",
@@ -678,6 +720,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
         "sante",
@@ -707,6 +751,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy:default-entry",
         "all",
         "container:1e219d8ed6b4",
@@ -736,6 +782,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "geo:united-states",
         "container:1e219d8ed6b4",
         "all",
@@ -763,6 +811,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "ip:13-129-64-253",
         "asn:nil",
         "aclid:--default--",
@@ -790,6 +840,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "ip:13-129-64-253",
         "all",
         "aclid:--default--",
@@ -817,6 +869,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "geo:united-states",
         "securitypolicy:default-entry",
         "container:1e219d8ed6b4",
@@ -844,6 +898,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:nil",
         "container:1e219d8ed6b4",
         "geo:united-states",
@@ -871,6 +927,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:nil",
         "aclid:--default--",
         "securitypolicy:default-entry",
@@ -901,6 +959,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "aclid:--default--",
         "securitypolicy:default-entry",
         "geo:united-states",
@@ -929,6 +989,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "ip:13-129-64-253",
         "securitypolicy:default-entry",
         "geo:united-states",
@@ -959,6 +1021,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "ip:13-129-64-253",
         "securitypolicy:default-entry",
         "securitypolicy-entry:content-filter-restrict-tests",
@@ -990,6 +1054,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "contentfilterid:rr",
@@ -1021,6 +1087,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1057,6 +1125,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1093,6 +1163,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1121,6 +1193,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1149,6 +1223,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1186,6 +1262,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1223,6 +1301,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1260,6 +1340,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1288,6 +1370,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1324,6 +1408,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1360,6 +1446,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1389,6 +1477,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1418,6 +1508,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1455,6 +1547,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1485,6 +1579,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1513,6 +1609,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "asn:396507",
         "sante",
         "ip:23-129-64-253",
@@ -1541,6 +1639,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "contentfilterid:invertedre",
@@ -1571,6 +1671,8 @@
   {
     "response": {
       "tags": [
+        "region:nil",
+        "subregion:nil",
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "contentfilterid:invertedre",

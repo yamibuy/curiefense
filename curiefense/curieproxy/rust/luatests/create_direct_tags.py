@@ -26,6 +26,8 @@ def make_request(st: Set[str], b64: bool = False) -> Tuple[Any, str]:
         },
         "response": {
             "tags": [
+                "region:nil",
+                "subregion:nil",
                 "all",
                 "geo:united-states",
                 "ip:23-129-64-253",
