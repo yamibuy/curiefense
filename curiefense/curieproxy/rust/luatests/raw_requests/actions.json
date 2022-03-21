@@ -13,6 +13,8 @@
       "block_mode": true,
       "status": 503,
       "tags": [
+        "region:georgia",
+        "subregion:nil",
         "all",
         "geo:united-states",
         "ip:12-13-14-15",
