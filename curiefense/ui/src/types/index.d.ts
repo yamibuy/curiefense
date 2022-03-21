@@ -12,15 +12,13 @@ declare module CuriefenseClient {
 
   // Document types helpers - START
 
-  type ContentFilterIgnoreType = 'rule' | 'group'
-
   type ContentFilterEntryMatch = {
     key: string
     reg: string
     restrict: boolean
     mask: boolean
     type: NamesRegexType
-    exclusions: { [key: string]: ContentFilterIgnoreType }
+    exclusions: string[]
   }
 
   type ContentFilterProfileSection = {

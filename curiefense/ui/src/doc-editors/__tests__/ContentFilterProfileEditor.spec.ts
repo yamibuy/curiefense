@@ -304,32 +304,17 @@ describe('ContentFilterProfileEditor.vue', () => {
   })
 
   test('should unpack exclusions correctly from model for view', async () => {
-    const unpackedExclusions = '1000 (Group)\n100000\n100001'
-    const packedExclusions = {
-      1000: 'group',
-      100000: 'rule',
-      100001: 'rule',
-    }
-    const actualUnpackedExclusions = (wrapper.vm as any).unpackExclusions(packedExclusions)
+    const unpackedExclusions = 'cf-rule-id:100000 cf-risk:5'
+    const packedExclusions = ['cf-rule-id:100000', 'cf-risk:5']
+    const actualUnpackedExclusions = (wrapper.vm as any).exclusionsToString(packedExclusions)
     expect(actualUnpackedExclusions).toEqual(unpackedExclusions)
   })
 
   test('should unpack empty exclusions correctly from model for view', async () => {
     const unpackedExclusions = ''
-    const packedExclusions = {}
-    const actualUnpackedExclusions = (wrapper.vm as any).unpackExclusions(packedExclusions)
+    const packedExclusions: ContentFilterEntryMatch['exclusions'] = []
+    const actualUnpackedExclusions = (wrapper.vm as any).exclusionsToString(packedExclusions)
     expect(actualUnpackedExclusions).toEqual(unpackedExclusions)
-  })
-
-  test('should remove nonexisting exclusions from model for view', async () => {
-    delete (wrapper.vm as any).contentFilter.group
-    const unpackedExclusions = (wrapper.vm as any).unpackExclusions({
-      1000: 'group',
-      100000: 'rule',
-      100001: 'rule',
-      900001: 'rule',
-    })
-    expect(unpackedExclusions).toEqual('100000\n100001')
   })
 
   buildTabDescribe('headers')
@@ -425,60 +410,14 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add exclusions when creating new parameter', async () => {
-            const wantedValue = {
-              1000: 'group',
-              100000: 'rule',
-              100001: 'rule',
-            }
+            const wantedValue = ['cf-rule-id:100001', 'cf-risk:3']
             const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            autocompleteInput.vm.$emit('value-submitted', '100000\n100001\n1000 (Group)')
+            autocompleteInput.vm.$emit('value-submitted', 'cf-rule-id:100001 cf-risk:3')
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
             await Vue.nextTick()
             const actualValue = (wrapper.vm as any).localDoc[tab][type][0].exclusions
-            expect(actualValue).toEqual(wantedValue)
-          })
-
-          test('should remove nonexisting exclusions when creating new parameter', async () => {
-            const wantedValue = {
-              1000: 'group',
-              100000: 'rule',
-            }
-            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            autocompleteInput.vm.$emit('value-submitted', '100000\n9acf66222\n1000 (Group)\n900')
-            await Vue.nextTick()
-            const confirmButton = newRow.find('.confirm-add-new-parameter')
-            confirmButton.trigger('click')
-            await Vue.nextTick()
-            const actualValue = (wrapper.vm as any).localDoc[tab][type][0].exclusions
-            expect(actualValue).toEqual(wantedValue)
-          })
-
-          test('should have all suggestions passed to AutocompleteInput', async () => {
-            const wantedValue = [
-              {value: '100000'},
-              {value: '100001'},
-              {value: '100002'},
-              {value: '1000 (Group)'},
-              {value: '1001 (Group)'},
-            ]
-            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            const actualValue = autocompleteInput.props('suggestions')
-            expect(actualValue).toEqual(wantedValue)
-          })
-
-          test('should have correct filtered suggestions passed to AutocompleteInput', async () => {
-            const existingRuleIDs = '100000\n100002'
-            const wantedValue = [
-              {value: '100001'},
-              {value: '1000 (Group)'},
-              {value: '1001 (Group)'},
-            ]
-            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            autocompleteInput.vm.$emit('value-submitted', existingRuleIDs)
-            await Vue.nextTick()
-            const actualValue = autocompleteInput.props('suggestions')
             expect(actualValue).toEqual(wantedValue)
           })
 

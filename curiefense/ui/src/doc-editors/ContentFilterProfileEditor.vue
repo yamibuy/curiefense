@@ -188,12 +188,12 @@
           </div>
         </div>
         <div class="columns px-3 py-3 mx-0 my-0">
-          <div class="column is-4" v-for="operation in operations" :key="operation">
-            <p class="title is-7 is-uppercase">{{ titles[operation] }}</p>
-            <hr class="bar" :class="`bar-${operation}`"/>
+          <div class="column is-4" v-for="section in sections" :key="section">
+            <p class="title is-7 is-uppercase">{{ titles[section] }}</p>
+            <hr class="bar" :class="`bar-${section}`"/>
             <table class="table is-narrow is-fullwidth">
               <tbody>
-              <tr v-for="(tag, idx) in localDoc[operation]" :key="idx">
+              <tr v-for="(tag, idx) in localDoc[section]" :key="idx">
                 <td class="tag-cell ellipsis"
                     :class=" { 'has-text-danger': duplicateTags[tag] }"
                     :title="tagMessage(tag) || tag">
@@ -203,10 +203,10 @@
                   <a title="remove entry"
                      tabindex="0"
                      class="is-small has-text-grey remove-entry-button"
-                     @click="removeTag(operation, idx)"
+                     @click="removeTag(section, idx)"
                      @keypress.space.prevent
-                     @keypress.space="removeTag(operation, idx)"
-                     @keypress.enter="removeTag(operation, idx)">
+                     @keypress.space="removeTag(section, idx)"
+                     @keypress.enter="removeTag(section, idx)">
                     &ndash;
                   </a>
                 </td>
@@ -214,7 +214,7 @@
               <tr>
                 <td>
                   <autocomplete-input
-                      v-if="addNewColName === operation"
+                      v-if="addNewColName === section"
                       input-type="input"
                       selection-type="single"
                       title="Tag"
@@ -222,16 +222,16 @@
                       :clear-input-after-selection="true"
                       :auto-focus="true"
                       @keydown.esc="cancelAddNewTag"
-                      @value-submitted="addTag(operation, $event)"/>
+                      @value-submitted="addTag(section, $event)"/>
                 </td>
                 <td class="is-size-7 width-20px">
                   <a title="add new entry"
                      tabindex="0"
                      class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
-                     @click="openTagInput(operation)"
+                     @click="openTagInput(section)"
                      @keypress.space.prevent
-                     @keypress.space="openTagInput(operation)"
-                     @keypress.enter="openTagInput(operation)">
+                     @keypress.space="openTagInput(section)"
+                     @keypress.enter="openTagInput(section)">
                     +
                   </a>
                 </td>
@@ -292,7 +292,7 @@
                         <th class="has-text-centered width-25pct">Matching Value</th>
                         <th class="has-text-centered width-5pct">Restrict?</th>
                         <th class="has-text-centered width-5pct">Mask?</th>
-                        <th class="has-text-centered width-30pct">Ignore Content Filter</th>
+                        <th class="has-text-centered width-30pct">Ignore Content Filter Tags</th>
                         <th class="has-text-centered width-5pct">
                           <a v-show="newContentFilterLine !== tab"
                              class="has-text-grey-dark is-small new-parameter-button"
@@ -308,10 +308,10 @@
                              class="has-text-grey-dark is-small cancel-new-parameter"
                              title="Cancel adding new parameter"
                              tabindex="0"
-                             @click="cancelNewParemeter"
+                             @click="cancelNewParameter"
                              @keypress.space.prevent
-                             @keypress.space="cancelNewParemeter"
-                             @keypress.enter="cancelNewParemeter">
+                             @keypress.space="cancelNewParameter"
+                             @keypress.enter="cancelNewParameter">
                             <span class="icon is-small"><i class="fas fa-minus"></i></span>
                           </a>
                         </th>
@@ -387,8 +387,7 @@
                         </td>
                         <td class="width-30pct">
                           <autocomplete-input
-                              input-type="textarea"
-                              :suggestions="entryExclusionsSuggestions(newEntry)"
+                              input-type="input"
                               :clear-input-after-selection="false"
                               :auto-focus="false"
                               class="new-entry-exclusions"
@@ -455,10 +454,9 @@
                         </td>
                         <td class="width-30pct">
                           <autocomplete-input
-                              input-type="textarea"
-                              :suggestions="entryExclusionsSuggestions(entry)"
+                              input-type="input"
                               :clear-input-after-selection="false"
-                              :initial-value="unpackExclusions(entry.exclusions)"
+                              :initial-value="exclusionsToString(entry.exclusions)"
                               :auto-focus="false"
                               class="entry-exclusions"
                               selection-type="multiple"
@@ -527,10 +525,9 @@
                         </td>
                         <td class="width-30pct">
                           <autocomplete-input
-                              input-type="textarea"
-                              :suggestions="entryExclusionsSuggestions(entry)"
+                              input-type="input"
                               :clear-input-after-selection="false"
-                              :initial-value="unpackExclusions(entry.exclusions)"
+                              :initial-value="exclusionsToString(entry.exclusions)"
                               :auto-focus="false"
                               class="entry-exclusions"
                               selection-type="multiple"
@@ -569,17 +566,13 @@ import Vue from 'vue'
 import {
   ArgsCookiesHeadersType,
   ContentFilterEntryMatch,
-  ContentFilterIgnoreType,
   ContentFilterProfile,
   ContentFilterProfileSection,
   ContentFilterProfileSectionType,
   ContentFilterProfileTagLists,
-  ContentFilterRule,
-  ContentFilterRuleGroup,
   NamesRegexType,
 } from '@/types'
 import AutocompleteInput, {AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
-import RequestsUtils from '@/assets/RequestsUtils'
 import {Dictionary} from 'vue-router/types/router'
 import Utils from '@/assets/Utils'
 
@@ -599,7 +592,7 @@ export default Vue.extend({
       reg: '',
       restrict: false,
       mask: false,
-      exclusions: {},
+      exclusions: [],
     }
     const defaultContentFilterProfileSection: ContentFilterProfileSection = {
       names: [] as ContentFilterEntryMatch[],
@@ -614,7 +607,7 @@ export default Vue.extend({
       unicode: false,
     }
     return {
-      operations: ['active', 'report', 'ignore'] as ContentFilterProfileTagLists[],
+      sections: ['active', 'report', 'ignore'] as ContentFilterProfileTagLists[],
       addNewColName: null,
       tab: 'args' as ArgsCookiesHeadersType,
       newContentFilterLine: null as ArgsCookiesHeadersType,
@@ -624,12 +617,7 @@ export default Vue.extend({
       defaultContentFilterProfileSection: defaultContentFilterProfileSection,
       defaultContentFilterProfileDecoding: defaultContentFilterProfileDecoding,
       contentFilterSuggestions: [] as AutocompleteSuggestion[],
-      contentFilter: {
-        group: [] as ContentFilterRuleGroup[],
-        rule: [] as ContentFilterRule[],
-      },
-      autocompleteTitle: 'Rule or group name',
-      groupSuffix: '(Group)',
+      autocompleteTitle: 'Space separated content filter rules tags',
     }
   },
 
@@ -667,7 +655,7 @@ export default Vue.extend({
       this.newEntry = {...this.defaultNewEntry}
     },
 
-    cancelNewParemeter() {
+    cancelNewParameter() {
       this.newContentFilterLine = null
       this.newEntry = {...this.defaultNewEntry}
     },
@@ -682,50 +670,6 @@ export default Vue.extend({
       this.emitDocUpdate()
     },
 
-    updateEntryExclusions(entry: ContentFilterEntryMatch, exclusions: string) {
-      const result: ContentFilterEntryMatch['exclusions'] = {}
-      const exclusionsArray: string[] = exclusions.trim().split('\n')
-      exclusionsArray.forEach((ex) => {
-        const exclusionType = ex.endsWith(this.groupSuffix) ? 'group' : 'rule'
-        const exId = this.getContentFilterId(exclusionType, ex)
-        if (exId) {
-          result[exId] = exclusionType
-        }
-      })
-      entry.exclusions = result
-      this.emitDocUpdate()
-    },
-
-    entryExclusionsSuggestions({exclusions}: ContentFilterEntryMatch) {
-      return _.filter(this.contentFilterSuggestions, ({value}) => {
-        const exclusionType = value.endsWith(this.groupSuffix) ? 'group' : 'rule'
-        const exId = this.getContentFilterId(exclusionType, value)
-        return !exclusions?.[exId]
-      })
-    },
-
-    unpackExclusions(exclusions: ContentFilterEntryMatch['exclusions']) {
-      const result: string[] = []
-      Object.keys(exclusions).forEach(
-          (exId) => {
-            const exclusionType = exclusions[exId]
-            const name = (this.contentFilter[exclusionType] as (ContentFilterRule | ContentFilterRuleGroup)[])?.find(
-                ({id}) => id === exId,
-            )?.name
-            if (name) {
-              result.push(exclusionType === 'group' ? `${name} ${this.groupSuffix}` : name)
-            }
-          },
-      )
-      return result.join('\n')
-    },
-
-    getContentFilterId(exclusionType: ContentFilterIgnoreType, exclusions: string) {
-      return (this.contentFilter[exclusionType] as (ContentFilterRule | ContentFilterRuleGroup)[]).find(
-          ({name}) => exclusions.includes(name),
-      )?.id
-    },
-
     genRowKey(tab: string, type: string, idx: number) {
       return `${tab}-${type}-${idx}`
     },
@@ -735,27 +679,18 @@ export default Vue.extend({
       this.emitDocUpdate()
     },
 
-    async loadContentFilterRuleIDs() {
-      const [cfRules, cfGroups] = await Promise.all([
-        RequestsUtils.sendRequest({
-          methodName: 'GET',
-          url: `configs/${this.selectedBranch}/d/contentfilterrules/`,
-          config: {headers: {'x-fields': 'id, name'}},
-        }),
-        RequestsUtils.sendRequest({
-          methodName: 'GET',
-          url: `configs/${this.selectedBranch}/d/contentfiltergroups/`,
-          config: {headers: {'x-fields': 'id, name'}},
-        }),
-      ])
-      this.contentFilter = {
-        rule: cfRules.data,
-        group: cfGroups.data,
+    updateEntryExclusions(entry: ContentFilterEntryMatch, exclusions: string) {
+      entry.exclusions = exclusions.length > 0 ? _.map(exclusions.split(' '), (tag) => {
+        return tag.trim()
+      }) : []
+      this.emitDocUpdate()
+    },
+
+    exclusionsToString(exclusions: ContentFilterEntryMatch['exclusions']) {
+      if (exclusions && exclusions.length) {
+        return exclusions.join(' ')
       }
-      this.contentFilterSuggestions = [
-        ..._.sortBy(_.map(this.contentFilter.rule, ({name}) => ({value: name}))),
-        ..._.sortBy(_.map(this.contentFilter.group, ({name}) => ({value: `${name} ${this.groupSuffix}`}))),
-      ]
+      return ''
     },
 
     normalizeDocSections(section: ContentFilterProfileSectionType) {
@@ -795,10 +730,6 @@ export default Vue.extend({
       }
       return message
     },
-  },
-
-  created() {
-    this.loadContentFilterRuleIDs()
   },
 
   watch: {
