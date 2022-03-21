@@ -103,11 +103,12 @@ pub fn flow_check(
                         if is_banned(&mut cnx, &ban_key) {
                             logs.debug(format!("Key {} is banned!", ban_key));
                             tags.insert(&elem.name);
+                            let action = extract_bannable_action(&mut cnx, logs, &elem.action, &redis_key, &ban_key);
 
                             bad = stronger_decision(
                                 bad,
                                 SimpleDecision::Action(
-                                    elem.action.clone(),
+                                    action,
                                     serde_json::json!({
                                         "initiator": "flow_check",
                                         "name": elem.name,
