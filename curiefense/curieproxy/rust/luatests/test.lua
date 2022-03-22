@@ -295,6 +295,7 @@ end
 local function test_flow(request_path)
   print("Flow control " .. request_path)
   clean_redis()
+  local good = true
   local raw_request_maps = load_json_file(request_path)
   for n, raw_request_map in pairs(raw_request_maps) do
     print(" -> step " .. n)
@@ -303,12 +304,22 @@ local function test_flow(request_path)
 
     if raw_request_map.pass then
       if res["action"] ~= "pass" then
-        error("curiefense.session_flow_check should have returned pass, but returned: " .. jres)
+        print("curiefense.session_flow_check should have returned pass, but returned: " .. res["action"])
+        good = false
       end
     else
       if res["action"] == "pass" then
-        error("curiefense.session_flow_check should have blocked, but returned: " .. jres)
+        print("curiefense.session_flow_check should have blocked, but returned: " .. res["action"])
+        good = false
       end
+    end
+
+    if not good then
+        for _, log in ipairs(res.logs) do
+            print(log["elapsed_micros"] .. "µs " .. log["message"])
+        end
+        print(jres)
+        error("mismatch in flow control")
     end
 
     if raw_request_map.delay then
