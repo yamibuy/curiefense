@@ -447,7 +447,15 @@ fn selector<'a>(reqinfo: &'a RequestInfo, sel: &RequestSelector, tags: &Tags) ->
         RequestSelector::Ip => Some(&reqinfo.rinfo.geoip.ipstr).map(Selected::Str),
         RequestSelector::Uri => Some(&reqinfo.rinfo.qinfo.uri).map(Selected::Str),
         RequestSelector::Path => Some(&reqinfo.rinfo.qinfo.qpath).map(Selected::Str),
-        RequestSelector::Query => Some(&reqinfo.rinfo.qinfo.query).map(Selected::Str),
+        RequestSelector::Query => {
+            let q = &reqinfo.rinfo.qinfo.query;
+            // an empty query string is considered missing
+            if q.is_empty() {
+                None
+            } else {
+                Some(Selected::Str(q))
+            }
+        }
         RequestSelector::Method => Some(&reqinfo.rinfo.meta.method).map(Selected::Str),
         RequestSelector::Country => reqinfo.rinfo.geoip.country_iso.as_ref().map(Selected::Str),
         RequestSelector::Authority => Some(Selected::Str(&reqinfo.rinfo.host)),
