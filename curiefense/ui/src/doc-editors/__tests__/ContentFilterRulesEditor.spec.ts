@@ -14,7 +14,7 @@ describe('ContentFilterRulesEditor.vue', () => {
       'msg': 'SQLi Attempt (Conditional Operator Detected)',
       'operand': '\\s(and|or)\\s+\\d+\\s+.*between\\s.*\\d+\\s+and\\s+\\d+.*',
       'risk': 5,
-      'notes': 'SQL injection',
+      'description': 'SQL injection',
       'category': 'sqli',
       'subcategory': 'statement injection',
       'tags': [],
@@ -75,12 +75,12 @@ describe('ContentFilterRulesEditor.vue', () => {
     expect(wrapper.emitted('update:selectedDoc')[0]).toEqual([wantedEmit])
   })
 
-  test('should emit doc update when notes input changes', async () => {
-    const wantedNotes = 'new notes'
+  test('should emit doc update when description input changes', async () => {
+    const wanteddescription = 'new description'
     const wantedEmit = JSON.parse(JSON.stringify(docs[0]))
-    wantedEmit.notes = wantedNotes
-    const element = wrapper.find('.document-notes')
-    element.setValue(wantedNotes)
+    wantedEmit.description = wanteddescription
+    const element = wrapper.find('.document-description')
+    element.setValue(wanteddescription)
     element.trigger('change')
     await Vue.nextTick()
     expect(wrapper.emitted('update:selectedDoc')).toBeTruthy()

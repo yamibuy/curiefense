@@ -4,7 +4,7 @@
       <div class="card-content">
         <div class="media">
           <div class="media-content">
-            <div class="columns mb-0">
+            <div class="columns columns-divided mb-0">
               <div class="column is-4">
                 <div class="field">
                   <label class="label is-small">
@@ -21,27 +21,19 @@
                            @change="emitDocUpdate()"/>
                   </div>
                 </div>
-                <div class="field">
-                  <label class="label is-small">Notes</label>
+                <div class="field textarea-field">
+                  <label class="label is-small">Description</label>
                   <div class="control">
-                    <textarea class="is-small textarea document-notes"
-                              title="Notes"
-                              v-model="localDoc.notes"
+                    <textarea class="is-small textarea document-description"
+                              title="description"
+                              v-model="localDoc.description"
                               @change="emitDocUpdate()"
-                              rows="2">
+                              rows="5">
                     </textarea>
                   </div>
                 </div>
-                <div class="field">
-                  <label class="label is-small">Tags</label>
-                  <div class="control">
-                    <input class="input is-small document-tags"
-                           title="Tags"
-                           placeholder="Tags"
-                           v-model="selectedDocTags"
-                           @change="emitDocUpdate()"/>
-                  </div>
-                </div>
+              </div>
+              <div class="column is-4">
                 <div class="field">
                   <label class="label is-small">Category</label>
                   <div class="control">
@@ -78,19 +70,35 @@
                   </div>
                 </div>
               </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label is-small">Tags</label>
+                  <div class="control">
+                    <input class="input is-small document-tags"
+                           title="Tags"
+                           placeholder="Tags"
+                           v-model="selectedDocTags"
+                           @change="emitDocUpdate()"/>
+                  </div>
+                  <div class="is-size-7">
+                    Automatic Tags:
+                    <div v-html="automaticTags"></div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="field">
-            <label class="label is-small">Log Message</label>
-            <div class="control">
-              <input class="input is-small document-msg"
-                     type="text"
-                     title="Message to appear in the logs"
-                     placeholder="Log message"
-                     v-model="localDoc.msg"
-                     @change="emitDocUpdate()"
-                     required>
+              <label class="label is-small">Log Message</label>
+              <div class="control">
+                <input class="input is-small document-msg"
+                       type="text"
+                       title="Message to appear in the logs"
+                       placeholder="Log message"
+                       v-model="localDoc.msg"
+                       @change="emitDocUpdate()"
+                       required>
+              </div>
             </div>
-          </div>
             <div class="field">
               <label class="label is-small">Match</label>
               <div class="control has-icons-left">
@@ -142,6 +150,22 @@ export default Vue.extend({
         this.emitDocUpdate()
       },
     },
+
+    automaticTags(): string {
+      const rule = this.localDoc
+      if (!rule || !rule.id) {
+        return ''
+      }
+      const ruleTag = `cf-rule-id:${rule.id?.replace(/ /g, '-')}`
+      const ruleTagElement = this.createTagElement(ruleTag)
+      const riskTag = `cf-rule-risk:${rule.risk}`
+      const riskTagElement = this.createTagElement(riskTag)
+      const categoryTag = `cf-rule-category:${rule.category?.replace(/ /g, '-')}`
+      const categoryTagElement = this.createTagElement(categoryTag)
+      const subcategoryTag = `cf-rule-subcategory:${rule.subcategory?.replace(/ /g, '-')}`
+      const subcategoryTagElement = this.createTagElement(subcategoryTag)
+      return `${ruleTagElement}${riskTagElement}${categoryTagElement}${subcategoryTagElement}`
+    },
   },
   data() {
     return {
@@ -152,6 +176,34 @@ export default Vue.extend({
     emitDocUpdate() {
       this.$emit('update:selectedDoc', this.localDoc)
     },
+
+    createTagElement(tag: string): string {
+      return `
+            <div
+                class="automatic-tag ellipsis"
+                title="${tag}">
+                    ${tag}
+            </div>`
+    },
   },
 })
 </script>
+
+<style lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/initial-variables.sass';
+@import 'node_modules/bulma/sass/utilities/functions.sass';
+@import 'node_modules/bulma/sass/utilities/derived-variables.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
+.automatic-tag {
+  @extend .has-background-grey-lighter;
+  border: 1px solid #fff;
+  border-radius: 10px;
+  margin-right: 0.25rem;
+  max-width: 90vh;
+  padding: 0.05rem 0.5rem;
+  width: fit-content;
+}
+
+</style>

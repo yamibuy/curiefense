@@ -21,7 +21,7 @@
             "title": "Operand",
             "description": "Matching domain(s) regex"
         },
-        "notes": {
+        "description": {
             "type": "string",
             "title": "Description",
             "description": "Description of entity shown in UI"
@@ -55,5 +55,5 @@
             "description": "Subcategory of the rule"
         }
     },
-    "required": [ "id", "name", "operand", "notes", "risk", "msg", "category", "subcategory" ]
+    "required": [ "id", "name", "operand", "description", "risk", "msg", "category", "subcategory" ]
 }

@@ -188,7 +188,7 @@ declare module CuriefenseClient {
     id: string
     name: string
     operand: string
-    notes: string
+    description: string
     risk: number
     msg: string
     category: string
