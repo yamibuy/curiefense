@@ -350,5 +350,44 @@
         },
         "timeframe": 4,
         "id": "col3"
+    },
+    {
+        "exclude": [],
+        "include": [
+            "all"
+        ],
+        "name": "Flow Control by query",
+        "key": [
+            {
+                "attrs": "query"
+            }
+        ],
+        "sequence": [
+            {
+                "method": "GET",
+                "uri": "/fc/by-query-step1",
+                "cookies": {},
+                "headers": {
+                    "host": "www.byquery.com"
+                },
+                "args": {}
+            },
+            {
+                "method": "GET",
+                "uri": "/fc/by-query-step2",
+                "cookies": {},
+                "headers": {
+                    "host": "www.byquery.com"
+                },
+                "args": {}
+            }
+        ],
+        "active": true,
+        "description": "abc",
+        "action": {
+            "type": "default"
+        },
+        "timeframe": 4,
+        "id": "fcbyquery"
     }
 ]
