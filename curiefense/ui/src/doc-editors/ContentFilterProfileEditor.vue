@@ -2,9 +2,7 @@
   <div>
     <div class="card">
       <div class="card-content">
-        <div class="media">
-          <div class="media-content">
-            <div class="columns columns-divided">
+        <div class="columns columns-divided pb-6">
               <div class="column is-4">
                 <div class="field">
                   <label class="label is-small">
@@ -35,75 +33,124 @@
                            v-model="localDoc.masking_seed"/>
                   </div>
                 </div>
-                <div class="field">
-                  <label class="label is-small">
-                    Content Type
-                  </label>
-                  <div class="control">
-                    <input class="input is-small document-masking-seed"
-                           title="Content type"
-                           placeholder="Comma separated content types"
+                <div class="field ignore-alphanumeric-input-field"
+                     :title="additionalInfoIgnoreAlphanumericInput">
+                  <label class="checkbox is-size-7">
+                    <input type="checkbox"
+                           class="checkbox-input ignore-alphanumeric-input"
                            @change="emitDocUpdate"
-                           v-model="commaSeparatedContentType"/>
-                  </div>
+                           v-model="localDoc.ignore_alphanum"/>
+                    Ignore Alphanumeric Input
+                  </label>
+                  <span class="icon is-small info-icon">
+                    <i class="fas fa-info-circle"></i>
+                  </span>
                 </div>
               </div>
-              <div class="column is-4">
+              <div class="column is-2">
                 <div class="field">
                   <label class="label is-small">
                     Decoding
                   </label>
                   <div class="control">
-                    <div class="columns">
-                      <div class="column is-6">
-                        <div class="decoding-option-wrapper mb-3">
-                          <label class="checkbox is-size-7">
-                            <input type="checkbox"
-                                   @change="emitDocUpdate"
-                                   class="checkbox-input decoding-base64-active"
-                                   v-model="localDoc.decoding.base64">
-                            base64
-                          </label>
-                        </div>
-                        <div class="decoding-option-wrapper">
-                          <label class="checkbox is-size-7">
-                            <input type="checkbox"
-                                   @change="emitDocUpdate"
-                                   class="checkbox-input decoding-dual-active"
-                                   v-model="localDoc.decoding.dual">
-                            URL
-                          </label>
-                        </div>
-                      </div>
-                      <div class="column is-6">
-                        <div class="decoding-option-wrapper mb-3">
-                          <label class="checkbox is-size-7">
-                            <input type="checkbox"
-                                   @change="emitDocUpdate"
-                                   class="checkbox-input decoding-html-active"
-                                   v-model="localDoc.decoding.html">
-                            html
-                          </label>
-                        </div>
-                        <div class="decoding-option-wrapper">
-                          <label class="checkbox is-size-7">
-                            <input type="checkbox"
-                                   @change="emitDocUpdate"
-                                   class="checkbox-input decoding-unicode-active"
-                                   v-model="localDoc.decoding.unicode">
-                            unicode
-                          </label>
-                        </div>
-                      </div>
+                    <div v-for="decodingOption in decodingOptions"
+                         :key="decodingOption.value"
+                         class="decoding-option-wrapper mb-3">
+                      <label class="checkbox is-size-7">
+                        <input type="checkbox"
+                               @change="emitDocUpdate"
+                               class="checkbox-input"
+                               :class="`decoding-${decodingOption.value}-input`"
+                               v-model="localDoc.decoding[decodingOption.value]">
+                        {{ decodingOption.displayName }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-3">
+                <div class="field">
+                  <label class="label is-small"
+                         :title="additionalInfoContentType">
+                    Restrict Content Type
+                    <span class="icon is-small info-icon">
+                      <i class="fas fa-info-circle"></i>
+                    </span>
+                  </label>
+                  <div class="control">
+                    <div v-for="contentTypeOption in contentTypeOptions"
+                         :key="contentTypeOption.value"
+                         class="content-type-option-wrapper mb-3">
+                      <label class="checkbox is-size-7">
+                        <input type="checkbox"
+                               @change="updateContentType(contentTypeOption.value, $event.target.checked)"
+                               class="checkbox-input"
+                               :class="`content-type-${contentTypeOption.value}-input`"
+                               :value="getContentTypeStatus(contentTypeOption.value)">
+                        {{ contentTypeOption.displayName }}
+                      </label>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+        <div class="columns pb-6">
+          <div class="column is-4"
+               v-for="section in sections"
+               :key="section">
+            <p class="title is-7 is-uppercase">{{ titles[section] }}</p>
+            <hr class="bar" :class="`bar-${section}`"/>
+            <table class="table is-narrow is-fullwidth">
+              <tbody>
+              <tr v-for="(tag, idx) in localDoc[section]" :key="idx">
+                <td class="tag-cell ellipsis"
+                    :class=" { 'has-text-danger': duplicateTags[tag] }"
+                    :title="tagMessage(tag) || tag">
+                  {{ tag }}
+                </td>
+                <td class="is-size-7 width-20px">
+                  <a title="remove entry"
+                     tabindex="0"
+                     class="is-small has-text-grey remove-entry-button"
+                     @click="removeTag(section, idx)"
+                     @keypress.space.prevent
+                     @keypress.space="removeTag(section, idx)"
+                     @keypress.enter="removeTag(section, idx)">
+                    &ndash;
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <autocomplete-input
+                      v-if="addNewColName === section"
+                      input-type="input"
+                      selection-type="single"
+                      title="Tag"
+                      :minimum-value-length="2"
+                      :clear-input-after-selection="true"
+                      :auto-focus="true"
+                      @keydown.esc="cancelAddNewTag"
+                      @value-submitted="addTag(section, $event)"/>
+                </td>
+                <td class="is-size-7 width-20px">
+                  <a title="add new entry"
+                     tabindex="0"
+                     class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
+                     @click="openTagInput(section)"
+                     @keypress.space.prevent
+                     @keypress.space="openTagInput(section)"
+                     @keypress.enter="openTagInput(section)">
+                    +
+                  </a>
+                </td>
+              </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         <div class="tile is-ancestor px-3 py-3 mx-0 my-0">
-          <div class="tile is-9">
+          <div class="tile is-12">
             <table class="table is-fullwidth">
               <thead>
               <tr>
@@ -166,74 +213,6 @@
                          @change="emitDocUpdate"
                          title="Max arguments count"
                          v-model.number="localDoc.args.max_count"/>
-                </td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="tile is-3">
-            <div class="card">
-              <div class="card-content">
-                <label class="checkbox">
-                  <input type="checkbox"
-                         class="ignore-alphanumeric-input"
-                         @change="emitDocUpdate"
-                         v-model="localDoc.ignore_alphanum"/>
-                  Ignore Alphanumeric input
-                </label>
-                <p class="help">When checked, arguments, headers or cookies, which contain only alpha numeric
-                  characters, will be ignored.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="columns px-3 py-3 mx-0 my-0">
-          <div class="column is-4" v-for="section in sections" :key="section">
-            <p class="title is-7 is-uppercase">{{ titles[section] }}</p>
-            <hr class="bar" :class="`bar-${section}`"/>
-            <table class="table is-narrow is-fullwidth">
-              <tbody>
-              <tr v-for="(tag, idx) in localDoc[section]" :key="idx">
-                <td class="tag-cell ellipsis"
-                    :class=" { 'has-text-danger': duplicateTags[tag] }"
-                    :title="tagMessage(tag) || tag">
-                  {{ tag }}
-                </td>
-                <td class="is-size-7 width-20px">
-                  <a title="remove entry"
-                     tabindex="0"
-                     class="is-small has-text-grey remove-entry-button"
-                     @click="removeTag(section, idx)"
-                     @keypress.space.prevent
-                     @keypress.space="removeTag(section, idx)"
-                     @keypress.enter="removeTag(section, idx)">
-                    &ndash;
-                  </a>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <autocomplete-input
-                      v-if="addNewColName === section"
-                      input-type="input"
-                      selection-type="single"
-                      title="Tag"
-                      :minimum-value-length="2"
-                      :clear-input-after-selection="true"
-                      :auto-focus="true"
-                      @keydown.esc="cancelAddNewTag"
-                      @value-submitted="addTag(section, $event)"/>
-                </td>
-                <td class="is-size-7 width-20px">
-                  <a title="add new entry"
-                     tabindex="0"
-                     class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
-                     @click="openTagInput(section)"
-                     @keypress.space.prevent
-                     @keypress.space="openTagInput(section)"
-                     @keypress.enter="openTagInput(section)">
-                    +
-                  </a>
                 </td>
               </tr>
               </tbody>
@@ -618,6 +597,46 @@ export default Vue.extend({
       defaultContentFilterProfileDecoding: defaultContentFilterProfileDecoding,
       contentFilterSuggestions: [] as AutocompleteSuggestion[],
       autocompleteTitle: 'Space separated content filter rules tags',
+      additionalInfoIgnoreAlphanumericInput: 'When checked, arguments, headers or cookies, ' +
+          'which contain only alpha numeric characters, will be ignored.',
+      additionalInfoContentType: 'When checked, only the selected types will be allowed. ' +
+          'Malformed data will get rejected',
+      decodingOptions: [
+        {
+          value: 'base64',
+          displayName: 'Base64',
+        },
+        {
+          value: 'dual',
+          displayName: 'URL',
+        },
+        {
+          value: 'html',
+          displayName: 'HTML',
+        },
+        {
+          value: 'unicode',
+          displayName: 'Unicode',
+        },
+      ],
+      contentTypeOptions: [
+        {
+          value: 'json',
+          displayName: 'JSON',
+        },
+        {
+          value: 'multipart_form',
+          displayName: 'Multipart Form',
+        },
+        {
+          value: 'url_encoded',
+          displayName: 'URL Encoded',
+        },
+        {
+          value: 'xml',
+          displayName: 'XML',
+        },
+      ],
     }
   },
 
@@ -633,15 +652,6 @@ export default Vue.extend({
       const result = _.fromPairs(_.zip(dupTags, dupTags))
       this.$emit('form-invalid', !!_.size(result))
       return result
-    },
-
-    commaSeparatedContentType: {
-      get(): string {
-        return this.localDoc.content_type?.join(', ') || ''
-      },
-      set(val: string): void {
-        this.localDoc.content_type = val.trim().split(/[, ]+/)
-      },
     },
   },
 
@@ -730,6 +740,23 @@ export default Vue.extend({
       }
       return message
     },
+
+    getContentTypeStatus(value: string): boolean {
+      return this.localDoc.content_type?.includes(value)
+    },
+
+    updateContentType(value: string, state: boolean): void {
+      if (state) {
+        this.localDoc.content_type.push(value)
+        this.emitDocUpdate()
+      } else {
+        const index = this.localDoc.content_type.indexOf(value)
+        if (index > -1) {
+          this.localDoc.content_type.splice(index, 1)
+          this.emitDocUpdate()
+        }
+      }
+    },
   },
 
   watch: {
@@ -784,10 +811,13 @@ export default Vue.extend({
   font-size: 0.58rem;
 }
 
-.decoding-option-wrapper {
-  .checkbox-input {
-    vertical-align: text-bottom;
-  }
+.checkbox-input {
+  vertical-align: text-bottom;
+}
+
+.info-icon {
+  margin-left: 0.5rem;
+  vertical-align: middle;
 }
 
 </style>
