@@ -47,7 +47,32 @@
                   </span>
                 </div>
               </div>
-              <div class="column is-2">
+              <div class="column is-4">
+            <div class="field">
+              <label class="label is-small"
+                     :title="additionalInfoContentType">
+                Restrict Content Type
+                <span class="icon is-small info-icon">
+                      <i class="fas fa-info-circle"></i>
+                    </span>
+              </label>
+              <div class="control">
+                <div v-for="contentTypeOption in contentTypeOptions"
+                     :key="contentTypeOption.value"
+                     class="content-type-option-wrapper mb-3">
+                  <label class="checkbox is-size-7">
+                    <input type="checkbox"
+                           @change="updateContentType(contentTypeOption.value, $event.target.checked)"
+                           class="checkbox-input"
+                           :class="`content-type-${contentTypeOption.value}-input`"
+                           :value="getContentTypeStatus(contentTypeOption.value)">
+                    {{ contentTypeOption.displayName }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+              <div class="column is-4">
                 <div class="field">
                   <label class="label is-small">
                     Decoding
@@ -63,31 +88,6 @@
                                :class="`decoding-${decodingOption.value}-input`"
                                v-model="localDoc.decoding[decodingOption.value]">
                         {{ decodingOption.displayName }}
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="column is-3">
-                <div class="field">
-                  <label class="label is-small"
-                         :title="additionalInfoContentType">
-                    Restrict Content Type
-                    <span class="icon is-small info-icon">
-                      <i class="fas fa-info-circle"></i>
-                    </span>
-                  </label>
-                  <div class="control">
-                    <div v-for="contentTypeOption in contentTypeOptions"
-                         :key="contentTypeOption.value"
-                         class="content-type-option-wrapper mb-3">
-                      <label class="checkbox is-size-7">
-                        <input type="checkbox"
-                               @change="updateContentType(contentTypeOption.value, $event.target.checked)"
-                               class="checkbox-input"
-                               :class="`content-type-${contentTypeOption.value}-input`"
-                               :value="getContentTypeStatus(contentTypeOption.value)">
-                        {{ contentTypeOption.displayName }}
                       </label>
                     </div>
                   </div>
