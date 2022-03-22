@@ -2,8 +2,11 @@
   {
     "response": {
       "tags": [
-        "region:idf",
-        "subregion:75",
+        "geo-continent-code:eu",
+        "geo-city:paris",
+        "geo-continent-name:europe",
+        "geo-region:idf",
+        "geo-subregion:75",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "sante",
@@ -16,8 +19,8 @@
         "parisien",
         "francilien",
         "ip:82-64-131-193",
-        "geo:france",
-        "asn:12322"
+        "geo-country:france",
+        "geo-asn:12322"
       ],
       "action": "pass"
     },
