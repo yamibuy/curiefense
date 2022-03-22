@@ -7,7 +7,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -18,7 +18,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -29,7 +29,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -40,7 +40,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -51,7 +51,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -62,7 +62,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -73,7 +73,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -84,7 +84,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -95,7 +95,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -106,7 +106,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -117,7 +117,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -128,7 +128,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -139,7 +139,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -150,7 +150,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -161,7 +161,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -172,7 +172,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -183,7 +183,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -194,7 +194,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -205,7 +205,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -216,7 +216,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -227,7 +227,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -238,7 +238,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -249,7 +249,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -260,7 +260,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -271,7 +271,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -282,7 +282,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -293,7 +293,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -304,7 +304,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -315,7 +315,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -326,7 +326,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -337,7 +337,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -348,7 +348,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -359,7 +359,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -370,7 +370,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -381,7 +381,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "escape-character",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -392,7 +392,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -403,7 +403,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "statement",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -414,7 +414,7 @@
     "risk": 5,
     "category": "sqli",
     "subcategory": "built-in function invocation",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -425,7 +425,7 @@
     "operand": "(%0d%0a|%3f%0d|%0a%0d|%25%30%4[14]|%25%30%4[14]%25%30%4[14]|%25%0a%0a)[-A-Za-z0-9]+:",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -436,7 +436,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "tag insertion",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -447,7 +447,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "tag insertion",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -458,7 +458,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -469,7 +469,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -480,7 +480,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -491,7 +491,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -502,7 +502,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -513,7 +513,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -524,7 +524,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -535,7 +535,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -546,7 +546,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -557,7 +557,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -568,7 +568,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -579,7 +579,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -590,7 +590,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -601,7 +601,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -612,7 +612,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -623,7 +623,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "tag insertion",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -634,7 +634,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -645,7 +645,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -656,7 +656,7 @@
     "risk": 5,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -667,7 +667,7 @@
     "operand": "\\$\\{\\s*IFS\\s*\\}",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -678,7 +678,7 @@
     "operand": "[|&]\\s*(/bin/|sleep|timeout)",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -689,7 +689,7 @@
     "operand": "set\\s*/a\\s*\\d+\\s*[*+-/]\\s*\\d+",
     "risk": 4,
     "subcategory": "windows",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -700,7 +700,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -711,7 +711,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -722,7 +722,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -733,7 +733,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -744,7 +744,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -755,7 +755,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -766,7 +766,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -777,7 +777,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -788,7 +788,7 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -799,7 +799,7 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -810,7 +810,7 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -821,7 +821,7 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -832,7 +832,7 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -843,7 +843,7 @@
     "risk": 5,
     "category": "fileinclusion",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -854,7 +854,7 @@
     "operand": "file://0*::\\d+/",
     "risk": 4,
     "subcategory": "unixI",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -865,7 +865,7 @@
     "operand": "\\\\\\\\(0*::\\d+|localhost)\\\\.\\$\\\\",
     "risk": 4,
     "subcategory": "inI",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -876,7 +876,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -887,7 +887,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -898,7 +898,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -909,7 +909,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -920,7 +920,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -931,7 +931,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -942,7 +942,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -953,7 +953,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -964,7 +964,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -975,7 +975,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -986,7 +986,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -997,7 +997,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1008,7 +1008,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1019,7 +1019,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1030,7 +1030,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1041,7 +1041,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1052,7 +1052,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1063,7 +1063,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1074,7 +1074,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1085,7 +1085,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1096,7 +1096,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1107,7 +1107,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1118,7 +1118,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1129,7 +1129,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1140,7 +1140,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1151,7 +1151,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1162,7 +1162,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1173,7 +1173,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1184,7 +1184,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1195,7 +1195,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1206,7 +1206,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1217,7 +1217,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1228,7 +1228,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1239,7 +1239,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1250,7 +1250,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1261,7 +1261,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1272,7 +1272,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1283,7 +1283,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1294,7 +1294,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1305,7 +1305,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1316,7 +1316,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1327,7 +1327,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1338,7 +1338,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1349,7 +1349,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1360,7 +1360,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1371,7 +1371,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1382,7 +1382,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1393,7 +1393,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1404,7 +1404,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1415,7 +1415,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1426,7 +1426,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1437,7 +1437,7 @@
     "operand": "%(ALLUSERSPROFILE|APPDATA|COMPUTERNAME|COMSPEC|HOMEDRIVE|HOMEPATH|PATH|PATHEXT|PROGRAMFILES|PROMPT|SYSTEMDRIVE|SYSTEMROOT|TEMP|USERNAME|USERPROFILE|WINDIR|ERRORLEVEL|RANDOM|CommonProgramFiles|LOCALAPPDATA|ProgramData|Public)%",
     "risk": 4,
     "subcategory": "windows",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1448,7 +1448,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1459,7 +1459,7 @@
     "risk": 5,
     "category": "osci",
     "subcategory": "osci",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1470,7 +1470,7 @@
     "risk": 5,
     "category": "generic",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1481,7 +1481,7 @@
     "risk": 5,
     "category": "generic",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1492,7 +1492,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1503,7 +1503,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1514,7 +1514,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1525,7 +1525,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1536,7 +1536,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1547,7 +1547,7 @@
     "risk": 5,
     "category": "generic",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1558,7 +1558,7 @@
     "risk": 5,
     "category": "generic",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1569,7 +1569,7 @@
     "risk": 5,
     "category": "generic",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1580,7 +1580,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1591,7 +1591,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1602,7 +1602,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1613,7 +1613,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1624,7 +1624,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1635,7 +1635,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1646,7 +1646,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1657,7 +1657,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1668,7 +1668,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1679,7 +1679,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1690,7 +1690,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1701,7 +1701,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1712,7 +1712,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1723,7 +1723,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1734,7 +1734,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1745,7 +1745,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1756,7 +1756,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1767,7 +1767,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1778,7 +1778,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1789,7 +1789,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1800,7 +1800,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1811,7 +1811,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1822,7 +1822,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1833,7 +1833,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1844,7 +1844,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1855,7 +1855,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1866,7 +1866,7 @@
     "risk": 5,
     "category": "systemresource",
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1877,7 +1877,7 @@
     "operand": "\nRCPT TO: .*@",
     "risk": 4,
     "subcategory": "SMTP",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1888,7 +1888,7 @@
     "operand": "\r\nQUIT\r\n",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1899,7 +1899,7 @@
     "operand": "\r\nV\\d+ [A-Z]+\r\n",
     "risk": 4,
     "subcategory": "IMAP",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1910,7 +1910,7 @@
     "operand": "\\{\\s*__schema\\s*\\{.*type",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1921,7 +1921,7 @@
     "operand": "\\(\\s*uid\\s*=\\s*\\*\\s*\\)",
     "risk": 4,
     "subcategory": "injection",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1932,7 +1932,7 @@
     "operand": "(true|')\\s*,\\s*\\$(where|or)\\s*:",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1943,7 +1943,7 @@
     "operand": "db\\.[a-z.]+\\.insert\\(\\s*\\{.*:.*\\}\\s*\\)",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1954,7 +1954,7 @@
     "operand": "\\{php\\}.*\\{/php\\}",
     "risk": 4,
     "subcategory": "php",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1965,7 +1965,7 @@
     "operand": "\\$\\{.*\\.getResource\\s*\\(\\s*\"",
     "risk": 4,
     "subcategory": "java",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1976,7 +1976,7 @@
     "operand": "\\{\\{[^}]+\\|attr\\(\".*\\}\\}",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1987,7 +1987,7 @@
     "operand": "template\\.utility\\.Execute",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -1998,7 +1998,7 @@
     "operand": "response\\.write\\s*\\(",
     "risk": 4,
     "subcategory": "asp",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -2009,7 +2009,7 @@
     "risk": 4,
     "category": "xss",
     "subcategory": "xss",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -2020,7 +2020,7 @@
     "operand": "'\\s*\\+\\s*#{.*}\\s*\\+\\s*'",
     "risk": 5,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -2031,7 +2031,7 @@
     "operand": "{{\\s*\\d+\\s*[*+-/]\\s*\\d+\\s*}}",
     "risk": 4,
     "subcategory": "generic",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -2042,7 +2042,7 @@
     "operand": "!!python/object/new:",
     "risk": 4,
     "subcategory": "python",
-    "notes": "",
+    "description": "",
     "tags": []
   },
   {
@@ -2053,7 +2053,7 @@
     "operand": "<!(entity|doctype)\\s+[^\\s]+\\s+system",
     "risk": 4,
     "subcategory": "xxe",
-    "notes": "",
+    "description": "",
     "tags": []
   }
 ]

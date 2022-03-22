@@ -71,14 +71,14 @@
                                @update:action="emitDocUpdate"
                                label-separated-line/>
             </div>
-            <div class="field">
+            <div class="field textarea-field">
               <label class="label is-small">Description</label>
               <div class="control">
                 <textarea class="is-small textarea document-description"
                           title="Description"
                           @change="emitDocUpdate"
                           v-model="localDoc.description"
-                          rows="2">
+                          rows="5">
                 </textarea>
               </div>
             </div>
