@@ -124,7 +124,14 @@
                              :placeholder="isCategoryArgsCookiesHeaders( newEntryCategory ) ? 'Value' : 'Annotation'"
                              v-model="newEntryItem.secondAttr"
                              @input="onChangeSecondAttr( sectionIndex, $event.target.value )"/>
-                      <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>
+                      <span v-show="isCategoryArgsCookiesHeaders( newEntryCategory )"
+                            class="icon is-small is-left has-text-grey-light">
+                        <i class="fa fa-code"></i>
+                      </span>
+                      <span v-show="!isCategoryArgsCookiesHeaders( newEntryCategory )"
+                            class="icon is-small is-left has-text-grey-light">
+                        <i class="fa fa-font"></i>
+                      </span>
                     </div>
                   </td>
                   <td class="is-size-7 width-80px">
@@ -437,6 +444,12 @@ export default Vue.extend({
       this.$nextTick(this.validateDuplicates)
     },
 
+    cancelAllEntries() {
+      this.setNewEntryIndex(-1)
+      this.invalidIPs = []
+      this.clearError()
+    },
+
     cancelEntry(sectionIndex: number) {
       this.setNewEntryIndex(-1)
       this.invalidIPs = []
@@ -486,11 +499,11 @@ export default Vue.extend({
       )
       if (this.duplicatedEntries.length) {
         const duplicatesMsg = this.duplicatedEntries.reduce(
-          (prev: string, [section, category, value]: GlobalFilterSectionEntry) => {
-            const sectionMsg = this.rule.sections.length > 1 ? `Section ${section + 1}: ` : ''
-            return `${prev}<br/>` +
+            (prev: string, [section, category, value]: GlobalFilterSectionEntry) => {
+              const sectionMsg = this.rule.sections.length > 1 ? `Section ${section + 1}: ` : ''
+              return `${prev}<br/>` +
                   `${sectionMsg}${this.listEntryTypes[category as Category]?.title} = ${this.dualCell(value)}`
-          },
+            },
             '',
         )
         this.addError('duplicate')

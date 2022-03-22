@@ -20,12 +20,13 @@
                        v-model="localDoc.name" />
               </div>
             </div>
-            <div class="field">
+            <div class="field textarea-field">
               <label class="label is-small">Description</label>
               <div class="control">
                 <textarea class="is-small textarea document-description"
                           title="Description"
                           @change="emitDocUpdate"
+                          rows="5"
                           v-model="localDoc.description" />
               </div>
             </div>
