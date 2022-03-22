@@ -117,7 +117,7 @@
         "sequence": [
             {
                 "method": "GET",
-                "uri": "/rlban1",
+                "uri": "/fcban1",
                 "cookies": {},
                 "headers": {
                     "host": "www.example.com"
@@ -126,7 +126,7 @@
             },
             {
                 "method": "GET",
-                "uri": "/rlban2",
+                "uri": "/fcban2",
                 "cookies": {},
                 "headers": {
                     "host": "www.example.com"
@@ -139,13 +139,13 @@
         "action": {
             "type": "ban",
             "params": {
-                "duration": "3600",
+                "duration": "4",
                 "action": {
                     "type": "default"
                 }
             }
         },
-        "timeframe": 4,
+        "timeframe": 2,
         "id": "d03dabe4b9cx"
     },
     {
