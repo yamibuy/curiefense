@@ -5,7 +5,7 @@ import VueAxios from 'vue-axios'
 import MasterComponent from '@/views/MasterComponent.vue'
 import DocumentEditor from '@/views/DocumentEditor.vue'
 import CurieDBEditor from '@/views/CurieDBEditor.vue'
-import Publish from '@/views/Publish.vue'
+import PublishChanges from '@/views/Publish.vue'
 import VersionControl from '@/views/VersionControl.vue'
 import DocumentSearch from '@/views/DocumentSearch.vue'
 
@@ -45,7 +45,7 @@ const routes = [
       },
       {path: 'db', name: 'MasterComponent', component: MasterComponent, redirect: '/CurieDB'},
       {path: 'CurieDB', name: 'CurieDBEditor', component: CurieDBEditor},
-      {path: 'publish', name: 'Publish', component: Publish},
+      {path: 'publish', name: 'PublishChanges', component: PublishChanges},
       {path: 'versioncontrol', name: 'VersionControl', component: VersionControl},
       {path: 'search', name: 'DocumentSearch', component: DocumentSearch},
     ],
