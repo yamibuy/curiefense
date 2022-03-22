@@ -93,16 +93,28 @@ pub fn tag_request(is_human: bool, cfg: &Config, rinfo: &RequestInfo) -> (Tags, 
         tags.insert("bot");
     }
     tags.insert_qualified("ip", &rinfo.rinfo.geoip.ipstr);
-    tags.insert_qualified("geo", rinfo.rinfo.geoip.country_name.as_deref().unwrap_or("nil"));
-    tags.insert_qualified("region", rinfo.rinfo.geoip.region.as_deref().unwrap_or("nil"));
-    tags.insert_qualified("subregion", rinfo.rinfo.geoip.subregion.as_deref().unwrap_or("nil"));
+    tags.insert_qualified(
+        "geo-continent-name",
+        rinfo.rinfo.geoip.continent_name.as_deref().unwrap_or("nil"),
+    );
+    tags.insert_qualified(
+        "geo-continent-code",
+        rinfo.rinfo.geoip.continent_code.as_deref().unwrap_or("nil"),
+    );
+    tags.insert_qualified("geo-city", rinfo.rinfo.geoip.city_name.as_deref().unwrap_or("nil"));
+    tags.insert_qualified(
+        "geo-country",
+        rinfo.rinfo.geoip.country_name.as_deref().unwrap_or("nil"),
+    );
+    tags.insert_qualified("geo-region", rinfo.rinfo.geoip.region.as_deref().unwrap_or("nil"));
+    tags.insert_qualified("geo-subregion", rinfo.rinfo.geoip.subregion.as_deref().unwrap_or("nil"));
     match rinfo.rinfo.geoip.asn {
         None => {
-            tags.insert_qualified("asn", "nil");
+            tags.insert_qualified("geo-asn", "nil");
         }
         Some(asn) => {
             let sasn = format!("{}", asn);
-            tags.insert_qualified("asn", &sasn);
+            tags.insert_qualified("geo-asn", &sasn);
         }
     }
     if let Some(container_name) = &cfg.container_name {
