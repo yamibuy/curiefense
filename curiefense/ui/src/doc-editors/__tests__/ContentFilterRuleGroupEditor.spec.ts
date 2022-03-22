@@ -19,7 +19,7 @@ describe('ContentFilterRuleGroupEditor.vue', () => {
     'msg': 'SQLi Attempt (Conditional Operator Detected)',
     'operand': '\\s(and|or)\\s+\\d+\\s+.*between\\s.*\\d+\\s+and\\s+\\d+.*',
     'risk': 5,
-    'notes': 'SQL injection',
+    'description': 'SQL injection',
     'category': 'sqli',
     'subcategory': 'statement injection',
     'tags': [],
@@ -30,7 +30,7 @@ describe('ContentFilterRuleGroupEditor.vue', () => {
       ...docExample,
       id: `${parseInt(docExample['id']) + index}`,
       name: `${parseInt(docExample['id']) + index}`,
-      notes: '',
+      description: '',
       risk: 1,
     }))
     selectedDoc = {

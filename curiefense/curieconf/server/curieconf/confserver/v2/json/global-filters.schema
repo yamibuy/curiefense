@@ -23,14 +23,14 @@
     "mdate": {
       "type": "string",
       "title": "Last Modified Date",
-      "description": "Date of last modification"
+      "description": "Date of previous modification of an external list"
     },
     "source": {
       "type": "string",
       "title": "List's Source",
       "description": "URL to location for download or 'self' if self managed"
     },
-    "notes": {
+    "description": {
       "type": "string",
       "title": "Description",
       "description": "Description of entity shown in UI"
