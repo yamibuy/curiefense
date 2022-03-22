@@ -140,7 +140,7 @@ import Utils from '@/assets/Utils'
 import DateTimeUtils from '@/assets/DateTimeUtils'
 
 export default Vue.extend({
-  name: 'Publish',
+  name: 'PublishChanges',
   props: {},
   components: {},
   data() {
