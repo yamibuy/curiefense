@@ -32,25 +32,36 @@ pub fn redis_conn() -> anyhow::Result<RedisCnx> {
     Ok(cnx)
 }
 
+pub enum BanStatus {
+    NewBan,
+    AlreadyBanned,
+}
+
 pub fn extract_bannable_action(
     cnx: &mut redis::Connection,
     logs: &mut Logs,
     action: &SimpleAction,
     redis_key: &str,
     ban_key: &str,
+    ban_status: BanStatus,
 ) -> SimpleAction {
     if let SimpleActionT::Ban(subaction, duration) = &action.atype {
         logs.info(format!("Banned key {} for {}s", redis_key, duration));
-        if let Err(rr) = redis::pipe()
-            .cmd("SET")
-            .arg(ban_key)
-            .arg(1)
-            .cmd("EXPIRE")
-            .arg(ban_key)
-            .arg(*duration)
-            .query::<()>(cnx)
-        {
-            println!("*** Redis error {}", rr);
+        match ban_status {
+            BanStatus::AlreadyBanned => (),
+            BanStatus::NewBan => {
+                if let Err(rr) = redis::pipe()
+                    .cmd("SET")
+                    .arg(ban_key)
+                    .arg(1)
+                    .cmd("EXPIRE")
+                    .arg(ban_key)
+                    .arg(*duration)
+                    .query::<()>(cnx)
+                {
+                    println!("*** Redis error {}", rr);
+                }
+            }
         }
         *subaction.clone()
     } else {
