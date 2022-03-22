@@ -2,9 +2,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -14,7 +17,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl"
       ],
@@ -32,9 +35,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -44,7 +50,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl"
       ],
@@ -62,9 +68,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -74,7 +83,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl",
         "cf-rule-id:100016",
@@ -100,9 +109,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -112,7 +124,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl",
         "cf-rule-id:100017",
@@ -138,9 +150,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -150,7 +165,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl",
         "cf-rule-id:100016",
@@ -176,9 +191,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -188,7 +206,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl",
         "cf-rule-id:100017",
@@ -214,9 +232,12 @@
   {
     "response": {
       "tags": [
-        "region:nil",
-        "subregion:nil",
-        "asn:396507",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:nil",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:reportpriority",
@@ -226,7 +247,7 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:reportpriority",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl",
         "cf-rule-id:100016",
