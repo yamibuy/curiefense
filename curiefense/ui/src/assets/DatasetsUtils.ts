@@ -1,6 +1,5 @@
 import {
   ACLProfile,
-  ContentFilterEntryMatch,
   ContentFilterProfile,
   ContentFilterRule,
   ContentFilterRuleGroup,
@@ -113,38 +112,38 @@ const newDocEntryFactory: { [key: string]: Function } = {
       'name': 'New Content Filter Profile',
       'ignore_alphanum': true,
       'headers': {
-        'names': [] as ContentFilterEntryMatch[],
-        'regex': [] as ContentFilterEntryMatch[],
+        'names': [],
+        'regex': [],
         'max_count': 42,
         'max_length': 1024,
       },
       'cookies': {
-        'names': [] as ContentFilterEntryMatch[],
-        'regex': [] as ContentFilterEntryMatch[],
+        'names': [],
+        'regex': [],
         'max_count': 42,
         'max_length': 1024,
       },
       'args': {
-        'names': [] as ContentFilterEntryMatch[],
-        'regex': [] as ContentFilterEntryMatch[],
+        'names': [],
+        'regex': [],
         'max_count': 512,
         'max_length': 1024,
       },
       'path': {
-        'names': [] as ContentFilterEntryMatch[],
-        'regex': [] as ContentFilterEntryMatch[],
+        'names': [],
+        'regex': [],
         'max_count': 42,
         'max_length': 1024,
       },
       'decoding': {
-        base64: true,
-        dual: false,
-        html: false,
-        unicode: false,
+        'base64': true,
+        'dual': true,
+        'html': false,
+        'unicode': false,
       },
       'masking_seed': 'CHANGEME',
       'content_type': [],
-      'active': [],
+      'active': ['cf-rule-risk:5', 'cf-rule-risk:4', 'cf-rule-risk:3', 'cf-rule-subcategory:libinjection-xss'],
       'report': [],
       'ignore': [],
     }
@@ -155,10 +154,10 @@ const newDocEntryFactory: { [key: string]: Function } = {
       'id': generateUUID2(),
       'name': 'New Global Filter',
       'source': 'self-managed',
-      'mdate': (new Date()).toISOString(),
-      'description': 'New List Description and Remarks',
-      'active': true,
-      'tags': [],
+      'mdate': '',
+      'description': 'New Global Filter Description and Remarks',
+      'active': false,
+      'tags': ['trusted'],
       'action': {
         'type': 'monitor',
       },
@@ -181,8 +180,8 @@ const newDocEntryFactory: { [key: string]: Function } = {
           'name': 'default',
           'acl_profile': '__default__',
           'content_filter_profile': '__default__',
-          'acl_active': true,
-          'content_filter_active': true,
+          'acl_active': false,
+          'content_filter_active': false,
           'limit_ids': [],
         },
       ],
@@ -192,22 +191,22 @@ const newDocEntryFactory: { [key: string]: Function } = {
   ratelimits(): RateLimit {
     return {
       'id': generateUUID2(),
-      'description': 'New Rate Limit Rule',
       'name': 'New Rate Limit Rule',
+      'description': 'New Rate Limit Rule Description and Remarks',
+      'timeframe': '60',
       'thresholds': [
         {
-          'limit': '3',
+          'limit': '5',
           'action': {'type': 'default'},
         },
       ],
+      'include': ['all'],
+      'exclude': [''],
       'key': [
         {
           'attrs': 'ip',
         },
       ],
-      'timeframe': '180',
-      'exclude': ['allowlist'],
-      'include': ['blocklist'],
       'pairwith': {
         'self': 'self',
       },
@@ -218,19 +217,19 @@ const newDocEntryFactory: { [key: string]: Function } = {
     return {
       'id': generateUUID2(),
       'name': 'New Flow Control Policy',
-      'timeframe': 60,
-      'active': true,
       'description': 'New Flow Control Policy Description and Remarks',
+      'active': true,
+      'include': ['all'],
+      'exclude': [],
+      'timeframe': 60,
+      'action': {
+        'type': 'default',
+      },
       'key': [
         {
           'attrs': 'ip',
         },
       ],
-      'action': {
-        'type': 'default',
-      },
-      'exclude': [],
-      'include': ['all'],
       'sequence': [
         {...defaultFlowControlSequenceItem},
         {
@@ -245,10 +244,10 @@ const newDocEntryFactory: { [key: string]: Function } = {
     return {
       'id': generateUUID2(),
       'name': 'New Content Filter Rule',
-      'risk': 1,
+      'description': 'New Content Filter Rule Description and Remarks',
       'msg': '',
-      'notes': '',
       'operand': '',
+      'risk': 1,
       'category': '',
       'subcategory': '',
       'tags': [],
