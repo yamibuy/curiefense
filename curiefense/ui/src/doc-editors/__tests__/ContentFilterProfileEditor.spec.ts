@@ -12,6 +12,7 @@ import {
   NamesRegexType,
 } from '@/types'
 import AutocompleteInput from '@/components/AutocompleteInput.vue'
+// @ts-ignore
 import _ from 'lodash'
 import axios from 'axios'
 
@@ -22,7 +23,7 @@ describe('ContentFilterProfileEditor.vue', () => {
   let wrapper: Wrapper<Vue>
   let contentFilterRulesDocs: ContentFilterRule[]
   let contentFilterGroupsDocs: ContentFilterRuleGroup[]
-  beforeEach(() => {
+  beforeEach(async () => {
     docs = [{
       'id': '__default__',
       'name': 'default contentfilter',
@@ -119,12 +120,12 @@ describe('ContentFilterProfileEditor.vue', () => {
       const branch = (wrapper.vm as any).selectedBranch
       if (path === `/conf/api/v2/configs/${branch}/d/contentfilterrules/`) {
         if (config && config.headers && config.headers['x-fields'] === 'id, name') {
-          return Promise.resolve({data: _.map(contentFilterRulesDocs, (i) => _.pick(i, 'id', 'name'))})
+          return Promise.resolve({data: _.map(contentFilterRulesDocs, (i: any) => _.pick(i, 'id', 'name'))})
         }
         return Promise.resolve({data: contentFilterRulesDocs})
       } else if (path === `/conf/api/v2/configs/${branch}/d/contentfiltergroups/`) {
         if (config?.headers?.['x-fields'] === 'id, name') {
-          return Promise.resolve({data: _.map(contentFilterGroupsDocs, (i) => _.pick(i, 'id', 'name'))})
+          return Promise.resolve({data: _.map(contentFilterGroupsDocs, (i: any) => _.pick(i, 'id', 'name'))})
         }
         return Promise.resolve({data: contentFilterGroupsDocs})
       }
@@ -142,6 +143,7 @@ describe('ContentFilterProfileEditor.vue', () => {
         'update:selectedDoc': onUpdate,
       },
     })
+    await Vue.nextTick()
   })
 
   describe('form data', () => {
@@ -365,8 +367,11 @@ describe('ContentFilterProfileEditor.vue', () => {
 
           test('should add name key when creating new parameter', async () => {
             const wantedValue = 'foo'
-            const input = newRow.find('.new-entry-key')
-            input.setValue(wantedValue)
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue(wantedValue)
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
@@ -377,8 +382,11 @@ describe('ContentFilterProfileEditor.vue', () => {
 
           test('should add value when creating new parameter', async () => {
             const wantedValue = 'bar'
-            const input = newRow.find('.new-entry-reg')
-            input.setValue(wantedValue)
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue(wantedValue)
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
@@ -388,6 +396,12 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add restrict when creating new parameter', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const input = newRow.find('.new-entry-restrict')
             input.setChecked(true)
             await Vue.nextTick()
@@ -399,6 +413,12 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add mask when creating new parameter', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const input = newRow.find('.new-entry-mask')
             input.setChecked(true)
             await Vue.nextTick()
@@ -410,6 +430,12 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add exclusions when creating new parameter', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const wantedValue = ['cf-rule-id:100001', 'cf-risk:3']
             const autocompleteInput = wrapper.findComponent(AutocompleteInput)
             autocompleteInput.vm.$emit('value-submitted', 'cf-rule-id:100001 cf-risk:3')
@@ -422,6 +448,12 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should remove parameter when remove button is clicked', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
             await Vue.nextTick()

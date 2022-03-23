@@ -76,7 +76,7 @@
                   <div class="control">
                     <input class="input is-small document-tags"
                            title="Tags"
-                           placeholder="Tags"
+                           placeholder="Space separated tags"
                            v-model="selectedDocTags"
                            @change="emitDocUpdate()"/>
                   </div>
