@@ -334,7 +334,8 @@
                                     <div>
                                       <input required
                                              class="input is-small new-entry-key"
-                                             :class="{ 'is-danger': !newEntry.key }"
+                                             :class="{ 'is-danger': !newEntry.key && newEntry.keyDirty }"
+                                             @input="newEntry.keyDirty = true"
                                              type="text"
                                              v-model="newEntry.key"
                                              placeholder="Key"
@@ -352,7 +353,8 @@
                                    class="input is-small new-entry-reg"
                                    type="text"
                                    v-model="newEntry.reg"
-                                   :class="{ 'is-danger': entryMatchingValueInvalid(newEntry) }"
+                                   :class="{ 'is-danger': entryMatchingValueInvalid(newEntry) && newEntry.regDirty }"
+                                   @input="newEntry.regDirty = true"
                                    placeholder="Value"
                                    title="Value regex"/>
                             <span class="icon is-small is-left has-text-grey">
@@ -587,6 +589,8 @@ export default Vue.extend({
       restrict: false,
       mask: false,
       exclusions: [],
+      keyDirty: false,
+      regDirty: false,
     }
     const defaultContentFilterProfileSection: ContentFilterProfileSection = {
       names: [] as ContentFilterEntryMatch[],
@@ -712,6 +716,8 @@ export default Vue.extend({
       this.newContentFilterLine = null
       const type: NamesRegexType = newEntry.type
       delete newEntry.type
+      delete newEntry.keyDirty
+      delete newEntry.regDirty
       this.localDoc[this.tab][type].unshift(newEntry)
       this.emitDocUpdate()
     },
@@ -797,7 +803,7 @@ export default Vue.extend({
     entryMatchingValueInvalid(entry: ContentFilterEntryMatch): boolean {
       const matchingValueEmpty = !entry.reg
       if (!matchingValueEmpty) {
-        return true
+        return false
       }
       const maskChecked = entry.mask
       const exclusionTagsIsEmpty = !entry.exclusions.length
