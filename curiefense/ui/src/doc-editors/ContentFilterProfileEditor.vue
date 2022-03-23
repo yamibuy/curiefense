@@ -716,6 +716,8 @@ export default Vue.extend({
       this.newContentFilterLine = null
       const type: NamesRegexType = newEntry.type
       delete newEntry.type
+      delete newEntry.keyDirty
+      delete newEntry.regDirty
       this.localDoc[this.tab][type].unshift(newEntry)
       this.emitDocUpdate()
     },
