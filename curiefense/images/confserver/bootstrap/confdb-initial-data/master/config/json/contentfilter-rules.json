@@ -1437,6 +1437,7 @@
     "operand": "%(ALLUSERSPROFILE|APPDATA|COMPUTERNAME|COMSPEC|HOMEDRIVE|HOMEPATH|PATH|PATHEXT|PROGRAMFILES|PROMPT|SYSTEMDRIVE|SYSTEMROOT|TEMP|USERNAME|USERPROFILE|WINDIR|ERRORLEVEL|RANDOM|CommonProgramFiles|LOCALAPPDATA|ProgramData|Public)%",
     "risk": 4,
     "subcategory": "windows",
+    "notes": "",
     "tags": []
   },
   {
@@ -1997,6 +1998,7 @@
     "operand": "response\\.write\\s*\\(",
     "risk": 4,
     "subcategory": "asp",
+    "notes": "",
     "tags": []
   },
   {
@@ -2007,6 +2009,7 @@
     "risk": 4,
     "category": "xss",
     "subcategory": "xss",
+    "notes": "",
     "tags": []
   },
   {
