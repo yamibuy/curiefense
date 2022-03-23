@@ -29,6 +29,7 @@
              class="has-icons-left">
           <input type="text"
                  title="Name"
+                 :class="{ 'is-danger': selectedName === '' }"
                  v-model="selectedName"
                  class="input is-small option-name-input">
           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-font"></i></span>
@@ -47,6 +48,7 @@
         <div class="control has-icons-left is-fullwidth">
           <input type="text"
                  title="Value"
+                 :class="{ 'is-danger': selectedValue === '' }"
                  v-model="selectedValue"
                  class="input is-small option-value-input">
           <span class="icon is-small is-left has-text-grey-light"><i class="fa fa-code"></i></span>

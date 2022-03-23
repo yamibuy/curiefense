@@ -105,7 +105,7 @@
                 <input class="input is-small document-operand"
                        type="text"
                        title="Match"
-                       placeholder="matching domain(s) regex"
+                       placeholder="matching regex"
                        v-model="localDoc.operand"
                        @change="emitDocUpdate()"
                        required>
