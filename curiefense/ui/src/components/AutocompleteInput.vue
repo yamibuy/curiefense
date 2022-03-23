@@ -295,6 +295,7 @@ export default (Vue as VueConstructor<Vue & {
       this.closeDropdown()
       if (this.clearInputAfterSelection) {
         this.autocompleteValue = ''
+        this.skipNextWatchUpdate = true
       }
     },
 
