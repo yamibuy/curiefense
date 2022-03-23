@@ -49,7 +49,8 @@ fn gen_bogus_config(sz: usize) -> Config {
                     content_filter_profile: ContentFilterProfile::default_from_seed("seed"),
                     limits: Vec::new(),
                 },
-            ).unwrap()
+            )
+            .unwrap()
         })
         .collect();
 

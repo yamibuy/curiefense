@@ -126,7 +126,16 @@ pub fn limit_check(
                 .unwrap_or(&limit.thresholds[0]);
             out = stronger_decision(
                 out,
-                limit_react(logs, tags, &mut redis, limit, ban_threshold, &key, &ban_key, BanStatus::AlreadyBanned,),
+                limit_react(
+                    logs,
+                    tags,
+                    &mut redis,
+                    limit,
+                    ban_threshold,
+                    &key,
+                    &ban_key,
+                    BanStatus::AlreadyBanned,
+                ),
             );
         }
 
@@ -148,7 +157,16 @@ pub fn limit_check(
                     if current_count > threshold.limit as i64 {
                         out = stronger_decision(
                             out,
-                            limit_react(logs, tags, &mut redis, limit, threshold, &key, &ban_key, BanStatus::NewBan,),
+                            limit_react(
+                                logs,
+                                tags,
+                                &mut redis,
+                                limit,
+                                threshold,
+                                &key,
+                                &ban_key,
+                                BanStatus::NewBan,
+                            ),
                         );
                     }
                 }

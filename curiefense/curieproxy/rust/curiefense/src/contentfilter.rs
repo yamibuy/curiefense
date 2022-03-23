@@ -295,7 +295,6 @@ fn section_check(
     Ok(())
 }
 
-
 /// TODO: This also populates the hca_keys map
 /// this is stupid and needs to be changed
 fn injection_check(

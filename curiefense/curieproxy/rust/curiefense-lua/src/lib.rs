@@ -40,7 +40,14 @@ fn lua_inspect_content_filter(
     let (meta, headers, lua_body, str_ip, content_filter_id) = args;
 
     let res = match lua_body {
-        None => inspect_content_filter("/cf-config/current/config", meta, headers, None, str_ip, content_filter_id),
+        None => inspect_content_filter(
+            "/cf-config/current/config",
+            meta,
+            headers,
+            None,
+            str_ip,
+            content_filter_id,
+        ),
         Some(body) => inspect_content_filter(
             "/cf-config/current/config",
             meta,
@@ -80,7 +87,8 @@ fn inspect_content_filter(
         mbody,
     };
 
-    let (dec, reqinfo, tags) = content_filter_check_generic_request_map(configpath, &raw, &content_filter_id, &mut logs);
+    let (dec, reqinfo, tags) =
+        content_filter_check_generic_request_map(configpath, &raw, &content_filter_id, &mut logs);
 
     Ok(InspectionResult {
         decision: dec,
