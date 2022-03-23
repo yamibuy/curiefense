@@ -19,6 +19,8 @@ declare module CuriefenseClient {
     mask: boolean
     type: NamesRegexType
     exclusions: string[]
+    keyDirty?: boolean
+    regDirty?: boolean
   }
 
   type ContentFilterProfileSection = {
