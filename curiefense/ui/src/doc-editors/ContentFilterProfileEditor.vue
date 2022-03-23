@@ -65,7 +65,7 @@
                            @change="updateContentType(contentTypeOption.value, $event.target.checked)"
                            class="checkbox-input"
                            :class="`content-type-${contentTypeOption.value}-input`"
-                           :value="getContentTypeStatus(contentTypeOption.value)">
+                           :checked="getContentTypeStatus(contentTypeOption.value)">
                     {{ contentTypeOption.displayName }}
                   </label>
                 </div>
