@@ -133,6 +133,7 @@ m_contentfilterprofile = api.model(
         "path": fields.Raw(required=True),
         "decoding": fields.Raw(required=True),
         "masking_seed": fields.String(required=True),
+        "content_type": fields.List(fields.String()),
         "active": fields.List(fields.String()),
         "report": fields.List(fields.String()),
         "ignore": fields.List(fields.String()),
