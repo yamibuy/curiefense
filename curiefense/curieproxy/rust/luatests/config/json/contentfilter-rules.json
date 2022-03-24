@@ -4,9 +4,11 @@
     "name": "100016",
     "msg": "SQLi Attempt (SQL Built-in Function Call Detected)",
     "operand": "xp_(makecab|cmdshell|execresultset|regaddmultistring|regread|enumdsn|availablemedia|regdeletekey|loginconfig|regremovemultistring|regwrite|regdeletevalue|dirtree|regenumkeys|filelist|terminate|servicecontrol|ntsec_enumdomains|terminate_process|ntsec|regenumvalues|cmdshell)",
-    "severity": 5,
-    "certainity": 5,
+    "risk": 5,
     "category": "sqli",
+    "tags": [
+      "waf"
+    ],
     "subcategory": "built-in function invocation"
   },
   {
@@ -14,9 +16,11 @@
     "name": "100017",
     "msg": "SQLi Attempt (SQL Built-in Function Call Detected)",
     "operand": "(information_schema|connection_id|iif|benchmark|sha1|md5)(\\s)?\\(",
-    "severity": 5,
-    "certainity": 5,
+    "risk": 3,
     "category": "sqli",
+    "tags": [
+      "waf"
+    ],
     "subcategory": "built-in function invocation"
   },
   {
@@ -24,9 +28,12 @@
     "name": "100010",
     "msg": "alphanum operand",
     "operand": "AZDGSDQZE16Z",
-    "severity": 5,
-    "certainity": 5,
+    "risk": 5,
     "category": "generic",
+    "tags": [
+      "generic",
+      "waf"
+    ],
     "subcategory": "generic"
   },
   {
@@ -34,9 +41,52 @@
     "name": "100099",
     "msg": "RFI/LFI/OSCI",
     "operand": "/nettracker/",
-    "severity": 5,
-    "certainity": 5,
+    "risk": 1,
     "category": "generic",
+    "tags": [
+      "generic",
+      "waf"
+    ],
     "subcategory": "generic"
+  },
+  {
+    "id": "GENERICRL5",
+    "name": "GENERICRL5",
+    "msg": "GENERICRL5",
+    "operand": "GENERICRL5",
+    "risk": 5,
+    "category": "generic",
+    "tags": [],
+    "subcategory": "generic"
+  },
+  {
+    "id": "GENERICRL3",
+    "name": "GENERICRL3",
+    "msg": "GENERICRL3",
+    "operand": "GENERICRL3",
+    "risk": 3,
+    "category": "generic",
+    "tags": [],
+    "subcategory": "generic"
+  },
+  {
+    "id": "SQLIRL5",
+    "name": "SQLIRL5",
+    "msg": "SQLIRL5",
+    "operand": "SQLIRL5",
+    "risk": 5,
+    "category": "sqli",
+    "tags": [],
+    "subcategory": "sqli"
+  },
+  {
+    "id": "SQLIRL3",
+    "name": "SQLIRL3",
+    "msg": "SQLIRL3",
+    "operand": "SQLIRL3",
+    "risk": 3,
+    "category": "sqli",
+    "tags": [],
+    "subcategory": "sqli"
   }
 ]

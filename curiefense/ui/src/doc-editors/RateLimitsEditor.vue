@@ -96,8 +96,8 @@
                       </label>
                       <input class="input is-small document-limit"
                             type="text"
-                            title="A number of requests"
-                            placeholder="A number of requests"
+                            title="Number of events"
+                            placeholder="Number of events"
                             @change="emitDocUpdate"
                             v-model="threshold.limit">
                     </div>
@@ -150,8 +150,9 @@
                     <tbody>
                     <tr v-for="(tag, tagIndex) in localDoc[filter]"
                         :key="tagIndex">
-                      <td class="tag-cell"
-                          :class=" duplicateTags[tag] ? 'has-text-danger' : '' ">
+                      <td class="tag-cell ellipsis"
+                          :class=" duplicateTags[tag] ? 'has-text-danger' : '' "
+                          :title="tag">
                         {{ tag }}
                       </td>
                       <td class="is-size-7 width-20px">
@@ -541,7 +542,8 @@ export default Vue.extend({
 
     openNewSecurityPolicyConnection() {
       this.newSecurityPolicyConnectionOpened = true
-      this.newSecurityPolicyConnectionData.map = this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
+      this.newSecurityPolicyConnectionData.map =
+          this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
       this.newSecurityPolicyConnectionData.entryIndex = 0
     },
 
@@ -606,7 +608,8 @@ export default Vue.extend({
       }).then((response: AxiosResponse<SecurityPolicy[]>) => {
         this.securityPolicies = _.sortBy(response.data)
         this.getConnectedSecurityPoliciesEntries()
-        this.newSecurityPolicyConnectionData.map = this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
+        this.newSecurityPolicyConnectionData.map =
+            this.newSecurityPolicyConnections.length > 0 ? this.newSecurityPolicyConnections[0] : null
       })
     },
 

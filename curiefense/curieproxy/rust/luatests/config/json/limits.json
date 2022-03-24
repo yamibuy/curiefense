@@ -174,7 +174,7 @@
             }
         ],
         "include": [
-            "geo:united-states"
+            "geo-country:united-states"
         ],
         "exclude": [],
         "key": [

@@ -12,15 +12,22 @@ declare module CuriefenseClient {
 
   // Document types helpers - START
 
-  type ContentFilterIgnoreType = 'rule' | 'group'
-
   type ContentFilterEntryMatch = {
     key: string
     reg: string
     restrict: boolean
     mask: boolean
     type: NamesRegexType
-    exclusions: { [key: string]: ContentFilterIgnoreType }
+    exclusions: string[]
+    keyDirty?: boolean
+    regDirty?: boolean
+  }
+
+  type ContentFilterProfileSection = {
+    names: ContentFilterEntryMatch[],
+    regex: ContentFilterEntryMatch[],
+    max_count: number,
+    max_length: number
   }
 
   type SecurityPolicyEntryMatch = {
@@ -63,11 +70,15 @@ declare module CuriefenseClient {
 
   type ACLProfileFilter = 'allow' | 'allow_bot' | 'deny_bot' | 'passthrough' | 'force_deny' | 'deny'
 
+  type ContentFilterProfileTagLists = 'active' | 'report' | 'ignore'
+
   type IncludeExcludeType = 'include' | 'exclude'
 
   type Relation = 'OR' | 'AND'
 
   type Category = 'path' | 'query' | 'uri' | 'method' | 'ip' | 'asn' | 'country' | 'headers' | 'args' | 'cookies'
+
+  type ContentFilterProfileSectionType = 'headers' | 'args' | 'cookies' | 'path'
 
   type ArgsCookiesHeadersType = 'headers' | 'args' | 'cookies'
 
@@ -103,24 +114,21 @@ declare module CuriefenseClient {
     id: string
     name: string
     ignore_alphanum: boolean
-    max_header_length: number
-    max_cookie_length: number
-    max_arg_length: number
-    max_headers_count: number
-    max_cookies_count: number
-    max_args_count: number
-    args: {
-      names: ContentFilterEntryMatch[]
-      regex: ContentFilterEntryMatch[]
-    }
-    headers: {
-      names: ContentFilterEntryMatch[]
-      regex: ContentFilterEntryMatch[]
-    }
-    cookies: {
-      names: ContentFilterEntryMatch[]
-      regex: ContentFilterEntryMatch[]
-    }
+    headers: ContentFilterProfileSection,
+    cookies: ContentFilterProfileSection,
+    args: ContentFilterProfileSection,
+    path: ContentFilterProfileSection,
+    decoding: {
+      base64: boolean,
+      dual: boolean,
+      html: boolean,
+      unicode: boolean
+    },
+    masking_seed: string,
+    content_type: string[],
+    active: string[],
+    report: string[],
+    ignore: string[]
   }
 
   type GlobalFilter = {
@@ -181,12 +189,13 @@ declare module CuriefenseClient {
   type ContentFilterRule = {
     id: string
     name: string
-    category?: string
-    certainity?: number
-    msg?: string
     operand: string
-    severity?: number
-    subcategory?: string
+    description: string
+    risk: number
+    msg: string
+    category: string
+    subcategory: string
+    tags: string[]
   }
 
   type ContentFilterRuleGroup = {

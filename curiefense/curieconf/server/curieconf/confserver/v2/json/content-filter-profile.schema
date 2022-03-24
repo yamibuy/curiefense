@@ -3,6 +3,36 @@
     "title": "Content Filter Profile",
     "description": "Content Filter Profile",
     "definitions": {
+        "content-filter-profile-section": {
+            "type": "object",
+            "properties": {
+                "names": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/content-filter-entry-match" }
+                },
+                "regex": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/content-filter-entry-match" }
+                },
+                "max_length": {
+                    "type": "number",
+                    "title": "Max Length",
+                    "description": "Max length of characters allowed for each item of the section type in the request"
+                },
+                "max_count": {
+                    "type": "number",
+                    "title": "Max Count",
+                    "description": "Max amount of items of the section type allowed in the request"
+                }
+            },
+            "required": [ "names", "regex", "max_length", "max_count" ]
+        },
+        "tags_array": {
+            "title": "Tags List",
+            "description": "List of tags to apply",
+            "type": "array",
+            "items": { "type": "string" }
+        },
         "content-filter-entry-match": {
             "type": "object",
             "properties": {
@@ -11,11 +41,10 @@
                 "restrict": { "type": "boolean" },
                 "mask": { "type": "boolean" },
                 "exclusions": {
-                    "type": ["object", "null"],
-                    "additionalProperties": { 
-                        "type": "string", 
-                        "enum": ["rule", "group"]
-                    }
+                    "title": "Excluded Tags",
+                    "description": "List of excluded Content Filter tags",
+                    "type": "array",
+                    "items": { "type": "string" }
                 }
             }
         }
@@ -38,60 +67,34 @@
             "title": "Ignore Alphanumeric",
             "description": "When true, arguments, headers or cookies, which contain only alpha numeric characters, will be ignored"
         },
-        "max_header_length": {
-            "type": "number",
-            "title": "Max Header Length",
-            "description": "Max length of characters allowed for each header in the request"
-        },
-        "max_cookie_length": {
-            "type": "number",
-            "title": "Max Cookie Length",
-            "description": "Max length of characters allowed for each cookie in the request"
-        },
-        "max_arg_length": {
-            "type": "number",
-            "title": "Max Argument Length",
-            "description": "Max length of characters allowed for each argument in the request"
-        },
-        "max_headers_count": {
-            "type": "number",
-            "title": "Max Headers Count",
-            "description": "Max amount of headers allowed in the request"
-        },
-        "max_cookies_count": {
-            "type": "number",
-            "title": "Max Cookies Count",
-            "description": "Max amount of cookies allowed in the request"
-        },
-        "max_args_count": {
-            "type": "number",
-            "title": "Max Arguments Count",
-            "description": "Max amount of arguments allowed in the request"
-        },
-        "args": {
+        "args": { "$ref": "#/definitions/content-filter-profile-section" },
+        "headers": { "$ref": "#/definitions/content-filter-profile-section" },
+        "cookies": { "$ref": "#/definitions/content-filter-profile-section" },
+        "path": { "$ref": "#/definitions/content-filter-profile-section" },
+        "decoding": {
             "type": "object",
+            "title": "Active / Inactive decoding",
             "properties": {
-                "names": { "type": "array", "items": { "$ref": "#/definitions/content-filter-entry-match" } },
-                "regex": { "type": "array", "items": { "$ref": "#/definitions/content-filter-entry-match" } }
-            },
-            "required": [ "names", "regex"]
+                "base64": { "type": "boolean" },
+                "dual": { "type": "boolean" },
+                "html": { "type": "boolean" },
+                "unicode": { "type": "boolean" }
+            }
         },
-        "headers": {
-            "type": "object",
-            "properties": {
-                "names": { "type": "array", "items": { "$ref": "#/definitions/content-filter-entry-match" } },
-                "regex": { "type": "array", "items": { "$ref": "#/definitions/content-filter-entry-match" } }
-            },
-            "required": [ "names", "regex" ]
+        "masking_seed": {
+            "type": "string",
+            "title": "Masking Seed",
+            "description": "A seed which will be used in the masking process"
         },
-        "cookies": {
-            "type": "object",
-            "properties": {
-                "names": { "type": "array", "items": { "$ref": "#/definitions/content-filter-entry-match" } },
-                "regex": { "type": "array", "items": { "$ref": "#/definitions/content-filter-entry-match" } }
-            },
-            "required": [ "names", "regex" ]
-        }
+        "content_type": {
+            "title": "Content Type",
+            "description": "List of content types",
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "active": { "$ref": "#/definitions/tags_array" },
+        "report": { "$ref": "#/definitions/tags_array" },
+        "ignore": { "$ref": "#/definitions/tags_array" }
     },
-    "required": [ "id", "name", "ignore_alphanum", "max_header_length", "max_cookie_length", "max_arg_length", "max_headers_count", "max_cookies_count", "max_args_count", "args", "headers", "cookies" ]
+    "required": [ "id", "name", "ignore_alphanum", "args", "headers", "cookies", "path", "decoding", "masking_seed", "active", "report", "ignore" ]
 }

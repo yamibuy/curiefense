@@ -1,6 +1,13 @@
 import {
-  ACLProfile, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, ContentFilterProfile,
-  ContentFilterRule, ContentFilterRuleGroup, HttpRequestMethods,
+  ACLProfile,
+  ContentFilterProfile,
+  ContentFilterRule,
+  ContentFilterRuleGroup,
+  FlowControlPolicy,
+  GlobalFilter,
+  HttpRequestMethods,
+  RateLimit,
+  SecurityPolicy,
 } from '@/types'
 
 const titles: { [key: string]: string } = {
@@ -50,6 +57,9 @@ const titles: { [key: string]: string } = {
   'flowcontrol-singular': 'Flow Control Policy',
   'contentfiltergroups': 'Content Filter Rules Groups',
   'contentfiltergroups-singular': 'Content Filter Rules Group',
+  'active': 'Active',
+  'report': 'Report',
+  'ignore': 'Ignore',
 }
 
 const limitOptionsTypes = {
@@ -101,27 +111,41 @@ const newDocEntryFactory: { [key: string]: Function } = {
       'id': generateUUID2(),
       'name': 'New Content Filter Profile',
       'ignore_alphanum': true,
-
-      'max_header_length': 1024,
-      'max_cookie_length': 1024,
-      'max_arg_length': 1024,
-
-      'max_headers_count': 42,
-      'max_cookies_count': 42,
-      'max_args_count': 512,
-
-      'args': {
-        'names': [],
-        'regex': [],
-      },
       'headers': {
         'names': [],
         'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
       },
       'cookies': {
         'names': [],
         'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
       },
+      'args': {
+        'names': [],
+        'regex': [],
+        'max_count': 512,
+        'max_length': 1024,
+      },
+      'path': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'decoding': {
+        'base64': true,
+        'dual': true,
+        'html': false,
+        'unicode': false,
+      },
+      'masking_seed': 'CHANGEME',
+      'content_type': [],
+      'active': ['cf-rule-risk:5', 'cf-rule-risk:4', 'cf-rule-risk:3', 'cf-rule-subcategory:libinjection-xss'],
+      'report': [],
+      'ignore': [],
     }
   },
 
@@ -130,10 +154,10 @@ const newDocEntryFactory: { [key: string]: Function } = {
       'id': generateUUID2(),
       'name': 'New Global Filter',
       'source': 'self-managed',
-      'mdate': (new Date()).toISOString(),
-      'description': 'New List Description and Remarks',
-      'active': true,
-      'tags': [],
+      'mdate': '',
+      'description': 'New Global Filter Description and Remarks',
+      'active': false,
+      'tags': ['trusted'],
       'action': {
         'type': 'monitor',
       },
@@ -156,8 +180,8 @@ const newDocEntryFactory: { [key: string]: Function } = {
           'name': 'default',
           'acl_profile': '__default__',
           'content_filter_profile': '__default__',
-          'acl_active': true,
-          'content_filter_active': true,
+          'acl_active': false,
+          'content_filter_active': false,
           'limit_ids': [],
         },
       ],
@@ -167,22 +191,22 @@ const newDocEntryFactory: { [key: string]: Function } = {
   ratelimits(): RateLimit {
     return {
       'id': generateUUID2(),
-      'description': 'New Rate Limit Rule',
       'name': 'New Rate Limit Rule',
+      'description': 'New Rate Limit Rule Description and Remarks',
+      'timeframe': '60',
       'thresholds': [
         {
-          'limit': '3',
+          'limit': '5',
           'action': {'type': 'default'},
         },
       ],
+      'include': ['all'],
+      'exclude': [''],
       'key': [
         {
           'attrs': 'ip',
         },
       ],
-      'timeframe': '180',
-      'exclude': ['allowlist'],
-      'include': ['blocklist'],
       'pairwith': {
         'self': 'self',
       },
@@ -193,19 +217,19 @@ const newDocEntryFactory: { [key: string]: Function } = {
     return {
       'id': generateUUID2(),
       'name': 'New Flow Control Policy',
-      'timeframe': 60,
-      'active': true,
       'description': 'New Flow Control Policy Description and Remarks',
+      'active': true,
+      'include': ['all'],
+      'exclude': [],
+      'timeframe': 60,
+      'action': {
+        'type': 'default',
+      },
       'key': [
         {
           'attrs': 'ip',
         },
       ],
-      'action': {
-        'type': 'default',
-      },
-      'exclude': [],
-      'include': ['all'],
       'sequence': [
         {...defaultFlowControlSequenceItem},
         {
@@ -220,7 +244,13 @@ const newDocEntryFactory: { [key: string]: Function } = {
     return {
       'id': generateUUID2(),
       'name': 'New Content Filter Rule',
+      'description': 'New Content Filter Rule Description and Remarks',
+      'msg': '',
       'operand': '',
+      'risk': 1,
+      'category': '',
+      'subcategory': '',
+      'tags': [],
     }
   },
 

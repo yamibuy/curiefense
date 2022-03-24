@@ -64,7 +64,8 @@
                 <td class="is-size-7 width-50px has-text-right has-text-grey-light entry-index">
                   {{ mapIndex + 1 }}
                 </td>
-                <td class="is-size-7 entry-name">
+                <td class="is-size-7 width-100px ellipsis entry-name"
+                    :title="mapEntry.name">
                   {{ mapEntry.name }}
                 </td>
                 <td class="is-size-7 width-360px ellipsis entry-match"
@@ -72,12 +73,12 @@
                     :title="mapEntry.match">
                   {{ mapEntry.match }}
                 </td>
-                <td class="is-size-7 entry-content-filter"
+                <td class="is-size-7 width-150px ellipsis entry-content-filter"
                     :class="mapEntry.content_filter_active ? 'has-text-success' : 'has-text-danger'"
                     :title="mapEntry.content_filter_active ? 'Active mode' : 'Learning mode'">
                   {{ contentFilterProfileName(mapEntry.content_filter_profile) }}
                 </td>
-                <td class="is-size-7 entry-acl"
+                <td class="is-size-7 width-150px ellipsis entry-acl"
                     :class="mapEntry.acl_active ? 'has-text-success' : 'has-text-danger'"
                     :title="mapEntry.acl_active ? 'Active mode' : 'Learning mode'">
                   {{ aclProfileName(mapEntry.acl_profile) }}
@@ -126,7 +127,7 @@
                                        type="text"
                                        @input="emitDocUpdate();
                                                validateInput($event, isSelectedMapEntryMatchValid(mapIndex))"
-                                       title="A unique matching regex value, not overlapping other Security Policy definitions"
+                                       title="matchingDomainTitle"
                                        placeholder="Matching domain(s) regex"
                                        required
                                        :disabled="localDoc.id === '__default__' && initialMapEntryMatch === '/'"
@@ -146,13 +147,13 @@
                               <table class="table is-hoverable is-narrow is-fullwidth current-entry-rate-limits-table">
                                 <thead>
                                 <tr>
-                                  <th class="is-size-7">
+                                  <th class="is-size-7 width-250px">
                                     Rule Name
                                   </th>
-                                  <th class="is-size-7">
+                                  <th class="is-size-7 width-200px">
                                     Description
                                   </th>
-                                  <th class="is-size-7">
+                                  <th class="is-size-7 width-80px">
                                     Timeframe
                                   </th>
                                   <th class="has-text-centered is-size-7 width-60px">
@@ -175,15 +176,17 @@
                                   <tr v-if="limitDetails(limitId)"
                                       :key="limitId"
                                       class="rate-limit-row">
-                                    <td class="is-size-7 rate-limit-name"
-                                        v-if="limitDetails(limitId)">
+                                    <td class="is-size-7 width-250px ellipsis rate-limit-name"
+                                        v-if="limitDetails(limitId)"
+                                        :title="limitDetails(limitId).name">
                                       {{ limitDetails(limitId).name }}
                                     </td>
-                                    <td class="is-size-7 rate-limit-description"
-                                        v-if="limitDetails(limitId)">
+                                    <td class="is-size-7 width-220px ellipsis rate-limit-description"
+                                        v-if="limitDetails(limitId)"
+                                        :title="limitDetails(limitId).description">
                                       {{ limitDetails(limitId).description }}
                                     </td>
-                                    <td class="is-size-7 rate-limit-timeframe"
+                                    <td class="is-size-7 width-80px ellipsis rate-limit-timeframe"
                                         v-if="limitDetails(limitId)">
                                       {{ limitDetails(limitId).timeframe }}
                                     </td>
@@ -202,7 +205,7 @@
                                 </template>
                                 <tr v-if="limitNewEntryMode(mapIndex)"
                                     class="new-rate-limit-row">
-                                  <td colspan="4">
+                                  <td colspan="3">
                                     <div class="control is-expanded">
                                       <div class="select is-small is-size-7 is-fullwidth">
                                         <select class="select is-small new-rate-limit-selection"
@@ -312,7 +315,7 @@
                               <button title="Delete this profile"
                                       class="button is-small is-pulled-right is-danger is-light remove-entry-button"
                                       @click="removeMapEntry(mapIndex)"
-                                      v-if="localDoc.id !== '__default__' || initialMapEntryMatch !== '/'">
+                                      v-if="isRemoveEntryEnabled">
                                 Delete
                               </button>
                             </div>
@@ -372,6 +375,9 @@ export default (Vue as VueConstructor<Vue & {
       initialDocDomainMatch: '',
       initialMapEntryMatch: '',
       upstreams: [],
+
+      // titles
+      matchingDomainTitle: 'A unique matching regex value, not overlapping other Security Policy definitions',
     }
   },
 
@@ -386,6 +392,11 @@ export default (Vue as VueConstructor<Vue & {
       const isCurrentEntryMatchValid = this.mapEntryIndex === -1 ||
           this.isSelectedMapEntryMatchValid(this.mapEntryIndex)
       return !isDomainMatchValid || !isCurrentEntryMatchValid
+    },
+
+    isRemoveEntryEnabled(): boolean {
+      const isDefaultPath = (this.localDoc.id === '__default__' && this.initialMapEntryMatch === '/')
+      return this.localDoc.map.length > 1 && !isDefaultPath
     },
   },
 
@@ -418,8 +429,10 @@ export default (Vue as VueConstructor<Vue & {
       const isDomainMatchDuplicate = this.domainNames.includes(
           newDomainMatch,
       ) ? this.initialDocDomainMatch !== newDomainMatch : false
-      const domainMatchContainsInvalidCharacters = !this.isURLValid(newDomainMatch)
-      return !isDomainMatchEmpty && !isDomainMatchDuplicate && !domainMatchContainsInvalidCharacters
+      // TODO: Fix regex test for rust standards and re-apply this
+      // const domainMatchContainsInvalidCharacters = !this.isURLValid(newDomainMatch)
+      // return !isDomainMatchEmpty && !isDomainMatchDuplicate && !domainMatchContainsInvalidCharacters
+      return !isDomainMatchEmpty && !isDomainMatchDuplicate
     },
 
     isSelectedMapEntryMatchValid(index: number): boolean {
@@ -430,8 +443,10 @@ export default (Vue as VueConstructor<Vue & {
         const isMapEntryMatchDuplicate = this.entriesMatchNames.includes(
             newMapEntryMatch,
         ) ? this.initialMapEntryMatch !== newMapEntryMatch : false
-        const mapEntryMatchContainsInvalidCharacters = !this.isURLValid(newMapEntryMatch.substring(1))
-        isValid = !isMapEntryMatchEmpty && !isMapEntryMatchDuplicate && !mapEntryMatchContainsInvalidCharacters
+        // TODO: Fix regex test for rust standards and re-apply this
+        // const mapEntryMatchContainsInvalidCharacters = !this.isURLValid(newMapEntryMatch.substring(1))
+        // isValid = !isMapEntryMatchEmpty && !isMapEntryMatchDuplicate && !mapEntryMatchContainsInvalidCharacters
+        isValid = !isMapEntryMatchEmpty && !isMapEntryMatchDuplicate
       }
       return isValid
     },
@@ -583,7 +598,7 @@ export default (Vue as VueConstructor<Vue & {
   watch: {
     selectedDoc: {
       handler: function(val, oldVal) {
-        if (!val || !oldVal || val.id !== oldVal.id) {
+        if (!val || !oldVal || _.isUndefined(oldVal.match) || val.id !== oldVal.id) {
           this.securityPoliciesDomainMatches()
           this.initialDocDomainMatch = val.match
         }

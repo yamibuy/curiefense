@@ -8,12 +8,12 @@
                 :title="title"
                 :placeholder="title"
                 class="autocomplete-input textarea is-small"
-                @keydown.enter="selectTextareaValue"
-                @keydown.space.prevent
-                @keydown.down="focusNextSuggestion"
-                @keydown.up="focusPreviousSuggestion"
-                @keydown.esc="closeDropdown"
-                @keydown.delete.prevent="onTextareaDelete"
+                @keyup.enter="selectTextareaValue"
+                @keyup.space.prevent
+                @keyup.down="focusNextSuggestion"
+                @keyup.up="focusPreviousSuggestion"
+                @keyup.esc="closeDropdown"
+                @keyup.delete.prevent="onTextareaDelete"
                 @input="onInput"
                 @blur="inputBlurred"
                 @focus="onTextareaFocus"
@@ -27,11 +27,11 @@
              class="autocomplete-input input is-small"
              aria-haspopup="true"
              aria-controls="dropdown-menu"
-             @keydown.enter="selectValue"
-             @keydown.space="selectValue"
-             @keydown.down="focusNextSuggestion"
-             @keydown.up="focusPreviousSuggestion"
-             @keydown.esc="closeDropdown"
+             @keyup.enter="selectValue"
+             @keyup.space="selectValue"
+             @keyup.down="focusNextSuggestion"
+             @keyup.up="focusPreviousSuggestion"
+             @keyup.esc="closeDropdown"
              @input="openDropdown(); valueChanged()"
              @blur="inputBlurred"
              ref="autocompleteInput" />
@@ -44,7 +44,8 @@
            :class="{'is-active': isSuggestionFocused(index)}"
            @mousedown="suggestionClick(index)"
            :key="index"
-           class="dropdown-item">
+           :title="suggestion.value"
+           class="dropdown-item ellipsis">
           <span v-if="suggestion.prefix" v-html="suggestion.prefix"></span>
           {{ suggestion.value }}
         </a>
@@ -113,9 +114,13 @@ export default (Vue as VueConstructor<Vue & {
   },
 
   watch: {
-    initialValue( newVal ) {
-      const newValFiltered = this.filterFunction ? this.filterFunction( newVal ) : newVal
-      if ( this.autocompleteValue !== newVal ) {
+    initialValue(newVal) {
+      if (this.skipNextWatchUpdate) {
+        this.skipNextWatchUpdate = false
+        return
+      }
+      const newValFiltered = this.filterFunction ? this.filterFunction(newVal) : newVal
+      if (this.autocompleteValue !== newVal) {
         this.autocompleteValue = newValFiltered
         this.closeDropdown()
       }
@@ -138,11 +143,12 @@ export default (Vue as VueConstructor<Vue & {
   data() {
     const {filterFunction, initialValue} = this
     return {
-      autocompleteValue: filterFunction ? filterFunction( initialValue ) : initialValue,
+      autocompleteValue: filterFunction ? filterFunction(initialValue) : initialValue,
       open: false,
       focusedSuggestionIndex: -1,
       inputBlurredTimeout: null,
       divider: this.inputType === 'textarea' ? '\n' : ' ',
+      skipNextWatchUpdate: false,
     }
   },
 
@@ -225,6 +231,7 @@ export default (Vue as VueConstructor<Vue & {
       if (this.inputType === 'textarea') {
         this.autocompleteValue = `${this.autocompleteValue.trim()}${this.divider}`
       }
+      this.skipNextWatchUpdate = true
     },
 
     moveCursorToEnd(event: KeyboardEvent) {
@@ -288,6 +295,7 @@ export default (Vue as VueConstructor<Vue & {
       this.closeDropdown()
       if (this.clearInputAfterSelection) {
         this.autocompleteValue = ''
+        this.skipNextWatchUpdate = true
       }
     },
 
@@ -308,7 +316,7 @@ export default (Vue as VueConstructor<Vue & {
     },
 
     inputBlurred() {
-      // We would like to cancel and skip the selection if one of the following occoured:
+      // We would like to cancel and skip the selection if one of the following occurred:
       // * The blur is due to a suggestion click
       // * The component is destroyed before we finish selecting
       this.inputBlurredTimeout = setTimeout(() => {

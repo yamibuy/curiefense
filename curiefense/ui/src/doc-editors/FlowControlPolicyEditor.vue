@@ -71,14 +71,14 @@
                                @update:action="emitDocUpdate"
                                label-separated-line/>
             </div>
-            <div class="field">
+            <div class="field textarea-field">
               <label class="label is-small">Description</label>
               <div class="control">
                 <textarea class="is-small textarea document-description"
                           title="Description"
                           @change="emitDocUpdate"
                           v-model="localDoc.description"
-                          rows="2">
+                          rows="5">
                 </textarea>
               </div>
             </div>
@@ -96,8 +96,9 @@
                   <tbody>
                   <tr v-for="(tag, tagIndex) in localDoc[filter]"
                       :key="tagIndex">
-                    <td class="tag-cell"
-                        :class=" duplicateTags[tag] ? 'has-text-danger' : '' ">
+                    <td class="tag-cell ellipsis"
+                        :class=" duplicateTags[tag] ? 'has-text-danger' : '' "
+                        :title="tag">
                       {{ tag }}
                     </td>
                     <td class="is-size-7 width-20px">

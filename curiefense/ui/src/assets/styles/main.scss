@@ -212,3 +212,18 @@ $color-light: hsl(0, 0%, 96%);
 .button.is-light:focus {
   border-color: #3273dc;
 }
+
+/* Other */
+
+.tag-cell {
+  max-width: 0;
+}
+
+.textarea-field {
+  margin-bottom: 10px;
+}
+
+.document-description {
+  line-height: 1rem;
+  text-size-adjust: none;
+}

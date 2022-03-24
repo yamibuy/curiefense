@@ -67,7 +67,7 @@
               </div>
             </div>
             <div class="field">
-              <a v-if="localDoc && localDoc.source && localDoc.source.indexOf('http') === 0"
+              <a v-if="externalSource"
                  class="is-small has-text-grey is-size-7 is-pulled-right update-now-button"
                  tabindex="0"
                  @click="fetchList"
@@ -85,6 +85,11 @@
                        v-model="localDoc.source"
                        :readonly="readonly"/>
               </div>
+              <p class="help"
+                 v-if="externalSource"
+                 :title="fullFormattedModifiedDate">
+                updated @ {{ formattedModifiedDate }}
+              </p>
             </div>
             <div class="field">
               <response-action :action.sync="localDoc.action"
@@ -93,14 +98,14 @@
                                label-separated-line
                                is-single-input-column/>
             </div>
-            <div class="field">
+            <div class="field textarea-field">
               <label class="label is-small">Description</label>
               <div class="control">
                 <textarea class="is-small textarea document-description"
                           title="Description"
                           @change="emitDocUpdate"
                           v-model="localDoc.description"
-                          rows="2"
+                          rows="5"
                           :readonly="readonly"></textarea>
               </div>
             </div>
@@ -114,16 +119,13 @@
                   </button>
                 </div>
               </div>
-              <p class="help"
-                 :title="fullFormattedModifiedDate">
-                updated @ {{ formattedModifiedDate }}
-              </p>
             </div>
 
           </div>
           <div class="column is-9">
             <entries-relation-list :rule.sync="localDoc.rule"
                                    :editable="editable"
+                                   ref="entriesRelationList"
                                    @update:rule="emitDocUpdate"
                                    @invalid="emitFormInvalid">
             </entries-relation-list>
@@ -161,6 +163,18 @@ export default Vue.extend({
     docs: Array,
   },
 
+  watch: {
+    selectedDoc: {
+      handler: function(val, oldVal) {
+        if (!val || !oldVal || val.id !== oldVal.id) {
+          (this.$refs.entriesRelationList as any)?.cancelAllEntries()
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
+
   computed: {
     sectionsEntriesDisplay(): string {
       const sectionsCounter = (this.localDoc?.rule?.sections?.length !== 1) ? 'sections' : 'section'
@@ -175,6 +189,10 @@ export default Vue.extend({
 
     editable(): boolean {
       return this.localDoc.source === 'self-managed'
+    },
+
+    externalSource(): boolean {
+      return this.localDoc.source?.indexOf('http') === 0
     },
 
     selectedDocTags: {
@@ -221,7 +239,7 @@ export default Vue.extend({
       this.$emit('update:selectedDoc', this.localDoc)
     },
 
-    emitFormInvalid( isFormInvalid: boolean ) {
+    emitFormInvalid(isFormInvalid: boolean) {
       this.$emit('form-invalid', isFormInvalid)
     },
 

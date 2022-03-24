@@ -13,8 +13,13 @@
       "block_mode": true,
       "status": 503,
       "tags": [
+        "geo-city:buford",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-region:georgia",
+        "geo-subregion:nil",
         "all",
-        "geo:united-states",
+        "geo-country:united-states",
         "ip:12-13-14-15",
         "sante",
         "securitypolicy-entry:default",
@@ -22,7 +27,7 @@
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "aclid:--default--",
-        "asn:7018",
+        "geo-asn:7018",
         "tagbyip",
         "contentfilterid:--default--",
         "bot"

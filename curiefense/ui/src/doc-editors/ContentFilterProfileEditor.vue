@@ -2,32 +2,163 @@
   <div>
     <div class="card">
       <div class="card-content">
-        <div class="media">
-          <div class="media-content">
-            <div class="columns">
-              <div class="column is-4">
-                <div class="field">
-                  <label class="label is-small">
-                    Name
-                    <span class="has-text-grey is-pulled-right document-id"
-                          title="Document id">
+        <div class="columns columns-divided pb-6">
+          <div class="column is-4">
+            <div class="field">
+              <label class="label is-small">
+                Name
+                <span class="has-text-grey is-pulled-right document-id"
+                      title="Document id">
                     {{ localDoc.id }}
                   </span>
+              </label>
+              <div class="control">
+                <input class="input is-small document-name"
+                       title="Document name"
+                       placeholder="Document name"
+                       @change="emitDocUpdate"
+                       v-model="localDoc.name"/>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label is-small">
+                Masking Seed
+              </label>
+              <div class="control">
+                <input class="input is-small document-masking-seed"
+                       title="Masking seed"
+                       placeholder="Masking seed"
+                       type="password"
+                       @change="emitDocUpdate"
+                       v-model="localDoc.masking_seed"/>
+              </div>
+            </div>
+            <div class="field ignore-alphanumeric-input-field"
+                 :title="additionalInfoIgnoreAlphanumericInput">
+              <label class="checkbox is-size-7">
+                <input type="checkbox"
+                       class="checkbox-input ignore-alphanumeric-input"
+                       @change="emitDocUpdate"
+                       v-model="localDoc.ignore_alphanum"/>
+                Ignore Alphanumeric Input
+              </label>
+              <span class="icon is-small info-icon">
+                    <i class="fas fa-info-circle"></i>
+                  </span>
+            </div>
+          </div>
+          <div class="column is-4">
+            <div class="field">
+              <label class="label is-small"
+                     :title="additionalInfoContentType">
+                Restrict Content Type
+                <span class="icon is-small info-icon">
+                      <i class="fas fa-info-circle"></i>
+                    </span>
+              </label>
+              <div class="control">
+                <div v-for="contentTypeOption in contentTypeOptions"
+                     :key="contentTypeOption.value"
+                     class="content-type-option-wrapper mb-3">
+                  <label class="checkbox is-size-7">
+                    <input type="checkbox"
+                           @change="updateContentType(contentTypeOption.value, $event.target.checked)"
+                           class="checkbox-input"
+                           :class="`content-type-${contentTypeOption.value}-input`"
+                           :checked="getContentTypeStatus(contentTypeOption.value)">
+                    {{ contentTypeOption.displayName }}
                   </label>
-                  <div class="control">
-                    <input class="input is-small document-name"
-                           title="Document name"
-                           placeholder="Document name"
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="column is-4">
+            <div class="field">
+              <label class="label is-small">
+                Decoding
+              </label>
+              <div class="control">
+                <div v-for="decodingOption in decodingOptions"
+                     :key="decodingOption.value"
+                     class="decoding-option-wrapper mb-3">
+                  <label class="checkbox is-size-7">
+                    <input type="checkbox"
                            @change="emitDocUpdate"
-                           v-model="localDoc.name"/>
-                  </div>
+                           class="checkbox-input"
+                           :class="`decoding-${decodingOption.value}-input`"
+                           v-model="localDoc.decoding[decodingOption.value]">
+                    {{ decodingOption.displayName }}
+                  </label>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <div class="tag-lists-wrapper pb-6">
+          <div class="columns mb-0">
+            <div class="column is-4"
+                 v-for="section in sections"
+                 :key="section">
+              <p class="title is-7 is-uppercase">{{ titles[section] }}</p>
+              <hr class="bar" :class="`bar-${section}`"/>
+              <table class="table is-narrow is-fullwidth">
+                <tbody>
+                <tr v-for="(tag, idx) in localDoc[section]" :key="idx">
+                  <td class="tag-cell ellipsis"
+                      :class=" { 'has-text-danger': duplicateTags[tag] }"
+                      :title="tagMessage(tag) || tag">
+                    {{ tag }}
+                  </td>
+                  <td class="is-size-7 width-20px">
+                    <a title="remove entry"
+                       tabindex="0"
+                       class="is-small has-text-grey remove-entry-button"
+                       @click="removeTag(section, idx)"
+                       @keypress.space.prevent
+                       @keypress.space="removeTag(section, idx)"
+                       @keypress.enter="removeTag(section, idx)">
+                      &ndash;
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <autocomplete-input
+                        v-if="addNewColName === section"
+                        input-type="input"
+                        selection-type="single"
+                        title="Tag"
+                        :minimum-value-length="2"
+                        :clear-input-after-selection="true"
+                        :auto-focus="true"
+                        @keydown.esc="cancelAddNewTag"
+                        @value-submitted="addTag(section, $event)"/>
+                  </td>
+                  <td class="is-size-7 width-20px">
+                    <a title="add new entry"
+                       tabindex="0"
+                       class="is-size-7 width-20px is-small has-text-grey add-new-entry-button"
+                       @click="openTagInput(section)"
+                       @keypress.space.prevent
+                       @keypress.space="openTagInput(section)"
+                       @keypress.enter="openTagInput(section)">
+                      +
+                    </a>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <p class="has-text-danger is-size-7 tags-invalid"
+               v-if="tagsInvalid">
+              Content Filter Profile does not contain any tags, Content Filter Rules will be ineffective.
+            </p>
+          </div>
+        </div>
         <div class="tile is-ancestor px-3 py-3 mx-0 my-0">
-          <div class="tile is-9">
+          <div class="tile is-12">
             <table class="table is-fullwidth">
               <thead>
               <tr>
@@ -46,7 +177,7 @@
                          type="number"
                          @change="emitDocUpdate"
                          title="Max header length"
-                         v-model.number="localDoc.max_header_length"/>
+                         v-model.number="localDoc.headers.max_length"/>
                 </td>
                 <td>
                   <input required
@@ -54,7 +185,7 @@
                          type="number"
                          @change="emitDocUpdate"
                          title="Max cookie length"
-                         v-model.number="localDoc.max_cookie_length"/>
+                         v-model.number="localDoc.cookies.max_length"/>
                 </td>
                 <td>
                   <input required
@@ -62,7 +193,7 @@
                          type="number"
                          @change="emitDocUpdate"
                          title="Max argument length"
-                         v-model.number="localDoc.max_arg_length"/>
+                         v-model.number="localDoc.args.max_length"/>
                 </td>
               </tr>
               <tr>
@@ -73,7 +204,7 @@
                          type="number"
                          @change="emitDocUpdate"
                          title="Max headers count"
-                         v-model.number="localDoc.max_headers_count"/>
+                         v-model.number="localDoc.headers.max_count"/>
                 </td>
                 <td>
                   <input required
@@ -81,7 +212,7 @@
                          type="number"
                          @change="emitDocUpdate"
                          title="Max cookies count"
-                         v-model.number="localDoc.max_cookies_count"/>
+                         v-model.number="localDoc.cookies.max_count"/>
                 </td>
                 <td>
                   <input required
@@ -89,26 +220,11 @@
                          type="number"
                          @change="emitDocUpdate"
                          title="Max arguments count"
-                         v-model.number="localDoc.max_args_count"/>
+                         v-model.number="localDoc.args.max_count"/>
                 </td>
               </tr>
               </tbody>
             </table>
-          </div>
-          <div class="tile is-3">
-            <div class="card">
-              <div class="card-content">
-                <label class="checkbox">
-                  <input type="checkbox"
-                         class="ignore-alphanumeric-input"
-                         @change="emitDocUpdate"
-                         v-model="localDoc.ignore_alphanum"/>
-                  Ignore Alphanumeric input
-                </label>
-                <p class="help">When checked, arguments, headers or cookies, which contain only alpha numeric
-                  characters, will be ignored.</p>
-              </div>
-            </div>
           </div>
         </div>
         <div class="tile is-ancestor px-3 py-3 mx-0 my-0">
@@ -163,7 +279,7 @@
                         <th class="has-text-centered width-25pct">Matching Value</th>
                         <th class="has-text-centered width-5pct">Restrict?</th>
                         <th class="has-text-centered width-5pct">Mask?</th>
-                        <th class="has-text-centered width-30pct">Ignore Content Filter</th>
+                        <th class="has-text-centered width-30pct">Ignore Content Filter Tags</th>
                         <th class="has-text-centered width-5pct">
                           <a v-show="newContentFilterLine !== tab"
                              class="has-text-grey-dark is-small new-parameter-button"
@@ -179,10 +295,10 @@
                              class="has-text-grey-dark is-small cancel-new-parameter"
                              title="Cancel adding new parameter"
                              tabindex="0"
-                             @click="cancelNewParemeter"
+                             @click="cancelNewParameter"
                              @keypress.space.prevent
-                             @keypress.space="cancelNewParemeter"
-                             @keypress.enter="cancelNewParemeter">
+                             @keypress.space="cancelNewParameter"
+                             @keypress.enter="cancelNewParameter">
                             <span class="icon is-small"><i class="fas fa-minus"></i></span>
                           </a>
                         </th>
@@ -218,10 +334,12 @@
                                     <div>
                                       <input required
                                              class="input is-small new-entry-key"
+                                             :class="{ 'is-danger': !newEntry.key && newEntry.keyDirty }"
+                                             @input="newEntry.keyDirty = true"
                                              type="text"
                                              v-model="newEntry.key"
                                              placeholder="Key"
-                                             title="Key" />
+                                             title="Key"/>
                                     </div>
                                   </div>
                                 </div>
@@ -235,8 +353,10 @@
                                    class="input is-small new-entry-reg"
                                    type="text"
                                    v-model="newEntry.reg"
+                                   :class="{ 'is-danger': entryMatchingValueInvalid(newEntry) && newEntry.regDirty }"
+                                   @input="newEntry.regDirty = true"
                                    placeholder="Value"
-                                   title="Value regex" />
+                                   title="Value regex"/>
                             <span class="icon is-small is-left has-text-grey">
                               <i class="fas fa-code"></i>
                             </span>
@@ -258,18 +378,18 @@
                         </td>
                         <td class="width-30pct">
                           <autocomplete-input
-                            input-type="textarea"
-                            :suggestions="entryExclusionsSuggestions(newEntry)"
-                            :clear-input-after-selection="false"
-                            :auto-focus="false"
-                            class="new-entry-exclusions"
-                            selection-type="multiple"
-                            :title="autocompleteTitle"
-                            @value-submitted="updateEntryExclusions(newEntry, $event)" />
+                              input-type="input"
+                              :clear-input-after-selection="false"
+                              :auto-focus="false"
+                              class="new-entry-exclusions"
+                              selection-type="multiple"
+                              :title="autocompleteTitle"
+                              @value-submitted="updateEntryExclusions(newEntry, $event)"/>
                         </td>
                         <td class="has-text-centered width-5pct">
-                          <button title="Add new parameter"
-                                  class="button is-light is-small confirm-add-new-parameter"
+                          <button class="button is-light is-small confirm-add-new-parameter"
+                                  :disabled="!newEntry.key || entryMatchingValueInvalid(newEntry)"
+                                  :title="addNewParameterTitle"
                                   @click="addNewParameter">
                             <span class="icon is-small"><i class="fas fa-plus fa-xs"></i></span>
                           </button>
@@ -283,6 +403,7 @@
                             <p class="control has-icons-left">
                               <input required
                                      class="input is-small entry-key"
+                                     :class="{ 'is-danger': !entry.key }"
                                      type="text"
                                      @change="emitDocUpdate"
                                      v-model="entry.key"
@@ -298,11 +419,12 @@
                           <p class="control has-icons-left">
                             <input required
                                    class="input is-small entry-reg"
+                                   :class="{ 'is-danger': entryMatchingValueInvalid(entry) }"
                                    type="text"
                                    @change="emitDocUpdate"
                                    v-model="entry.reg"
                                    placeholder="Value"
-                                   title="Value regex" />
+                                   title="Value regex"/>
                             <span class="icon is-small is-left has-text-grey">
                               <i class="fas fa-code"></i>
                             </span>
@@ -326,15 +448,14 @@
                         </td>
                         <td class="width-30pct">
                           <autocomplete-input
-                            input-type="textarea"
-                            :suggestions="entryExclusionsSuggestions(entry)"
-                            :clear-input-after-selection="false"
-                            :initial-value="unpackExclusions(entry.exclusions)"
-                            :auto-focus="false"
-                            class="entry-exclusions"
-                            selection-type="multiple"
-                            :title="autocompleteTitle"
-                            @value-submitted="updateEntryExclusions(entry, $event)" />
+                              input-type="input"
+                              :clear-input-after-selection="false"
+                              :initial-value="exclusionsToString(entry.exclusions)"
+                              :auto-focus="false"
+                              class="entry-exclusions"
+                              selection-type="multiple"
+                              :title="autocompleteTitle"
+                              @value-submitted="updateEntryExclusions(entry, $event)"/>
                         </td>
                         <td class="has-text-centered width-5pct">
                           <button title="Delete entry"
@@ -355,6 +476,7 @@
                             <p class="control has-icons-left">
                               <input required
                                      class="input is-small entry-key"
+                                     :class="{ 'is-danger': !entry.key }"
                                      type="text"
                                      @change="emitDocUpdate"
                                      v-model="entry.key"
@@ -370,6 +492,7 @@
                           <p class="control has-icons-left">
                             <input required
                                    class="input is-small entry-reg"
+                                   :class="{ 'is-danger': entryMatchingValueInvalid(entry) }"
                                    type="text"
                                    @change="emitDocUpdate"
                                    v-model="entry.reg"
@@ -385,7 +508,7 @@
                             <input type="checkbox"
                                    class="entry-restrict"
                                    @change="emitDocUpdate"
-                                   v-model="entry.restrict" />
+                                   v-model="entry.restrict"/>
                           </label>
                         </td>
                         <td class="has-text-centered width-5pct">
@@ -393,20 +516,19 @@
                             <input type="checkbox"
                                    class="entry-mask"
                                    @change="emitDocUpdate"
-                                   v-model="entry.mask" />
+                                   v-model="entry.mask"/>
                           </label>
                         </td>
                         <td class="width-30pct">
                           <autocomplete-input
-                            input-type="textarea"
-                            :suggestions="entryExclusionsSuggestions(entry)"
-                            :clear-input-after-selection="false"
-                            :initial-value="unpackExclusions(entry.exclusions)"
-                            :auto-focus="false"
-                            class="entry-exclusions"
-                            selection-type="multiple"
-                            :title="autocompleteTitle"
-                            @value-submitted="updateEntryExclusions(entry, $event)" />
+                              input-type="input"
+                              :clear-input-after-selection="false"
+                              :initial-value="exclusionsToString(entry.exclusions)"
+                              :auto-focus="false"
+                              class="entry-exclusions"
+                              selection-type="multiple"
+                              :title="autocompleteTitle"
+                              @value-submitted="updateEntryExclusions(entry, $event)"/>
                         </td>
                         <td class="has-text-centered width-5pct">
                           <button title="Delete entry"
@@ -438,11 +560,17 @@ import _ from 'lodash'
 import DatasetsUtils from '@/assets/DatasetsUtils.ts'
 import Vue from 'vue'
 import {
-  ArgsCookiesHeadersType, NamesRegexType, ContentFilterEntryMatch, ContentFilterProfile, ContentFilterIgnoreType,
-  ContentFilterRuleGroup, ContentFilterRule,
+  ArgsCookiesHeadersType,
+  ContentFilterEntryMatch,
+  ContentFilterProfile,
+  ContentFilterProfileSection,
+  ContentFilterProfileSectionType,
+  ContentFilterProfileTagLists,
+  NamesRegexType,
 } from '@/types'
 import AutocompleteInput, {AutocompleteSuggestion} from '@/components/AutocompleteInput.vue'
-import RequestsUtils from '@/assets/RequestsUtils'
+import {Dictionary} from 'vue-router/types/router'
+import Utils from '@/assets/Utils'
 
 export default Vue.extend({
   name: 'ContentFilterEditor',
@@ -460,27 +588,110 @@ export default Vue.extend({
       reg: '',
       restrict: false,
       mask: false,
-      exclusions: {},
+      exclusions: [],
+      keyDirty: false,
+      regDirty: false,
+    }
+    const defaultContentFilterProfileSection: ContentFilterProfileSection = {
+      names: [] as ContentFilterEntryMatch[],
+      regex: [] as ContentFilterEntryMatch[],
+      max_count: 0,
+      max_length: 0,
+    }
+    const defaultContentFilterProfileDecoding: ContentFilterProfile['decoding'] = {
+      base64: true,
+      dual: false,
+      html: false,
+      unicode: false,
     }
     return {
+      sections: ['ignore', 'active', 'report'] as ContentFilterProfileTagLists[],
+      addNewColName: null,
       tab: 'args' as ArgsCookiesHeadersType,
       newContentFilterLine: null as ArgsCookiesHeadersType,
       newEntry: defaultNewEntry,
       titles: DatasetsUtils.titles,
       defaultNewEntry: defaultNewEntry,
+      defaultContentFilterProfileSection: defaultContentFilterProfileSection,
+      defaultContentFilterProfileDecoding: defaultContentFilterProfileDecoding,
       contentFilterSuggestions: [] as AutocompleteSuggestion[],
-      contentFilter: {
-        group: [] as ContentFilterRuleGroup[],
-        rule: [] as ContentFilterRule[],
-      },
-      autocompleteTitle: 'Rule or group name',
-      groupSuffix: '(Group)',
+      autocompleteTitle: 'Space separated content filter rules tags',
+      additionalInfoIgnoreAlphanumericInput: 'When checked, arguments, headers or cookies, ' +
+          'which contain only alpha numeric characters, will be ignored.',
+      additionalInfoContentType: 'When checked, only the selected types will be allowed. ' +
+          'Malformed data will get rejected',
+      decodingOptions: [
+        {
+          value: 'base64',
+          displayName: 'Base64',
+        },
+        {
+          value: 'dual',
+          displayName: 'URL',
+        },
+        {
+          value: 'html',
+          displayName: 'HTML',
+        },
+        {
+          value: 'unicode',
+          displayName: 'Unicode',
+        },
+      ],
+      contentTypeOptions: [
+        {
+          value: 'json',
+          displayName: 'JSON',
+        },
+        {
+          value: 'multipart_form',
+          displayName: 'Multipart Form',
+        },
+        {
+          value: 'url_encoded',
+          displayName: 'URL Encoded',
+        },
+        {
+          value: 'xml',
+          displayName: 'XML',
+        },
+      ],
     }
   },
 
   computed: {
     localDoc(): ContentFilterProfile {
       return _.cloneDeep(this.selectedDoc)
+    },
+
+    duplicateTags(): Dictionary<string> {
+      const doc = this.localDoc
+      const allTags = _.concat(doc['active'], doc['report'], doc['ignore'])
+      const dupTags = _.filter(allTags, (val, i, iteratee) => _.includes(iteratee, val, i + 1))
+      const result = _.fromPairs(_.zip(dupTags, dupTags))
+      this.$emit('form-invalid', !!_.size(result))
+      return result
+    },
+
+    tagsInvalid(): boolean {
+      const doc = this.localDoc
+      if (!doc) {
+        return true
+      }
+      const activeValid = this.localDoc.active?.length > 0
+      const reportValid = this.localDoc.report?.length > 0
+      const ignoreValid = this.localDoc.ignore?.length > 0
+      return !activeValid && !reportValid && !ignoreValid
+    },
+
+    addNewParameterTitle(): string {
+      if (!this.newEntry.key) {
+        return 'Parameter cannot be empty'
+      }
+      if (this.entryMatchingValueInvalid(this.newEntry)) {
+        return 'Matching Value cannot be empty if Mask is unchecked & Ignore Tags is empty'
+      }
+      return 'Add new parameter'
     },
   },
 
@@ -494,63 +705,21 @@ export default Vue.extend({
       this.newEntry = {...this.defaultNewEntry}
     },
 
-    cancelNewParemeter() {
+    cancelNewParameter() {
       this.newContentFilterLine = null
       this.newEntry = {...this.defaultNewEntry}
     },
 
     addNewParameter() {
       const newEntry = _.cloneDeep(this.newEntry)
-      this.newEntry = null
+      this.newEntry = {...this.defaultNewEntry}
       this.newContentFilterLine = null
       const type: NamesRegexType = newEntry.type
       delete newEntry.type
+      delete newEntry.keyDirty
+      delete newEntry.regDirty
       this.localDoc[this.tab][type].unshift(newEntry)
       this.emitDocUpdate()
-    },
-
-    updateEntryExclusions(entry: ContentFilterEntryMatch, exclusions: string) {
-      const result: ContentFilterEntryMatch['exclusions'] = {}
-      const exclusionsArray: string[] = exclusions.trim().split('\n')
-      exclusionsArray.forEach((ex) => {
-        const exclusionType = ex.endsWith(this.groupSuffix) ? 'group' : 'rule'
-        const exId = this.getContentFilterId(exclusionType, ex)
-        if ( exId ) {
-          result[exId] = exclusionType
-        }
-      })
-      entry.exclusions = result
-      this.emitDocUpdate()
-    },
-
-    entryExclusionsSuggestions({exclusions}: ContentFilterEntryMatch) {
-      return _.filter(this.contentFilterSuggestions, ({value}) => {
-        const exclusionType = value.endsWith(this.groupSuffix) ? 'group' : 'rule'
-        const exId = this.getContentFilterId(exclusionType, value)
-        return !exclusions?.[exId]
-      })
-    },
-
-    unpackExclusions(exclusions: ContentFilterEntryMatch['exclusions']) {
-      const result: string[] = []
-      Object.keys(exclusions).forEach(
-        (exId) => {
-          const exclusionType = exclusions[exId]
-          const name = (this.contentFilter[exclusionType] as (ContentFilterRule | ContentFilterRuleGroup)[])?.find(
-            ({id}) => id === exId,
-          )?.name
-          if (name) {
-            result.push(exclusionType === 'group' ? `${name} ${this.groupSuffix}` : name)
-          }
-        },
-      )
-      return result.join('\n')
-    },
-
-    getContentFilterId(exclusionType: ContentFilterIgnoreType, exclusions: string) {
-      return (this.contentFilter[exclusionType] as (ContentFilterRule | ContentFilterRuleGroup)[]).find(
-        ({name}) => exclusions.includes(name),
-      )?.id
     },
 
     genRowKey(tab: string, type: string, idx: number) {
@@ -562,38 +731,145 @@ export default Vue.extend({
       this.emitDocUpdate()
     },
 
-    async loadContentFilterRuleIDs() {
-      const [cfRules, cfGroups] = await Promise.all([
-        RequestsUtils.sendRequest({
-          methodName: 'GET',
-          url: `configs/${this.selectedBranch}/d/contentfilterrules/`,
-          config: {headers: {'x-fields': 'id, name'}},
-        }),
-        RequestsUtils.sendRequest({
-          methodName: 'GET',
-          url: `configs/${this.selectedBranch}/d/contentfiltergroups/`,
-          config: {headers: {'x-fields': 'id, name'}},
-        }),
-      ])
-      this.contentFilter = {
-        rule: cfRules.data,
-        group: cfGroups.data,
+    updateEntryExclusions(entry: ContentFilterEntryMatch, exclusions: string) {
+      entry.exclusions = exclusions.length > 0 ? _.map(exclusions.split(' '), (tag) => {
+        return tag.trim()
+      }) : []
+      this.emitDocUpdate()
+    },
+
+    exclusionsToString(exclusions: ContentFilterEntryMatch['exclusions']) {
+      if (exclusions && exclusions.length) {
+        return exclusions.join(' ')
       }
-      this.contentFilterSuggestions = [
-        ..._.sortBy(_.map(this.contentFilter.rule, ({name}) => ({value: name}))),
-        ..._.sortBy(_.map(this.contentFilter.group, ({name}) => ({value: `${name} ${this.groupSuffix}`}))),
-      ]
+      return ''
+    },
+
+    normalizeDocSections(section: ContentFilterProfileSectionType) {
+      this.localDoc[section] = _.cloneDeep(this.defaultContentFilterProfileSection)
+      this.emitDocUpdate()
+    },
+
+    normalizeDocDecoding() {
+      this.localDoc.decoding = _.cloneDeep(this.defaultContentFilterProfileDecoding)
+      this.emitDocUpdate()
+    },
+
+    openTagInput(section: ContentFilterProfileTagLists) {
+      this.addNewColName = section
+    },
+
+    cancelAddNewTag() {
+      this.addNewColName = null
+    },
+
+    addTag(section: ContentFilterProfileTagLists, entry: string) {
+      entry = Utils.removeExtraWhitespaces(entry).trim()
+      this.localDoc[section].push(entry)
+      this.emitDocUpdate()
+    },
+
+    removeTag(section: ContentFilterProfileTagLists, index: number) {
+      this.localDoc[section].splice(index, 1)
+      this.addNewColName = null
+      this.emitDocUpdate()
+    },
+
+    tagMessage(tag: string) {
+      let message = ''
+      if (this.duplicateTags[tag]) {
+        message = `[${tag}] is duplicated`
+      }
+      return message
+    },
+
+    getContentTypeStatus(value: string): boolean {
+      return this.localDoc.content_type?.includes(value)
+    },
+
+    updateContentType(value: string, state: boolean): void {
+      if (state) {
+        this.localDoc.content_type.push(value)
+        this.emitDocUpdate()
+      } else {
+        const index = this.localDoc.content_type.indexOf(value)
+        if (index > -1) {
+          this.localDoc.content_type.splice(index, 1)
+          this.emitDocUpdate()
+        }
+      }
+    },
+
+    entryMatchingValueInvalid(entry: ContentFilterEntryMatch): boolean {
+      const matchingValueEmpty = !entry.reg
+      if (!matchingValueEmpty) {
+        return false
+      }
+      const maskChecked = entry.mask
+      const exclusionTagsIsEmpty = !entry.exclusions.length
+      return (!maskChecked && exclusionTagsIsEmpty)
     },
   },
 
-  created() {
-    this.loadContentFilterRuleIDs()
+  watch: {
+    selectedDoc: {
+      handler: function(value) {
+        // adding necessary fields to all local doc sections if missing
+        const sections: ContentFilterProfileSectionType[] = ['args', 'cookies', 'headers', 'path']
+        for (let i = 0; i < sections.length; i++) {
+          if (!value[sections[i]]) {
+            this.normalizeDocSections(sections[i])
+          }
+        }
+        if (!value['decoding']) {
+          this.normalizeDocDecoding()
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
   },
 })
 </script>
 
-<style>
-  .dropdown .dropdown-menu {
-    width: auto;
-  }
+<style scoped lang="scss">
+
+@import 'node_modules/bulma/sass/utilities/initial-variables.sass';
+@import 'node_modules/bulma/sass/utilities/functions.sass';
+@import 'node_modules/bulma/sass/utilities/derived-variables.sass';
+@import 'node_modules/bulma/sass/helpers/color.sass';
+
+.dropdown .dropdown-menu {
+  width: auto;
+}
+
+.bar {
+  margin: 1rem 0 0.5rem;
+}
+
+.bar-active {
+  @extend .has-background-grey-light;
+}
+
+.bar-report {
+  @extend .has-background-grey-light;
+}
+
+.bar-ignore {
+  @extend .has-background-grey-light;
+}
+
+::v-deep .tag-input {
+  font-size: 0.58rem;
+}
+
+.checkbox-input {
+  vertical-align: text-bottom;
+}
+
+.info-icon {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
 </style>

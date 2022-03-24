@@ -7,7 +7,17 @@ import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
-import {ACLProfile, Branch, Commit, ContentFilterProfile, Document, FlowControlPolicy, GlobalFilter, RateLimit, SecurityPolicy} from '@/types'
+import {
+  ACLProfile,
+  Branch,
+  Commit,
+  ContentFilterProfile,
+  Document,
+  FlowControlPolicy,
+  GlobalFilter,
+  RateLimit,
+  SecurityPolicy,
+} from '@/types'
 
 jest.mock('axios')
 
@@ -655,15 +665,41 @@ describe('DocumentEditor.vue', () => {
       'id': '009e846e819e',
       'name': 'content filter',
       'ignore_alphanum': true,
-      'max_header_length': 1024,
-      'max_cookie_length': 2048,
-      'max_arg_length': 1536,
-      'max_headers_count': 36,
-      'max_cookies_count': 42,
-      'max_args_count': 512,
-      'args': {'names': [], 'regex': []},
-      'headers': {'names': [], 'regex': []},
-      'cookies': {'names': [], 'regex': []},
+      'headers': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'cookies': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'args': {
+        'names': [],
+        'regex': [],
+        'max_count': 512,
+        'max_length': 1024,
+      },
+      'path': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'decoding': {
+        base64: true,
+        dual: false,
+        html: false,
+        unicode: false,
+      },
+      'masking_seed': '',
+      'content_type': [],
+      'active': [],
+      'report': [],
+      'ignore': [],
     }]
     rateLimitsDocs = [{
       'id': 'f971e92459e2',
@@ -919,7 +955,7 @@ describe('DocumentEditor.vue', () => {
       // allow all requests to finish
       setImmediate(() => {
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(2)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         done()
       })
     })
@@ -949,7 +985,7 @@ describe('DocumentEditor.vue', () => {
         const branchSelection = wrapper.find('.branch-selection')
         expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(4)
         const docSelection = wrapper.find('.doc-selection')
         expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(1)
         done()
@@ -967,7 +1003,7 @@ describe('DocumentEditor.vue', () => {
         const branchSelection = wrapper.find('.branch-selection')
         expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(4)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(2)
         const docSelection = wrapper.find('.doc-selection')
         expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         done()
@@ -985,7 +1021,7 @@ describe('DocumentEditor.vue', () => {
         const branchSelection = wrapper.find('.branch-selection')
         expect((branchSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         const docTypeSelection = wrapper.find('.doc-type-selection')
-        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
+        expect((docTypeSelection.element as HTMLSelectElement).selectedIndex).toEqual(4)
         const docSelection = wrapper.find('.doc-selection')
         expect((docSelection.element as HTMLSelectElement).selectedIndex).toEqual(0)
         done()
@@ -1280,7 +1316,7 @@ describe('DocumentEditor.vue', () => {
       const docTypeSelection = wrapper.find('.doc-type-selection')
       docTypeSelection.trigger('click')
       const docTypeOptions = docTypeSelection.findAll('option')
-      docTypeOptions.at(2).setSelected()
+      docTypeOptions.at(0).setSelected()
       // allow all requests to finish
       setImmediate(() => {
         // switch to a different document
@@ -1347,7 +1383,7 @@ describe('DocumentEditor.vue', () => {
       const docTypeSelection = wrapper.find('.doc-type-selection')
       docTypeSelection.trigger('click')
       const options = docTypeSelection.findAll('option')
-      options.at(4).setSelected()
+      options.at(2).setSelected()
       // allow all requests to finish
       setImmediate(async () => {
         const originalDoc = (wrapper.vm as any).selectedDoc
@@ -1408,8 +1444,8 @@ describe('DocumentEditor.vue', () => {
 
     test('should not be able to delete a document if its id is __default__', async () => {
       const deleteSpy = jest.spyOn(axios, 'delete')
-      deleteSpy.mockImplementation(() => Promise.resolve());
-      (wrapper.vm as any).selectedDocID = '__default__'
+      deleteSpy.mockImplementation(() => Promise.resolve())
+      wrapper.setData({selectedDocID: '__default__'})
       await Vue.nextTick()
       const deleteDocumentButton = wrapper.find('.delete-document-button')
       deleteDocumentButton.trigger('click')
@@ -1425,14 +1461,15 @@ describe('DocumentEditor.vue', () => {
       options.at(1).setSelected()
       await Vue.nextTick()
       const deleteSpy = jest.spyOn(axios, 'delete')
-      deleteSpy.mockImplementation(() => Promise.resolve());
-      (wrapper.vm as any).selectedDoc.id = '__default__'
+      deleteSpy.mockImplementation(() => Promise.resolve())
+      wrapper.setData({selectedDoc: {id: '__default__'}})
       const deleteDocumentButton = wrapper.find('.delete-document-button')
       deleteDocumentButton.trigger('click')
       await Vue.nextTick()
       expect(deleteSpy).not.toHaveBeenCalled()
     })
 
+    // eslint-disable-next-line max-len
     test('should not be able to delete an Content Filter Profile document if it is referenced by a security policy', async () => {
       // switch to Content Filter Profiles
       const docTypeSelection = wrapper.find('.doc-type-selection')
@@ -1442,8 +1479,8 @@ describe('DocumentEditor.vue', () => {
       await Vue.nextTick()
       await Vue.nextTick()
       const deleteSpy = jest.spyOn(axios, 'delete')
-      deleteSpy.mockImplementation(() => Promise.resolve());
-      (wrapper.vm as any).selectedDoc.id = '009e846e819e'
+      deleteSpy.mockImplementation(() => Promise.resolve())
+      wrapper.setData({selectedDoc: {id: '009e846e819e'}})
       const deleteDocumentButton = wrapper.find('.delete-document-button')
       deleteDocumentButton.trigger('click')
       await Vue.nextTick()
@@ -1459,8 +1496,8 @@ describe('DocumentEditor.vue', () => {
       await Vue.nextTick()
       await Vue.nextTick()
       const deleteSpy = jest.spyOn(axios, 'delete')
-      deleteSpy.mockImplementation(() => Promise.resolve());
-      (wrapper.vm as any).selectedDoc.id = 'f971e92459e2'
+      deleteSpy.mockImplementation(() => Promise.resolve())
+      wrapper.setData({selectedDoc: {id: 'f971e92459e2'}})
       const deleteDocumentButton = wrapper.find('.delete-document-button')
       deleteDocumentButton.trigger('click')
       await Vue.nextTick()

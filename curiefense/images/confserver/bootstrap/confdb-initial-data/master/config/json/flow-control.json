@@ -1,8 +1,15 @@
 [
     {
-        "exclude": [],
-        "include": ["all"],
+        "id": "c03dabe4b9ca",
         "name": "Flow Control Policy Example",
+        "description": "New Flow Control Notes and Remarks",
+        "active": true,
+        "include": ["all"],
+        "exclude": [],
+        "timeframe": 60,
+        "action": {
+            "type": "default"
+        },
         "key": [
             {
                 "attrs": "ip"
@@ -27,13 +34,6 @@
                 },
                 "args": {}
             }
-        ],
-        "active": true,
-        "description": "New Flow Control Notes and Remarks",
-        "action": {
-            "type": "default"
-        },
-        "timeframe": 60,
-        "id": "c03dabe4b9ca"
+        ]
     }
 ]

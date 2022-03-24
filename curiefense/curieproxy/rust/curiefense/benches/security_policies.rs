@@ -4,25 +4,25 @@ use curiefense::config::raw::AclProfile;
 use curiefense::config::utils::Matching;
 use curiefense::config::Config;
 use curiefense::logs::Logs;
-use curiefense::requestfields::RequestField;
 use curiefense::securitypolicy::match_securitypolicy;
-use curiefense::utils::{GeoIp, QueryInfo, RInfo, RequestInfo, RequestMeta};
 
 use criterion::*;
-use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 fn gen_bogus_config(sz: usize) -> Config {
     let mut def = Config::empty();
     def.securitypolicies = (0..sz)
-        .map(|i| Matching {
-            matcher: Regex::new(&format!("^dummyhost_{}$", i)).unwrap(),
-            inner: HostMap {
-                id: format!("abcd{}", i),
-                name: format!("Dummy hostmap {}", i),
-                entries: Vec::new(),
-                default: None,
-            },
+        .map(|i| {
+            Matching::from_str(
+                &format!("^dummyhost_{}$", i),
+                HostMap {
+                    id: format!("abcd{}", i),
+                    name: format!("Dummy hostmap {}", i),
+                    entries: Vec::new(),
+                    default: None,
+                },
+            )
+            .unwrap()
         })
         .collect();
 
@@ -38,16 +38,19 @@ fn gen_bogus_config(sz: usize) -> Config {
     };
 
     let dummy_entries: Vec<Matching<SecurityPolicy>> = (0..sz)
-        .map(|i| Matching {
-            matcher: Regex::new(&format!("/dummy/url/{}", i)).unwrap(),
-            inner: SecurityPolicy {
-                name: format!("Dummy securitypolicy {}", i),
-                acl_active: false,
-                acl_profile: acl_profile.clone(),
-                content_filter_active: false,
-                content_filter_profile: ContentFilterProfile::default(),
-                limits: Vec::new(),
-            },
+        .map(|i| {
+            Matching::from_str(
+                &format!("/dummy/url/{}", i),
+                SecurityPolicy {
+                    name: format!("Dummy securitypolicy {}", i),
+                    acl_active: false,
+                    acl_profile: acl_profile.clone(),
+                    content_filter_active: false,
+                    content_filter_profile: ContentFilterProfile::default_from_seed("seed"),
+                    limits: Vec::new(),
+                },
+            )
+            .unwrap()
         })
         .collect();
 
@@ -60,7 +63,7 @@ fn gen_bogus_config(sz: usize) -> Config {
             acl_active: false,
             acl_profile,
             content_filter_active: false,
-            content_filter_profile: ContentFilterProfile::default(),
+            content_filter_profile: ContentFilterProfile::default_from_seed("seed"),
             limits: Vec::new(),
         }),
     });
@@ -68,52 +71,15 @@ fn gen_bogus_config(sz: usize) -> Config {
     def
 }
 
-fn gen_rinfo() -> RequestInfo {
-    RequestInfo {
-        cookies: RequestField::default(),
-        headers: RequestField::default(),
-        rinfo: RInfo {
-            meta: RequestMeta {
-                authority: Some("my.host.name".into()),
-                method: "GET".into(),
-                extra: HashMap::new(),
-                path: "/non/matching/path".into(),
-            },
-            host: "my.host.name".into(),
-            geoip: GeoIp {
-                ipstr: "1.2.3.4".into(),
-                ip: None,
-                location: None,
-                in_eu: None,
-                city_name: None,
-                country_iso: None,
-                country_name: None,
-                continent_name: None,
-                continent_code: None,
-                asn: None,
-                company: None,
-                region: None,
-                subregion: None,
-            },
-            qinfo: QueryInfo {
-                qpath: "/non/matching/path".into(),
-                query: String::new(),
-                uri: None,
-                args: RequestField::default(),
-            },
-        },
-    }
-}
-
 fn forms_string_map(c: &mut Criterion) {
     let mut group = c.benchmark_group("Security Policy search");
-    let rinfo = gen_rinfo();
     for sz in [10, 100, 500, 1000].iter() {
         group.bench_with_input(BenchmarkId::from_parameter(sz), sz, |b, &size| {
             let cfg = gen_bogus_config(size);
             b.iter(|| {
                 let mut logs = Logs::default();
-                let (_, umap) = match_securitypolicy(black_box(&rinfo), black_box(&cfg), &mut logs).unwrap();
+                let (_, umap) =
+                    match_securitypolicy("my.host.name", "/non/matching/path", black_box(&cfg), &mut logs).unwrap();
                 assert_eq!(umap.name, "selected");
             })
         });

@@ -46,7 +46,7 @@
       ":path": "/limits/ban-test",
       ":authority": "localhost:30081"
     },
-    "delay": 5,
+    "delay": 2,
     "pass": false
   },
   {

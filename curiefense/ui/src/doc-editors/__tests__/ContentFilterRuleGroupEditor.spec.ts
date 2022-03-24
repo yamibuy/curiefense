@@ -13,15 +13,16 @@ describe('ContentFilterRuleGroupEditor.vue', () => {
   let selectedDoc: ContentFilterRuleGroup
   const ALL_RULES_NUMBER = 30
   const DOC_RULES_NUMBER = 25
-  const docExample = {
+  const docExample: ContentFilterRule = {
     'id': '100000',
     'name': '100000',
     'msg': 'SQLi Attempt (Conditional Operator Detected)',
     'operand': '\\s(and|or)\\s+\\d+\\s+.*between\\s.*\\d+\\s+and\\s+\\d+.*',
-    'severity': 5,
-    'certainity': 5,
+    'risk': 5,
+    'description': 'SQL injection',
     'category': 'sqli',
     'subcategory': 'statement injection',
+    'tags': [],
   }
   const selectedBranch = 'master'
   beforeEach(() => {
@@ -29,6 +30,8 @@ describe('ContentFilterRuleGroupEditor.vue', () => {
       ...docExample,
       id: `${parseInt(docExample['id']) + index}`,
       name: `${parseInt(docExample['id']) + index}`,
+      description: '',
+      risk: 1,
     }))
     selectedDoc = {
       id: '1',

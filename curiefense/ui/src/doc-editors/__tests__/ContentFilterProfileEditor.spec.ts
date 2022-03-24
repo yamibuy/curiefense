@@ -2,8 +2,17 @@ import ContentFilterEditor from '@/doc-editors/ContentFilterProfileEditor.vue'
 import {beforeEach, describe, expect, jest, test} from '@jest/globals'
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import Vue from 'vue'
-import {ArgsCookiesHeadersType, NamesRegexType, ContentFilterProfile, ContentFilterRuleGroup, ContentFilterRule} from '@/types'
+import {
+  ArgsCookiesHeadersType,
+  ContentFilterEntryMatch,
+  ContentFilterProfile,
+  ContentFilterProfileSection,
+  ContentFilterRule,
+  ContentFilterRuleGroup,
+  NamesRegexType,
+} from '@/types'
 import AutocompleteInput from '@/components/AutocompleteInput.vue'
+// @ts-ignore
 import _ from 'lodash'
 import axios from 'axios'
 
@@ -14,20 +23,46 @@ describe('ContentFilterProfileEditor.vue', () => {
   let wrapper: Wrapper<Vue>
   let contentFilterRulesDocs: ContentFilterRule[]
   let contentFilterGroupsDocs: ContentFilterRuleGroup[]
-  beforeEach(() => {
+  beforeEach(async () => {
     docs = [{
       'id': '__default__',
       'name': 'default contentfilter',
       'ignore_alphanum': true,
-      'max_header_length': 1024,
-      'max_cookie_length': 2048,
-      'max_arg_length': 1536,
-      'max_headers_count': 36,
-      'max_cookies_count': 42,
-      'max_args_count': 512,
-      'args': {'names': [], 'regex': []},
-      'headers': {'names': [], 'regex': []},
-      'cookies': {'names': [], 'regex': []},
+      'headers': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'cookies': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'args': {
+        'names': [],
+        'regex': [],
+        'max_count': 512,
+        'max_length': 1024,
+      },
+      'path': {
+        'names': [],
+        'regex': [],
+        'max_count': 42,
+        'max_length': 1024,
+      },
+      'decoding': {
+        base64: true,
+        dual: false,
+        html: false,
+        unicode: false,
+      },
+      'masking_seed': '',
+      'content_type': [],
+      'active': [],
+      'report': [],
+      'ignore': [],
     }]
     contentFilterRulesDocs = [
       {
@@ -35,30 +70,33 @@ describe('ContentFilterProfileEditor.vue', () => {
         'name': '100000',
         'msg': 'SQLi Attempt (Conditional Operator Detected)',
         'operand': '\\s(and|or)\\s+\\d+\\s+.*between\\s.*\\d+\\s+and\\s+\\d+.*',
-        'severity': 5,
-        'certainity': 5,
+        'risk': 5,
+        'description': '',
         'category': 'sqli',
         'subcategory': 'statement injection',
+        'tags': [],
       },
       {
         'id': '100001',
         'name': '100001',
         'subcategory': 'statement injection',
         'category': 'sqli',
-        'certainity': 5,
-        'severity': 5,
+        'risk': 5,
+        'description': '',
         'operand': '\\s(and|or)\\s+["\']\\w+["\']\\s+.*between\\s.*["\']\\w+["\']\\s+and\\s+["\']\\w+.*',
         'msg': 'SQLi Attempt (Conditional Operator Detected)',
+        'tags': [],
       },
       {
         'id': '100002',
         'name': '100002',
         'subcategory': 'statement injection',
         'category': 'sqli',
-        'certainity': 5,
-        'severity': 5,
+        'risk': 5,
+        'description': '',
         'operand': '\\W(\\s*)?(and|or)\\s.*(\'|").+(\'|")(\\s+)?(=|>|<|>=|<=).*(\'|").+',
         'msg': 'SQLi Attempt (Conditional Operator Detected)',
+        'tags': [],
       },
     ]
     contentFilterGroupsDocs = [
@@ -82,12 +120,12 @@ describe('ContentFilterProfileEditor.vue', () => {
       const branch = (wrapper.vm as any).selectedBranch
       if (path === `/conf/api/v2/configs/${branch}/d/contentfilterrules/`) {
         if (config && config.headers && config.headers['x-fields'] === 'id, name') {
-          return Promise.resolve({data: _.map(contentFilterRulesDocs, (i) => _.pick(i, 'id', 'name'))})
+          return Promise.resolve({data: _.map(contentFilterRulesDocs, (i: any) => _.pick(i, 'id', 'name'))})
         }
         return Promise.resolve({data: contentFilterRulesDocs})
       } else if (path === `/conf/api/v2/configs/${branch}/d/contentfiltergroups/`) {
         if (config?.headers?.['x-fields'] === 'id, name') {
-          return Promise.resolve({data: _.map(contentFilterGroupsDocs, (i) => _.pick(i, 'id', 'name'))})
+          return Promise.resolve({data: _.map(contentFilterGroupsDocs, (i: any) => _.pick(i, 'id', 'name'))})
         }
         return Promise.resolve({data: contentFilterGroupsDocs})
       }
@@ -105,6 +143,7 @@ describe('ContentFilterProfileEditor.vue', () => {
         'update:selectedDoc': onUpdate,
       },
     })
+    await Vue.nextTick()
   })
 
   describe('form data', () => {
@@ -119,32 +158,32 @@ describe('ContentFilterProfileEditor.vue', () => {
 
     test('should have correct max header length in input', () => {
       const element = wrapper.find('.max-header-length-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].max_header_length.toString())
+      expect(element.value).toEqual(docs[0].headers.max_length.toString())
     })
 
     test('should have correct max cookie length in input', () => {
       const element = wrapper.find('.max-cookie-length-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].max_cookie_length.toString())
+      expect(element.value).toEqual(docs[0].cookies.max_length.toString())
     })
 
     test('should have correct max arg length in input', () => {
       const element = wrapper.find('.max-arg-length-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].max_arg_length.toString())
+      expect(element.value).toEqual(docs[0].args.max_length.toString())
     })
 
     test('should have correct max headers count in input', () => {
       const element = wrapper.find('.max-headers-count-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].max_headers_count.toString())
+      expect(element.value).toEqual(docs[0].headers.max_count.toString())
     })
 
     test('should have correct max cookies count in input', () => {
       const element = wrapper.find('.max-cookies-count-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].max_cookies_count.toString())
+      expect(element.value).toEqual(docs[0].cookies.max_count.toString())
     })
 
     test('should have correct max args count in input', () => {
       const element = wrapper.find('.max-args-count-input').element as HTMLInputElement
-      expect(element.value).toEqual(docs[0].max_args_count.toString())
+      expect(element.value).toEqual(docs[0].args.max_count.toString())
     })
 
     test('should have correct ignore alphanumeric boolean in checkbox input', () => {
@@ -153,33 +192,131 @@ describe('ContentFilterProfileEditor.vue', () => {
     })
   })
 
+  describe('normalize sections', () => {
+    describe('with missing sections', () => {
+      let docsForNormalization: ContentFilterProfile[]
+      let defaultSectionsValue: ContentFilterProfileSection
+      beforeEach(async () => {
+        // TS ignore because we want to test the status of normalization where some of the data is missing
+        // @ts-ignore
+        docsForNormalization = [{
+          'id': '__default__',
+          'name': 'default contentfilter',
+          'ignore_alphanum': true,
+          'decoding': {
+            base64: true,
+            dual: false,
+            html: false,
+            unicode: false,
+          },
+          'masking_seed': '',
+          'content_type': [],
+          'active': [],
+          'report': [],
+          'ignore': [],
+        }]
+        defaultSectionsValue = {
+          names: [] as ContentFilterEntryMatch[],
+          regex: [] as ContentFilterEntryMatch[],
+          max_count: 0,
+          max_length: 0,
+        }
+        wrapper = shallowMount(ContentFilterEditor, {
+          propsData: {
+            selectedDoc: docsForNormalization[0],
+            selectedBranch: 'master',
+          },
+        })
+        await Vue.nextTick()
+      })
+
+      test('should emit default section for args when given profile with undefined args', () => {
+        expect(wrapper.emitted('update:selectedDoc')).toBeTruthy()
+        expect(wrapper.emitted('update:selectedDoc')[0][0].args).toEqual(defaultSectionsValue)
+      })
+
+      test('should emit default section for headers when given profile with undefined headers', () => {
+        expect(wrapper.emitted('update:selectedDoc')).toBeTruthy()
+        expect(wrapper.emitted('update:selectedDoc')[0][0].headers).toEqual(defaultSectionsValue)
+      })
+
+      test('should emit default section for cookies when given profile with undefined cookies', () => {
+        expect(wrapper.emitted('update:selectedDoc')).toBeTruthy()
+        expect(wrapper.emitted('update:selectedDoc')[0][0].cookies).toEqual(defaultSectionsValue)
+      })
+
+      test('should emit default section for path when given profile with undefined path', () => {
+        expect(wrapper.emitted('update:selectedDoc')).toBeTruthy()
+        expect(wrapper.emitted('update:selectedDoc')[0][0].path).toEqual(defaultSectionsValue)
+      })
+    })
+
+    describe('with all sections provided', () => {
+      test('should not emit new doc if all sections are provided', async () => {
+        const docsShouldNotNormalize: ContentFilterProfile[] = [{
+          'id': '__default__',
+          'name': 'default contentfilter',
+          'ignore_alphanum': true,
+          'headers': {
+            'names': [],
+            'regex': [],
+            'max_count': 42,
+            'max_length': 1024,
+          },
+          'cookies': {
+            'names': [],
+            'regex': [],
+            'max_count': 42,
+            'max_length': 1024,
+          },
+          'args': {
+            'names': [],
+            'regex': [],
+            'max_count': 512,
+            'max_length': 1024,
+          },
+          'path': {
+            'names': [],
+            'regex': [],
+            'max_count': 42,
+            'max_length': 1024,
+          },
+          'decoding': {
+            base64: true,
+            dual: false,
+            html: false,
+            unicode: false,
+          },
+          'masking_seed': '',
+          'content_type': [],
+          'active': [],
+          'report': [],
+          'ignore': [],
+        }]
+        wrapper = shallowMount(ContentFilterEditor, {
+          propsData: {
+            selectedDoc: docsShouldNotNormalize[0],
+            selectedBranch: 'master',
+          },
+        })
+        await Vue.nextTick()
+        expect(wrapper.emitted('update:selectedDoc')).toBeFalsy()
+      })
+    })
+  })
+
   test('should unpack exclusions correctly from model for view', async () => {
-    const unpackedExclusions = '1000 (Group)\n100000\n100001'
-    const packedExclusions = {
-      1000: 'group',
-      100000: 'rule',
-      100001: 'rule',
-    }
-    const actualUnpackedExclusions = (wrapper.vm as any).unpackExclusions(packedExclusions)
+    const unpackedExclusions = 'cf-rule-id:100000 cf-risk:5'
+    const packedExclusions = ['cf-rule-id:100000', 'cf-risk:5']
+    const actualUnpackedExclusions = (wrapper.vm as any).exclusionsToString(packedExclusions)
     expect(actualUnpackedExclusions).toEqual(unpackedExclusions)
   })
 
   test('should unpack empty exclusions correctly from model for view', async () => {
     const unpackedExclusions = ''
-    const packedExclusions = {}
-    const actualUnpackedExclusions = (wrapper.vm as any).unpackExclusions(packedExclusions)
+    const packedExclusions: ContentFilterEntryMatch['exclusions'] = []
+    const actualUnpackedExclusions = (wrapper.vm as any).exclusionsToString(packedExclusions)
     expect(actualUnpackedExclusions).toEqual(unpackedExclusions)
-  })
-
-  test('should remove nonexisting exclusions from model for view', async () => {
-    delete (wrapper.vm as any).contentFilter.group
-    const unpackedExclusions = (wrapper.vm as any).unpackExclusions({
-      1000: 'group',
-      100000: 'rule',
-      100001: 'rule',
-      900001: 'rule',
-    })
-    expect(unpackedExclusions).toEqual('100000\n100001')
   })
 
   buildTabDescribe('headers')
@@ -230,8 +367,11 @@ describe('ContentFilterProfileEditor.vue', () => {
 
           test('should add name key when creating new parameter', async () => {
             const wantedValue = 'foo'
-            const input = newRow.find('.new-entry-key')
-            input.setValue(wantedValue)
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue(wantedValue)
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
@@ -242,8 +382,11 @@ describe('ContentFilterProfileEditor.vue', () => {
 
           test('should add value when creating new parameter', async () => {
             const wantedValue = 'bar'
-            const input = newRow.find('.new-entry-reg')
-            input.setValue(wantedValue)
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue(wantedValue)
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
@@ -253,6 +396,12 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add restrict when creating new parameter', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const input = newRow.find('.new-entry-restrict')
             input.setChecked(true)
             await Vue.nextTick()
@@ -264,6 +413,12 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add mask when creating new parameter', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const input = newRow.find('.new-entry-mask')
             input.setChecked(true)
             await Vue.nextTick()
@@ -275,64 +430,30 @@ describe('ContentFilterProfileEditor.vue', () => {
           })
 
           test('should add exclusions when creating new parameter', async () => {
-            const wantedValue = {
-              1000: 'group',
-              100000: 'rule',
-              100001: 'rule',
-            }
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
+            const wantedValue = ['cf-rule-id:100001', 'cf-risk:3']
             const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            autocompleteInput.vm.$emit('value-submitted', '100000\n100001\n1000 (Group)')
+            autocompleteInput.vm.$emit('value-submitted', 'cf-rule-id:100001 cf-risk:3')
             await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
             await Vue.nextTick()
             const actualValue = (wrapper.vm as any).localDoc[tab][type][0].exclusions
-            expect(actualValue).toEqual(wantedValue)
-          })
-
-          test('should remove nonexisting exclusions when creating new parameter', async () => {
-            const wantedValue = {
-              1000: 'group',
-              100000: 'rule',
-            }
-            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            autocompleteInput.vm.$emit('value-submitted', '100000\n9acf66222\n1000 (Group)\n900')
-            await Vue.nextTick()
-            const confirmButton = newRow.find('.confirm-add-new-parameter')
-            confirmButton.trigger('click')
-            await Vue.nextTick()
-            const actualValue = (wrapper.vm as any).localDoc[tab][type][0].exclusions
-            expect(actualValue).toEqual(wantedValue)
-          })
-
-          test('should have all suggestions passed to AutocompleteInput', async () => {
-            const wantedValue = [
-              {value: '100000'},
-              {value: '100001'},
-              {value: '100002'},
-              {value: '1000 (Group)'},
-              {value: '1001 (Group)'},
-            ]
-            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            const actualValue = autocompleteInput.props('suggestions')
-            expect(actualValue).toEqual(wantedValue)
-          })
-
-          test('should have correct filtered suggestions passed to AutocompleteInput', async () => {
-            const existingRuleIDs = '100000\n100002'
-            const wantedValue = [
-              {value: '100001'},
-              {value: '1000 (Group)'},
-              {value: '1001 (Group)'},
-            ]
-            const autocompleteInput = wrapper.findComponent(AutocompleteInput)
-            autocompleteInput.vm.$emit('value-submitted', existingRuleIDs)
-            await Vue.nextTick()
-            const actualValue = autocompleteInput.props('suggestions')
             expect(actualValue).toEqual(wantedValue)
           })
 
           test('should remove parameter when remove button is clicked', async () => {
+            const keyInput = newRow.find('.new-entry-key')
+            keyInput.setValue('foo')
+            await Vue.nextTick()
+            const regInput = newRow.find('.new-entry-reg')
+            regInput.setValue('bar')
+            await Vue.nextTick()
             const confirmButton = newRow.find('.confirm-add-new-parameter')
             confirmButton.trigger('click')
             await Vue.nextTick()

@@ -3,7 +3,16 @@ import {afterEach, beforeEach, describe, expect, jest, test} from '@jest/globals
 import {shallowMount, Wrapper} from '@vue/test-utils'
 import axios from 'axios'
 import Vue from 'vue'
-import {ACLProfile, BasicDocument, Branch, FlowControlPolicy, RateLimit, GlobalFilter, SecurityPolicy, ContentFilterProfile} from '@/types'
+import {
+  ACLProfile,
+  BasicDocument,
+  Branch,
+  ContentFilterProfile,
+  FlowControlPolicy,
+  GlobalFilter,
+  RateLimit,
+  SecurityPolicy,
+} from '@/types'
 
 jest.useFakeTimers()
 jest.mock('axios')
@@ -345,15 +354,41 @@ describe('DocumentSearch.vue', () => {
         'id': '01b2abccc275',
         'name': 'default contentfilter',
         'ignore_alphanum': true,
-        'max_header_length': 1024,
-        'max_cookie_length': 1024,
-        'max_arg_length': 1024,
-        'max_headers_count': 42,
-        'max_cookies_count': 42,
-        'max_args_count': 512,
-        'args': {'names': [], 'regex': []},
-        'headers': {'names': [], 'regex': []},
-        'cookies': {'names': [], 'regex': []},
+        'headers': {
+          'names': [],
+          'regex': [],
+          'max_count': 42,
+          'max_length': 1024,
+        },
+        'cookies': {
+          'names': [],
+          'regex': [],
+          'max_count': 42,
+          'max_length': 1024,
+        },
+        'args': {
+          'names': [],
+          'regex': [],
+          'max_count': 512,
+          'max_length': 1024,
+        },
+        'path': {
+          'names': [],
+          'regex': [],
+          'max_count': 42,
+          'max_length': 1024,
+        },
+        'decoding': {
+          base64: true,
+          dual: false,
+          html: false,
+          unicode: false,
+        },
+        'masking_seed': '',
+        'content_type': [],
+        'active': [],
+        'report': [],
+        'ignore': [],
       },
     ]
     jest.spyOn(axios, 'get').mockImplementation((path) => {
@@ -467,11 +502,11 @@ describe('DocumentSearch.vue', () => {
     const options = searchTypeSelection.findAll('option')
     options.at(1).setSelected()
     await Vue.nextTick()
-    const searchInput = wrapper.find('.search-input');
+    const searchInput = wrapper.find('.search-input')
     // Using a partial name instead of 'security policy'
     // The search is executing a RegEx which means 'securitypolicies' would not
     // match 'security policies'
-    (searchInput.element as HTMLInputElement).value = 'security pol'
+    searchInput.setValue('security pol')
     searchInput.trigger('input')
     await Vue.nextTick()
 
@@ -498,8 +533,8 @@ describe('DocumentSearch.vue', () => {
       options.at(1).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'default'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('default')
       searchInput.trigger('input')
       await Vue.nextTick()
 
@@ -527,8 +562,8 @@ describe('DocumentSearch.vue', () => {
       options.at(0).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'default'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('default')
       searchInput.trigger('input')
       await Vue.nextTick()
 
@@ -549,8 +584,8 @@ describe('DocumentSearch.vue', () => {
       options.at(1).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'flow'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('flow')
       searchInput.trigger('input')
       await Vue.nextTick()
       expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
@@ -565,8 +600,8 @@ describe('DocumentSearch.vue', () => {
       options.at(2).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'c03dabe4b9ca'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('c03dabe4b9ca')
       searchInput.trigger('input')
       await Vue.nextTick()
       expect(isItemInFilteredDocs(flowControlPolicyDocs[0], 'flowcontrol')).toBeTruthy()
@@ -581,8 +616,8 @@ describe('DocumentSearch.vue', () => {
       options.at(3).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'default entry'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('default entry')
       searchInput.trigger('input')
       await Vue.nextTick()
       expect(isItemInFilteredDocs(securityPoliciesDocs[0], 'securitypolicies')).toBeTruthy()
@@ -597,8 +632,8 @@ describe('DocumentSearch.vue', () => {
       options.at(4).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'default'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('default')
       searchInput.trigger('input')
       await Vue.nextTick()
       expect(isItemInFilteredDocs(profilingListDocs[0], 'globalfilters')).toBeTruthy()
@@ -613,8 +648,8 @@ describe('DocumentSearch.vue', () => {
       options.at(5).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'china'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('china')
       searchInput.trigger('input')
       await Vue.nextTick()
       expect(isItemInFilteredDocs(aclDocs[0], 'aclprofiles')).toBeTruthy()
@@ -629,8 +664,8 @@ describe('DocumentSearch.vue', () => {
       options.at(6).setSelected()
       await Vue.nextTick()
 
-      const searchInput = wrapper.find('.search-input');
-      (searchInput.element as HTMLInputElement).value = 'default'
+      const searchInput = wrapper.find('.search-input')
+      searchInput.setValue('default')
       searchInput.trigger('input')
       await Vue.nextTick()
       expect(isItemInFilteredDocs(aclDocs[1], 'aclprofiles')).toBeTruthy()

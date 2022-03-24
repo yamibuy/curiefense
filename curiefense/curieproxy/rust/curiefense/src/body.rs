@@ -14,9 +14,11 @@ use serde_json::Value;
 use std::io::Read;
 use xmlparser::{ElementEnd, EntityDefinition, ExternalId, Token};
 
+use crate::config::raw::ContentType;
+use crate::config::utils::DataSource;
 use crate::logs::Logs;
 use crate::requestfields::RequestField;
-use crate::utils::url::parse_urlencoded_params_bytes;
+use crate::utils::decoders::parse_urlencoded_params_bytes;
 
 fn json_path(prefix: &[String]) -> String {
     if prefix.is_empty() {
@@ -53,16 +55,20 @@ fn flatten_json(args: &mut RequestField, prefix: &mut Vec<String>, value: Value)
             prefix.pop();
         }
         Value::String(str) => {
-            args.add(json_path(prefix), str);
+            args.add(json_path(prefix), DataSource::FromBody, str);
         }
         Value::Bool(b) => {
-            args.add(json_path(prefix), (if b { "true" } else { "false" }).to_string());
+            args.add(
+                json_path(prefix),
+                DataSource::FromBody,
+                (if b { "true" } else { "false" }).to_string(),
+            );
         }
         Value::Number(n) => {
-            args.add(json_path(prefix), format!("{}", n));
+            args.add(json_path(prefix), DataSource::FromBody, format!("{}", n));
         }
         Value::Null => {
-            args.add(json_path(prefix), "null".to_string());
+            args.add(json_path(prefix), DataSource::FromBody, "null".to_string());
         }
     }
 }
@@ -119,7 +125,7 @@ fn close_xml_element(
             if idx == 0 {
                 // empty XML element, save it with an empty string
                 let path = xml_path(stack) + openname.as_str() + "1";
-                args.add(path, String::new());
+                args.add(path, DataSource::FromBody, String::new());
             }
             Ok(())
         }
@@ -133,6 +139,36 @@ fn xml_increment_last(stack: &mut Vec<(String, u64)>) -> u64 {
         return prev;
     }
     0
+}
+
+fn xml_external_id(args: &mut RequestField, stack: &[(String, u64)], name: &str, me: Option<ExternalId>) {
+    match me {
+        Some(ExternalId::System(spn)) => {
+            let path = xml_path(stack) + "entity/" + name;
+            args.add(path, DataSource::FromBody, "SYSTEM ".to_string() + spn.as_str());
+            let path_raw = xml_path(stack) + "entity_raw/" + name;
+            args.add(
+                path_raw,
+                DataSource::FromBody,
+                "<!DOCTYPE ".to_string() + name + " SYSTEM \"" + spn.as_str() + "\"",
+            );
+        }
+        Some(ExternalId::Public(spn1, spn2)) => {
+            let path = xml_path(stack) + "entity/" + name;
+            args.add(
+                path,
+                DataSource::FromBody,
+                "PUBLIC ".to_string() + spn1.as_str() + " " + spn2.as_str(),
+            );
+            let path_raw = xml_path(stack) + "entity_raw/" + name;
+            args.add(
+                path_raw,
+                DataSource::FromBody,
+                "<!DOCTYPE ".to_string() + name + " PUBLIC \"" + spn1.as_str() + "\" \"" + spn2.as_str() + "\"",
+            );
+        }
+        None => (),
+    }
 }
 
 /// Parses the XML body by iterating on the token stream
@@ -149,20 +185,16 @@ fn xml_body(args: &mut RequestField, body: &[u8]) -> Result<(), String> {
             Token::ProcessingInstruction { .. } => (),
             Token::Comment { .. } => (),
             Token::Declaration { .. } => (),
-            Token::DtdStart { .. } => (),
+            Token::DtdStart { external_id, name, .. } => xml_external_id(args, &stack, name.as_str(), external_id),
             Token::DtdEnd { .. } => (),
-            Token::EmptyDtd { .. } => (),
+            Token::EmptyDtd { external_id, name, .. } => xml_external_id(args, &stack, name.as_str(), external_id),
             Token::EntityDeclaration { name, definition, .. } => match definition {
-                EntityDefinition::EntityValue(span) => {
-                    args.add("_XMLENTITY_VALUE_".to_string() + name.as_str(), span.to_string())
-                }
-                EntityDefinition::ExternalId(ExternalId::System(span)) => {
-                    args.add("_XMLENTITY_SYSTEMID_".to_string() + name.as_str(), span.to_string())
-                }
-                EntityDefinition::ExternalId(ExternalId::Public(p1, p2)) => args.add(
-                    "_XMLENTITY_PUBLICID_".to_string() + name.as_str(),
-                    p1.to_string() + "/" + p2.as_str(),
+                EntityDefinition::EntityValue(span) => args.add(
+                    "_XMLENTITY_VALUE_".to_string() + name.as_str(),
+                    DataSource::FromBody,
+                    span.to_string(),
                 ),
+                EntityDefinition::ExternalId(eid) => xml_external_id(args, &stack, "entity", Some(eid)),
             },
             Token::ElementStart { local, .. } => {
                 // increment element index for the current element
@@ -180,18 +212,18 @@ fn xml_body(args: &mut RequestField, body: &[u8]) -> Result<(), String> {
             },
             Token::Attribute { local, value, .. } => {
                 let path = xml_path(&stack) + local.as_str();
-                args.add(path, value.to_string());
+                args.add(path, DataSource::FromBody, value.to_string());
             }
             Token::Text { text } => {
                 let trimmed = text.trim();
                 if !trimmed.is_empty() {
                     xml_increment_last(&mut stack);
-                    args.add(xml_path(&stack), trimmed.to_string());
+                    args.add(xml_path(&stack), DataSource::FromBody, trimmed.to_string());
                 }
             }
             Token::Cdata { text, .. } => {
                 xml_increment_last(&mut stack);
-                args.add(xml_path(&stack), text.to_string());
+                args.add(xml_path(&stack), DataSource::FromBody, text.to_string());
             }
         }
     }
@@ -224,54 +256,84 @@ fn multipart_form_encoded(boundary: &str, args: &mut RequestField, body: &[u8]) 
             let _ = entry.data.read_to_end(&mut content);
             let name = entry.headers.name.to_string();
             let scontent = String::from_utf8_lossy(&content);
-            args.add(name, scontent.to_string());
+            args.add(name, DataSource::FromBody, scontent.to_string());
         })
         .map_err(|rr| format!("Could not parse multipart body: {}", rr))
 }
 
-/// body parsing function
-///
-/// fails if the
+/// body parsing function, returns an error when the body can't be decoded
 pub fn parse_body(
     logs: &mut Logs,
     args: &mut RequestField,
     mcontent_type: Option<&str>,
+    accepted_types: &[ContentType],
     body: &[u8],
 ) -> Result<(), String> {
     logs.debug("body parsing started");
 
+    let active_accepted_types = if accepted_types.is_empty() {
+        &ContentType::VALUES
+    } else {
+        accepted_types
+    };
+
     if let Some(content_type) = mcontent_type {
-        logs.debug(format!("parsing content type: {}", content_type));
-        if let Some(boundary) = content_type.strip_prefix("multipart/form-data; boundary=") {
-            return multipart_form_encoded(boundary, args, body);
-        }
-
-        if content_type.ends_with("/json") {
-            return json_body(args, body);
-        }
-
-        if content_type.ends_with("/xml") {
-            return xml_body(args, body);
-        }
-
-        if content_type == "application/x-www-form-urlencoded" {
-            return forms_body(args, body);
+        for t in active_accepted_types {
+            match t {
+                ContentType::Json => {
+                    if content_type.ends_with("/json") {
+                        return json_body(args, body);
+                    }
+                }
+                ContentType::MultipartForm => {
+                    if let Some(boundary) = content_type.strip_prefix("multipart/form-data; boundary=") {
+                        return multipart_form_encoded(boundary, args, body);
+                    }
+                }
+                ContentType::Xml => {
+                    if content_type.ends_with("/xml") {
+                        return xml_body(args, body);
+                    }
+                }
+                ContentType::UrlEncoded => {
+                    if content_type == "application/x-www-form-urlencoded" {
+                        return forms_body(args, body);
+                    }
+                }
+            }
         }
     }
 
-    // unhandled content type, default to json and forms_body
-    json_body(args, body).or_else(|_| forms_body(args, body))
+    logs.debug("content-type based body parsing failed");
+
+    // content-type not found
+    if accepted_types.is_empty() {
+        // we had no particular expection, so blindly try json, and urlencoded
+        json_body(args, body).or_else(|_| forms_body(args, body))
+    } else {
+        // we expected a specific content type!
+        Err(format!(
+            "Invalid content type={:?}, accepted types={:?}",
+            mcontent_type, accepted_types
+        ))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::contentfilter::Transformation;
     use crate::logs::LogLevel;
 
-    fn test_parse_ok(mcontent_type: Option<&str>, body: &[u8]) -> RequestField {
+    fn test_parse_ok_dec(
+        dec: &[Transformation],
+        mcontent_type: Option<&str>,
+        accepted_types: &[ContentType],
+        body: &[u8],
+    ) -> RequestField {
         let mut logs = Logs::default();
-        let mut args = RequestField::default();
-        parse_body(&mut logs, &mut args, mcontent_type, body).unwrap();
+        let mut args = RequestField::new(dec);
+        parse_body(&mut logs, &mut args, mcontent_type, accepted_types, body).unwrap();
         for lg in logs.logs {
             if lg.level > LogLevel::Debug {
                 panic!("unexpected log: {:?}", lg);
@@ -280,14 +342,20 @@ mod tests {
         args
     }
 
-    fn test_parse_bad(mcontent_type: Option<&str>, body: &[u8]) {
+    fn test_parse_bad(mcontent_type: Option<&str>, accepted_types: &[ContentType], body: &[u8]) {
         let mut logs = Logs::default();
-        let mut args = RequestField::default();
-        assert!(parse_body(&mut logs, &mut args, mcontent_type, body).is_err());
+        let mut args = RequestField::new(&[]);
+        assert!(parse_body(&mut logs, &mut args, mcontent_type, accepted_types, body).is_err());
     }
 
-    fn test_parse(mcontent_type: Option<&str>, body: &[u8], expected: &[(&str, &str)]) {
-        let args = test_parse_ok(mcontent_type, body);
+    fn test_parse_dec(
+        dec: &[Transformation],
+        mcontent_type: Option<&str>,
+        accepted_types: &[ContentType],
+        body: &[u8],
+        expected: &[(&str, &str)],
+    ) {
+        let args = test_parse_ok_dec(dec, mcontent_type, accepted_types, body);
         for (k, v) in expected {
             match args.get_str(k) {
                 None => panic!("Argument not set {}", k),
@@ -296,12 +364,16 @@ mod tests {
         }
         if args.len() != expected.len() {
             for (k, v) in args.iter() {
-                if !expected.iter().any(|(ek, _)| ek == k) {
+                if !expected.iter().any(|(ek, _)| ek == &k) {
                     println!("Spurious argument {}: {}", k, v);
                 }
             }
             panic!("Spurious arguments");
         }
+    }
+
+    fn test_parse(mcontent_type: Option<&str>, body: &[u8], expected: &[(&str, &str)]) {
+        test_parse_dec(&[], mcontent_type, &[], body, expected)
     }
 
     #[test]
@@ -316,10 +388,12 @@ mod tests {
 
     #[test]
     fn json_scalar_b64() {
-        test_parse(
+        test_parse_dec(
+            &[Transformation::Base64Decode],
             Some("application/json"),
+            &[],
             br#""c2NhbGFyIQ==""#,
-            &[("JSON_ROOT", "c2NhbGFyIQ=="), ("JSON_ROOT_base64", "scalar!")],
+            &[("JSON_ROOT", "c2NhbGFyIQ=="), ("JSON_ROOT:decoded", "scalar!")],
         );
     }
 
@@ -334,7 +408,7 @@ mod tests {
 
     #[test]
     fn json_bad() {
-        test_parse_bad(Some("application/json"), br#"{"a": "b""#);
+        test_parse_bad(Some("application/json"), &[], br#"{"a": "b""#);
     }
 
     #[test]
@@ -363,9 +437,16 @@ mod tests {
     #[test]
     fn arguments_collision() {
         let mut logs = Logs::default();
-        let mut args = RequestField::default();
-        args.add("a".to_string(), "query_arg".to_string());
-        parse_body(&mut logs, &mut args, Some("application/json"), br#"{"a": "body_arg"}"#).unwrap();
+        let mut args = RequestField::new(&[]);
+        args.add("a".to_string(), DataSource::FromBody, "query_arg".to_string());
+        parse_body(
+            &mut logs,
+            &mut args,
+            Some("application/json"),
+            &[],
+            br#"{"a": "body_arg"}"#,
+        )
+        .unwrap();
         assert_eq!(args.get_str("a"), Some("query_arg body_arg"));
     }
 
@@ -376,26 +457,50 @@ mod tests {
 
     #[test]
     fn xml_simple_b64() {
-        test_parse(
+        test_parse_dec(
+            &[Transformation::Base64Decode],
             Some("text/xml"),
+            &[],
             br#"<a>ZHFzcXNkcXNk</a>"#,
-            &[("a1", "ZHFzcXNkcXNk"), ("a1_base64", "dqsqsdqsd")],
+            &[("a1", "ZHFzcXNkcXNk"), ("a1:decoded", "dqsqsdqsd")],
+        );
+    }
+
+    #[test]
+    fn xml_simple_html() {
+        test_parse_dec(
+            &[Transformation::HtmlEntitiesDecode],
+            Some("text/xml"),
+            &[],
+            br#"<a>&lt;em&gt;</a>"#,
+            &[("a1", "&lt;em&gt;"), ("a1:decoded", "<em>")],
+        );
+    }
+
+    #[test]
+    fn xml_simple_html_partial() {
+        test_parse_dec(
+            &[Transformation::HtmlEntitiesDecode],
+            Some("text/xml"),
+            &[],
+            br#"<a>&lt;em&gt</a>"#,
+            &[("a1", "&lt;em&gt"), ("a1:decoded", "<em&gt")],
         );
     }
 
     #[test]
     fn xml_bad1() {
-        test_parse_bad(Some("text/xml"), br#"<a>"#);
+        test_parse_bad(Some("text/xml"), &[], br#"<a>"#);
     }
 
     #[test]
     fn xml_bad2() {
-        test_parse_bad(Some("text/xml"), br#"<a>x</b>"#);
+        test_parse_bad(Some("text/xml"), &[], br#"<a>x</b>"#);
     }
 
     #[test]
     fn xml_bad3() {
-        test_parse_bad(Some("text/xml"), br#"<a 1x="12">x</a>"#);
+        test_parse_bad(Some("text/xml"), &[], br#"<a 1x="12">x</a>"#);
     }
 
     #[test]
@@ -444,7 +549,11 @@ mod tests {
         test_parse(
             Some("application/xml"),
             br#"<!DOCTYPE foo [ <!ENTITY ext SYSTEM "http://website.com" > ]><a>xx</a>"#,
-            &[("a1", "xx"), ("_XMLENTITY_SYSTEMID_ext", "http://website.com")],
+            &[
+                ("a1", "xx"),
+                ("entity_raw/entity", "<!DOCTYPE entity SYSTEM \"http://website.com\""),
+                ("entity/entity", "SYSTEM http://website.com"),
+            ],
         );
     }
 
@@ -517,5 +626,42 @@ mod tests {
     #[test]
     fn json_default() {
         test_parse(None, br#"{"a": "b", "c": "d"}"#, &[("a", "b"), ("c", "d")]);
+    }
+
+    #[test]
+    fn json_but_expect_json_ct() {
+        test_parse_dec(
+            &[],
+            Some("application/json"),
+            &[ContentType::Json],
+            br#"{"a": "b", "c": "d"}"#,
+            &[("a", "b"), ("c", "d")],
+        );
+    }
+
+    #[test]
+    fn json_but_expect_json_noct() {
+        test_parse_bad(None, &[ContentType::Json], br#"{"a": "b", "c": "d"}"#);
+    }
+
+    #[test]
+    fn json_but_expect_xml_ct() {
+        test_parse_bad(Some("text/xml"), &[ContentType::Json], br#"{"a": "b", "c": "d"}"#);
+    }
+
+    #[test]
+    fn json_but_expect_xml_noct() {
+        test_parse_bad(None, &[ContentType::Json], br#"{"a": "b", "c": "d"}"#);
+    }
+
+    #[test]
+    fn json_but_expect_json_xml_ct() {
+        test_parse_dec(
+            &[],
+            Some("application/json"),
+            &[ContentType::Xml, ContentType::Json],
+            br#"{"a": "b", "c": "d"}"#,
+            &[("a", "b"), ("c", "d")],
+        );
     }
 }

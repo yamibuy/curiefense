@@ -5,7 +5,7 @@ use redis::RedisResult;
 use crate::config::limit::Limit;
 use crate::config::limit::LimitThreshold;
 use crate::interface::{stronger_decision, SimpleActionT, SimpleDecision, Tags};
-use crate::redis::redis_conn;
+use crate::redis::{redis_conn, BanStatus};
 use crate::utils::{select_string, RequestInfo};
 
 fn build_key(security_policy_name: &str, reqinfo: &RequestInfo, tags: &Tags, limit: &Limit) -> Option<String> {
@@ -24,9 +24,10 @@ fn limit_react(
     threshold: &LimitThreshold,
     key: &str,
     ban_key: &str,
+    ban_status: BanStatus,
 ) -> SimpleDecision {
     tags.insert(&limit.name);
-    let action = extract_bannable_action(cnx, logs, &threshold.action, key, ban_key);
+    let action = extract_bannable_action(cnx, logs, &threshold.action, key, ban_key, ban_status);
     SimpleDecision::Action(
         action,
         serde_json::json!({
@@ -125,7 +126,16 @@ pub fn limit_check(
                 .unwrap_or(&limit.thresholds[0]);
             out = stronger_decision(
                 out,
-                limit_react(logs, tags, &mut redis, limit, ban_threshold, &key, &ban_key),
+                limit_react(
+                    logs,
+                    tags,
+                    &mut redis,
+                    limit,
+                    ban_threshold,
+                    &key,
+                    &ban_key,
+                    BanStatus::AlreadyBanned,
+                ),
             );
         }
 
@@ -147,7 +157,16 @@ pub fn limit_check(
                     if current_count > threshold.limit as i64 {
                         out = stronger_decision(
                             out,
-                            limit_react(logs, tags, &mut redis, limit, threshold, &key, &ban_key),
+                            limit_react(
+                                logs,
+                                tags,
+                                &mut redis,
+                                limit,
+                                threshold,
+                                &key,
+                                &ban_key,
+                                BanStatus::NewBan,
+                            ),
                         );
                     }
                 }

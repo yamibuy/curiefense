@@ -2,7 +2,12 @@
   {
     "response": {
       "tags": [
-        "asn:396507",
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
         "sante",
         "ip:23-129-64-253",
         "contentfilterid:--default--",
@@ -12,8 +17,12 @@
         "securitypolicy:default-entry",
         "securitypolicy-entry:default",
         "aclid:--default--",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
+        "cf-rule-category:libinjection",
+        "cf-rule-subcategory:libinjection-xss",
+        "cf-rule-risk:libinjection",
+        "cf-rule-id:libinjection-xss",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -32,19 +41,30 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy:default-entry",
         "securitypolicy-entry:default",
         "ip:23-129-64-253",
         "sante",
         "all",
         "container:1e219d8ed6b4",
-        "geo:united-states",
-        "asn:396507",
+        "geo-country:united-states",
+        "geo-asn:396507",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
         "aclid:--default--",
         "bot",
-        "aclname:default-acl"
+        "aclname:default-acl",
+        "sqli",
+        "waf",
+        "cf-rule-risk:5",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "cf-rule-id:100016"
       ],
       "action": "custom_response",
       "block_mode": false,
@@ -63,18 +83,29 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
-        "asn:396507",
+        "geo-asn:396507",
         "securitypolicy-entry:default",
         "ip:23-129-64-253",
         "securitypolicy:default-entry",
         "aclid:--default--",
         "all",
         "aclname:default-acl",
-        "geo:united-states",
+        "geo-country:united-states",
         "container:1e219d8ed6b4",
         "bot",
+        "sqli",
+        "waf",
+        "cf-rule-risk:5",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "cf-rule-id:100016",
         "sante"
       ],
       "action": "custom_response",
@@ -93,18 +124,29 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "aclid:--default--",
         "ip:23-129-64-253",
         "container:1e219d8ed6b4",
         "all",
-        "geo:united-states",
+        "geo-country:united-states",
         "securitypolicy-entry:default",
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
-        "asn:396507",
+        "geo-asn:396507",
         "bot",
+        "sqli",
+        "waf",
+        "cf-rule-id:100016",
+        "cf-rule-risk:5",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
         "sante"
       ],
       "action": "custom_response",
@@ -124,13 +166,18 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
         "all",
         "sante",
         "container:1e219d8ed6b4",
-        "asn:16625",
-        "geo:united-states",
+        "geo-asn:16625",
+        "geo-country:united-states",
         "securitypolicy-entry:content-filter-omit-tests",
         "ip:23-5-64-253",
         "securitypolicy:default-entry",
@@ -152,46 +199,29 @@
   {
     "response": {
       "tags": [
-        "contentfiltername:omit-group-id-100001",
-        "contentfilterid:omitted-group",
-        "all",
-        "sante",
-        "container:1e219d8ed6b4",
-        "asn:16625",
-        "geo:united-states",
-        "securitypolicy-entry:content-filter-omit-group-tests",
-        "ip:23-5-64-253",
-        "securitypolicy:default-entry",
-        "aclid:--default--",
-        "bot",
-        "aclname:default-acl"
-      ],
-      "action": "pass"
-    },
-    "name": "omit sqli group",
-    "headers": {
-      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
-      "x-forwarded-for": "23.5.64.253",
-      ":path": "\/content-filter\/group-omitted?foo=xp_cmdshell",
-      ":method": "GET",
-      ":authority": "localhost:30081"
-    }
-  },
-  {
-    "response": {
-      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
         "aclid:--default--",
-        "asn:16625",
+        "geo-asn:16625",
         "all",
-        "geo:united-states",
+        "geo-country:united-states",
         "securitypolicy-entry:content-filter-omit-tests",
         "securitypolicy:default-entry",
         "sante",
         "container:1e219d8ed6b4",
         "ip:23-5-64-253",
         "bot",
+        "sqli",
+        "waf",
+        "cf-rule-id:100016",
+        "cf-rule-risk:5",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -211,11 +241,16 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
         "all",
         "sante",
-        "asn:nil",
+        "geo-asn:nil",
         "ip:13-129-64-253",
         "securitypolicy-entry:default",
         "aclid:--default--",
@@ -223,7 +258,13 @@
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "bot",
-        "geo:united-states"
+        "sqli",
+        "waf",
+        "cf-rule-id:100017",
+        "cf-rule-risk:3",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "geo-country:united-states"
       ],
       "action": "custom_response",
       "block_mode": false,
@@ -241,18 +282,29 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
-        "asn:nil",
+        "geo-asn:nil",
         "all",
         "securitypolicy:default-entry",
         "ip:13-129-64-253",
         "sante",
         "container:1e219d8ed6b4",
-        "geo:united-states",
+        "geo-country:united-states",
         "securitypolicy-entry:content-filter-omit-tests",
         "aclid:--default--",
         "bot",
+        "sqli",
+        "waf",
+        "cf-rule-id:100017",
+        "cf-rule-risk:3",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
         "aclname:default-acl"
       ],
       "action": "custom_response",
@@ -271,19 +323,75 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy-entry:default",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
         "ip:13-129-64-253",
         "sante",
-        "geo:united-states",
+        "geo-country:united-states",
         "all",
         "securitypolicy:default-entry",
         "container:1e219d8ed6b4",
         "aclid:--default--",
         "aclname:default-acl",
         "bot",
-        "asn:nil"
+        "sqli",
+        "waf",
+        "cf-rule-id:100016",
+        "cf-rule-id:100017",
+        "cf-rule-risk:3",
+        "cf-rule-risk:5",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "geo-asn:nil"
+      ],
+      "action": "custom_response",
+      "block_mode": false,
+      "status": 403
+    },
+    "name": "two sqli, same parameter",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "13.129.64.253",
+      ":path": "\/content-filter\/misc\/?v=information_schema%28+xp_cmdshell",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "securitypolicy-entry:default",
+        "contentfilterid:--default--",
+        "contentfiltername:default-contentfilter",
+        "ip:13-129-64-253",
+        "sante",
+        "geo-country:united-states",
+        "all",
+        "securitypolicy:default-entry",
+        "container:1e219d8ed6b4",
+        "aclid:--default--",
+        "aclname:default-acl",
+        "bot",
+        "sqli",
+        "waf",
+        "cf-rule-id:100016",
+        "cf-rule-id:100017",
+        "cf-rule-risk:3",
+        "cf-rule-risk:5",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "geo-asn:nil"
       ],
       "action": "custom_response",
       "block_mode": false,
@@ -301,18 +409,29 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy:default-entry",
         "sante",
         "aclname:default-acl",
         "ip:13-129-64-253",
         "all",
         "securitypolicy-entry:content-filter-omit-tests",
-        "asn:nil",
+        "geo-asn:nil",
         "contentfiltername:omit-id-100016",
         "contentfilterid:omitted",
-        "geo:united-states",
+        "geo-country:united-states",
         "container:1e219d8ed6b4",
         "bot",
+        "sqli",
+        "waf",
+        "cf-rule-id:100017",
+        "cf-rule-risk:3",
+        "cf-rule-category:sqli",
+        "cf-rule-subcategory:built-in-function-invocation",
         "aclid:--default--"
       ],
       "action": "custom_response",
@@ -331,6 +450,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "container:1e219d8ed6b4",
         "all",
         "securitypolicy:default-entry",
@@ -340,8 +464,8 @@
         "aclid:--default--",
         "contentfiltername:omit-libinjection",
         "contentfilterid:noinject",
-        "asn:396507",
-        "geo:united-states",
+        "geo-asn:396507",
+        "geo-country:united-states",
         "bot",
         "sante"
       ],
@@ -359,6 +483,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "aclid:--default--",
         "securitypolicy-entry:content-filter-omit-tests",
         "contentfiltername:omit-id-100016",
@@ -368,10 +497,16 @@
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
         "contentfilterid:omitted",
-        "asn:nil",
+        "geo-asn:nil",
         "all",
         "bot",
-        "geo:united-states"
+        "generic",
+        "waf",
+        "cf-rule-id:100010",
+        "cf-rule-risk:5",
+        "cf-rule-category:generic",
+        "cf-rule-subcategory:generic",
+        "geo-country:united-states"
       ],
       "action": "custom_response",
       "block_mode": true,
@@ -389,8 +524,13 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "container:1e219d8ed6b4",
-        "asn:nil",
+        "geo-asn:nil",
         "securitypolicy-entry:content-filter-noinjection-tests",
         "contentfiltername:omit-libinjection",
         "aclid:--default--",
@@ -399,7 +539,7 @@
         "all",
         "securitypolicy:default-entry",
         "contentfilterid:noinject",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
         "aclname:default-acl"
       ],
@@ -417,6 +557,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "aclid:--default--",
         "contentfiltername:args-checkes",
@@ -425,11 +570,11 @@
         "sante",
         "aclname:default-acl",
         "ip:13-129-64-253",
-        "asn:nil",
+        "geo-asn:nil",
         "all",
         "securitypolicy:default-entry",
         "bot",
-        "geo:united-states"
+        "geo-country:united-states"
       ],
       "action": "custom_response",
       "block_mode": true,
@@ -446,6 +591,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
         "all",
@@ -456,9 +606,9 @@
         "aclname:default-acl",
         "securitypolicy:default-entry",
         "sante",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
-        "asn:nil"
+        "geo-asn:nil"
       ],
       "action": "pass"
     },
@@ -473,6 +623,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "all",
         "securitypolicy:default-entry",
         "aclname:default-acl",
@@ -480,12 +635,12 @@
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
         "securitypolicy-entry:content-filter-args-tests",
-        "asn:nil",
+        "geo-asn:nil",
         "aclid:--default--",
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
         "bot",
-        "geo:united-states"
+        "geo-country:united-states"
       ],
       "action": "pass"
     },
@@ -500,15 +655,20 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "aclid:--default--",
         "container:1e219d8ed6b4",
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
-        "geo:united-states",
+        "geo-country:united-states",
         "aclname:default-acl",
         "ip:13-129-64-253",
         "sante",
-        "asn:nil",
+        "geo-asn:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "securitypolicy:default-entry",
         "bot",
@@ -527,7 +687,12 @@
   {
     "response": {
       "tags": [
-        "asn:nil",
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "aclid:--default--",
         "sante",
@@ -536,7 +701,7 @@
         "contentfilterid:argschecks",
         "ip:13-129-64-253",
         "securitypolicy:default-entry",
-        "geo:united-states",
+        "geo-country:united-states",
         "all",
         "bot",
         "container:1e219d8ed6b4"
@@ -554,13 +719,18 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "aclid:--default--",
-        "asn:nil",
+        "geo-asn:nil",
         "sante",
         "aclname:default-acl",
         "securitypolicy:default-entry",
         "all",
-        "geo:united-states",
+        "geo-country:united-states",
         "securitypolicy-entry:content-filter-args-tests",
         "ip:13-129-64-253",
         "contentfiltername:args-checkes",
@@ -581,16 +751,21 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "sante",
-        "geo:united-states",
+        "geo-country:united-states",
         "all",
         "container:1e219d8ed6b4",
         "securitypolicy:default-entry",
         "aclid:--default--",
         "aclname:default-acl",
         "ip:13-129-64-253",
-        "asn:nil",
+        "geo-asn:nil",
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
         "bot"
@@ -608,6 +783,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "container:1e219d8ed6b4",
         "ip:13-129-64-253",
         "sante",
@@ -618,9 +798,9 @@
         "all",
         "securitypolicy-entry:content-filter-args-tests",
         "aclname:default-acl",
-        "geo:united-states",
+        "geo-country:united-states",
         "bot",
-        "asn:nil"
+        "geo-asn:nil"
       ],
       "action": "custom_response",
       "block_mode": true,
@@ -637,6 +817,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy:default-entry",
         "all",
         "container:1e219d8ed6b4",
@@ -645,11 +830,11 @@
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
         "aclname:default-acl",
-        "geo:united-states",
+        "geo-country:united-states",
         "sante",
         "ip:13-129-64-253",
         "bot",
-        "asn:nil"
+        "geo-asn:nil"
       ],
       "action": "custom_response",
       "block_mode": true,
@@ -666,14 +851,19 @@
   {
     "response": {
       "tags": [
-        "geo:united-states",
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-country:united-states",
         "container:1e219d8ed6b4",
         "all",
         "sante",
         "securitypolicy-entry:content-filter-args-tests",
         "ip:13-129-64-253",
         "securitypolicy:default-entry",
-        "asn:nil",
+        "geo-asn:nil",
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
         "aclid:--default--",
@@ -693,11 +883,16 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "ip:13-129-64-253",
-        "asn:nil",
+        "geo-asn:nil",
         "aclid:--default--",
         "aclname:default-acl",
-        "geo:united-states",
+        "geo-country:united-states",
         "securitypolicy-entry:content-filter-args-tests",
         "sante",
         "container:1e219d8ed6b4",
@@ -720,15 +915,20 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "ip:13-129-64-253",
         "all",
         "aclid:--default--",
         "aclname:default-acl",
         "container:1e219d8ed6b4",
-        "geo:united-states",
+        "geo-country:united-states",
         "sante",
         "securitypolicy:default-entry",
-        "asn:nil",
+        "geo-asn:nil",
         "securitypolicy-entry:content-filter-args-tests",
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
@@ -747,7 +947,12 @@
   {
     "response": {
       "tags": [
-        "geo:united-states",
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-country:united-states",
         "securitypolicy:default-entry",
         "container:1e219d8ed6b4",
         "securitypolicy-entry:content-filter-args-tests",
@@ -755,7 +960,7 @@
         "contentfiltername:args-checkes",
         "contentfilterid:argschecks",
         "all",
-        "asn:nil",
+        "geo-asn:nil",
         "ip:13-129-64-253",
         "sante",
         "bot",
@@ -774,9 +979,14 @@
   {
     "response": {
       "tags": [
-        "asn:nil",
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:nil",
         "container:1e219d8ed6b4",
-        "geo:united-states",
+        "geo-country:united-states",
         "securitypolicy-entry:content-filter-args-tests",
         "aclid:--default--",
         "sante",
@@ -801,14 +1011,19 @@
   {
     "response": {
       "tags": [
-        "asn:nil",
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:nil",
         "aclid:--default--",
         "securitypolicy:default-entry",
         "sante",
         "aclname:default-acl",
         "securitypolicy-entry:default",
         "ip:13-129-64-253",
-        "geo:united-states",
+        "geo-country:united-states",
         "contentfilterid:--default--",
         "contentfiltername:default-contentfilter",
         "all",
@@ -831,12 +1046,17 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "aclid:--default--",
         "securitypolicy:default-entry",
-        "geo:united-states",
+        "geo-country:united-states",
         "aclname:default-acl",
         "all",
-        "asn:nil",
+        "geo-asn:nil",
         "contentfiltername:e2e-content-filter-short-headers",
         "contentfilterid:e2e000000002",
         "ip:13-129-64-253",
@@ -859,16 +1079,21 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "ip:13-129-64-253",
         "securitypolicy:default-entry",
-        "geo:united-states",
+        "geo-country:united-states",
         "sante",
         "container:1e219d8ed6b4",
         "securitypolicy-entry:content-filter-short-headers",
         "aclid:--default--",
         "contentfiltername:e2e-content-filter-short-headers",
         "contentfilterid:e2e000000002",
-        "asn:nil",
+        "geo-asn:nil",
         "all",
         "bot",
         "aclname:default-acl"
@@ -889,13 +1114,18 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "ip:13-129-64-253",
         "securitypolicy:default-entry",
         "securitypolicy-entry:content-filter-restrict-tests",
         "container:1e219d8ed6b4",
         "aclid:--default--",
-        "asn:nil",
-        "geo:united-states",
+        "geo-asn:nil",
+        "geo-country:united-states",
         "contentfiltername:rr",
         "contentfilterid:rr",
         "aclname:default-acl",
@@ -920,6 +1150,11 @@
   {
     "response": {
       "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
         "securitypolicy:default-entry",
         "aclname:default-acl",
         "contentfilterid:rr",
@@ -927,12 +1162,12 @@
         "all",
         "sante",
         "container:1e219d8ed6b4",
-        "geo:united-states",
+        "geo-country:united-states",
         "aclid:--default--",
         "securitypolicy-entry:content-filter-restrict-tests",
         "ip:13-129-64-253",
         "bot",
-        "asn:nil"
+        "geo-asn:nil"
       ],
       "action": "custom_response",
       "block_mode": true,
@@ -945,6 +1180,674 @@
       ":path": "\/rr\/blocklisted-value-regex-restrict-restrict",
       ":method": "GET",
       "short-header": "01234567890123456789012345678901234567890123456789A",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "contentfilterid:lvl2",
+        "securitypolicy-entry:content-filter-level2",
+        "contentfiltername:level-2",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "sqli",
+        "waf",
+        "cf-rule-id:100017",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:3",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "aclname:default-acl"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 2 <= 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "/content-filter/lvl2/?v=information_schema%28",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl3",
+        "securitypolicy-entry:content-filter-level3",
+        "contentfiltername:level-3",
+        "sqli",
+        "waf",
+        "cf-rule-id:100017",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:3",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "aclname:default-acl"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 3 <= 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvl3\/?v=information_schema%28",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl4",
+        "securitypolicy-entry:content-filter-level4",
+        "contentfiltername:level-4",
+        "aclname:default-acl"
+      ],
+      "action": "pass"
+    },
+    "name": "test risk level ! 4 <= 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvl4\/?v=information_schema%28",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl5",
+        "securitypolicy-entry:content-filter-level5",
+        "contentfiltername:level-5",
+        "aclname:default-acl"
+      ],
+      "action": "pass"
+    },
+    "name": "test risk level ! 5 <= 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvl5\/?v=information_schema%28",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5",
+        "generic",
+        "waf",
+        "cf-rule-subcategory:generic",
+        "cf-rule-category:generic",
+        "cf-rule-risk:1",
+        "cf-rule-id:100099"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 135 headers 1",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      "x-header": "/nettracker/",
+      ":path": "\/content-filter\/lvlX135\/",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5",
+        "cf-rule-id:100017",
+        "sqli",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:3",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "waf"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 135 headers 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      "x-header": "information_schema(",
+      ":path": "\/content-filter\/lvlX135\/",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5",
+        "sqli",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:5",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "waf",
+        "cf-rule-id:100016"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 135 headers 5",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      "x-header": "xp_makecab",
+      ":path": "\/content-filter\/lvlX135\/",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5"
+      ],
+      "action": "pass"
+    },
+    "name": "test risk level 135 args 1",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvlX135\/?v=/nettracker/",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "cf-rule-id:100017",
+        "sqli",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:3",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "waf",
+        "contentfiltername:level-1-3-5"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 135 args 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvlX135\/?v=information_schema%28",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "cf-rule-id:100016",
+        "sqli",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:5",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "waf",
+        "contentfiltername:level-1-3-5"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 135 args 5",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvlX135\/?v=xp_makecab",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5"
+      ],
+      "action": "pass"
+    },
+    "name": "test risk level 135 cookies 1",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvlX135\/",
+      "cookies": "%2Fnettracker%2F",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5"
+      ],
+      "action": "pass"
+    },
+    "name": "test risk level 135 cookies 3",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvlX135/",
+      "cookies": "information_schema%28",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:lvl135",
+        "aclname:default-acl",
+        "cf-rule-id:100016",
+        "sqli",
+        "cf-rule-category:sqli",
+        "cf-rule-risk:5",
+        "cf-rule-subcategory:built-in-function-invocation",
+        "waf",
+        "securitypolicy-entry:content-filter-level-1-3-5",
+        "contentfiltername:level-1-3-5"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "test risk level 135 cookies 5",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/lvlX135\/",
+      "cookies": "xp_makecab",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:mixedmatch",
+        "aclname:default-acl",
+        "securitypolicy-entry:mixed-matcher",
+        "contentfiltername:mixed-matching"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "mixed matching, non specific argument (block)",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/mixedmatch\/?nonspecifickey=2",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:mixedmatch",
+        "aclname:default-acl",
+        "securitypolicy-entry:mixed-matcher",
+        "contentfiltername:mixed-matching"
+      ],
+      "action": "pass"
+    },
+    "name": "mixed matching, non specific argument (pass)",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/mixedmatch\/?nonspecifickey=A",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "geo-asn:396507",
+        "sante",
+        "ip:23-129-64-253",
+        "container:1e219d8ed6b4",
+        "all",
+        "securitypolicy:default-entry",
+        "aclid:--default--",
+        "geo-country:united-states",
+        "bot",
+        "contentfilterid:mixedmatch",
+        "aclname:default-acl",
+        "securitypolicy-entry:mixed-matcher",
+        "contentfiltername:mixed-matching"
+      ],
+      "action": "pass"
+    },
+    "name": "specific argument (pass)",
+    "headers": {
+      "x-request-id": "e6acdce3-e076-4f0d-9a22-9d82fe01ba60",
+      "x-forwarded-for": "23.129.64.253",
+      ":path": "\/content-filter\/mixedmatch\/?specifickey=1",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "securitypolicy:default-entry",
+        "aclname:default-acl",
+        "contentfilterid:invertedre",
+        "contentfiltername:inverted-regex",
+        "all",
+        "sante",
+        "container:1e219d8ed6b4",
+        "geo-country:united-states",
+        "aclid:--default--",
+        "securitypolicy-entry:invertedre",
+        "ip:13-129-64-253",
+        "bot",
+        "geo-asn:nil"
+      ],
+      "action": "custom_response",
+      "block_mode": true,
+      "status": 403
+    },
+    "name": "inverted re block",
+    "headers": {
+      "x-forwarded-for": "13.129.64.253",
+      "regex-norestrict": "invalid",
+      ":path": "\/invertedre?test=id",
+      ":method": "GET",
+      ":authority": "localhost:30081"
+    }
+  },
+  {
+    "response": {
+      "tags": [
+        "geo-region:nil",
+        "geo-city:nil",
+        "geo-continent-name:north-america",
+        "geo-continent-code:na",
+        "geo-subregion:nil",
+        "securitypolicy:default-entry",
+        "aclname:default-acl",
+        "contentfilterid:invertedre",
+        "contentfiltername:inverted-regex",
+        "all",
+        "sante",
+        "container:1e219d8ed6b4",
+        "geo-country:united-states",
+        "aclid:--default--",
+        "securitypolicy-entry:invertedre",
+        "ip:13-129-64-253",
+        "bot",
+        "geo-asn:nil"
+      ],
+      "action": "pass"
+    },
+    "name": "inverted re pass",
+    "headers": {
+      "x-forwarded-for": "13.129.64.253",
+      "regex-norestrict": "invalid",
+      ":path": "\/invertedre?test=ix",
+      ":method": "GET",
       ":authority": "localhost:30081"
     }
   }

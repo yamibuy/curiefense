@@ -1,15 +1,39 @@
 use hyperscan::Matching;
+use lazy_static::lazy_static;
 use libinjection::{sqli, xss};
-use serde_json::{json, Value};
+use serde_json::json;
 use std::collections::{HashMap, HashSet};
 
 use crate::config::contentfilter::{
-    ContentFilterEntryMatch, ContentFilterProfile, ContentFilterRule, ContentFilterRules, ContentFilterSection,
-    Section, SectionIdx,
+    ContentFilterEntryMatch, ContentFilterProfile, ContentFilterRules, ContentFilterSection, Section, SectionIdx,
 };
-use crate::interface::{Action, ActionType};
+use crate::config::raw::ContentFilterRule;
+use crate::config::utils::XDataSource;
+use crate::interface::{Action, ActionType, Tags};
 use crate::requestfields::RequestField;
 use crate::utils::RequestInfo;
+use crate::Logs;
+
+lazy_static! {
+    pub static ref LIBINJECTION_SQLI_TAGS: HashSet<String> = [
+        "cf-rule-id:libinjection-sqli",
+        "cf-rule-category:libinjection",
+        "cf-rule-subcategory:libinjection-sqli",
+        "cf-rule-risk:libinjection",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+    pub static ref LIBINJECTION_XSS_TAGS: HashSet<String> = [
+        "cf-rule-id:libinjection-xss",
+        "cf-rule-category:libinjection",
+        "cf-rule-subcategory:libinjection-xss",
+        "cf-rule-risk:libinjection",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+}
 
 #[derive(Debug, Clone)]
 pub struct ContentFilterMatched {
@@ -35,41 +59,23 @@ pub enum ContentFilterBlock {
     TooManyEntries(SectionIdx),
     EntryTooLarge(SectionIdx, String),
     Mismatch(ContentFilterMatched),
-    SqlInjection(ContentFilterMatched, String), // fingerprint
-    Xss(ContentFilterMatched),
-    Policies(Vec<ContentFilterMatch>),
+    Block(HashSet<String>),
+    Monitor(HashSet<String>),
 }
 
 impl ContentFilterBlock {
     pub fn to_action(&self) -> Action {
         let reason = match self {
-            ContentFilterBlock::Policies(ids) => ids
-                .first()
-                .and_then(|e| {
-                    e.ids.first().map(|sig| {
-                        let mut groups = Vec::new();
-                        for (group_id, group_name) in &sig.groups {
-                            groups.push(json!({
-                                "content_filter_group_id": group_id,
-                                "content_filter_group_name": group_name,
-                            }));
-                        }
-                        json!({
-                            "section": e.matched.section,
-                            "name": e.matched.name,
-                            "value": e.matched.value,
-                            "initiator": "content_filter",
-                            "sig_category": sig.category,
-                            "sig_subcategory": sig.subcategory,
-                            "sig_operand": sig.operand,
-                            "sig_id": sig.id,
-                            "sig_severity": sig.severity,
-                            "sig_msg": sig.msg,
-                            "content_filter_groups": json!(groups),
-                        })
-                    })
-                })
-                .unwrap_or(Value::Null),
+            ContentFilterBlock::Block(ids) => json!({
+                "initiator": "content_filter",
+                "tags": ids,
+                "name": "block"
+            }),
+            ContentFilterBlock::Monitor(ids) => json!({
+                "initiator": "content_filter",
+                "tags": ids,
+                "name": "monitor"
+            }),
             ContentFilterBlock::TooManyEntries(idx) => json!({
                 "section": idx,
                 "initiator": "content_filter",
@@ -81,21 +87,6 @@ impl ContentFilterBlock {
                 "initiator": "content_filter",
                 "value": "Entry too large"
             }),
-            ContentFilterBlock::SqlInjection(wmatch, fp) => json!({
-                "section": wmatch.section,
-                "name": wmatch.name,
-                "initiator": "content_filter",
-                "value": "SQLi",
-                "matched": wmatch.value,
-                "fingerprint": fp
-            }),
-            ContentFilterBlock::Xss(wmatch) => json!({
-                "section": wmatch.section,
-                "name": wmatch.name,
-                "initiator": "content_filter",
-                "value": "WSS",
-                "matched": wmatch.value
-            }),
             ContentFilterBlock::Mismatch(wmatch) => json!({
                 "section": wmatch.section,
                 "name": wmatch.name,
@@ -104,10 +95,11 @@ impl ContentFilterBlock {
                 "msg": "Mismatch"
             }),
         };
+        let block_mode = !matches!(self, ContentFilterBlock::Monitor(_));
 
         Action {
             atype: ActionType::Block,
-            block_mode: true,
+            block_mode,
             ban: false,
             status: 403,
             headers: None,
@@ -138,11 +130,14 @@ fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
         Headers => &rinfo.headers,
         Cookies => &rinfo.cookies,
         Args => &rinfo.rinfo.qinfo.args,
+        Path => &rinfo.rinfo.qinfo.path_as_map,
     }
 }
 
 /// Runs the Content Filter part of curiefense
 pub fn content_filter_check(
+    logs: &mut Logs,
+    tags: &mut Tags,
     rinfo: &RequestInfo,
     profile: &ContentFilterProfile,
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
@@ -150,9 +145,16 @@ pub fn content_filter_check(
     use SectionIdx::*;
     let mut omit = Default::default();
 
+    // directly exit if omitted profile
+    if tags.has_intersection(&profile.ignore) {
+        logs.debug("content filter bypass because of global ignore");
+        return Ok(());
+    }
+
     // check section profiles
-    for idx in &[Headers, Cookies, Args] {
+    for idx in &[Path, Headers, Cookies, Args] {
         section_check(
+            tags,
             *idx,
             profile.sections.get(*idx),
             get_section(*idx, rinfo),
@@ -161,73 +163,123 @@ pub fn content_filter_check(
         )?;
     }
 
+    let kept = profile.active.union(&profile.report).cloned().collect::<HashSet<_>>();
+    let test_xss = LIBINJECTION_XSS_TAGS.intersection(&profile.ignore).next().is_none()
+        && LIBINJECTION_XSS_TAGS.intersection(&kept).next().is_some();
+    let test_sqli = LIBINJECTION_SQLI_TAGS.intersection(&profile.ignore).next().is_none()
+        && LIBINJECTION_SQLI_TAGS.intersection(&kept).next().is_some();
+
     let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
 
-    // run libinjection on non-whitelisted sections
-    for idx in &[Headers, Cookies, Args] {
-        injection_check(*idx, get_section(*idx, rinfo), &omit, &mut hca_keys)?;
+    // run libinjection on non-whitelisted sections, and populate the hca_keys table
+    for idx in &[Path, Headers, Cookies, Args] {
+        // note that there is no risk check with injection, every match triggers a block.
+        injection_check(
+            tags,
+            *idx,
+            get_section(*idx, rinfo),
+            &omit,
+            &mut hca_keys,
+            test_xss,
+            test_sqli,
+        );
     }
 
+    logs.info(format!("TO TEST: {:?}", hca_keys));
+
+    let mut specific_tags = Tags::default();
     // finally, hyperscan check
-    match hyperscan(hca_keys, hsdb, &omit.exclusions) {
-        Err(rr) => {
-            println!("Hyperscan failed {}", rr);
-            Ok(())
-        }
-        Ok(None) => Ok(()),
-        Ok(Some(block)) => Err(block),
+    if let Err(rr) = hyperscan(
+        logs,
+        tags,
+        &mut specific_tags,
+        hca_keys,
+        hsdb,
+        &kept,
+        &profile.ignore,
+        &omit.exclusions,
+    ) {
+        logs.error(rr)
     }
+
+    let sactive = specific_tags.intersect(&profile.active);
+    let sreport = specific_tags.intersect(&profile.report);
+    tags.extend(specific_tags);
+
+    if !sactive.is_empty() {
+        return Err(ContentFilterBlock::Block(sactive));
+    }
+    if !sreport.is_empty() {
+        return Err(ContentFilterBlock::Monitor(sreport));
+    }
+
+    let active = tags.intersect(&profile.active);
+    if !active.is_empty() {
+        return Err(ContentFilterBlock::Block(active));
+    }
+
+    let report = tags.intersect(&profile.report);
+    if !report.is_empty() {
+        return Err(ContentFilterBlock::Monitor(report));
+    }
+
+    Ok(())
 }
 
 /// checks a section (headers, args, cookies) against the policy
 fn section_check(
+    tags: &Tags,
     idx: SectionIdx,
     section: &ContentFilterSection,
     params: &RequestField,
     ignore_alphanum: bool,
     omit: &mut Omitted,
 ) -> Result<(), ContentFilterBlock> {
-    if params.len() > section.max_count {
+    if idx != SectionIdx::Path && params.len() > section.max_count {
         return Err(ContentFilterBlock::TooManyEntries(idx));
     }
 
     for (name, value) in params.iter() {
-        if value.len() > section.max_length {
-            return Err(ContentFilterBlock::EntryTooLarge(idx, name.clone()));
+        // skip decoded parameters for length checks
+        if !name.ends_with(":decoded") && value.len() > section.max_length {
+            return Err(ContentFilterBlock::EntryTooLarge(idx, name.to_string()));
         }
 
         // automatically ignored
         if ignore_alphanum && value.chars().all(|c| c.is_ascii_alphanumeric()) {
-            omit.entries.at(idx).insert(name.clone());
+            omit.entries.at(idx).insert(name.to_string());
             continue;
         }
 
         // logic for checking an entry
         let mut check_entry = |name_entry: &ContentFilterEntryMatch| {
             let matched = if let Some(re) = &name_entry.reg {
-                re.is_match(value)
+                re.matches(value)
             } else {
                 false
             };
             if matched {
-                omit.entries.at(idx).insert(name.clone());
+                omit.entries.at(idx).insert(name.to_string());
             } else if name_entry.restrict {
                 return Err(ContentFilterBlock::Mismatch(ContentFilterMatched::new(
                     idx,
-                    name.clone(),
-                    value.clone(),
+                    name.to_string(),
+                    value.to_string(),
                 )));
+            } else if tags.has_intersection(&name_entry.exclusions) {
+                omit.entries.at(idx).insert(name.to_string());
             } else if !name_entry.exclusions.is_empty() {
-                omit.exclusions
-                    .at(idx)
-                    .insert(name.clone(), name_entry.exclusions.clone());
+                let entry = omit.exclusions.at(idx).entry(name.to_string()).or_default();
+                entry.extend(name_entry.exclusions.iter().cloned());
             }
             Ok(())
         };
 
         // check name rules
-        for entry in section.names.get(name).iter() {
+        if let Some(entry) = section.names.get(name) {
             check_entry(entry)?;
+            // if an argument was matched by exact check, we do not try to match it against regex rules
+            continue;
         }
 
         // // check regex rules
@@ -243,123 +295,172 @@ fn section_check(
     Ok(())
 }
 
+/// TODO: This also populates the hca_keys map
+/// this is stupid and needs to be changed
 fn injection_check(
+    tags: &mut Tags,
     idx: SectionIdx,
     params: &RequestField,
     omit: &Omitted,
     hca_keys: &mut HashMap<String, (SectionIdx, String)>,
-) -> Result<(), ContentFilterBlock> {
+    test_xss: bool,
+    test_sqli: bool,
+) {
     for (name, value) in params.iter() {
         if !omit.entries.get(idx).contains(name) {
-            if !omit
-                .exclusions
-                .get(idx)
-                .get(name)
-                .map(|st| st.contains("libinjection"))
-                .unwrap_or(false)
-            {
-                if let Some((b, fp)) = sqli(value) {
+            let omit_tags = omit.exclusions.get(idx).get(name);
+            let rtest_xss = test_xss
+                && !omit_tags
+                    .map(|tgs| LIBINJECTION_XSS_TAGS.intersection(tgs).next().is_some())
+                    .unwrap_or(false);
+            let rtest_sqli = test_sqli
+                && !omit_tags
+                    .map(|tgs| LIBINJECTION_SQLI_TAGS.intersection(tgs).next().is_some())
+                    .unwrap_or(false);
+            if rtest_sqli {
+                if let Some((b, _)) = sqli(value) {
                     if b {
-                        return Err(ContentFilterBlock::SqlInjection(
-                            ContentFilterMatched::new(idx, name.clone(), value.clone()),
-                            fp,
-                        ));
+                        tags.insert_qualified("cf-rule-id", "libinjection-sqli");
+                        tags.insert_qualified("cf-rule-category", "libinjection");
+                        tags.insert_qualified("cf-rule-subcategory", "libinjection-sqli");
+                        tags.insert_qualified("cf-rule-risk", "libinjection");
                     }
                 }
+            }
+            if rtest_xss {
                 if let Some(b) = xss(value) {
                     if b {
-                        return Err(ContentFilterBlock::Xss(ContentFilterMatched::new(
-                            idx,
-                            name.clone(),
-                            value.clone(),
-                        )));
+                        tags.insert_qualified("cf-rule-id", "libinjection-xss");
+                        tags.insert_qualified("cf-rule-category", "libinjection");
+                        tags.insert_qualified("cf-rule-subcategory", "libinjection-xss");
+                        tags.insert_qualified("cf-rule-risk", "libinjection");
                     }
                 }
             }
 
-            hca_keys.insert(value.clone(), (idx, name.clone()));
+            hca_keys.insert(value.to_string(), (idx, name.to_string()));
         }
     }
-
-    Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn hyperscan(
+    logs: &mut Logs,
+    tags: &mut Tags,
+    specific_tags: &mut Tags,
     hca_keys: HashMap<String, (SectionIdx, String)>,
     hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
+    global_kept: &HashSet<String>,
+    global_ignore: &HashSet<String>,
     exclusions: &Section<HashMap<String, HashSet<String>>>,
-) -> anyhow::Result<Option<ContentFilterBlock>> {
+) -> anyhow::Result<()> {
     let sigs = match &*hsdb {
         None => return Err(anyhow::anyhow!("Hyperscan database not loaded")),
         Some(x) => x,
     };
     let scratch = sigs.db.alloc_scratch()?;
-    let to_scan = hca_keys.keys().map(|s| s.as_bytes());
+    // TODO: use `intersperse` when this stabilizes
+    let to_scan = hca_keys.keys().cloned().collect::<Vec<_>>().join("\n");
     let mut found = false;
-    sigs.db.scan(to_scan, &scratch, |_, _, _, _| {
+    sigs.db.scan(&[to_scan], &scratch, |_, _, _, _| {
         found = true;
         Matching::Continue
     })?;
-    if !found {
-        return Ok(None);
-    }
+    logs.debug(format!("matching content filter signatures: {}", found));
 
-    let mut matches = Vec::new();
+    if !found {
+        return Ok(());
+    }
 
     // something matched! but what?
     for (k, (sid, name)) in hca_keys {
-        let mut ids = Vec::new();
         sigs.db.scan(&[k.as_bytes()], &scratch, |id, _, _, _| {
             // TODO this is really ugly, the string hashmap should be converted into a numeric id, or it should be a string in the first place?
             match sigs.ids.get(id as usize) {
-                None => println!("INVALID INDEX ??? {}", id),
+                None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
-                    if exclusions.get(sid).get(&name).map(|ex| ex.contains(&sig.id)) != Some(true) {
-                        ids.push(sig.clone());
+                    logs.debug(format!("signature matched {:?}", sig));
+
+                    // new specific tags are singleton hashsets, but we use the Tags structure to make sure
+                    // they are properly converted
+                    let mut new_specific_tags = Tags::default();
+                    new_specific_tags.insert_qualified("cf-rule-id", &sig.id);
+
+                    let mut new_tags = Tags::default();
+                    new_tags.insert_qualified("cf-rule-risk", &format!("{}", sig.risk));
+                    new_tags.insert_qualified("cf-rule-category", &sig.category);
+                    new_tags.insert_qualified("cf-rule-subcategory", &sig.subcategory);
+                    for t in &sig.tags {
+                        new_tags.insert(t);
+                    }
+
+                    if (new_tags.has_intersection(global_kept) || new_specific_tags.has_intersection(global_kept))
+                        && exclusions
+                            .get(sid)
+                            .get(&name)
+                            .map(|ex| new_tags.has_intersection(ex) || new_specific_tags.has_intersection(ex))
+                            != Some(true)
+                        && !new_tags.has_intersection(global_ignore)
+                        && !new_specific_tags.has_intersection(global_ignore)
+                    {
+                        tags.extend(new_tags);
+                        specific_tags.extend(new_specific_tags);
                     }
                 }
             }
             Matching::Continue
         })?;
-        if !ids.is_empty() {
-            matches.push(ContentFilterMatch {
-                matched: ContentFilterMatched::new(sid, name, k),
-                ids,
-            })
-        }
     }
-    Ok(if matches.is_empty() {
-        None
-    } else {
-        Some(ContentFilterBlock::Policies(matches))
-    })
+    Ok(())
 }
 
-fn mask_section(sec: &mut RequestField, section: &ContentFilterSection) -> bool {
-    let mut out = false;
-    for (name, value) in sec.iter_mut() {
-        if section.names.get(name).map(|e| e.mask).unwrap_or(false)
-            || section.regex.iter().any(|(re, v)| v.mask && re.is_match(name))
-        {
-            *value = "*MASKED*".to_string();
-            out = true;
-        }
-    }
-    out
+fn mask_section(masking_seed: &[u8], sec: &mut RequestField, section: &ContentFilterSection) -> HashSet<XDataSource> {
+    let to_mask: Vec<String> = sec
+        .iter()
+        .filter(|&(name, _)| {
+            if let Some(e) = section.names.get(name) {
+                e.mask
+            } else {
+                section.regex.iter().any(|(re, e)| e.mask && re.is_match(name))
+            }
+        })
+        .map(|(name, _)| name.to_string())
+        .collect();
+    to_mask.iter().flat_map(|n| sec.mask(masking_seed, n)).collect()
 }
 
-pub fn masking(req: RequestInfo, profile: &ContentFilterProfile) -> RequestInfo {
+pub fn masking(masking_seed: &[u8], req: RequestInfo, profile: &ContentFilterProfile) -> RequestInfo {
     let mut ri = req;
-    mask_section(&mut ri.headers, profile.sections.get(SectionIdx::Headers));
-    let cookies_masked = mask_section(&mut ri.cookies, profile.sections.get(SectionIdx::Cookies));
-    if cookies_masked {
-        ri.headers.0.insert("cookie".into(), "*REDACTED*".into());
-    }
+    let mut to_mask = HashSet::new();
 
-    let arg_masked = mask_section(&mut ri.rinfo.qinfo.args, profile.sections.get(SectionIdx::Args));
-    if arg_masked {
-        ri.rinfo.qinfo.query = "*MASKED*".into();
-        ri.rinfo.qinfo.uri = Some("*MASKED*".into());
+    to_mask.extend(mask_section(
+        masking_seed,
+        &mut ri.cookies,
+        profile.sections.get(SectionIdx::Cookies),
+    ));
+    to_mask.extend(mask_section(
+        masking_seed,
+        &mut ri.rinfo.qinfo.args,
+        profile.sections.get(SectionIdx::Args),
+    ));
+    to_mask.extend(mask_section(
+        masking_seed,
+        &mut ri.rinfo.qinfo.path_as_map,
+        profile.sections.get(SectionIdx::Path),
+    ));
+    to_mask.extend(mask_section(
+        masking_seed,
+        &mut ri.headers,
+        profile.sections.get(SectionIdx::Headers),
+    ));
+    for x in to_mask {
+        match x {
+            // for now, do not mask the Uri
+            XDataSource::Uri => (),
+            XDataSource::CookieHeader => {
+                ri.headers.mask(masking_seed, "cookie");
+            }
+        }
     }
     ri
 }
@@ -367,8 +468,9 @@ pub fn masking(req: RequestInfo, profile: &ContentFilterProfile) -> RequestInfo 
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::config::utils::DataSource;
     use crate::utils::{map_request, RequestMeta};
-    use crate::Logs;
+    use crate::{Logs, RawRequest};
 
     fn test_request_info() -> RequestInfo {
         let meta = RequestMeta {
@@ -382,14 +484,20 @@ mod test {
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
-        map_request(&mut logs, "1.2.3.4".into(), headers, meta, None).unwrap()
+        let raw_request = RawRequest {
+            ipstr: "1.2.3.4".into(),
+            mbody: None,
+            headers,
+            meta,
+        };
+        map_request(&mut logs, &[], &[], &raw_request)
     }
 
     #[test]
     fn no_masking() {
         let rinfo = test_request_info();
-        let profile = ContentFilterProfile::default();
-        let masked = masking(rinfo.clone(), &profile);
+        let profile = ContentFilterProfile::default_from_seed("test");
+        let masked = masking(b"test", rinfo.clone(), &profile);
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(rinfo.rinfo.qinfo.args, masked.rinfo.qinfo.args);
@@ -407,14 +515,20 @@ mod test {
     #[test]
     fn masking_all_args_re() {
         let rinfo = test_request_info();
-        let mut profile = ContentFilterProfile::default();
+        let mut profile = ContentFilterProfile::default_from_seed("test");
         let asection = profile.sections.at(SectionIdx::Args);
         asection.regex = vec![(regex::Regex::new(".").unwrap(), maskentry())];
-        let masked = masking(rinfo.clone(), &profile);
+        let masked = masking(b"test", rinfo.clone(), &profile);
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            RequestField::raw_create(
+                &[],
+                &[
+                    ("arg1", &DataSource::X(XDataSource::Uri), "MASKED{fac00299}"),
+                    ("arg2", &DataSource::X(XDataSource::Uri), "MASKED{7ce2d8de}")
+                ]
+            ),
             masked.rinfo.qinfo.args
         );
     }
@@ -422,14 +536,20 @@ mod test {
     #[test]
     fn masking_re_arg1() {
         let rinfo = test_request_info();
-        let mut profile = ContentFilterProfile::default();
+        let mut profile = ContentFilterProfile::default_from_seed("test");
         let asection = profile.sections.at(SectionIdx::Args);
         asection.regex = vec![(regex::Regex::new("1").unwrap(), maskentry())];
-        let masked = masking(rinfo.clone(), &profile);
+        let masked = masking(b"test", rinfo.clone(), &profile);
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            RequestField::raw_create(
+                &[],
+                &[
+                    ("arg1", &DataSource::X(XDataSource::Uri), "MASKED{fac00299}"),
+                    ("arg2", &DataSource::X(XDataSource::Uri), "avalue2")
+                ]
+            ),
             masked.rinfo.qinfo.args
         );
     }
@@ -437,14 +557,20 @@ mod test {
     #[test]
     fn masking_named_arg1() {
         let rinfo = test_request_info();
-        let mut profile = ContentFilterProfile::default();
+        let mut profile = ContentFilterProfile::default_from_seed("test");
         let asection = profile.sections.at(SectionIdx::Args);
         asection.names = ["arg1"].iter().map(|k| (k.to_string(), maskentry())).collect();
-        let masked = masking(rinfo.clone(), &profile);
+        let masked = masking(b"test", rinfo.clone(), &profile);
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "avalue2")]),
+            RequestField::raw_create(
+                &[],
+                &[
+                    ("arg1", &DataSource::X(XDataSource::Uri), "MASKED{fac00299}"),
+                    ("arg2", &DataSource::X(XDataSource::Uri), "avalue2")
+                ]
+            ),
             masked.rinfo.qinfo.args
         );
     }
@@ -452,14 +578,20 @@ mod test {
     #[test]
     fn masking_all_args_names() {
         let rinfo = test_request_info();
-        let mut profile = ContentFilterProfile::default();
+        let mut profile = ContentFilterProfile::default_from_seed("test");
         let asection = profile.sections.at(SectionIdx::Args);
         asection.names = ["arg1", "arg2"].iter().map(|k| (k.to_string(), maskentry())).collect();
-        let masked = masking(rinfo.clone(), &profile);
+        let masked = masking(b"test", rinfo.clone(), &profile);
         assert_eq!(rinfo.headers, masked.headers);
         assert_eq!(rinfo.cookies, masked.cookies);
         assert_eq!(
-            RequestField::raw_create(&[("arg1", "*MASKED*"), ("arg2", "*MASKED*")]),
+            RequestField::raw_create(
+                &[],
+                &[
+                    ("arg1", &DataSource::X(XDataSource::Uri), "MASKED{fac00299}"),
+                    ("arg2", &DataSource::X(XDataSource::Uri), "MASKED{7ce2d8de}")
+                ]
+            ),
             masked.rinfo.qinfo.args
         );
     }
