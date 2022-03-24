@@ -10,8 +10,9 @@ RUN mkdir /uwsgi
 RUN chown nginx /uwsgi
 
 RUN /usr/bin/apt-get update && \
+    /usr/bin/apt-get upgrade -yq --no-install-recommends && \
     /usr/bin/apt-get install -yq --no-install-recommends dumb-init && \
-	rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 
 COPY bootstrap /bootstrap
 COPY init /init
