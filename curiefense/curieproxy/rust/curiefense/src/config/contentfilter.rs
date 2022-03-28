@@ -20,7 +20,6 @@ pub struct Section<A> {
     pub path: A,
 }
 
-// TODO: undefined data structures
 #[derive(Debug, Clone)]
 pub struct ContentFilterProfile {
     pub id: String,

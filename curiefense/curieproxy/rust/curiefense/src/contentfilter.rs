@@ -375,7 +375,6 @@ fn hyperscan(
     // something matched! but what?
     for (k, (sid, name)) in hca_keys {
         sigs.db.scan(&[k.as_bytes()], &scratch, |id, _, _, _| {
-            // TODO this is really ugly, the string hashmap should be converted into a numeric id, or it should be a string in the first place?
             match sigs.ids.get(id as usize) {
                 None => logs.error(format!("INVALID INDEX ??? {}", id)),
                 Some(sig) => {
