@@ -200,7 +200,7 @@ impl Config {
         }
 
         // order by decreasing matcher length, so that more specific rules are matched first
-        securitypolicies.sort_by(|a, b| b.matcher_len().cmp(&a.matcher_len()));
+        securitypolicies.sort_by_key(|b| std::cmp::Reverse(b.matcher_len()));
 
         let globalfilters = GlobalFilterSection::resolve(logs, rawglobalfilters);
 
