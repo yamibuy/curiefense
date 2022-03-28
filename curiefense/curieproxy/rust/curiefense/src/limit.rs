@@ -16,6 +16,7 @@ fn build_key(security_policy_name: &str, reqinfo: &RequestInfo, tags: &Tags, lim
     Some(format!("{:X}", md5::compute(key)))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn limit_react(
     logs: &mut Logs,
     tags: &mut Tags,
