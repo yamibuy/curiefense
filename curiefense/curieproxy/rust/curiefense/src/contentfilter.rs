@@ -171,21 +171,16 @@ pub fn content_filter_check(
 
     let mut hca_keys: HashMap<String, (SectionIdx, String)> = HashMap::new();
 
-    // run libinjection on non-whitelisted sections, and populate the hca_keys table
+    // list of non whitelisted entries
     for idx in &[Path, Headers, Cookies, Args] {
-        // note that there is no risk check with injection, every match triggers a block.
-        injection_check(
-            tags,
-            *idx,
-            get_section(*idx, rinfo),
-            &omit,
-            &mut hca_keys,
-            test_xss,
-            test_sqli,
-        );
+        let section_content = get_section(*idx, rinfo)
+            .iter()
+            .filter(|(name, _)| !omit.entries.get(*idx).contains(*name))
+            .map(|(name, value)| (value.to_string(), (*idx, name.to_string())));
+        hca_keys.extend(section_content);
     }
 
-    logs.info(format!("TO TEST: {:?}", hca_keys));
+    injection_check(tags, &hca_keys, &omit, test_xss, test_sqli);
 
     let mut specific_tags = Tags::default();
     // finally, hyperscan check
@@ -299,46 +294,40 @@ fn section_check(
 /// this is stupid and needs to be changed
 fn injection_check(
     tags: &mut Tags,
-    idx: SectionIdx,
-    params: &RequestField,
+    hca_keys: &HashMap<String, (SectionIdx, String)>,
     omit: &Omitted,
-    hca_keys: &mut HashMap<String, (SectionIdx, String)>,
     test_xss: bool,
     test_sqli: bool,
 ) {
-    for (name, value) in params.iter() {
-        if !omit.entries.get(idx).contains(name) {
-            let omit_tags = omit.exclusions.get(idx).get(name);
-            let rtest_xss = test_xss
-                && !omit_tags
-                    .map(|tgs| LIBINJECTION_XSS_TAGS.intersection(tgs).next().is_some())
-                    .unwrap_or(false);
-            let rtest_sqli = test_sqli
-                && !omit_tags
-                    .map(|tgs| LIBINJECTION_SQLI_TAGS.intersection(tgs).next().is_some())
-                    .unwrap_or(false);
-            if rtest_sqli {
-                if let Some((b, _)) = sqli(value) {
-                    if b {
-                        tags.insert_qualified("cf-rule-id", "libinjection-sqli");
-                        tags.insert_qualified("cf-rule-category", "libinjection");
-                        tags.insert_qualified("cf-rule-subcategory", "libinjection-sqli");
-                        tags.insert_qualified("cf-rule-risk", "libinjection");
-                    }
+    for (value, (idx, name)) in hca_keys.iter() {
+        let omit_tags = omit.exclusions.get(*idx).get(name);
+        let rtest_xss = test_xss
+            && !omit_tags
+                .map(|tgs| LIBINJECTION_XSS_TAGS.intersection(tgs).next().is_some())
+                .unwrap_or(false);
+        let rtest_sqli = test_sqli
+            && !omit_tags
+                .map(|tgs| LIBINJECTION_SQLI_TAGS.intersection(tgs).next().is_some())
+                .unwrap_or(false);
+        if rtest_sqli {
+            if let Some((b, _)) = sqli(value) {
+                if b {
+                    tags.insert_qualified("cf-rule-id", "libinjection-sqli");
+                    tags.insert_qualified("cf-rule-category", "libinjection");
+                    tags.insert_qualified("cf-rule-subcategory", "libinjection-sqli");
+                    tags.insert_qualified("cf-rule-risk", "libinjection");
                 }
             }
-            if rtest_xss {
-                if let Some(b) = xss(value) {
-                    if b {
-                        tags.insert_qualified("cf-rule-id", "libinjection-xss");
-                        tags.insert_qualified("cf-rule-category", "libinjection");
-                        tags.insert_qualified("cf-rule-subcategory", "libinjection-xss");
-                        tags.insert_qualified("cf-rule-risk", "libinjection");
-                    }
+        }
+        if rtest_xss {
+            if let Some(b) = xss(value) {
+                if b {
+                    tags.insert_qualified("cf-rule-id", "libinjection-xss");
+                    tags.insert_qualified("cf-rule-category", "libinjection");
+                    tags.insert_qualified("cf-rule-subcategory", "libinjection-xss");
+                    tags.insert_qualified("cf-rule-risk", "libinjection");
                 }
             }
-
-            hca_keys.insert(value.to_string(), (idx, name.to_string()));
         }
     }
 }
