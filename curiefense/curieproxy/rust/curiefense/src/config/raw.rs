@@ -363,9 +363,7 @@ pub struct RawContentFilterEntryMatch {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ContentFilterRule {
     pub id: String,
-    pub name: String,
     pub operand: String,
-    pub msg: String,
     pub risk: u8,
     pub category: String,
     pub subcategory: String,
