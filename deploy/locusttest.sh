@@ -5,7 +5,7 @@ REQSIZEKB="$2"
 NODE_IP=$(kubectl get nodes -o json|jq '.items[0].status.addresses[]|select(.type=="ExternalIP").address'|tr -d '"')
 JAEGER_URL="http://$NODE_IP:30686/jaeger/api/"
 LOCUST_URL="http://$NODE_IP:30400"
-OUTDIR="stats-locust/$NAME"
+OUTDIR="${RESULTS_DIR:stats-locust}/$NAME"
 mkdir -p "$OUTDIR"
 
 for UC in 10 50 100 200 400 500 600; do
