@@ -4,6 +4,12 @@
 # * images built & pushed to the registry
 # * gcloud access is set up
 # * the curiefense/curiefense-helm repository is checked out in $HOME/curiefense-helm
+# * This is run on a machine or virtualenv that has pytest & curieconfctl installed
+
+# Some parameters can be overridden, such as:
+# * DOCKER_TAG determines which image versions get deployed
+# * KUBECONFIG determines where temp credentials are saved. Useful if you want to interact with the cluster with kubectl
+# * CLUSTER_NAME defines the name of the GKE cluster -- set this to something unique to avoid interference with other users in your GCP project
 
 BASEDIR="$(dirname "$(readlink -f "$0")")" 
 if [ -z "$KUBECONFIG" ]; then
@@ -50,10 +56,11 @@ deploy_curiefense () {
 		kubectl apply -f "$BASEDIR/../e2e/latency/jaeger-service.yml"
 	fi
 	export JWT_WORKAROUND=yes
-	cd "$HOME/curiefense-helm/istio-helm/" || exit 1
+	pushd "$HOME/curiefense-helm/istio-helm/" || exit 1
 	./deploy.sh --set 'global.tracer.zipkin.address=zipkin.istio-system:9411' --set 'gateways.istio-ingressgateway.autoscaleMax=1' -f "$BASEDIR/curiefense-helm/use-minio-istio.yaml" --set 'global.proxy.curiefense_minio_insecure=true' --set 'gateways.istio-ingressgateway.resources.limits.cpu=4'
 	sleep 5
-	cd "$HOME/curiefense-helm/curiefense-helm/" || exit 1
+	popd || exit 1
+	pushd "$HOME/curiefense-helm/curiefense-helm/" || exit 1
 	./deploy.sh -f "$BASEDIR/curiefense-helm/use-minio-curiefense.yaml" --set 'global.settings.curiefense_minio_insecure=true'
 	kubectl apply -f "$BASEDIR/curiefense-helm/expose-services.yaml"
 	if [ "$nbnodes" -gt 1 ]; then
@@ -74,15 +81,17 @@ deploy_curiefense () {
 				'{"spec":{"template":{"spec":{"nodeSelector": {"nodegroup": "curiefense"}}}}}'
 		done
 	fi
+	popd || exit 1
 }
 
 deploy_bookinfo () {
 	echo "-- Deploy target: bookinfo app --"
 	kubectl label namespace default istio-injection=enabled
 	if [ ! -d "$BASEDIR/istio-1.9.3/" ]; then
-		cd "$BASEDIR" || exit 1
+		pushd "$BASEDIR" || exit 1
 		wget 'https://github.com/istio/istio/releases/download/1.9.3/istio-1.9.3-linux-amd64.tar.gz'
 		tar -xf 'istio-1.9.3-linux-amd64.tar.gz'
+		popd || exit 1
 	fi
 	kubectl apply -f "$BASEDIR/istio-1.9.3/samples/bookinfo/platform/kube/bookinfo.yaml"
 	kubectl apply -f "$BASEDIR/istio-1.9.3/samples/bookinfo/networking/bookinfo-gateway.yaml"
@@ -104,10 +113,11 @@ install_fortio () {
 }
 
 install_locust () {
+	kubectl create namespace locust
 	kubectl create configmap -n locust cf-locustfile "--from-file=main.py=$BASEDIR/locustfile.py"
 
 	helm repo add deliveryhero https://charts.deliveryhero.io/
-	helm install locust -n locust --create-namespace deliveryhero/locust --set worker.replicas=6 --set loadtest.locust_locustfile_configmap=cf-locustfile
+	helm install locust -n locust deliveryhero/locust --set worker.replicas=6 --set loadtest.locust_locustfile_configmap=cf-locustfile
 
 	for deployment in locust-master locust-worker; do
 		kubectl patch deployment -n locust "$deployment" -p \
@@ -177,6 +187,8 @@ perftest () {
 }
 
 locust_perftest () {
+	RESULTS_DIR=${RESULTS_DIR:-$BASEDIR/../e2e/latency/locust-results/$DATE}
+	export RESULTS_DIR
 	NODE_IP=$(kubectl get nodes -o json|jq '.items[0].status.addresses[]|select(.type=="ExternalIP").address'|tr -d '"')
 	CONFSERVER_URL="http://$NODE_IP:30000/api/v2/"
 
@@ -205,6 +217,10 @@ locust_perftest () {
 	for REQSIZE in 0 1 2 4 8 16; do
 		./locusttest.sh istio-only $REQSIZE
 	done
+	
+	echo "Generating test report..."
+	jupyter nbconvert --execute "$BASEDIR/../e2e/latency/Curiefense performance report locust.ipynb" --to html --template classic
+	mv "$BASEDIR/../e2e/latency/Curiefense performance report.html" "$BASEDIR/../e2e/latency/Curiefense performance report-$VERSION-$DATE.html"
 }
 
 
