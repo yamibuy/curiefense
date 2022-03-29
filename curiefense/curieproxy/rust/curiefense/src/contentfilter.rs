@@ -154,6 +154,7 @@ pub fn content_filter_check(
     // check section profiles
     for idx in &[Path, Headers, Cookies, Args] {
         section_check(
+            logs,
             tags,
             *idx,
             profile.sections.get(*idx),
@@ -223,6 +224,7 @@ pub fn content_filter_check(
 
 /// checks a section (headers, args, cookies) against the policy
 fn section_check(
+    logs: &mut Logs,
     tags: &Tags,
     idx: SectionIdx,
     section: &ContentFilterSection,
@@ -231,13 +233,21 @@ fn section_check(
     omit: &mut Omitted,
 ) -> Result<(), ContentFilterBlock> {
     if idx != SectionIdx::Path && params.len() > section.max_count {
-        return Err(ContentFilterBlock::TooManyEntries(idx));
+        if section.max_count > 0 {
+            return Err(ContentFilterBlock::TooManyEntries(idx));
+        } else {
+            logs.warning(format!("In section {:?}, param_count = 0", idx));
+        }
     }
 
     for (name, value) in params.iter() {
         // skip decoded parameters for length checks
         if !name.ends_with(":decoded") && value.len() > section.max_length {
-            return Err(ContentFilterBlock::EntryTooLarge(idx, name.to_string()));
+            if section.max_length > 0 {
+                return Err(ContentFilterBlock::EntryTooLarge(idx, name.to_string()));
+            } else {
+                logs.warning(format!("In section {:?}, max_length = 0", idx));
+            }
         }
 
         // automatically ignored
