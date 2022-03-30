@@ -274,7 +274,7 @@ class TestACL:
         assert not target.is_reachable("/deny-all")
 
     def test_ip_asn(self, acl, target):
-        acl.reset_and_set_acl({"deny": "asn:1239"})
+        acl.reset_and_set_acl({"deny": "geo-asn:1239"})
         assert not target.is_reachable("/acl-asn", srcip=IP4_US)
         assert target.is_reachable("/")
 
@@ -284,7 +284,7 @@ class TestACL:
         assert target.is_reachable("/")
 
     def test_geo(self, acl, target):
-        acl.reset_and_set_acl({"deny": "geo:united-states"})
+        acl.reset_and_set_acl({"deny": "geo-country:united-states"})
         assert not target.is_reachable("/acl-geo", srcip=IP4_US)
         assert target.is_reachable("/acl-geo", srcip=IP4_JP)
         assert target.is_reachable("/")
@@ -1270,15 +1270,18 @@ ACL_BYPASSALL = {
 CONTENT_FILTER_SHORT_HEADERS = {
     "id": "e2e000000002",
     "name": "e2e content filter short headers",
+    "masking_seed": "CHANGEME",
     "ignore_alphanum": True,
     "args": {"names": [], "regex": []},
     "headers": {"max_length": 50, "max_count": 42, "names": [], "regex": []},
     "cookies": {"names": [], "regex": []},
+    "active": ["cf-rule-risk:5"],
 }
 
 CONTENT_FILTER_MISC_HEADERS = {
     "id": "e2e000000002m",
     "name": "e2e waf misc headers",
+    "masking_seed": "CHANGEME",
     "ignore_alphanum": False,
     "args": {
         "max_count": 5,
@@ -1286,28 +1289,28 @@ CONTENT_FILTER_MISC_HEADERS = {
         "min_risk": 1,
         "names": [
             {
-                "exclusions": {},
+                "exclusions": [],
                 "key": "a",
                 "mask": False,
                 "reg": "^[A-Z]+",
                 "restrict": False,
             },
             {
-                "exclusions": {},
+                "exclusions": [],
                 "key": "b",
                 "mask": False,
                 "reg": "^[A-Z]+",
                 "restrict": True,
             },
             {
-                "exclusions": {},
+                "exclusions": [],
                 "key": "c",
                 "mask": True,
                 "reg": "^[A-Z]+",
                 "restrict": True,
             },
             {
-                "exclusions": {},
+                "exclusions": [],
                 "key": "d",
                 "mask": True,
                 "reg": "^[A-Z]+",
@@ -1337,6 +1340,7 @@ CONTENT_FILTER_MISC_HEADERS = {
         "max_count": 42,
         "min_risk": 5,
     },
+    "active": ["cf-rule-risk:5"],
 }
 
 SECURITYPOLICY = [
@@ -1540,13 +1544,13 @@ CONTENT_FILTER_PARAM_CONSTRAINTS = {
             "key": "name-norestrict",
             "reg": "[v]+[a]{1}l?u*e",
             "restrict": False,
-            "exclusions": {"100140": "rule"},
+            "exclusions": ["cf-rule-id:600140"],
         },
         {
             "key": "name-restrict",
             "reg": "[v]+[a]{1}l?u*e",
             "restrict": True,
-            "exclusions": {},
+            "exclusions": [],
         },
     ],
     "regex": [
@@ -1554,13 +1558,13 @@ CONTENT_FILTER_PARAM_CONSTRAINTS = {
             "key": "reg[e]x{1}-norestrict",
             "reg": "[v]+[a]{1}l?u*e",
             "restrict": False,
-            "exclusions": {"100140": "rule"},
+            "exclusions": ["cf-rule-id:600140"],
         },
         {
             "key": "reg[e]x{1}-restrict",
             "reg": "[v]+[a]{1}l?u*e",
             "restrict": True,
-            "exclusions": {},
+            "exclusions": [],
         },
     ],
 }
@@ -1638,7 +1642,7 @@ class TestContentFilterParamsConstraints:
         assert not target.is_reachable(
             f"/blocklisted-value-{paramname}-content-filter-match",
             **{section: {paramname: "../../../../../"}},
-        ), f"Reachable despite matching content filter rule 100116 (non-matching {section} value)"
+        ), f"Reachable despite matching content filter rule 600116 (non-matching {section} value)"
 
     def test_non_allowlisted_value_norestrict_content_filter_match_excludesig(
         self, content_filter_param_config, section, name_regex, target
@@ -1647,7 +1651,7 @@ class TestContentFilterParamsConstraints:
         assert target.is_reachable(
             f"/blocklisted-value-{paramname}-content-filter-match-excludedsig",
             **{section: {paramname: "htaccess"}},
-        ), f"Not reachable despite excludesig for rule 100140 ({section} value)"
+        ), f"Not reachable despite excludesig for rule 600140 ({section} value)"
 
 
 # --- Content Filter Rules tests ---
