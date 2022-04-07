@@ -5,10 +5,10 @@
 /curiefense/                        @xavier-rbz @phil777 @tzuryby
 /curiefense/curieconf/              @xavier-rbz @phil777
 /curiefense/curielogger/            @flaper87
-/curiefense/curieproxy/             @xavier-rbz @Aviv-Galmidi
+/curiefense/curieproxy/             @xavier-rbz @bartavelle
 /curiefense/curietasker/            @phil777
 /curiefense/images/                 @xavier-rbz
-/curiefense/iptools/                @tzuryby @phil777 @flaper87
+/curiefense/iptools/                @tzuryby @phil777 @bartavelle
 /curiefense/ui/                     @xavier-rbz
 
 /e2e/                               @xavier-rbz
@@ -22,7 +22,7 @@
 
 # By language
 
-*.rs                                @phil777 @flaper87
+*.rs                                @phil777 @bartavelle
 *.sh                                @xavier-rbz
 *.py                                @xavier-rbz
-*.md                                @jdorfman
+*.md                                @tzuryby
