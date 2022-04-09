@@ -236,8 +236,13 @@ class TestLogs:
             [random.choice(string.ascii_lowercase) for i in range(20)]
         )
         assert target.is_reachable(test_pattern)
-        time.sleep(10)
-        assert log_fixture.check_log_pattern(test_pattern)
+        result = False
+        for _ in range(10):
+            time.sleep(10)
+            result = log_fixture.check_log_pattern(test_pattern)
+            if result:
+                break
+        assert result
 
 
 class TestACL:
