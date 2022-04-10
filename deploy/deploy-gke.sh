@@ -182,6 +182,16 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 done
 
+# Checks
+if [ "$locustperftest" = "y" ] || [ "$all" = "y" ]; then
+	if ! type curieconfctl; then
+		echo "The curieconfctl executable is not available. Please install it, or activate the venv where it is installed."
+		echo "Exiting."
+		exit 1
+	fi
+fi
+# Run
+
 if [ "$create" = "y" ] || [ "$all" = "y" ]; then
 	create_cluster
 fi
