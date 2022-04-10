@@ -107,11 +107,6 @@ deploy_bookinfo () {
 	fi
 }
 
-install_fortio () {
-	kubectl apply -f "$BASEDIR/../e2e/latency/fortio-deployment.yml"
-	kubectl apply -f "$BASEDIR/../e2e/latency/fortio-service.yml"
-}
-
 install_locust () {
 	kubectl create namespace locust
 	kubectl create configmap -n locust cf-locustfile "--from-file=main.py=$BASEDIR/locustfile.py"
@@ -125,65 +120,6 @@ install_locust () {
 	done
 
 	kubectl apply -f "$BASEDIR/../e2e/latency/locust-service.yml"
-}
-
-run_fortio () {
-	CONNECTIONS=$1
-	QPS=$2
-	DURATION=$3
-	# use an int, changing for each fortio run; used to query jaeger traces
-	TEST_NUMBER=$4
-	OUT_PATH=$5
-	if [ -z "$FORTIO_URL" ]; then
-		NODE_IP=$(kubectl get nodes -o json|jq '.items[0].status.addresses[]|select(.type=="ExternalIP").address'|tr -d '"')
-		INGRESS_PORT=$(kubectl -n istio-system get service -n istio-system istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
-		FORTIO_URL="http://$NODE_IP:30100/fortio/"
-		JAEGER_URL="http://$NODE_IP:30686/jaeger/api/"
-		echo "Waiting for fortio to become reachable..."
-		for _ in $(seq 1 30); do
-			if curl --silent --fail "$FORTIO_URL" >/dev/null; then
-				break
-			fi
-			sleep 1
-		done
-		echo "Pre-heat request"
-		curl -s "http://$NODE_IP:$INGRESS_PORT/ratings/preheat" > /dev/null
-	fi
-
-	# target: http://istio-ingressgateway.istio-system/ratings/invalid-$tag -- JSON response
-	# setting the id to "invalid" makes the service quickly return a constant json document 
-	DATA_URL=$(curl "$FORTIO_URL?labels=Fortio&url=http%3A%2F%2Fistio-ingressgateway.istio-system%2Fratings%2Finvalid-$TEST_NUMBER&qps=$QPS&t=${DURATION}s&n=&c=$CONNECTIONS&p=50%2C+75%2C+90%2C+99%2C+99.9&r=0.0001&H=User-Agent%3A+fortio.org%2Ffortio-1.11.3&runner=http&resolve=&save=on&load=Start"|grep -o --color "[0-9-]*_Fortio.json"|head -n1)
-	OUTNAME="$DURATION-$QPS-$CONNECTIONS"
-	curl "${FORTIO_URL}data/$DATA_URL" --output "$OUT_PATH/fortio-$OUTNAME.json"
-	sleep 2
-	# undocumented, unsupported API -- move to supported GRPC API if needed
-	curl "${JAEGER_URL}traces?service=istio-ingressgateway&tags=%7B%22http.url%22%3A%22http%3A%2F%2Fistio-ingressgateway.istio-system%2Fratings%2Finvalid-$TEST_NUMBER%22%7D" --output "$OUT_PATH/jaeger-$OUTNAME.json"
-}
-
-perftest () {
-	RESULTS_DIR=${RESULTS_DIR:-$BASEDIR/../e2e/latency/results/$DATE}
-	mkdir -p "$RESULTS_DIR/with_cf"
-	TESTID=$((RANDOM*10000))
-	for CONNECTIONS in 10 70 125 250 500; do
-	for QPS in 50 250 500 1000; do
-		run_fortio "$CONNECTIONS" "$QPS" 30 "$TESTID" "$RESULTS_DIR/with_cf"
-		TESTID=$((TESTID+1))
-	done
-	done
-
-	mkdir -p "$RESULTS_DIR/without_cf"
-	kubectl delete -n istio-system envoyfilter curiefense-access-logs-filter
-	kubectl delete -n istio-system envoyfilter curiefense-lua-filter
-	for CONNECTIONS in 10 70 125 250 500; do
-		for QPS in 50 250 500 1000; do
-			run_fortio "$CONNECTIONS" "$QPS" 30 "$TESTID" "$RESULTS_DIR/without_cf"
-			TESTID=$((TESTID+1))
-		done
-	done
-
-	export RESULTS_DIR
-	jupyter nbconvert --execute "$BASEDIR/../e2e/latency/Curiefense performance report.ipynb" --to html --template classic
-	mv "$BASEDIR/../e2e/latency/Curiefense performance report.html" "$BASEDIR/../e2e/latency/Curiefense performance report-$VERSION-$DATE.html"
 }
 
 locust_perftest () {
@@ -238,10 +174,8 @@ while [[ "$#" -gt 0 ]]; do
 		-d|--deploy-curiefense) curiefense="y"; shift ;;
 		-b|--deploy-bookinfo) bookinfo="y"; shift ;;
 		-j|--deploy-jaeger) jaeger="y"; shift ;;
-		-f|--deploy-fortio) fortio="y"; shift ;;
 		-l|--deploy-locust) locust="y"; nbnodes=3; shift ;;
-		-p|--perf-test) perftest="y"; shift ;;
-		-L|--locust-perf-test) locustperftest="y"; shift ;;
+		-p|-L|--locust-perf-test) locustperftest="y"; shift ;;
 		-C|--cleanup) cleanup="y"; shift ;;
 		-t|--test-cycle) all="y"; shift ;;
 		*) echo "Unknown parameter passed: $1"; exit 1 ;;
@@ -260,17 +194,11 @@ fi
 if [ "$bookinfo" = "y" ] || [ "$all" = "y" ]; then
 	deploy_bookinfo
 fi
-if [ "$fortio" = "y" ] || [ "$all" = "y" ]; then
-	install_fortio
-fi
-if [ "$locust" = "y" ]; then
+if [ "$locust" = "y" ] || [ "$all" = "y" ]; then
 	install_locust
 fi
-if [ "$locustperftest" = "y" ]; then
+if [ "$locustperftest" = "y" ] || [ "$all" = "y" ]; then
 	locust_perftest
-fi
-if [ "$perftest" = "y" ] || [ "$all" = "y" ]; then
-	perftest
 fi
 if [ "$cleanup" = "y" ] || [ "$all" = "y" ]; then
 	cleanup
