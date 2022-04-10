@@ -3,7 +3,7 @@
 # Pre-requisites:
 # * images built & pushed to the registry
 # * gcloud access is set up
-# * the curiefense/curiefense-helm repository is checked out in $HOME/curiefense-helm
+# * the curiefense/curiefense-helm repository is checked out in ../curiefense-helm (at the root of the public-curiefense repository)
 # * This is run on a machine or virtualenv that has pytest & curieconfctl installed
 
 # Some parameters can be overridden, such as:
@@ -56,11 +56,12 @@ deploy_curiefense () {
 		kubectl apply -f "$BASEDIR/../e2e/latency/jaeger-service.yml"
 	fi
 	export JWT_WORKAROUND=yes
-	pushd "$HOME/curiefense-helm/istio-helm/" || exit 1
+	pushd "$BASEDIR/../curiefense-helm/istio-helm/" || exit 1
 	./deploy.sh --set 'global.tracer.zipkin.address=zipkin.istio-system:9411' --set 'gateways.istio-ingressgateway.autoscaleMax=1' -f "$BASEDIR/curiefense-helm/use-minio-istio.yaml" --set 'global.proxy.curiefense_minio_insecure=true' --set 'gateways.istio-ingressgateway.resources.limits.cpu=4'
 	sleep 5
-	popd || exit 1
 	pushd "$HOME/curiefense-helm/curiefense-helm/" || exit 1
+	popd || exit 1
+	pushd "$BASEDIR/../curiefense-helm/curiefense-helm/" || exit 1
 	./deploy.sh -f "$BASEDIR/curiefense-helm/use-minio-curiefense.yaml" --set 'global.settings.curiefense_minio_insecure=true'
 	kubectl apply -f "$BASEDIR/curiefense-helm/expose-services.yaml"
 	if [ "$nbnodes" -gt 1 ]; then
