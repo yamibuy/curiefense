@@ -1,6 +1,6 @@
 ARG RUSTBIN_TAG=latest
 FROM curiefense/curiefense-rustbuild-bionic:${RUSTBIN_TAG} AS rustbin
-FROM curiefense/envoy-istio-cf:66815c263c6b178df7cecacf69f9b374435d1bcd AS envoy-istio-cf
+FROM curiefense/envoy-istio-cf:407e092226b2c0913357b16ddf0917cf71e69dd4 AS envoy-istio-cf
 FROM docker.io/istio/proxyv2:1.9.3
 
 RUN apt-get update && \
