@@ -261,7 +261,7 @@ mod tests {
                     assert!(logs.logs[0].message.to_string().contains("CFGLOAD"));
                     assert!(logs.logs[1].message.to_string().contains("Loaded profile"));
                 }
-                12 => {
+                10 => {
                     assert!(logs.logs[0]
                         .message
                         .to_string()
@@ -269,7 +269,7 @@ mod tests {
                 }
                 n => {
                     for r in logs.logs.iter() {
-                        println!("{}", r.to_string());
+                        println!("{}", r);
                     }
                     panic!("Invalid amount of logs: {}", n);
                 }

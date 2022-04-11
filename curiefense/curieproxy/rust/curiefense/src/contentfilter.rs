@@ -111,18 +111,10 @@ impl ContentFilterBlock {
     }
 }
 
+#[derive(Default)]
 struct Omitted {
     entries: Section<HashSet<String>>,
     exclusions: Section<HashMap<String, HashSet<String>>>,
-}
-
-impl Default for Omitted {
-    fn default() -> Self {
-        Omitted {
-            entries: Default::default(),
-            exclusions: Default::default(),
-        }
-    }
 }
 
 fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
