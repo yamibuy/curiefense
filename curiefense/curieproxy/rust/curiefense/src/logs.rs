@@ -15,13 +15,15 @@ pub struct Log {
     pub message: String,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord, Copy)]
 #[serde(rename_all = "lowercase")]
+#[repr(u8)]
+// mapped to nginx log levels
 pub enum LogLevel {
-    Debug,
-    Info,
-    Warning,
-    Error,
+    Debug = 0,
+    Info = 1,
+    Warning = 2,
+    Error = 3,
 }
 
 impl LogLevel {
@@ -52,7 +54,18 @@ impl Default for Logs {
 }
 
 impl Logs {
+    pub fn new(lvl: LogLevel) -> Self {
+        Logs {
+            start: Instant::now(),
+            level: lvl,
+            logs: Vec::new(),
+        }
+    }
+
     pub fn log<S: ToString>(&mut self, level: LogLevel, message: S) {
+        if level < self.level {
+            return;
+        }
         let now = Instant::now();
         self.logs.push(Log {
             elapsed_micros: now.duration_since(self.start).as_micros() as u64,
@@ -76,5 +89,9 @@ impl Logs {
 
     pub fn to_stringvec(&self) -> Vec<String> {
         self.logs.iter().map(|l| l.to_string()).collect()
+    }
+
+    pub fn extend(&mut self, other: Logs) {
+        self.logs.extend(other.logs);
     }
 }
