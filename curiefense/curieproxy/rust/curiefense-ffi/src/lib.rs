@@ -213,7 +213,7 @@ pub unsafe extern "C" fn curiefense_str_free(ptr: *mut c_char) {
     if ptr.is_null() {
         return;
     }
-    CString::from_raw(ptr);
+    drop(CString::from_raw(ptr));
 }
 
 /// Simple wrapper to return the reqinfo data
