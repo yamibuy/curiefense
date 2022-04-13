@@ -5,7 +5,8 @@ use serde_json::json;
 use std::collections::{HashMap, HashSet};
 
 use crate::config::contentfilter::{
-    ContentFilterEntryMatch, ContentFilterProfile, ContentFilterRules, ContentFilterSection, Section, SectionIdx,
+    rule_tags, ContentFilterEntryMatch, ContentFilterProfile, ContentFilterRules, ContentFilterSection, Section,
+    SectionIdx,
 };
 use crate::config::raw::ContentFilterRule;
 use crate::config::utils::XDataSource;
@@ -110,18 +111,10 @@ impl ContentFilterBlock {
     }
 }
 
+#[derive(Default)]
 struct Omitted {
     entries: Section<HashSet<String>>,
     exclusions: Section<HashMap<String, HashSet<String>>>,
-}
-
-impl Default for Omitted {
-    fn default() -> Self {
-        Omitted {
-            entries: Default::default(),
-            exclusions: Default::default(),
-        }
-    }
 }
 
 fn get_section(idx: SectionIdx, rinfo: &RequestInfo) -> &RequestField {
@@ -140,7 +133,7 @@ pub fn content_filter_check(
     tags: &mut Tags,
     rinfo: &RequestInfo,
     profile: &ContentFilterProfile,
-    hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
+    mhsdb: Option<&ContentFilterRules>,
 ) -> Result<(), ContentFilterBlock> {
     use SectionIdx::*;
     let mut omit = Default::default();
@@ -184,18 +177,26 @@ pub fn content_filter_check(
     injection_check(tags, &hca_keys, &omit, test_xss, test_sqli);
 
     let mut specific_tags = Tags::default();
+
     // finally, hyperscan check
-    if let Err(rr) = hyperscan(
-        logs,
-        tags,
-        &mut specific_tags,
-        hca_keys,
-        hsdb,
-        &kept,
-        &profile.ignore,
-        &omit.exclusions,
-    ) {
-        logs.error(rr)
+    match mhsdb {
+        Some(hsdb) => {
+            if let Err(rr) = hyperscan(
+                logs,
+                tags,
+                &mut specific_tags,
+                hca_keys,
+                hsdb,
+                &kept,
+                &profile.ignore,
+                &omit.exclusions,
+            ) {
+                logs.error(rr)
+            }
+        }
+        None => {
+            logs.warning(format!("no hsdb found for profile {}, it probably means that no rules were matched by the active/report/ignore", profile.id));
+        }
     }
 
     let sactive = specific_tags.intersect(&profile.active);
@@ -348,15 +349,11 @@ fn hyperscan(
     tags: &mut Tags,
     specific_tags: &mut Tags,
     hca_keys: HashMap<String, (SectionIdx, String)>,
-    hsdb: std::sync::RwLockReadGuard<Option<ContentFilterRules>>,
+    sigs: &ContentFilterRules,
     global_kept: &HashSet<String>,
     global_ignore: &HashSet<String>,
     exclusions: &Section<HashMap<String, HashSet<String>>>,
 ) -> anyhow::Result<()> {
-    let sigs = match &*hsdb {
-        None => return Err(anyhow::anyhow!("Hyperscan database not loaded")),
-        Some(x) => x,
-    };
     let scratch = sigs.db.alloc_scratch()?;
     // TODO: use `intersperse` when this stabilizes
     let to_scan = hca_keys.keys().cloned().collect::<Vec<_>>().join("\n");
@@ -381,17 +378,7 @@ fn hyperscan(
 
                     // new specific tags are singleton hashsets, but we use the Tags structure to make sure
                     // they are properly converted
-                    let mut new_specific_tags = Tags::default();
-                    new_specific_tags.insert_qualified("cf-rule-id", &sig.id);
-
-                    let mut new_tags = Tags::default();
-                    new_tags.insert_qualified("cf-rule-risk", &format!("{}", sig.risk));
-                    new_tags.insert_qualified("cf-rule-category", &sig.category);
-                    new_tags.insert_qualified("cf-rule-subcategory", &sig.subcategory);
-                    for t in &sig.tags {
-                        new_tags.insert(t);
-                    }
-
+                    let (new_specific_tags, new_tags) = rule_tags(sig);
                     if (new_tags.has_intersection(global_kept) || new_specific_tags.has_intersection(global_kept))
                         && exclusions
                             .get(sid)

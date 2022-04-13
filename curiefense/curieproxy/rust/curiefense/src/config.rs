@@ -6,7 +6,6 @@ pub mod limit;
 pub mod raw;
 pub mod utils;
 
-use crate::config::limit::Limit;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::path::Path;
@@ -14,19 +13,18 @@ use std::path::PathBuf;
 use std::sync::RwLock;
 use std::time::SystemTime;
 
+use crate::config::limit::Limit;
 use crate::logs::Logs;
 use contentfilter::{resolve_rules, ContentFilterProfile, ContentFilterRules};
 use flow::{flow_resolve, FlowElement, SequenceKey};
 use globalfilter::GlobalFilterSection;
 use hostmap::{HostMap, SecurityPolicy};
-use raw::{
-    AclProfile, RawContentFilterProfile, RawFlowEntry, RawGlobalFilterSection, RawHostMap, RawLimit, RawSecurityPolicy,
-};
+use raw::{AclProfile, RawFlowEntry, RawGlobalFilterSection, RawHostMap, RawLimit, RawSecurityPolicy};
 use utils::Matching;
 
 lazy_static! {
     pub static ref CONFIG: RwLock<Config> = RwLock::new(Config::empty());
-    pub static ref HSDB: RwLock<Option<ContentFilterRules>> = RwLock::new(None);
+    pub static ref HSDB: RwLock<HashMap<String, ContentFilterRules>> = RwLock::new(HashMap::new());
 }
 
 pub fn with_config<R, F>(basepath: &str, logs: &mut Logs, f: F) -> Option<R>
@@ -51,7 +49,7 @@ where
         Err(rr) => logs.error(rr),
     };
     match HSDB.write() {
-        Ok(mut dbw) => *dbw = Some(newhsdb),
+        Ok(mut dbw) => *dbw = newhsdb,
         Err(rr) => logs.error(rr),
     };
     Some(r)
@@ -155,7 +153,7 @@ impl Config {
         rawlimits: Vec<RawLimit>,
         rawglobalfilters: Vec<RawGlobalFilterSection>,
         rawacls: Vec<AclProfile>,
-        rawcontentfilterprofiles: Vec<RawContentFilterProfile>,
+        content_filter_profiles: HashMap<String, ContentFilterProfile>,
         container_name: Option<String>,
         rawflows: Vec<RawFlowEntry>,
     ) -> Config {
@@ -163,7 +161,6 @@ impl Config {
         let mut securitypolicies: Vec<Matching<HostMap>> = Vec::new();
 
         let limits = Limit::resolve(logs, rawlimits);
-        let content_filter_profiles = ContentFilterProfile::resolve(logs, rawcontentfilterprofiles);
         let acls = rawacls.into_iter().map(|a| (a.id.clone(), a)).collect();
 
         // build the entries while looking for the default entry
@@ -247,7 +244,7 @@ impl Config {
         out
     }
 
-    pub fn reload(&self, logs: &mut Logs, basepath: &str) -> Option<(Config, ContentFilterRules)> {
+    pub fn reload(&self, logs: &mut Logs, basepath: &str) -> Option<(Config, HashMap<String, ContentFilterRules>)> {
         let last_mod = std::fs::metadata(basepath)
             .and_then(|x| x.modified())
             .unwrap_or_else(|rr| {
@@ -266,7 +263,7 @@ impl Config {
         let globalfilters = Config::load_config_file(logs, &bjson, "globalfilter-lists.json");
         let limits = Config::load_config_file(logs, &bjson, "limits.json");
         let acls = Config::load_config_file(logs, &bjson, "acl-profiles.json");
-        let contentfilterprofiles = Config::load_config_file(logs, &bjson, "contentfilter-profiles.json");
+        let rawcontentfilterprofiles = Config::load_config_file(logs, &bjson, "contentfilter-profiles.json");
         let contentfilterrules = Config::load_config_file(logs, &bjson, "contentfilter-rules.json");
         let contentfiltergroups = Config::load_config_file(logs, &bjson, "contentfilter-groups.json");
         let flows = Config::load_config_file(logs, &bjson, "flow-control.json");
@@ -275,6 +272,10 @@ impl Config {
             .ok()
             .map(|s| s.trim().to_string());
 
+        let content_filter_profiles = ContentFilterProfile::resolve(logs, rawcontentfilterprofiles);
+
+        let hsdb = resolve_rules(logs, &content_filter_profiles, contentfilterrules, contentfiltergroups);
+
         let config = Config::resolve(
             logs,
             last_mod,
@@ -282,14 +283,10 @@ impl Config {
             limits,
             globalfilters,
             acls,
-            contentfilterprofiles,
+            content_filter_profiles,
             container_name,
             flows,
         );
-        let hsdb = resolve_rules(contentfilterrules, contentfiltergroups).unwrap_or_else(|rr| {
-            logs.error(rr);
-            ContentFilterRules::empty()
-        });
         Some((config, hsdb))
     }
 

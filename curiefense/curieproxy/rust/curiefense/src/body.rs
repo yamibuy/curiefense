@@ -132,7 +132,7 @@ fn close_xml_element(
     }
 }
 
-fn xml_increment_last(stack: &mut Vec<(String, u64)>) -> u64 {
+fn xml_increment_last(stack: &mut [(String, u64)]) -> u64 {
     if let Some(curtop) = stack.last_mut() {
         let prev = curtop.1;
         curtop.1 = prev + 1;

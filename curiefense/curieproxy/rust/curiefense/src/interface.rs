@@ -89,7 +89,7 @@ impl Decision {
 }
 
 /// a newtype representing tags, to make sure they are tagified when inserted
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Tags(HashSet<String>);
 
 fn tagify(tag: &str) -> String {
@@ -101,12 +101,6 @@ fn tagify(tag: &str) -> String {
         }
     }
     tag.to_lowercase().chars().map(filter_char).collect()
-}
-
-impl Default for Tags {
-    fn default() -> Self {
-        Tags(HashSet::new())
-    }
 }
 
 impl Tags {
@@ -259,8 +253,7 @@ impl SimpleAction {
                         .params
                         .action
                         .as_ref()
-                        .map(|x| SimpleAction::resolve(x).ok())
-                        .flatten()
+                        .and_then(|x| SimpleAction::resolve(x).ok())
                         .unwrap_or_else(|| {
                             SimpleAction::from_reason(rawaction.params.reason.clone().unwrap_or_else(|| "?".into()))
                         }),

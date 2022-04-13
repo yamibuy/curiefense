@@ -337,7 +337,13 @@ pub async fn inspect_generic_request_map_async<GH: Grasshopper>(
 
     // otherwise, run content_filter_check
     let content_filter_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &securitypolicy.content_filter_profile, rd),
+        Ok(rd) => content_filter_check(
+            logs,
+            &mut tags,
+            &reqinfo,
+            &securitypolicy.content_filter_profile,
+            rd.get(&securitypolicy.content_filter_profile.id),
+        ),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())
@@ -388,7 +394,7 @@ pub fn content_filter_check_generic_request_map(
     let reqinfo = map_request(logs, &waf_profile.decoding, &[], raw);
 
     let waf_result = match HSDB.read() {
-        Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &waf_profile, rd),
+        Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &waf_profile, rd.get(content_filter_id)),
         Err(rr) => {
             logs.error(format!("Could not get lock on HSDB: {}", rr));
             Ok(())

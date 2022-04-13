@@ -17,7 +17,6 @@ setup(
         "pyyaml",
         "simple-rest-client",
         "typer",
-        "click==8.0.4",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
