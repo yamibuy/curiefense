@@ -3,7 +3,6 @@ mod lua;
 use crate::lua::Luagrasshopper;
 
 use curiefense::grasshopper::Grasshopper;
-use curiefense::interface::Tags;
 use curiefense::utils::RequestMeta;
 use mlua::prelude::*;
 use std::collections::HashMap;
@@ -217,8 +216,7 @@ fn inspect_request<GH: Grasshopper>(
         headers,
         mbody,
     };
-    let (dec, tags, masked_rinfo) =
-        inspect_generic_request_map(configpath, grasshopper, raw, Tags::default(), &mut logs);
+    let (dec, tags, masked_rinfo) = inspect_generic_request_map(configpath, grasshopper, raw, &mut logs);
 
     Ok(InspectionResult {
         decision: dec,
