@@ -221,11 +221,10 @@ pub async fn inspect_wrapper<GH: Grasshopper>(
     logs: Logs,
     configpath: String,
     raw: RawRequest<'_>,
-    itags: Tags,
     mgh: Option<GH>,
 ) -> CFDecision {
     let mut mlogs = logs;
-    let (decision, tags, reqinfo) = inspect_generic_request_map_async(&configpath, mgh, raw, itags, &mut mlogs).await;
+    let (decision, tags, reqinfo) = inspect_generic_request_map_async(&configpath, mgh, raw, &mut mlogs).await;
     CFDecision {
         decision,
         tags,
@@ -290,13 +289,7 @@ pub unsafe extern "C" fn curiefense_async_init(
     };
     let (executor, spawner) = new_executor_and_spawner::<TaskCB<CFDecision>>();
     spawner.spawn_cb(
-        inspect_wrapper(
-            logs,
-            configpath,
-            raw_request,
-            Tags::default(),
-            Some(DummyGrasshopper {}),
-        ),
+        inspect_wrapper(logs, configpath, raw_request, Some(DummyGrasshopper {})),
         cb,
         data,
     );
