@@ -86,7 +86,7 @@ fn map_args(
 
     let body_decoding = if let Some(body) = mbody {
         if let Err(rr) = parse_body(logs, &mut args, mcontent_type, accepted_types, body) {
-            logs.debug(format!("Body parsing failed: {}", rr));
+            logs.debug(|| format!("Body parsing failed: {}", rr));
             // if the body could not be parsed, store it in an argument, as if it was text
             args.add(
                 "RAW_BODY".to_string(),
@@ -315,7 +315,7 @@ pub fn find_geoip(logs: &mut Logs, ipstr: String) -> GeoIp {
     let ip = match pip {
         Ok(x) => x,
         Err(rr) => {
-            logs.error(format!("When parsing ip {}", rr));
+            logs.error(|| format!("When parsing ip {}", rr));
             return geoip;
         }
     };
@@ -366,7 +366,7 @@ pub fn find_geoip(logs: &mut Logs, ipstr: String) -> GeoIp {
                     geoip.region = region.iso_code.map(|s| s.to_string());
                     geoip.subregion = subregion.iso_code.map(|s| s.to_string());
                 }
-                _ => logs.error(format!("Too many subdivisions were reported for {}", ip)),
+                _ => logs.error(|| format!("Too many subdivisions were reported for {}", ip)),
             }
         }
         geoip.city_name = cty.city.as_ref().and_then(|c| get_name(&c.names));

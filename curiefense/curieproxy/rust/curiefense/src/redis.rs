@@ -38,7 +38,7 @@ pub async fn extract_bannable_action<CNX: redis::aio::ConnectionLike>(
     ban_status: BanStatus,
 ) -> SimpleAction {
     if let SimpleActionT::Ban(subaction, duration) = &action.atype {
-        logs.info(format!("Banned key {} for {}s", redis_key, duration));
+        logs.info(|| format!("Banned key {} for {}s", redis_key, duration));
         match ban_status {
             BanStatus::AlreadyBanned => (),
             BanStatus::NewBan => {

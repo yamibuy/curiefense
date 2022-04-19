@@ -53,6 +53,27 @@ impl Default for Logs {
     }
 }
 
+// this trait is for things that are cheap to pass, and that can be used to build a string
+// its main use is to avoid directly passing a possibly expensive format macro to a logging function
+pub trait CheapString {
+    fn c_to_string(self) -> String;
+}
+
+impl CheapString for &str {
+    fn c_to_string(self) -> String {
+        self.to_string()
+    }
+}
+
+impl<F> CheapString for F
+where
+    F: Fn() -> String,
+{
+    fn c_to_string(self) -> String {
+        self()
+    }
+}
+
 impl Logs {
     pub fn new(lvl: LogLevel) -> Self {
         Logs {
@@ -62,28 +83,28 @@ impl Logs {
         }
     }
 
-    pub fn log<S: ToString>(&mut self, level: LogLevel, message: S) {
+    pub fn log<S: CheapString>(&mut self, level: LogLevel, message: S) {
         if level < self.level {
             return;
         }
         let now = Instant::now();
         self.logs.push(Log {
             elapsed_micros: now.duration_since(self.start).as_micros() as u64,
-            message: message.to_string(),
+            message: message.c_to_string(),
             level,
         })
     }
 
-    pub fn debug<S: ToString>(&mut self, message: S) {
+    pub fn debug<S: CheapString>(&mut self, message: S) {
         self.log(LogLevel::Debug, message);
     }
-    pub fn info<S: ToString>(&mut self, message: S) {
+    pub fn info<S: CheapString>(&mut self, message: S) {
         self.log(LogLevel::Info, message);
     }
-    pub fn warning<S: ToString>(&mut self, message: S) {
+    pub fn warning<S: CheapString>(&mut self, message: S) {
         self.log(LogLevel::Warning, message);
     }
-    pub fn error<S: ToString>(&mut self, message: S) {
+    pub fn error<S: CheapString>(&mut self, message: S) {
         self.log(LogLevel::Error, message);
     }
 

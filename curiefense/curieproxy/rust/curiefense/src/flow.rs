@@ -93,7 +93,7 @@ async fn ban_react<CNX: redis::aio::ConnectionLike>(
     let ban_key = get_ban_key(redis_key);
     let banned = is_banned(cnx, &ban_key).await;
     if banned {
-        logs.debug(format!("Key {} is banned!", ban_key));
+        logs.debug(|| format!("Key {} is banned!", ban_key));
     }
     if banned || blocked {
         let action = extract_bannable_action(
@@ -142,7 +142,7 @@ pub async fn flow_check(
                 if !flow_match(reqinfo, tags, elem) {
                     continue;
                 }
-                logs.debug(format!("Testing flow control {} (step {})", elem.name, elem.step));
+                logs.debug(|| format!("Testing flow control {} (step {})", elem.name, elem.step));
                 match build_redis_key(reqinfo, tags, &elem.key, &elem.id, &elem.name) {
                     Some(redis_key) => {
                         match check_flow(&mut cnx, &redis_key, elem.step, elem.timeframe, elem.is_last).await? {
@@ -157,7 +157,7 @@ pub async fn flow_check(
                             FlowResult::NonLast => {}
                         }
                     }
-                    None => logs.warning(format!("Could not fetch key in flow control {}", elem.name)),
+                    None => logs.warning(|| format!("Could not fetch key in flow control {}", elem.name)),
                 }
             }
             Ok(bad)
