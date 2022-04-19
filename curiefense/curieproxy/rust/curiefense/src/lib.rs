@@ -31,7 +31,7 @@ use utils::{map_request, RawRequest, RequestInfo};
 fn challenge_verified<GH: Grasshopper>(gh: &GH, reqinfo: &RequestInfo, logs: &mut Logs) -> bool {
     if let Some(rbzid) = reqinfo.cookies.get("rbzid") {
         if let Some(ua) = reqinfo.headers.get("user-agent") {
-            logs.debug(format!("Checking rbzid cookie {} with user-agent {}", rbzid, ua));
+            logs.debug(|| format!("Checking rbzid cookie {} with user-agent {}", rbzid, ua));
             return match gh.parse_rbzid(&rbzid.replace('-', "="), ua) {
                 Some(b) => b,
                 None => {
@@ -89,7 +89,7 @@ pub async fn inspect_generic_request_map_async<GH: Grasshopper>(
     // insert the all tag here, to make sure it is always present, even in the presence of early errors
     tags.insert("all");
 
-    logs.debug(format!("Inspection starts (grasshopper active: {})", mgh.is_some()));
+    logs.debug(|| format!("Inspection starts (grasshopper active: {})", mgh.is_some()));
 
     // do all config queries in the lambda once
     // there is a lot of copying taking place, to minimize the lock time
@@ -175,7 +175,7 @@ pub fn content_filter_check_generic_request_map(
     let waf_result = match HSDB.read() {
         Ok(rd) => content_filter_check(logs, &mut tags, &reqinfo, &waf_profile, rd.get(content_filter_id)),
         Err(rr) => {
-            logs.error(format!("Could not get lock on HSDB: {}", rr));
+            logs.error(|| format!("Could not get lock on HSDB: {}", rr));
             Ok(())
         }
     };

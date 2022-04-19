@@ -248,7 +248,7 @@ impl ContentFilterProfile {
                 Ok((k, v)) => {
                     out.insert(k, v);
                 }
-                Err(rr) => logs.error(format!("content filter id {}: {:?}", id, rr)),
+                Err(rr) => logs.error(|| format!("content filter id {}: {:?}", id, rr)),
             }
         }
         out
@@ -342,10 +342,10 @@ pub fn resolve_rules(
     for v in profiles.values() {
         match build_from_profile(v) {
             Ok(p) => {
-                logs.debug(format!("Loaded profile {} with {} rules", v.id, p.ids.len()));
+                logs.debug(|| format!("Loaded profile {} with {} rules", v.id, p.ids.len()));
                 out.insert(v.id.to_string(), p);
             }
-            Err(rr) => logs.error(format!("When building profile {}, error: {}", v.id, rr)),
+            Err(rr) => logs.error(|| format!("When building profile {}, error: {}", v.id, rr)),
         }
     }
 
