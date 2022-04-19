@@ -106,7 +106,7 @@ pub async fn limit_check(
     let mut redis = match redis_async_conn().await {
         Ok(c) => c,
         Err(rr) => {
-            logs.error(format!("Could not connect to the redis server {}", rr));
+            logs.error(|| format!("Could not connect to the redis server {}", rr));
             return SimpleDecision::Pass;
         }
     };
@@ -115,7 +115,7 @@ pub async fn limit_check(
 
     for limit in limits {
         if !limit_match(tags, limit) {
-            logs.debug(format!("limit {} excluded", limit.name));
+            logs.debug(|| format!("limit {} excluded", limit.name));
             continue;
         }
 
@@ -126,7 +126,7 @@ pub async fn limit_check(
             Some(k) => k,
         };
         let ban_key = get_ban_key(&key);
-        logs.debug(format!("limit={:?} key={}", limit, key));
+        logs.debug(|| format!("limit={:?} key={}", limit, key));
 
         if is_banned(&mut redis, &ban_key).await {
             logs.debug("is banned!");
@@ -162,7 +162,7 @@ pub async fn limit_check(
         };
 
         match redis_get_limit(&mut redis, &key, limit.timeframe, pairvalue).await {
-            Err(rr) => logs.error(rr),
+            Err(rr) => logs.error(|| rr.to_string()),
             Ok(current_count) => {
                 for threshold in &limit.thresholds {
                     // Only one action with highest limit larger than current

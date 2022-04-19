@@ -39,18 +39,18 @@ where
         Err(rr) =>
         // read failed :(
         {
-            logs.error(rr);
+            logs.error(|| rr.to_string());
             return None;
         }
     };
     let r = f(logs, &newconfig);
     match CONFIG.write() {
         Ok(mut w) => *w = newconfig,
-        Err(rr) => logs.error(rr),
+        Err(rr) => logs.error(|| rr.to_string()),
     };
     match HSDB.write() {
         Ok(mut dbw) => *dbw = newhsdb,
-        Err(rr) => logs.error(rr),
+        Err(rr) => logs.error(|| rr.to_string()),
     };
     Some(r)
 }
@@ -96,7 +96,7 @@ impl Config {
             let acl_profile: AclProfile = match acls.get(&rawmap.acl_profile) {
                 Some(p) => p.clone(),
                 None => {
-                    logs.warning(format!("Unknown ACL profile {}", &rawmap.acl_profile));
+                    logs.warning(|| format!("Unknown ACL profile {}", &rawmap.acl_profile));
                     AclProfile::default()
                 }
             };
@@ -104,10 +104,7 @@ impl Config {
                 match contentfilterprofiles.get(&rawmap.content_filter_profile) {
                     Some(p) => p.clone(),
                     None => {
-                        logs.error(format!(
-                            "Unknown Content Filter profile {}",
-                            &rawmap.content_filter_profile
-                        ));
+                        logs.error(|| format!("Unknown Content Filter profile {}", &rawmap.content_filter_profile));
                         continue;
                     }
                 };
@@ -115,7 +112,7 @@ impl Config {
             for lid in rawmap.limit_ids {
                 match from_map(limits, &lid) {
                     Ok(lm) => olimits.push(lm),
-                    Err(rr) => logs.error(format!("When resolving limits in rawmap {}, {}", rawmap.name, rr)),
+                    Err(rr) => logs.error(format!("When resolving limits in rawmap {}, {}", rawmap.name, rr).as_str()),
                 }
             }
             let mapname = rawmap.name.clone();
@@ -134,10 +131,9 @@ impl Config {
                 default = Some(securitypolicy);
             } else {
                 match Matching::from_str(&rawmap.match_, securitypolicy) {
-                    Err(rr) => logs.warning(format!(
-                        "Invalid regex {} in entry {}: {}",
-                        &rawmap.match_, &mapname, rr
-                    )),
+                    Err(rr) => {
+                        logs.warning(format!("Invalid regex {} in entry {}: {}", &rawmap.match_, &mapname, rr).as_str())
+                    }
                     Ok(matcher) => entries.push(matcher),
                 }
             }
@@ -168,10 +164,13 @@ impl Config {
             let (entries, default_entry) =
                 Config::resolve_security_policies(logs, rawmap.map, &limits, &acls, &content_filter_profiles);
             if default_entry.is_none() {
-                logs.warning(format!(
-                    "HostMap entry '{}', id '{}' does not have a default entry",
-                    rawmap.name, rawmap.id
-                ));
+                logs.warning(
+                    format!(
+                        "HostMap entry '{}', id '{}' does not have a default entry",
+                        &rawmap.name, &rawmap.id
+                    )
+                    .as_str(),
+                );
             }
             let mapname = rawmap.name.clone();
             let hostmap = HostMap {
@@ -182,15 +181,19 @@ impl Config {
             };
             if rawmap.match_ == "__default__" {
                 if default.is_some() {
-                    logs.error(format!(
-                        "HostMap entry '{}', id '{}' has several default entries",
-                        hostmap.name, hostmap.id
-                    ));
+                    logs.error(|| {
+                        format!(
+                            "HostMap entry '{}', id '{}' has several default entries",
+                            hostmap.name, hostmap.id
+                        )
+                    });
                 }
                 default = Some(hostmap);
             } else {
                 match Matching::from_str(&rawmap.match_, hostmap) {
-                    Err(rr) => logs.error(format!("Invalid regex {} in entry {}: {}", &rawmap.match_, mapname, rr)),
+                    Err(rr) => {
+                        logs.error(format!("Invalid regex {} in entry {}: {}", &rawmap.match_, mapname, rr).as_str())
+                    }
                     Ok(matcher) => securitypolicies.push(matcher),
                 }
             }
@@ -221,7 +224,7 @@ impl Config {
         let file = match std::fs::File::open(path) {
             Ok(f) => f,
             Err(rr) => {
-                logs.error(format!("when loading {}: {}", fullpath, rr));
+                logs.error(|| format!("when loading {}: {}", fullpath, rr));
                 return Vec::new();
             }
         };
@@ -229,7 +232,7 @@ impl Config {
             Ok(vs) => vs,
             Err(rr) => {
                 // if it is not a json array, abort early and do not resolve anything
-                logs.error(format!("when parsing {}: {}", fullpath, rr));
+                logs.error(|| format!("when parsing {}: {}", fullpath, rr));
                 return Vec::new();
             }
         };
@@ -237,7 +240,7 @@ impl Config {
         for value in values {
             // for each entry, try to resolve it as a raw configuration value, failing otherwise
             match serde_json::from_value(value) {
-                Err(rr) => logs.error(format!("when resolving entry from {}: {}", fullpath, rr)),
+                Err(rr) => logs.error(|| format!("when resolving entry from {}: {}", fullpath, rr)),
                 Ok(v) => out.push(v),
             }
         }
@@ -248,7 +251,7 @@ impl Config {
         let last_mod = std::fs::metadata(basepath)
             .and_then(|x| x.modified())
             .unwrap_or_else(|rr| {
-                logs.error(format!("Could not get last modified time for {}: {}", basepath, rr));
+                logs.error(|| format!("Could not get last modified time for {}: {}", basepath, rr));
                 SystemTime::now()
             });
         if self.last_mod == last_mod {

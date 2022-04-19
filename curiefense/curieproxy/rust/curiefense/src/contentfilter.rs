@@ -191,11 +191,11 @@ pub fn content_filter_check(
                 &profile.ignore,
                 &omit.exclusions,
             ) {
-                logs.error(rr)
+                logs.error(|| rr.to_string())
             }
         }
         None => {
-            logs.warning(format!("no hsdb found for profile {}, it probably means that no rules were matched by the active/report/ignore", profile.id));
+            logs.warning(||format!("no hsdb found for profile {}, it probably means that no rules were matched by the active/report/ignore", profile.id));
         }
     }
 
@@ -237,7 +237,7 @@ fn section_check(
         if section.max_count > 0 {
             return Err(ContentFilterBlock::TooManyEntries(idx));
         } else {
-            logs.warning(format!("In section {:?}, param_count = 0", idx));
+            logs.warning(|| format!("In section {:?}, param_count = 0", idx));
         }
     }
 
@@ -247,7 +247,7 @@ fn section_check(
             if section.max_length > 0 {
                 return Err(ContentFilterBlock::EntryTooLarge(idx, name.to_string()));
             } else {
-                logs.warning(format!("In section {:?}, max_length = 0", idx));
+                logs.warning(|| format!("In section {:?}, max_length = 0", idx));
             }
         }
 
@@ -362,7 +362,7 @@ fn hyperscan(
         found = true;
         Matching::Continue
     })?;
-    logs.debug(format!("matching content filter signatures: {}", found));
+    logs.debug(|| format!("matching content filter signatures: {}", found));
 
     if !found {
         return Ok(());
@@ -372,9 +372,9 @@ fn hyperscan(
     for (k, (sid, name)) in hca_keys {
         sigs.db.scan(&[k.as_bytes()], &scratch, |id, _, _, _| {
             match sigs.ids.get(id as usize) {
-                None => logs.error(format!("INVALID INDEX ??? {}", id)),
+                None => logs.error(|| format!("Should not happen, invalid hyperscan index {}", id)),
                 Some(sig) => {
-                    logs.debug(format!("signature matched {:?}", sig));
+                    logs.debug(|| format!("signature matched {:?}", sig));
 
                     // new specific tags are singleton hashsets, but we use the Tags structure to make sure
                     // they are properly converted

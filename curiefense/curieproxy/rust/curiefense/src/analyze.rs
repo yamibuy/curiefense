@@ -90,7 +90,7 @@ pub async fn analyze<GH: Grasshopper>(
     logs.debug("challenge phase2 ignored");
 
     if let SimpleDecision::Action(action, reason) = globalfilter_dec {
-        logs.debug(format!("Global filter decision {:?}", reason));
+        logs.debug(|| format!("Global filter decision {:?}", reason));
         let decision = action.to_decision(is_human, &mgh, &reqinfo.headers, reason);
         if decision.is_final() {
             return (
@@ -102,7 +102,7 @@ pub async fn analyze<GH: Grasshopper>(
     }
 
     match flow_check(logs, flows, &reqinfo, &mut tags).await {
-        Err(rr) => logs.error(rr),
+        Err(rr) => logs.error(|| rr.to_string()),
         Ok(SimpleDecision::Pass) => {}
         Ok(SimpleDecision::Action(a, reason)) => {
             let decision = a.to_decision(is_human, &mgh, &reqinfo.headers, reason);
@@ -129,10 +129,10 @@ pub async fn analyze<GH: Grasshopper>(
             );
         }
     }
-    logs.debug(format!("limit checks done ({} limits)", securitypolicy.limits.len()));
+    logs.debug(|| format!("limit checks done ({} limits)", securitypolicy.limits.len()));
 
     let acl_result = check_acl(&tags, &securitypolicy.acl_profile);
-    logs.debug(format!("ACL result: {:?}", acl_result));
+    logs.debug(|| format!("ACL result: {:?}", acl_result));
     // store the check_acl result here
     let blockcode: Option<(i32, Vec<String>)> = match acl_result {
         AclResult::Passthrough(dec) => {
@@ -195,11 +195,13 @@ pub async fn analyze<GH: Grasshopper>(
                         );
                     }
                     (gua, ggh) => {
-                        logs.debug(format!(
-                            "ACL challenge detected: can't challenge, ua={} gh={}",
-                            gua.is_some(),
-                            ggh.is_some()
-                        ));
+                        logs.debug(|| {
+                            format!(
+                                "ACL challenge detected: can't challenge, ua={} gh={}",
+                                gua.is_some(),
+                                ggh.is_some()
+                            )
+                        });
                         Some((3, dtags))
                     }
                 }
@@ -207,7 +209,7 @@ pub async fn analyze<GH: Grasshopper>(
         }
         _ => None,
     };
-    logs.debug(format!("ACL checks done {:?}", blockcode));
+    logs.debug(|| format!("ACL checks done {:?}", blockcode));
 
     // if the acl is active, and we had a block result, immediately block
     if securitypolicy.acl_active {
@@ -230,7 +232,7 @@ pub async fn analyze<GH: Grasshopper>(
             rd.get(&securitypolicy.content_filter_profile.id),
         ),
         Err(rr) => {
-            logs.error(format!("Could not get lock on HSDB: {}", rr));
+            logs.error(|| format!("Could not get lock on HSDB: {}", rr));
             Ok(())
         }
     };

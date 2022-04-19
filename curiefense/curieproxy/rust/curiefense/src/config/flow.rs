@@ -109,7 +109,7 @@ pub fn flow_resolve(logs: &mut Logs, rawentries: Vec<RawFlowEntry>) -> HashMap<S
             continue;
         }
         match FlowEntry::convert(rawentry) {
-            Err(rr) => logs.warning(rr),
+            Err(rr) => logs.warning(|| rr.to_string()),
             Ok(entry) => {
                 let nsteps = entry.sequence.len();
                 for (stepid, step) in entry.sequence.into_iter().enumerate() {
