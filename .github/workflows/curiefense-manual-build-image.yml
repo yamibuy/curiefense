@@ -1,11 +1,12 @@
 name: Manual publish docker images
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
 jobs:
   push:
     runs-on: ubuntu-latest
+
     environment: prod
     steps:
       - uses: actions/checkout@v2
