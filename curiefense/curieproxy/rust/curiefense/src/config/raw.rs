@@ -138,7 +138,7 @@ pub struct RawLimitThreshold {
     pub action: RawAction,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct RawLimitSelector {
     #[serde(default)]
     pub headers: HashMap<String, String>,
@@ -148,17 +148,6 @@ pub struct RawLimitSelector {
     pub args: HashMap<String, String>,
     #[serde(default)]
     pub attrs: HashMap<String, String>,
-}
-
-impl std::default::Default for RawLimitSelector {
-    fn default() -> Self {
-        RawLimitSelector {
-            headers: HashMap::new(),
-            cookies: HashMap::new(),
-            args: HashMap::new(),
-            attrs: HashMap::new(),
-        }
-    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -306,7 +295,7 @@ impl Default for MaxLength {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct RawContentFilterProperties {
     pub names: Vec<RawContentFilterEntryMatch>,
     pub regex: Vec<RawContentFilterEntryMatch>,
@@ -314,17 +303,6 @@ pub struct RawContentFilterProperties {
     pub max_count: MaxCount,
     #[serde(default)]
     pub max_length: MaxLength,
-}
-
-impl Default for RawContentFilterProperties {
-    fn default() -> Self {
-        RawContentFilterProperties {
-            names: Vec::default(),
-            regex: Vec::default(),
-            max_count: MaxCount::default(),
-            max_length: MaxLength::default(),
-        }
-    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
