@@ -1,15 +1,12 @@
-name: Publish docker images
+name: Manual publish docker images
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'curiefense/**'
+  workflow_dispatch:
 
 jobs:
   push:
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - uses: actions/checkout@v2
         with:
