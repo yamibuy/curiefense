@@ -15,7 +15,7 @@ RUN cd /curieconf-utils ; pip3 install --no-cache-dir .
 COPY curieconf-client /curieconf-client
 RUN cd /curieconf-client ; pip3 install --no-cache-dir .
 COPY curietasker /curietasker
-RUN cd /curietasker ; pip3 install --no-cache-dir pyrsistent .
+RUN cd /curietasker ; pip3 install --no-cache-dir .
 COPY init /init
 
 ENTRYPOINT ["/usr/bin/dumb-init", "/bin/bash", "/init/run.sh"]
