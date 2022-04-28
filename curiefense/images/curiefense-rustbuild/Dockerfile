@@ -1,5 +1,5 @@
-ARG UBUNTU_VERSION=bionic
-FROM ubuntu:${UBUNTU_VERSION}
+ARG UBUNTU_VERSION=focal
+FROM ubuntu:${UBUNTU_VERSION} as builder
 
 RUN apt-get update && \
     apt-get dist-upgrade -y && \
