@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 use crate::{
     analyze::analyze,
+    body::body_too_large,
     challenge_verified,
     config::{
         contentfilter::SectionIdx,
@@ -20,7 +21,7 @@ use crate::{
     },
     contentfilter::ContentFilterBlock,
     grasshopper::Grasshopper,
-    interface::{Decision, Tags},
+    interface::{Action, Decision, Tags},
     logs::{LogLevel, Logs},
     securitypolicy::match_securitypolicy,
     tagging::tag_request,
@@ -64,7 +65,7 @@ pub fn inspect_init(
 
 /// called when the content filter policy is violated
 /// no tags are returned though!
-fn early_block(idata: IData, block: ContentFilterBlock) -> (Decision, Tags, RequestInfo) {
+fn early_block(idata: IData, action: Action) -> (Decision, Tags, RequestInfo) {
     let mut logs = idata.logs;
     let secpolicy = idata.secpol;
     let rawrequest = RawRequest {
@@ -77,9 +78,10 @@ fn early_block(idata: IData, block: ContentFilterBlock) -> (Decision, Tags, Requ
         &mut logs,
         &secpolicy.content_filter_profile.decoding,
         &secpolicy.content_filter_profile.content_type,
+        0,
         &rawrequest,
     );
-    (Decision::Action(block.to_action()), Tags::default(), reqinfo)
+    (Decision::Action(action), Tags::default(), reqinfo)
 }
 
 /// incrementally add headers, can exit early if there are too many headers, or they are too large
@@ -87,20 +89,34 @@ fn early_block(idata: IData, block: ContentFilterBlock) -> (Decision, Tags, Requ
 /// other properties are not checked at this point (restrict for example), this early check purely exists as an anti DOS measure
 pub fn add_header(idata: IData, new_headers: HashMap<String, String>) -> Result<IData, (Decision, Tags, RequestInfo)> {
     let mut dt = idata;
-    let secpol = &dt.secpol;
+    let secpol = dt.secpol;
     if secpol.content_filter_active {
         let hdrs = &secpol.content_filter_profile.sections.headers;
         if dt.headers.len() + new_headers.len() > hdrs.max_count {
-            return Err(early_block(dt, ContentFilterBlock::TooManyEntries(SectionIdx::Headers)));
+            return Err(early_block(
+                dt,
+                ContentFilterBlock::TooManyEntries(SectionIdx::Headers).to_action(),
+            ));
         }
         for (k, v) in new_headers {
+            let kl = k.to_lowercase();
+            if kl == "content-length" {
+                if let Ok(content_length) = v.parse::<usize>() {
+                    if content_length > secpol.content_filter_profile.max_body_size {
+                        return Err(early_block(
+                            dt,
+                            body_too_large(secpol.content_filter_profile.max_body_size, content_length),
+                        ));
+                    }
+                }
+            }
             if v.len() > hdrs.max_length {
                 return Err(early_block(
                     dt,
-                    ContentFilterBlock::EntryTooLarge(SectionIdx::Headers, k),
+                    ContentFilterBlock::EntryTooLarge(SectionIdx::Headers, kl).to_action(),
                 ));
             }
-            dt.headers.insert(k, v);
+            dt.headers.insert(kl, v);
         }
     } else {
         dt.headers.extend(new_headers);
@@ -111,6 +127,16 @@ pub fn add_header(idata: IData, new_headers: HashMap<String, String>) -> Result<
 /// TODO, incremental filtering of body based on the security policy (mainly body length)
 pub fn add_body(idata: IData, new_body: Vec<u8>) -> Result<IData, (Decision, Tags, RequestInfo)> {
     let mut dt = idata;
+    let cur_body_size = dt.body.as_ref().map(|v| v.len()).unwrap_or(0);
+    let new_size = cur_body_size + new_body.len();
+    let secpol = dt.secpol;
+    if new_size > secpol.content_filter_profile.max_body_size {
+        return Err(early_block(
+            dt,
+            body_too_large(secpol.content_filter_profile.max_body_size, new_size),
+        ));
+    }
+
     match dt.body.as_mut() {
         None => dt.body = Some(new_body),
         Some(b) => b.extend(new_body),
@@ -136,6 +162,7 @@ pub async fn finalize<'t, GH: Grasshopper>(
         &mut logs,
         &secpolicy.content_filter_profile.decoding,
         &secpolicy.content_filter_profile.content_type,
+        secpolicy.content_filter_profile.max_body_depth,
         &rawrequest,
     );
 
