@@ -265,7 +265,34 @@ fn curiefense(lua: &Lua) -> LuaResult<LuaTable> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Ok;
     use curiefense::config::with_config;
+
+    #[test]
+    fn test_content_filter_by_walon() {
+        let mut meta:HashMap<String, String> = HashMap::new();
+        meta.insert("authority".to_owned(), "localhost:30081".to_owned());
+        meta.insert("method".to_owned(), "get".to_owned());
+        meta.insert("path".to_owned(), "/test?bb=111&ddd=rfi?..".to_owned());
+
+        let mut headers:HashMap<String, String> = HashMap::new();
+        headers.insert("content-type".to_owned(), "text/plain".to_owned());
+
+
+        let str_ip :String = String::from("11.22.33.44");
+        // let content_filter_id: String = String::from("waylontest");
+        let content_filter_id: String = String::from("rl45report3");
+
+        
+        inspect_content_filter(
+            "/cf-config/current/config",
+            meta,
+            headers,
+            None,
+            str_ip,
+            content_filter_id,
+        );
+    }
 
     #[test]
     fn config_load() {

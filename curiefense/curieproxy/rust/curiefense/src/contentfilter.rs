@@ -390,6 +390,10 @@ fn hyperscan(
                     new_tags.insert_qualified("cf-rule-risk", &format!("{}", sig.risk));
                     new_tags.insert_qualified("cf-rule-category", &sig.category);
                     new_tags.insert_qualified("cf-rule-subcategory", &sig.subcategory);
+                    // Add by waylon
+                    new_specific_tags.insert_qualified("yami_block_source", &k);
+
+
                     for t in &sig.tags {
                         new_tags.insert(t);
                     }
